@@ -1,8 +1,6 @@
-// app/layout.tsx
 import "./globals.css"
 import type { Metadata, Viewport } from "next"
 import { M_PLUS_1 } from "next/font/google"
-import { headers } from "next/headers"
 import { createClient } from "@/utils/supabase/server"
 import Navigation from "@/components/navigation/Navigation"
 import ToastProvider from "@/components/providers/ToastProvider"
@@ -12,14 +10,63 @@ const mPlus1 = M_PLUS_1({
   subsets: ["latin"],
 })
 
+const siteConfig = {
+  title: "例のヤツ｜ブログ",
+  description: "日本のテクノロジーとライフスタイルについて深く掘り下げるブログ",
+  keywords: ["例のヤツ", "例のやつ", "ブログ", "例のヤツブログ", "例のヤツ｜ブログ"],
+  url: "https://reinoyatu-blog.vercel.app/",
+  ogImage: "/og-image.png",
+  twitterHandle: "@reinoyatu",
+}
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: {
-    template: "例のヤツ｜ブログ",
-    default: "例のヤツ｜ブログ",
+    template: `%s | ${siteConfig.title}`,
+    default: siteConfig.title,
+  },
+  description: siteConfig.description,
+  keywords: siteConfig.keywords,
+  authors: [{ name: "例のヤツ" }],
+  creator: "例のヤツ",
+  robots: "index, follow",
+
+  openGraph: {
+    type: "website",
+    locale: "ja_JP",
+    url: siteConfig.url,
+    title: siteConfig.title,
+    description: siteConfig.description,
+    siteName: siteConfig.title,
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: siteConfig.title,
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.title,
+    description: siteConfig.description,
+    images: [siteConfig.ogImage],
+    creator: siteConfig.twitterHandle,
+  },
+
+  other: {
+    "discord:type": "website",
+    "discord:title": siteConfig.title,
+    "discord:description": siteConfig.description,
+    "discord:image": siteConfig.ogImage,
   },
 }
 
 export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
   maximumScale: 1,
   userScalable: false,
 }
@@ -28,17 +75,14 @@ interface RootLayoutProps {
   children: React.ReactNode
 }
 
+// ルートレイアウト
 const RootLayout = async ({ children }: RootLayoutProps) => {
   const supabase = createClient()
   const { data } = await supabase.auth.getUser()
   const user = data?.user
 
-  const headersList = headers()
-  const userAgent = headersList.get("user-agent")
-  const isDarkMode = userAgent?.includes("Dark") ? "dark" : "light"
-
   return (
-    <html lang="ja" className={isDarkMode}>
+    <html lang="ja">
       <body className={mPlus1.className}>
         <ToastProvider />
         <div className="flex min-h-screen flex-col">
@@ -48,7 +92,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
 
           <footer className="border-t py-2">
             <div className="flex flex-col items-center justify-center text-sm space-y-5">
-              <div>©例のヤツ. ALL Rights Reserved.</div>
+              <div>©例のヤツ｜ブログ. ALL Rights Reserved.</div>
             </div>
           </footer>
         </div>
