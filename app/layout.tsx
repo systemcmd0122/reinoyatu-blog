@@ -12,7 +12,7 @@ const mPlus1 = M_PLUS_1({
 
 const siteConfig = {
   title: "例のヤツ｜ブログ",
-  description: "日本のテクノロジーとライフスタイルについて深く掘り下げるブログ",
+  description: "例のヤツを主催とした様々なことを投稿・共有するたのめのサイトです。",
   keywords: ["例のヤツ", "例のやつ", "ブログ", "例のヤツブログ", "例のヤツ｜ブログ"],
   url: "https://reinoyatu-blog.vercel.app/",
   ogImage: "/og-image.png",
