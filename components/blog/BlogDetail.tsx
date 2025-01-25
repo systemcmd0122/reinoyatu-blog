@@ -41,7 +41,7 @@ interface BlogDetailProps {
 const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog }) => {
   const router = useRouter()
   const [error, setError] = useState("")
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   const [isDeletePending, setIsDeletePending] = useState(false)
 
   const handleDelete = () => {
