@@ -4,12 +4,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
-  Laptop, 
   PenLine, 
   Globe, 
-  BookOpen, 
-  Users 
-} from "lucide-react"
+  BookOpen} from "lucide-react"
 
 import BlogItem from "@/components/blog/BlogItem"
 import Loading from "@/app/loading"
