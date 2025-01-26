@@ -3,7 +3,7 @@
 import { User } from "@supabase/supabase-js"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
-import { LogOut, Settings, PenSquare, Menu } from "lucide-react"
+import { LogOut, Settings, PenSquare, Menu, Shield } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 import {
@@ -67,6 +67,11 @@ const Navigation = ({ user }: NavigationProps) => {
               <DropdownMenuItem asChild>
                 <Link href="/settings/profile">プロフィール設定</Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/privacy" className="flex items-center space-x-2">
+                  プライバシーポリシー
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem 
                 onSelect={(e) => {
                   e.preventDefault()
@@ -125,6 +130,15 @@ const Navigation = ({ user }: NavigationProps) => {
                   <span>設定</span>
                 </Link>
               </SheetClose>
+              <SheetClose asChild>
+                <Link
+                  href="/privacy"
+                  className="flex items-center space-x-2 px-4 py-2 rounded-md hover:bg-slate-100"
+                >
+                  <Shield className="h-4 w-4" />
+                  <span>プライバシーポリシー</span>
+                </Link>
+              </SheetClose>
               <button
                 onClick={() => setIsLogoutDialogOpen(true)}
                 className="flex items-center space-x-2 px-4 py-2 rounded-md hover:bg-slate-100 text-red-600"
@@ -149,6 +163,14 @@ const Navigation = ({ user }: NavigationProps) => {
                   className="px-4 py-2 rounded-md bg-slate-900 text-white hover:bg-slate-800"
                 >
                   新規登録
+                </Link>
+              </SheetClose>
+              <SheetClose asChild>
+                <Link
+                  href="/privacy"
+                  className="px-4 py-2 rounded-md hover:bg-slate-100"
+                >
+                  プライバシーポリシー
                 </Link>
               </SheetClose>
             </>
@@ -177,7 +199,7 @@ const Navigation = ({ user }: NavigationProps) => {
       </header>
 
       <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-        <AlertDialogContent className="bg-white border shadow-lg rounded-lg"> {/* Added explicit background */}
+        <AlertDialogContent className="bg-white border shadow-lg rounded-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>ログアウトの確認</AlertDialogTitle>
             <AlertDialogDescription>
