@@ -1,3 +1,4 @@
+// components/privacypolicy/page.tsx
 import React from 'react'
 import { ShieldCheck, FileText, Globe, Lock, RefreshCw } from 'lucide-react'
 
