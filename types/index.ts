@@ -20,4 +20,12 @@ export interface BlogType {
   image_url: string | null
   updated_at: string
   created_at: string
+  likes_count?: number
+}
+
+export interface LikeType {
+  id: string
+  blog_id: string
+  user_id: string
+  created_at: string
 }

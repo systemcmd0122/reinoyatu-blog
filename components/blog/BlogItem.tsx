@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Heart } from "lucide-react"
 import { BlogType } from "@/types"
 
 interface BlogItemProps {
@@ -12,6 +13,7 @@ interface BlogItemProps {
       name: string
       avatar_url: string
     }
+    likes_count: number
   }
 }
 
@@ -35,6 +37,10 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
           <Badge variant="secondary" className="text-xs">
             {format(new Date(blog.updated_at), "yyyy/MM/dd HH:mm")}
           </Badge>
+          <div className="flex items-center space-x-1">
+            <Heart className="h-4 w-4 text-red-500" />
+            <span className="text-xs text-muted-foreground">{blog.likes_count || 0}</span>
+          </div>
         </div>
 
         <Link href={`blog/${blog.id}`}>

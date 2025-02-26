@@ -115,10 +115,25 @@ const MainPage = async () => {
       )
     `
     )
-    .order("updated_at", { ascending: false })
+    .order("created_at", { ascending: false })
+
+  // 各ブログのいいね数を取得
+  const blogsWithLikes = await Promise.all(
+    (blogsData || []).map(async (blog) => {
+      const { data: likesCount } = await supabase.rpc(
+        'get_blog_likes_count',
+        { blog_id: blog.id }
+      )
+      
+      return {
+        ...blog,
+        likes_count: likesCount || 0
+      }
+    })
+  )
 
   // ブログデータがない場合のメッセージ
-  if (!blogsData || error) {
+  if (!blogsWithLikes.length || error) {
     return (
       <div className="container mx-auto py-12 text-center">
         <h2 className="text-2xl font-semibold mb-4">
@@ -137,7 +152,8 @@ const MainPage = async () => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">最新のブログ記事</h1>
           <Link href="/blog/new">
             <Button>
               新規ブログ投稿
@@ -145,7 +161,7 @@ const MainPage = async () => {
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-          {blogsData.map((blog) => (
+          {blogsWithLikes.map((blog) => (
             <BlogItem key={blog.id} blog={blog} />
           ))}
         </div>

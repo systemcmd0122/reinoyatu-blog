@@ -15,6 +15,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { BlogType } from "@/types"
 import MarkdownRenderer from "@/components/blog/markdown/MarkdownRenderer"
+import LikeButton from "@/components/blog/LikeButton"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,11 +35,13 @@ interface BlogDetailProps {
       avatar_url: string | null
       introduce: string | null
     }
+    likes_count: number
   }
   isMyBlog: boolean
+  currentUserId?: string
 }
 
-const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog }) => {
+const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId }) => {
   const router = useRouter()
   const [error, setError] = useState("")
   const [, startTransition] = useTransition()
@@ -77,9 +80,17 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog }) => {
     <div className="container mx-auto max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-8 py-8">
       <div className="md:col-span-2 space-y-6">
         <div className="space-y-4">
-          <Badge variant="outline" className="text-sm">
-            {format(new Date(blog.updated_at), "yyyy/MM/dd HH:mm")}
-          </Badge>
+          <div className="flex justify-between items-center">
+            <Badge variant="outline" className="text-sm">
+              {format(new Date(blog.updated_at), "yyyy/MM/dd HH:mm")}
+            </Badge>
+            
+            <LikeButton 
+              blogId={blog.id}
+              userId={currentUserId}
+              initialLikesCount={blog.likes_count || 0}
+            />
+          </div>
           <h1 className="text-3xl font-bold text-foreground">{blog.title}</h1>
         </div>
 
