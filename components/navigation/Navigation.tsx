@@ -57,6 +57,12 @@ const Navigation = ({ user }: NavigationProps) => {
             </Link>
           </Button>
 
+          <Button variant="ghost" asChild>
+            <Link href="/bookmarks" className="flex items-center space-x-2">
+            <span>ブックマーク一覧</span>
+            </Link>
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -119,6 +125,15 @@ const Navigation = ({ user }: NavigationProps) => {
                 >
                   <PenSquare className="h-4 w-4" />
                   <span>投稿</span>
+                </Link>
+              </SheetClose>
+              <SheetClose asChild>
+                <Link
+                  href="/bookmarks"
+                  className="flex items-center space-x-2 px-4 py-2 rounded-md hover:bg-slate-100"
+                >
+                  <PenSquare className="h-4 w-4" />
+                  <span>ブックマーク一覧</span>
                 </Link>
               </SheetClose>
               <SheetClose asChild>

@@ -16,6 +16,7 @@ import Link from "next/link"
 import { BlogType } from "@/types"
 import MarkdownRenderer from "@/components/blog/markdown/MarkdownRenderer"
 import LikeButton from "@/components/blog/LikeButton"
+import BookmarkButton from "@/components/blog/BookmarkButton"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -85,11 +86,17 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId }
               {format(new Date(blog.updated_at), "yyyy/MM/dd HH:mm")}
             </Badge>
             
-            <LikeButton 
-              blogId={blog.id}
-              userId={currentUserId}
-              initialLikesCount={blog.likes_count || 0}
-            />
+            <div className="flex items-center space-x-2">
+              <BookmarkButton 
+                blogId={blog.id}
+                userId={currentUserId}
+              />
+              <LikeButton 
+                blogId={blog.id}
+                userId={currentUserId}
+                initialLikesCount={blog.likes_count || 0}
+              />
+            </div>
           </div>
           <h1 className="text-3xl font-bold text-foreground">{blog.title}</h1>
         </div>

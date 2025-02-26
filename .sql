@@ -74,4 +74,26 @@ create policy "画像はログインユーザーが追加" on storage.objects fo
 create policy "自身の画像を更新" on storage.objects for update with check ( bucket_id = 'blogs' AND auth.uid() = owner );
 create policy "自身の画像を削除" on storage.objects for delete using ( bucket_id = 'blogs' AND auth.uid() = owner );
 
+-- likesテーブル作成
+create table likes (
+  id uuid not null default uuid_generate_v4() primary key,
+  blog_id uuid not null references blogs(id) on delete cascade,
+  user_id uuid not null references profiles(id) on delete cascade,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  -- blog_idとuser_idの組み合わせは一意であるべき
+  unique(blog_id, user_id)
+);
 
+-- likesテーブルRLS設定
+alter table likes enable row level security;
+
+-- likesテーブルのポリシー設定
+create policy "いいねは誰でも参照可能" on likes for select using ( true );
+create policy "自身のいいねを追加" on likes for insert with check (auth.uid() = user_id);
+create policy "自身のいいねを削除" on likes for delete using (auth.uid() = user_id);
+
+-- 便利のため、likesの数を返す関数を作成
+create or replace function get_blog_likes_count(blog_id uuid)
+returns integer as $$
+  select count(*)::integer from likes where likes.blog_id = $1;
+$$ language sql;
