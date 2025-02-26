@@ -2,8 +2,6 @@
 
 import React, { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { format } from "date-fns"
-import { ja } from "date-fns/locale"
 import { FilePenLine, Loader2, Trash2, X } from "lucide-react"
 import { deleteBlog } from "@/actions/blog"
 import { toast } from "sonner"
@@ -19,6 +17,7 @@ import MarkdownRenderer from "@/components/blog/markdown/MarkdownRenderer"
 import LikeButton from "@/components/blog/LikeButton"
 import BookmarkButton from "@/components/blog/BookmarkButton"
 import CommentSection from "@/components/blog/CommentSection"
+import { formatJST } from "@/utils/date" // 修正: ここで共通関数をインポート
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,14 +50,6 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId, 
   const [, startTransition] = useTransition()
   const [isDeletePending, setIsDeletePending] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
-
-  // Convert date string to Date object and format with JST timezone consideration
-  const formatJST = (dateString: string) => {
-    const date = new Date(dateString)
-    // Add 9 hours to UTC time to get JST
-    date.setHours(date.getHours() + 9)
-    return format(date, "yyyy/MM/dd HH:mm", { locale: ja })
-  }
 
   const handleDelete = () => {
     setIsDeletePending(true)

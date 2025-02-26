@@ -1,10 +1,8 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from "react"
-import { format } from "date-fns"
-import { ja } from "date-fns/locale"
-import { Edit, Trash2, Reply, Loader2, Send } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { Edit, Trash2, Reply, Loader2, Send } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -23,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { editComment, deleteComment, newComment } from "@/actions/comment"
+import { formatJST } from "@/utils/date" // 既存のdate.tsユーティリティをインポート
 
 interface CommentItemProps {
   comment: CommentType
@@ -52,14 +51,6 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const replyTextareaRef = useRef<HTMLTextAreaElement>(null)
-
-  // Convert date string to Date object and format with JST timezone consideration
-  const formatJST = (dateString: string) => {
-    const date = new Date(dateString)
-    // Add 9 hours to UTC time to get JST
-    date.setHours(date.getHours() + 9)
-    return format(date, "yyyy/MM/dd HH:mm", { locale: ja })
-  }
   
   const isEdited = comment.created_at !== comment.updated_at
   const isMyComment = currentUserId === comment.user_id

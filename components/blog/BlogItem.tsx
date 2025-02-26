@@ -1,14 +1,13 @@
 "use client"
 
 import React, { useState } from "react"
-import { format } from "date-fns"
-import { ja } from "date-fns/locale"
 import Image from "next/image"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Heart } from "lucide-react"
 import { BlogType } from "@/types"
+import { formatJST } from "@/utils/date" // 修正: ここで共通関数をインポート
 
 interface BlogItemProps {
   blog: BlogType & {
@@ -21,14 +20,6 @@ interface BlogItemProps {
 }
 
 const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
-  // Convert date string to Date object and format with JST timezone consideration
-  const formatJST = (dateString: string) => {
-    const date = new Date(dateString)
-    // Add 9 hours to UTC time to get JST
-    date.setHours(date.getHours() + 9)
-    return format(date, "yyyy/MM/dd HH:mm", { locale: ja })
-  }
-  
   // ホバー状態を管理するstate
   const [isHovered, setIsHovered] = useState(false)
 
