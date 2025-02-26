@@ -1,5 +1,5 @@
 import React from "react"
-import { format } from "date-fns"
+import { format, addHours } from "date-fns"
 import Image from "next/image"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
@@ -18,6 +18,9 @@ interface BlogItemProps {
 }
 
 const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
+  // UTCから日本時間(JST)へ変換（+9時間）
+  const jstDate = addHours(new Date(blog.updated_at), 9)
+
   return (
     <Card className="w-full max-w-full overflow-hidden transition-all duration-300 hover:shadow-lg">
       <Link href={`blog/${blog.id}`}>
@@ -35,7 +38,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
       <CardContent className="p-4 space-y-3">
         <div className="flex justify-between items-center">
           <Badge variant="secondary" className="text-xs">
-            {format(new Date(blog.updated_at), "yyyy/MM/dd HH:mm")}
+            {format(jstDate, "yyyy/MM/dd HH:mm")}
           </Badge>
           <div className="flex items-center space-x-1">
             <Heart className="h-4 w-4 text-red-500" />

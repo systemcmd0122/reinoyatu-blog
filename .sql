@@ -97,3 +97,36 @@ create or replace function get_blog_likes_count(blog_id uuid)
 returns integer as $$
   select count(*)::integer from likes where likes.blog_id = $1;
 $$ language sql;
+
+-- bookmarksテーブル作成
+create table bookmarks (
+  id uuid not null default uuid_generate_v4() primary key,
+  blog_id uuid not null references blogs(id) on delete cascade,
+  user_id uuid not null references profiles(id) on delete cascade,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  -- blog_idとuser_idの組み合わせは一意であるべき
+  unique(blog_id, user_id)
+);
+
+-- bookmarksテーブルRLS設定
+alter table bookmarks enable row level security;
+
+-- bookmarksテーブルのポリシー設定
+create policy "ブックマークは誰でも参照可能" on bookmarks for select using ( true );
+create policy "自身のブックマークを追加" on bookmarks for insert with check (auth.uid() = user_id);
+create policy "自身のブックマークを削除" on bookmarks for delete using (auth.uid() = user_id);
+
+-- 便利のため、ブログのブックマーク数を返す関数を作成
+create or replace function get_blog_bookmarks_count(blog_id uuid)
+returns integer as $$
+  select count(*)::integer from bookmarks where bookmarks.blog_id = $1;
+$$ language sql;
+
+-- ユーザーのブックマーク済みブログを取得する関数を作成（オプション）
+create or replace function get_user_bookmarks(user_uuid uuid)
+returns setof blogs as $$
+  select b.* from blogs b
+  join bookmarks bm on b.id = bm.blog_id
+  where bm.user_id = user_uuid
+  order by bm.created_at desc;
+$$ language sql;

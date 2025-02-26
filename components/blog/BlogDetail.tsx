@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { format } from "date-fns"
+import { format, addHours } from "date-fns"
 import { FilePenLine, Loader2, Trash2 } from "lucide-react"
 import { deleteBlog } from "@/actions/blog"
 import { toast } from "sonner"
@@ -48,6 +48,9 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId }
   const [, startTransition] = useTransition()
   const [isDeletePending, setIsDeletePending] = useState(false)
 
+  // UTCから日本時間(JST)へ変換（+9時間）
+  const jstDate = addHours(new Date(blog.updated_at), 9)
+
   const handleDelete = () => {
     setIsDeletePending(true)
     setError("")
@@ -83,7 +86,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId }
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <Badge variant="outline" className="text-sm">
-              {format(new Date(blog.updated_at), "yyyy/MM/dd HH:mm")}
+              {format(jstDate, "yyyy/MM/dd HH:mm")}
             </Badge>
             
             <div className="flex items-center space-x-2">

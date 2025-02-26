@@ -29,3 +29,10 @@ export interface LikeType {
   user_id: string
   created_at: string
 }
+
+export interface BookmarkType {
+  id: string
+  blog_id: string
+  user_id: string
+  created_at: string
+}
