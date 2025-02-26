@@ -44,7 +44,8 @@ interface BlogEditProps {
 const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
   const router = useRouter()
   const [error, setError] = useState("")
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false) 
+  const [, startTransition] = useTransition()
   const [isDeletePending, setIsDeletePending] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>(
@@ -59,19 +60,25 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
     },
   })
 
-  const onSubmit = (values: z.infer<typeof BlogSchema>) => {
+  const onSubmit = async (values: z.infer<typeof BlogSchema>) => {
+    if (isPending) return; // 処理中の場合は早期リターン
+    
     setError("")
+    setIsPending(true)
 
-    let base64Image: string | undefined
-
-    startTransition(async () => {
-      try {
-        if (imageFile) {
+    try {
+      // 画像ファイルがある場合
+      if (imageFile) {
+        // Promise を使って FileReader を同期的に扱う
+        const base64Image = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.onerror = reject
           reader.readAsDataURL(imageFile)
-          reader.onloadend = async () => {
-            base64Image = reader.result as string
+        })
 
+        startTransition(async () => {
+          try {
             const res = await editBlog({
               ...values,
               blogId: blog.id,
@@ -82,36 +89,52 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
 
             if (res?.error) {
               setError(res.error)
+              setIsPending(false)
               return
             }
 
             toast.success("ブログを編集しました")
             router.push(`/blog/${blog.id}`)
             router.refresh()
+          } catch (error) {
+            console.error(error)
+            setError("エラーが発生しました")
+            setIsPending(false)
           }
-        } else {
-          const res = await editBlog({
-            ...values,
-            blogId: blog.id,
-            imageUrl: blog.image_url,
-            base64Image,
-            userId: blog.user_id,
-          })
+        })
+      } else {
+        // 画像ファイルがない場合
+        startTransition(async () => {
+          try {
+            const res = await editBlog({
+              ...values,
+              blogId: blog.id,
+              imageUrl: blog.image_url,
+              base64Image: undefined,
+              userId: blog.user_id,
+            })
 
-          if (res?.error) {
-            setError(res.error)
-            return
+            if (res?.error) {
+              setError(res.error)
+              setIsPending(false)
+              return
+            }
+
+            toast.success("ブログを編集しました")
+            router.push(`/blog/${blog.id}`)
+            router.refresh()
+          } catch (error) {
+            console.error(error)
+            setError("エラーが発生しました")
+            setIsPending(false)
           }
-
-          toast.success("ブログを編集しました")
-          router.push(`/blog/${blog.id}`)
-          router.refresh()
-        }
-      } catch (error) {
-        console.error(error)
-        setError("エラーが発生しました")
+        })
       }
-    })
+    } catch (error) {
+      console.error(error)
+      setError("画像の処理中にエラーが発生しました")
+      setIsPending(false)
+    }
   }
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

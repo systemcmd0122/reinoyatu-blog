@@ -32,7 +32,8 @@ interface BlogNewProps {
 const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   const router = useRouter()
   const [error, setError] = useState("")
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false)
+  const [, startTransition] = useTransition()
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
@@ -44,19 +45,26 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
     },
   })
 
-  const onSubmit = (values: z.infer<typeof BlogSchema>) => {
+  const onSubmit = async (values: z.infer<typeof BlogSchema>) => {
+    if (isPending) return; // 処理中の場合は早期リターン
+    
     setError("")
+    setIsPending(true)
 
-    let base64Image: string | undefined
-
-    startTransition(async () => {
-      try {
-        if (imageFile) {
+    try {
+      // 画像ファイルがある場合
+      if (imageFile) {
+        // Promise を使って FileReader を同期的に扱う
+        const base64Image = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.onerror = reject
           reader.readAsDataURL(imageFile)
-          reader.onloadend = async () => {
-            base64Image = reader.result as string
+        })
 
+        // 画像が読み込まれた後で投稿処理を実行
+        startTransition(async () => {
+          try {
             const res = await newBlog({
               ...values,
               base64Image,
@@ -65,34 +73,50 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
 
             if (res?.error) {
               setError(res.error)
+              setIsPending(false)
               return
             }
 
             toast.success("ブログを投稿しました")
             router.push("/")
             router.refresh()
+          } catch (error) {
+            console.error(error)
+            setError("エラーが発生しました")
+            setIsPending(false)
           }
-        } else {
-          const res = await newBlog({
-            ...values,
-            base64Image,
-            userId,
-          })
+        })
+      } else {
+        // 画像ファイルがない場合
+        startTransition(async () => {
+          try {
+            const res = await newBlog({
+              ...values,
+              base64Image: undefined,
+              userId,
+            })
 
-          if (res?.error) {
-            setError(res.error)
-            return
+            if (res?.error) {
+              setError(res.error)
+              setIsPending(false)
+              return
+            }
+
+            toast.success("ブログを投稿しました")
+            router.push("/")
+            router.refresh()
+          } catch (error) {
+            console.error(error)
+            setError("エラーが発生しました")
+            setIsPending(false)
           }
-
-          toast.success("ブログを投稿しました")
-          router.push("/")
-          router.refresh()
-        }
-      } catch (error) {
-        console.error(error)
-        setError("エラーが発生しました")
+        })
       }
-    })
+    } catch (error) {
+      console.error(error)
+      setError("画像の処理中にエラーが発生しました")
+      setIsPending(false)
+    }
   }
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
