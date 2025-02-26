@@ -36,3 +36,15 @@ export interface BookmarkType {
   user_id: string
   created_at: string
 }
+
+export interface CommentType {
+  id: string
+  blog_id: string
+  user_id: string
+  parent_id: string | null
+  content: string
+  updated_at: string
+  created_at: string
+  user_name: string
+  user_avatar_url: string | null
+}

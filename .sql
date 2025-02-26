@@ -130,3 +130,59 @@ returns setof blogs as $$
   where bm.user_id = user_uuid
   order by bm.created_at desc;
 $$ language sql;
+
+-- commentsテーブル作成
+create table comments (
+  id uuid not null default uuid_generate_v4() primary key,
+  blog_id uuid not null references blogs(id) on delete cascade,
+  user_id uuid not null references profiles(id) on delete cascade,
+  parent_id uuid references comments(id) on delete cascade,
+  content text not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- updated_atを自動で更新するトリガーの適用
+create trigger set_comment_updated_at
+before update on comments
+for each row
+execute function update_updated_at_column();
+
+-- commentsテーブルRLS設定
+alter table comments enable row level security;
+create policy "コメントは誰でも参照可能" on comments for select using (true);
+create policy "自身のコメントを追加" on comments for insert with check (auth.uid() = user_id);
+create policy "自身のコメントを更新" on comments for update using (auth.uid() = user_id);
+create policy "自身のコメントを削除" on comments for delete using (auth.uid() = user_id);
+
+-- 便利のため、ブログのコメント数を返す関数を作成
+create or replace function get_blog_comments_count(blog_id uuid)
+returns integer as $$
+  select count(*)::integer from comments where comments.blog_id = $1;
+$$ language sql;
+
+-- 返信を含むコメントを取得する関数
+create or replace function get_blog_comments_with_replies(blog_uuid uuid)
+returns table (
+  id uuid,
+  blog_id uuid,
+  user_id uuid,
+  parent_id uuid,
+  content text,
+  created_at timestamptz,
+  updated_at timestamptz,
+  user_name text,
+  user_avatar_url text
+) as $$
+  select c.id, c.blog_id, c.user_id, c.parent_id, c.content, c.created_at, c.updated_at,
+         p.name as user_name, p.avatar_url as user_avatar_url
+  from comments c
+  join profiles p on c.user_id = p.id
+  where c.blog_id = blog_uuid
+  order by 
+    case when c.parent_id is null then c.created_at else (
+      select parent.created_at from comments parent where parent.id = c.parent_id
+    ) end,
+    c.parent_id nulls first,
+    c.created_at;
+$$ language sql;

@@ -3,7 +3,7 @@
 import React, { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { format, addHours } from "date-fns"
-import { FilePenLine, Loader2, Trash2 } from "lucide-react"
+import { FilePenLine, Loader2, Trash2, X } from "lucide-react"
 import { deleteBlog } from "@/actions/blog"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -13,10 +13,11 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Image from "next/image"
 import Link from "next/link"
-import { BlogType } from "@/types"
+import { BlogType, CommentType } from "@/types"
 import MarkdownRenderer from "@/components/blog/markdown/MarkdownRenderer"
 import LikeButton from "@/components/blog/LikeButton"
 import BookmarkButton from "@/components/blog/BookmarkButton"
+import CommentSection from "@/components/blog/CommentSection"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,13 +41,15 @@ interface BlogDetailProps {
   }
   isMyBlog: boolean
   currentUserId?: string
+  initialComments?: CommentType[]
 }
 
-const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId }) => {
+const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId, initialComments }) => {
   const router = useRouter()
   const [error, setError] = useState("")
   const [, startTransition] = useTransition()
   const [isDeletePending, setIsDeletePending] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false)
 
   // UTCから日本時間(JST)へ変換（+9時間）
   const jstDate = addHours(new Date(blog.updated_at), 9)
@@ -165,32 +168,71 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId }
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+        
+        {/* コメントセクション */}
+        <CommentSection
+          blogId={blog.id}
+          currentUserId={currentUserId}
+          initialComments={initialComments}
+        />
       </div>
 
       <div className="md:col-span-1">
         <Card>
           <CardContent className="p-6 text-center">
-            <Avatar className="w-24 h-24 mx-auto mb-4">
-              <AvatarImage 
-                src={blog.profiles.avatar_url || "/noImage.png"} 
-                alt="Author Avatar" 
-              />
-              <AvatarFallback>
-                {blog.profiles.name?.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold">{blog.profiles.name}</h2>
-              {blog.profiles.introduce && (
-                <p className="text-sm text-muted-foreground">
-                  {blog.profiles.introduce}
-                </p>
-              )}
+            <div 
+              className="cursor-pointer transition-transform duration-300 hover:scale-110"
+              onClick={() => setShowProfileModal(true)}
+            >
+              <Avatar className="w-24 h-24 mx-auto mb-4">
+                <AvatarImage 
+                  src={blog.profiles.avatar_url || "/noImage.png"} 
+                  alt="Author Avatar" 
+                />
+                <AvatarFallback>
+                  {blog.profiles.name?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* プロフィールモーダル */}
+      {showProfileModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
+          <Card className="w-full max-w-md relative animate-in fade-in zoom-in duration-300">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2"
+              onClick={() => setShowProfileModal(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <CardContent className="p-6 text-center mt-6">
+              <Avatar className="w-32 h-32 mx-auto mb-6">
+                <AvatarImage 
+                  src={blog.profiles.avatar_url || "/noImage.png"} 
+                  alt="Author Avatar" 
+                />
+                <AvatarFallback>
+                  {blog.profiles.name?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="space-y-4">
+                <h2 className="text-2xl font-semibold">{blog.profiles.name}</h2>
+                {blog.profiles.introduce && (
+                  <p className="text-muted-foreground">
+                    {blog.profiles.introduce}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

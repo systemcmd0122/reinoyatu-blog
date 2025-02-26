@@ -42,6 +42,12 @@ const BlogDetailPage = async ({ params }: BlogDetailPageProps) => {
     { blog_id: blogId }
   )
 
+  // コメントを取得
+  const { data: commentsData } = await supabase.rpc(
+    'get_blog_comments_with_replies',
+    { blog_uuid: blogId }
+  )
+
   // いいね数をブログデータに追加
   const blogWithLikes = {
     ...blogData,
@@ -53,7 +59,12 @@ const BlogDetailPage = async ({ params }: BlogDetailPageProps) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <BlogDetail blog={blogWithLikes} isMyBlog={isMyBlog} currentUserId={user?.id} />
+      <BlogDetail 
+        blog={blogWithLikes} 
+        isMyBlog={isMyBlog} 
+        currentUserId={user?.id} 
+        initialComments={commentsData || []}
+      />
     </Suspense>
   )
 }
