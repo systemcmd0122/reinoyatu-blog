@@ -2,7 +2,8 @@
 
 import React, { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { format, addHours } from "date-fns"
+import { format } from "date-fns"
+import { ja } from "date-fns/locale"
 import { FilePenLine, Loader2, Trash2, X } from "lucide-react"
 import { deleteBlog } from "@/actions/blog"
 import { toast } from "sonner"
@@ -51,8 +52,13 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId, 
   const [isDeletePending, setIsDeletePending] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
 
-  // UTCから日本時間(JST)へ変換（+9時間）
-  const jstDate = addHours(new Date(blog.updated_at), 9)
+  // Convert date string to Date object and format with JST timezone consideration
+  const formatJST = (dateString: string) => {
+    const date = new Date(dateString)
+    // Add 9 hours to UTC time to get JST
+    date.setHours(date.getHours() + 9)
+    return format(date, "yyyy/MM/dd HH:mm", { locale: ja })
+  }
 
   const handleDelete = () => {
     setIsDeletePending(true)
@@ -89,7 +95,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId, 
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <Badge variant="outline" className="text-sm">
-              {format(jstDate, "yyyy/MM/dd HH:mm")}
+              {formatJST(blog.updated_at)}
             </Badge>
             
             <div className="flex items-center space-x-2">

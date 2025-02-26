@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from "react"
-import { format, addHours } from "date-fns"
+import { format } from "date-fns"
+import { ja } from "date-fns/locale"
 import { Edit, Trash2, Reply, Loader2, Send } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -52,8 +53,14 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const replyTextareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // UTCから日本時間(JST)へ変換（+9時間）
-  const jstDate = addHours(new Date(comment.created_at), 9)
+  // Convert date string to Date object and format with JST timezone consideration
+  const formatJST = (dateString: string) => {
+    const date = new Date(dateString)
+    // Add 9 hours to UTC time to get JST
+    date.setHours(date.getHours() + 9)
+    return format(date, "yyyy/MM/dd HH:mm", { locale: ja })
+  }
+  
   const isEdited = comment.created_at !== comment.updated_at
   const isMyComment = currentUserId === comment.user_id
   
@@ -181,7 +188,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
           <div className="flex items-center gap-2">
             <span className="font-medium text-sm">{comment.user_name}</span>
             <Badge variant="outline" className="text-xs font-normal">
-              {format(jstDate, "yyyy/MM/dd HH:mm")}
+              {formatJST(comment.created_at)}
               {isEdited && " (編集済み)"}
             </Badge>
           </div>
