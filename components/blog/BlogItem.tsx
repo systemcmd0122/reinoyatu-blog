@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Heart } from "lucide-react"
 import { BlogType } from "@/types"
-import { formatJST } from "@/utils/date" // 修正: ここで共通関数をインポート
+import { formatJST } from "@/utils/date"
 
 interface BlogItemProps {
   blog: BlogType & {

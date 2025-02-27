@@ -17,7 +17,7 @@ import MarkdownRenderer from "@/components/blog/markdown/MarkdownRenderer"
 import LikeButton from "@/components/blog/LikeButton"
 import BookmarkButton from "@/components/blog/BookmarkButton"
 import CommentSection from "@/components/blog/CommentSection"
-import { formatJST } from "@/utils/date" // 修正: ここで共通関数をインポート
+import { formatJST } from "@/utils/date"
 import {
   AlertDialog,
   AlertDialogAction,

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Edit, Trash2, Reply, Loader2, Send } from "lucide-react"
+import { Edit, Trash2, Reply, Loader2, Send, ChevronDown, ChevronUp } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { editComment, deleteComment, newComment } from "@/actions/comment"
-import { formatJST } from "@/utils/date" // 既存のdate.tsユーティリティをインポート
+import { formatJST } from "@/utils/date"
 
 interface CommentItemProps {
   comment: CommentType
@@ -31,6 +31,9 @@ interface CommentItemProps {
   onReplyAdded: (comment: CommentType) => void
   onCommentEdited: (commentId: string, content: string) => void
   onCommentDeleted: (commentId: string) => void
+  nestLevel?: number
+  maxNestLevel?: number
+  maxVisibleReplies?: number
 }
 
 const CommentItem: React.FC<CommentItemProps> = ({
@@ -40,7 +43,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
   parentComments,
   onReplyAdded,
   onCommentEdited,
-  onCommentDeleted
+  onCommentDeleted,
+  nestLevel = 0,
+  maxNestLevel = 3, // 最大ネストレベル
+  maxVisibleReplies = 3 // 初期表示する返信の最大数
 }) => {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
@@ -49,6 +55,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const [replyContent, setReplyContent] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
+  const [showAllReplies, setShowAllReplies] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const replyTextareaRef = useRef<HTMLTextAreaElement>(null)
   
@@ -56,6 +63,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const isMyComment = currentUserId === comment.user_id
   
   const replies = parentComments.get(comment.id) || []
+  const replyCount = replies.length
+  const visibleReplies = showAllReplies ? replies : replies.slice(0, maxVisibleReplies)
+  const hasMoreReplies = replyCount > maxVisibleReplies
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -162,8 +172,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
     }
   }
 
+  // 返信のインデントクラスを計算
+  const getIndentClass = () => {
+    return nestLevel > 0 ? "border-l-2 border-gray-200 pl-4 ml-2" : "";
+  }
+
   return (
-    <div className={`relative ${comment.parent_id ? "ml-10 mt-3" : "mt-4"}`}>
+    <div className={`relative ${getIndentClass()} ${nestLevel > 0 ? "mt-3" : "mt-4"}`}>
       <div className="flex items-start gap-2 bg-background p-3 rounded-lg shadow-sm">
         <Avatar className="w-8 h-8">
           <AvatarImage 
@@ -220,15 +235,18 @@ const CommentItem: React.FC<CommentItemProps> = ({
         
         {currentUserId && !isEditing && (
           <div className="flex items-center gap-1 self-start">
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              className="h-7 w-7" 
-              onClick={() => setIsReplying(!isReplying)}
-              aria-label="返信"
-            >
-              <Reply className="h-4 w-4" />
-            </Button>
+            {/* ネスティングが最大レベル未満の場合のみ返信ボタンを表示 */}
+            {nestLevel < maxNestLevel && (
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="h-7 w-7" 
+                onClick={() => setIsReplying(!isReplying)}
+                aria-label="返信"
+              >
+                <Reply className="h-4 w-4" />
+              </Button>
+            )}
             
             {isMyComment && (
               <>
@@ -283,7 +301,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
       </div>
       
       {isReplying && (
-        <div className="mt-3 ml-10">
+        <div className="mt-3 ml-4">
           <div className="flex items-start gap-2">
             <Textarea
               ref={replyTextareaRef}
@@ -317,9 +335,31 @@ const CommentItem: React.FC<CommentItemProps> = ({
       )}
       
       {/* 返信表示 */}
-      {replies.length > 0 && (
-        <div className="mt-1">
-          {replies.map((reply) => (
+      {replyCount > 0 && (
+        <div className="mt-2">
+          {/* 返信が多い場合に表示/非表示の切り替えボタンを表示 */}
+          {hasMoreReplies && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 text-xs mb-2 ml-2"
+              onClick={() => setShowAllReplies(!showAllReplies)}
+            >
+              {showAllReplies ? (
+                <>
+                  <ChevronUp className="h-4 w-4" />
+                  返信を折りたたむ ({replyCount})
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4" />
+                  すべての返信を表示 ({replyCount})
+                </>
+              )}
+            </Button>
+          )}
+          
+          {visibleReplies.map((reply) => (
             <CommentItem
               key={reply.id}
               comment={reply}
@@ -329,6 +369,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
               onReplyAdded={onReplyAdded}
               onCommentEdited={onCommentEdited}
               onCommentDeleted={onCommentDeleted}
+              nestLevel={nestLevel + 1}
+              maxNestLevel={maxNestLevel}
+              maxVisibleReplies={maxVisibleReplies}
             />
           ))}
         </div>

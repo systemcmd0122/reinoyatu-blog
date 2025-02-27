@@ -10,9 +10,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ChevronRight, Loader2, EyeOffIcon, EyeIcon, Chrome } from "lucide-react"
 import { SignupSchema } from "@/schemas"
 import { z } from "zod"
@@ -21,6 +23,13 @@ import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 import FormError from "@/components/auth/FormError"
 import Link from "next/link"
+
+// サインアップスキーマの拡張
+const SignupFormSchema = SignupSchema.extend({
+  privacyPolicy: z.boolean().refine(val => val === true, {
+    message: "プライバシーポリシーに同意する必要があります",
+  })
+})
 
 // アカウント登録
 const Signup = () => {
@@ -31,25 +40,29 @@ const Signup = () => {
   const [passwordVisibility, setPasswordVisibility] = useState(false)
 
   // フォームの状態
-  const form = useForm<z.infer<typeof SignupSchema>>({
+  const form = useForm<z.infer<typeof SignupFormSchema>>({
     // 入力値の検証
-    resolver: zodResolver(SignupSchema),
+    resolver: zodResolver(SignupFormSchema),
     // 初期値
     defaultValues: {
       name: "",
       email: "",
       password: "",
+      privacyPolicy: false,
     },
   })
 
   // Eメール登録送信
-  const onSubmit = async (values: z.infer<typeof SignupSchema>) => {
+  const onSubmit = async (values: z.infer<typeof SignupFormSchema>) => {
     setError("")
+
+    // privacyPolicyフィールドを除外
+    const { privacyPolicy, ...signupValues } = values
 
     startTransition(async () => {
       try {
         const res = await signup({
-          ...values,
+          ...signupValues,
         })
 
         if (res?.error) {
@@ -69,6 +82,12 @@ const Signup = () => {
 
   // Googleアカウントでの登録
   const handleGoogleLogin = async () => {
+    // プライバシーポリシーのチェックを確認
+    if (!form.getValues().privacyPolicy) {
+      setError("プライバシーポリシーに同意してください")
+      return
+    }
+
     setIsGooglePending(true)
     setError("")
 
@@ -162,6 +181,34 @@ const Signup = () => {
                   </div>
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="privacyPolicy"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={isPending || isGooglePending}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>
+                    <Link href="/privacy" className="text-primary hover:underline" target="_blank">
+                      プライバシーポリシー
+                    </Link>
+                    に同意します
+                  </FormLabel>
+                  <FormDescription>
+                    登録する前に、サービスのプライバシーポリシーをご確認ください。
+                  </FormDescription>
+                  <FormMessage />
+                </div>
               </FormItem>
             )}
           />

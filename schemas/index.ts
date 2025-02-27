@@ -10,6 +10,7 @@ export const SignupSchema = z.object({
   password: z.string().min(8, {
     message: "英数字8文字以上で入力してください",
   }),
+  privacyPolicy: z.boolean().optional(),
 })
 
 export const LoginSchema = z.object({
