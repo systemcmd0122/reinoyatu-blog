@@ -45,7 +45,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
     // オプション付き形式: {{youtube:VIDEO_ID:options}}
     const processedContent = markdownContent.replace(
       /{{youtube:([a-zA-Z0-9_-]+)(?::([^}]+))?}}/g,
-      (match, videoId, optionsStr, offset) => {
+      (_match, videoId, optionsStr) => {
         // オプションの解析
         const options = {
           showDetails: enableYouTubeDetails
