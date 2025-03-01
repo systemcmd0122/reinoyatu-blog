@@ -3,7 +3,7 @@
 import { User } from "@supabase/supabase-js"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
-import { LogOut, Settings, PenSquare, Menu, Shield } from "lucide-react"
+import { LogOut, Settings, PenSquare, Menu, Shield, House, Bookmark } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 import {
@@ -59,6 +59,7 @@ const Navigation = ({ user }: NavigationProps) => {
 
           <Button variant="ghost" asChild>
             <Link href="/bookmarks" className="flex items-center space-x-2">
+            <Bookmark className="h-4 w-4" />
             <span>ブックマーク一覧</span>
             </Link>
           </Button>
@@ -118,6 +119,15 @@ const Navigation = ({ user }: NavigationProps) => {
         <div className="flex flex-col space-y-4 mt-6">
           {user ? (
             <>
+             <SheetClose asChild>
+                <Link
+                  href="/"
+                  className="flex items-center space-x-2 px-4 py-2 rounded-md hover:bg-slate-100"
+                >
+                  <House className="h-4 w-4" />
+                  <span>ホーム</span>
+                </Link>
+              </SheetClose>
               <SheetClose asChild>
                 <Link
                   href="/blog/new"
@@ -132,7 +142,7 @@ const Navigation = ({ user }: NavigationProps) => {
                   href="/bookmarks"
                   className="flex items-center space-x-2 px-4 py-2 rounded-md hover:bg-slate-100"
                 >
-                  <PenSquare className="h-4 w-4" />
+                  <Bookmark className="h-4 w-4" />
                   <span>ブックマーク一覧</span>
                 </Link>
               </SheetClose>

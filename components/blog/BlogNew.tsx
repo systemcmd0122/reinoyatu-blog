@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useTransition } from "react"
+import React, { useState, useTransition, useRef } from "react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -36,6 +36,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   const [, startTransition] = useTransition()
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const form = useForm<z.infer<typeof BlogSchema>>({
     resolver: zodResolver(BlogSchema),
@@ -150,6 +151,32 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
     setImagePreview(null)
   }
 
+  // テキストエリアに選択した言語のコードブロックを挿入する関数
+  const insertCodeBlock = (language: string) => {
+    if (!textareaRef.current) return
+
+    const textarea = textareaRef.current
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const text = form.getValues("content")
+    
+    // コードブロックのテンプレート
+    const codeBlockTemplate = `\`\`\`${language}\n\n\`\`\``
+    
+    // 新しいテキスト
+    const newText = text.substring(0, start) + codeBlockTemplate + text.substring(end)
+    
+    // フォームの値を更新
+    form.setValue("content", newText, { shouldValidate: true })
+    
+    // カーソル位置を更新（言語名の後の改行の次に配置）
+    setTimeout(() => {
+      const newCursorPosition = start + language.length + 4
+      textarea.focus()
+      textarea.setSelectionRange(newCursorPosition, newCursorPosition)
+    }, 0)
+  }
+
   return (
     <div className="container mx-auto max-w-2xl py-8">
       <Card>
@@ -246,13 +273,14 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                     <FormLabel>内容 (Markdown対応)</FormLabel>
                     <FormControl>
                       <div className="space-y-2">
-                      <Textarea
+                        <Textarea
                           placeholder="Markdownで記事を書けます。ヘッダー、リスト、コードブロックなどが使用可能です。"
                           rows={10}
                           {...field}
                           disabled={isPending}
+                          ref={textareaRef}
                         />
-                        <MarkdownHelp />
+                        <MarkdownHelp onInsertCodeBlock={insertCodeBlock} />
                       </div>
                     </FormControl>
                     <FormMessage />
