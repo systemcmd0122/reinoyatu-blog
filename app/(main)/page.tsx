@@ -10,6 +10,7 @@ import {
 
 import BlogItem from "@/components/blog/BlogItem"
 import Loading from "@/app/loading"
+import { Session } from "@supabase/supabase-js"
 
 const MainPage = async () => {
   const supabase = createClient()
@@ -103,7 +104,18 @@ const MainPage = async () => {
     )
   }
 
-  // ログイン済みの場合、ブログ一覧を取得
+  return (
+    <Suspense fallback={<Loading />}>
+      <BlogContent session={session} />
+    </Suspense>
+  )
+}
+
+// ブログコンテンツを別コンポーネントとして分離して、データフェッチングとレンダリングを分離
+const BlogContent = async ({ }: { session: Session }) => {
+  const supabase = createClient()
+  
+  // ブログ一覧を取得
   const { data: blogsData, error } = await supabase
     .from("blogs")
     .select(
@@ -150,23 +162,21 @@ const MainPage = async () => {
 
   // ブログ一覧表示
   return (
-    <Suspense fallback={<Loading />}>
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">最新のブログ記事</h1>
-          <Link href="/blog/new">
-            <Button>
-              新規ブログ投稿
-            </Button>
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-          {blogsWithLikes.map((blog) => (
-            <BlogItem key={blog.id} blog={blog} />
-          ))}
-        </div>
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">最新のブログ記事</h1>
+        <Link href="/blog/new">
+          <Button>
+            新規ブログ投稿
+          </Button>
+        </Link>
       </div>
-    </Suspense>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+        {blogsWithLikes.map((blog) => (
+          <BlogItem key={blog.id} blog={blog} />
+        ))}
+      </div>
+    </div>
   )
 }
 

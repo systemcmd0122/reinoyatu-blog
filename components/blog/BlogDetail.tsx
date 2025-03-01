@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useTransition } from "react"
+import React, { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { FilePenLine, Loader2, Trash2, X } from "lucide-react"
 import { deleteBlog } from "@/actions/blog"
@@ -29,6 +29,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { getBlogLikeStatus } from "@/actions/like"
+import { getBlogBookmarkStatus } from "@/actions/bookmark"
 
 interface BlogDetailProps {
   blog: BlogType & {
@@ -50,6 +52,81 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId, 
   const [, startTransition] = useTransition()
   const [isDeletePending, setIsDeletePending] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
+  
+  // 共有状態: いいねとブックマークの状態を一元管理
+  const [sharedLikeState, setSharedLikeState] = useState<{
+    isLiked: boolean;
+    likesCount: number;
+  }>({
+    isLiked: false,
+    likesCount: blog.likes_count || 0,
+  })
+  
+  const [sharedBookmarkState, setSharedBookmarkState] = useState<{
+    isBookmarked: boolean;
+  }>({
+    isBookmarked: false,
+  })
+
+  // 各種データの読み込み状態を管理
+  const [dataLoadingState, setDataLoadingState] = useState({
+    likeLoading: !!currentUserId,
+    bookmarkLoading: !!currentUserId,
+  })
+
+  // 全体のローディング状態
+  const isLoading = dataLoadingState.likeLoading || dataLoadingState.bookmarkLoading
+
+  // 初期データの取得
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      if (!currentUserId) {
+        // ログインしていない場合はロード済みとしてマーク
+        setDataLoadingState({
+          likeLoading: false,
+          bookmarkLoading: false,
+        })
+        return
+      }
+
+      // いいね状態の取得
+      try {
+        const { isLiked } = await getBlogLikeStatus({ blogId: blog.id, userId: currentUserId })
+        setSharedLikeState({
+          isLiked,
+          likesCount: blog.likes_count || 0,
+        })
+      } catch (error) {
+        console.error("いいね状態の取得に失敗しました", error)
+        toast.error("いいね状態の取得に失敗しました")
+      } finally {
+        // いいねのロード完了
+        setDataLoadingState(prev => ({
+          ...prev,
+          likeLoading: false,
+        }))
+      }
+
+      // ブックマーク状態の取得
+      try {
+        const { isBookmarked } = await getBlogBookmarkStatus({ blogId: blog.id, userId: currentUserId })
+        setSharedBookmarkState({
+          isBookmarked,
+        })
+      } catch (error) {
+        console.error("ブックマーク状態の取得に失敗しました", error)
+        toast.error("ブックマーク状態の取得に失敗しました")
+      } finally {
+        // ブックマークのロード完了
+        setDataLoadingState(prev => ({
+          ...prev,
+          bookmarkLoading: false,
+        }))
+      }
+    }
+
+    fetchInitialData()
+  }, [blog.id, currentUserId, blog.likes_count])
 
   const handleDelete = () => {
     setIsDeletePending(true)
@@ -89,16 +166,38 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId, 
               {formatJST(blog.updated_at)}
             </Badge>
             
-            <div className="flex items-center space-x-2">
-              <BookmarkButton 
-                blogId={blog.id}
-                userId={currentUserId}
-              />
-              <LikeButton 
-                blogId={blog.id}
-                userId={currentUserId}
-                initialLikesCount={blog.likes_count || 0}
-              />
+            {/* 上部のアクション領域 - ローディング中は表示を切り替え */}
+            <div className="flex items-center space-x-4">
+              {isLoading ? (
+                <div className="flex items-center space-x-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">読み込み中...</span>
+                </div>
+              ) : (
+                <>
+                  <BookmarkButton 
+                    blogId={blog.id}
+                    userId={currentUserId}
+                    showLabel={false}
+                    // 共有状態を使用
+                    sharedState={sharedBookmarkState}
+                    onStateChange={setSharedBookmarkState}
+                    // 既にデータロード済みのためisLoading=falseで渡す
+                    initialIsLoaded={true}
+                  />
+                  <LikeButton 
+                    blogId={blog.id}
+                    userId={currentUserId}
+                    initialLikesCount={blog.likes_count || 0}
+                    showLabel={false}
+                    // 共有状態を使用
+                    sharedState={sharedLikeState}
+                    onStateChange={setSharedLikeState}
+                    // 既にデータロード済みのためisLoading=falseで渡す
+                    initialIsLoaded={true}
+                  />
+                </>
+              )}
             </div>
           </div>
           <h1 className="text-3xl font-bold text-foreground">{blog.title}</h1>
@@ -118,20 +217,57 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId, 
           <MarkdownRenderer content={blog.content} />
         </div>
 
+        {/* 下部のアクションボタン - 同じ共有状態を使用 - ローディング中は表示を切り替え */}
+        <div className="flex justify-center md:justify-end space-x-6 pt-4 pb-2">
+          {isLoading ? (
+            <div className="flex items-center space-x-4 p-2">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">読み込み中...</span>
+            </div>
+          ) : (
+            <>
+              <BookmarkButton 
+                blogId={blog.id}
+                userId={currentUserId}
+                showLabel={true}
+                // 共有状態を使用
+                sharedState={sharedBookmarkState}
+                onStateChange={setSharedBookmarkState}
+                // 既にデータロード済みのためisLoading=falseで渡す
+                initialIsLoaded={true}
+              />
+              <LikeButton 
+                blogId={blog.id}
+                userId={currentUserId}
+                initialLikesCount={blog.likes_count || 0}
+                showLabel={true}
+                // 共有状態を使用
+                sharedState={sharedLikeState}
+                onStateChange={setSharedLikeState}
+                // 既にデータロード済みのためisLoading=falseで渡す
+                initialIsLoaded={true}
+              />
+            </>
+          )}
+        </div>
+
         {isMyBlog && (
-          <div className="flex justify-end space-x-4">
+          <div className="flex justify-end space-x-4 mt-6">
             <Link href={`/blog/${blog.id}/edit`}>
-              <Button variant="outline" size="icon">
-                <FilePenLine className="h-5 w-5" />
+              <Button variant="outline" size="sm" className="flex items-center space-x-2 px-4 py-2">
+                <FilePenLine className="h-4 w-4" />
+                <span>編集</span>
               </Button>
             </Link>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button 
                   variant="destructive" 
-                  size="icon"
+                  size="sm"
+                  className="flex items-center space-x-2 px-4 py-2"
                 >
-                  <Trash2 className="h-5 w-5" />
+                  <Trash2 className="h-4 w-4" />
+                  <span>削除</span>
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="bg-white dark:bg-gray-800 rounded-lg shadow-xl">
@@ -191,6 +327,12 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ blog, isMyBlog, currentUserId, 
                 </AvatarFallback>
               </Avatar>
             </div>
+            <h2 className="text-xl font-semibold mb-2">{blog.profiles.name}</h2>
+            {blog.profiles.introduce && (
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {blog.profiles.introduce}
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>

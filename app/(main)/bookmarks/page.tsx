@@ -7,19 +7,10 @@ import BlogItem from "@/components/blog/BlogItem"
 import Loading from "@/app/loading"
 import { getUserBookmarks } from "@/actions/bookmark"
 
-const BookmarksPage = async () => {
-  const supabase = createClient()
-
-  // ユーザーセッションを取得
-  const { data: { session } } = await supabase.auth.getSession()
-
-  // 認証されていない場合、ログインページにリダイレクト
-  if (!session) {
-    redirect("/login?callbackUrl=/bookmarks")
-  }
-
+// ユーザーのブックマーク一覧を表示するコンポーネント
+const BookmarksList = async ({ userId }: { userId: string }) => {
   // ブックマークしたブログ一覧を取得
-  const { blogs, error } = await getUserBookmarks(session.user.id)
+  const { blogs, error } = await getUserBookmarks(userId)
 
   // ブックマークデータがない場合のメッセージ
   if (!blogs.length || error) {
@@ -42,22 +33,40 @@ const BookmarksPage = async () => {
 
   // ブックマーク一覧表示
   return (
-    <Suspense fallback={<Loading />}>
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">ブックマークした記事</h1>
-          <Link href="/">
-            <Button variant="outline">
-              ブログ一覧に戻る
-            </Button>
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-          {blogs.map((blog) => (
-            <BlogItem key={blog.id} blog={blog} />
-          ))}
-        </div>
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">ブックマークした記事</h1>
+        <Link href="/">
+          <Button variant="outline">
+            ブログ一覧に戻る
+          </Button>
+        </Link>
       </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+        {blogs.map((blog) => (
+          <BlogItem key={blog.id} blog={blog} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// メインページコンポーネント
+const BookmarksPage = async () => {
+  const supabase = createClient()
+
+  // ユーザーセッションを取得
+  const { data: { session } } = await supabase.auth.getSession()
+
+  // 認証されていない場合、ログインページにリダイレクト
+  if (!session) {
+    redirect("/login?callbackUrl=/bookmarks")
+  }
+
+  // ユーザーIDを取得して、ブックマーク一覧表示コンポーネントをSuspenseで囲む
+  return (
+    <Suspense fallback={<Loading />}>
+      <BookmarksList userId={session.user.id} />
     </Suspense>
   )
 }
