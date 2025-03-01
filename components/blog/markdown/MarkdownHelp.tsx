@@ -104,7 +104,7 @@ const MarkdownHelp: React.FC<MarkdownHelpProps> = ({ onInsertCodeBlock }) => {
                 コードブロックは3つのバッククォート（```）で囲み、最初の行に言語名を指定します：
               </p>
               <div className="bg-gray-100 p-3 rounded mb-4">
-                <pre className="text-sm">```python<br/>print("Hello, World!")<br/>```</pre>
+                <pre className="text-sm">```python<br/>print(&quotHello, World!&quot)<br/>```</pre>
               </div>
             </div>
             
