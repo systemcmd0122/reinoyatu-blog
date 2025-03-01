@@ -52,7 +52,7 @@ const Navigation = ({ user }: NavigationProps) => {
         <>
           <Button variant="ghost" asChild>
             <Link href="/blog/new" className="flex items-center space-x-2">
-              <PenSquare className="h-4 w-4" />npm
+              <PenSquare className="h-4 w-4" />
               <span>投稿</span>
             </Link>
           </Button>
