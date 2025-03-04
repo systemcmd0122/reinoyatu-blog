@@ -11,10 +11,14 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error) {
+      // リダイレクト先を明示的に設定
       return NextResponse.redirect(`${origin}${next}`)
     }
+    
+    // エラーが発生した場合のリダイレクト
+    return NextResponse.redirect(`${origin}/login?error=AuthenticationError`)
   }
 
-  // Error handling
-  return NextResponse.redirect(`${origin}/login`)
+  // codeがない場合のエラーハンドリング
+  return NextResponse.redirect(`${origin}/login?error=MissingCode`)
 }

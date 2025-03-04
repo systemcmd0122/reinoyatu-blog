@@ -5,7 +5,7 @@ import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { LogOut, Settings, PenSquare, Menu, Shield, House, Bookmark } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,13 +34,38 @@ interface NavigationProps {
   user: User | null
 }
 
-const Navigation = ({ user }: NavigationProps) => {
+const Navigation = ({ user: initialUser }: NavigationProps) => {
   const router = useRouter()
   const supabase = createClient()
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
+  const [user, setUser] = useState(initialUser)
+
+  // ユーザーの認証状態を監視
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        // 認証状態が変わった場合
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+          setUser(session?.user || null)
+          router.refresh()
+        }
+      }
+    )
+
+    // コンポーネントのアンマウント時にサブスクリプションを解除
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [supabase, router])
+
+  // propsからのユーザー情報が変更された場合に更新
+  useEffect(() => {
+    setUser(initialUser)
+  }, [initialUser])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
+    setUser(null)
     router.push("/login")
     router.refresh()
   }
@@ -60,7 +85,7 @@ const Navigation = ({ user }: NavigationProps) => {
           <Button variant="ghost" asChild>
             <Link href="/bookmarks" className="flex items-center space-x-2">
             <Bookmark className="h-4 w-4" />
-            <span>ブックマーク一覧</span>
+            <span>ブックマーク一覧</span>
             </Link>
           </Button>
 

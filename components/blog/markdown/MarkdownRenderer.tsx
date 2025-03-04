@@ -42,10 +42,13 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
     const matches: YouTubeMatch[] = [];
     
     // 基本的な形式: {{youtube:VIDEO_ID}}
-    // オプション付き形式: {{youtube:VIDEO_ID:options}}
+    // オプション付き形式: {{youtube:VIDEO_ID:showDetails=false}}
     const processedContent = markdownContent.replace(
-      /{{youtube:([a-zA-Z0-9_-]+)(?::([^}]+))?}}/g,
-      (_match, videoId, optionsStr) => {
+      /{{youtube:([^:}]+)(?::([^}]+))?}}/g,
+      (match, videoId, optionsStr, offset) => {
+        // videoIdから余分な空白を削除
+        const trimmedVideoId = videoId.trim();
+        
         // オプションの解析
         const options = {
           showDetails: enableYouTubeDetails
@@ -61,55 +64,42 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           });
         }
         
+        // インデックスを保存
+        const index = matches.length;
         matches.push({ 
-          index: matches.length, 
-          videoId,
+          index, 
+          videoId: trimmedVideoId, 
           options
         });
         
-        // プレースホルダーを返す - 特別なプレースホルダー形式
-        return `youtube-embed-${matches.length - 1}`;
+        // プレースホルダーを返す
+        return `--youtube-embed-${index}--`;
       }
     );
     
     return { content: processedContent, matches };
   };
   
-  const { content: processedContent, matches: youtubeMatches } = extractYouTubeEmbeds(content);
+  // null, undefined, 空文字列チェック
+  const safeContent = content || '';
+  const { content: processedContent, matches: youtubeMatches } = extractYouTubeEmbeds(safeContent);
 
   // カスタムレンダリング関数
-  const renderCustomComponents = (text: string) => {
-    if (!text) return null;
+  const renderYouTubeComponent = (placeholderText: string) => {
+    const match = placeholderText.match(/--youtube-embed-(\d+)--/);
+    if (!match) return placeholderText;
     
-    // YouTubeプレースホルダーを分割して処理
-    const parts = text.split(/(youtube-embed-\d+)/);
+    const index = parseInt(match[1], 10);
+    const youtubeData = youtubeMatches[index];
     
-    if (parts.length <= 1) {
-      // プレースホルダーがない場合は通常のテキストを返す
-      return <span>{text}</span>;
-    }
+    if (!youtubeData) return placeholderText;
     
     return (
-      <>
-        {parts.map((part, index) => {
-          const match = part.match(/youtube-embed-(\d+)/);
-          if (match) {
-            const youtubeIndex = parseInt(match[1], 10);
-            const youtubeData = youtubeMatches[youtubeIndex];
-            
-            if (youtubeData) {
-              return (
-                <YouTubeEmbed 
-                  key={`youtube-${index}`} 
-                  videoId={youtubeData.videoId}
-                  showDetails={youtubeData.options.showDetails}
-                />
-              );
-            }
-          }
-          return <span key={`text-${index}`}>{part}</span>;
-        })}
-      </>
+      <YouTubeEmbed 
+        key={`youtube-${index}`} 
+        videoId={youtubeData.videoId}
+        showDetails={youtubeData.options.showDetails}
+      />
     );
   };
 
@@ -155,10 +145,31 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           h2: ({ children, ...props }) => <h2 className="text-2xl font-semibold my-3" {...props}>{children}</h2>,
           h3: ({ children, ...props }) => <h3 className="text-xl font-semibold my-2" {...props}>{children}</h3>,
           p: ({ children, ...props }) => {
-            // テキストコンテンツを確認
-            if (typeof children === 'string' && children.includes('youtube-embed-')) {
-              return renderCustomComponents(children);
+            // YouTube埋め込みプレースホルダーを処理
+            if (typeof children === 'string' && children.includes('--youtube-embed-')) {
+              return renderYouTubeComponent(children);
             }
+            
+            // 複数の段落やテキストノードが混在する場合の処理
+            if (Array.isArray(children)) {
+              const hasYouTubeEmbed = children.some(
+                child => typeof child === 'string' && child.includes('--youtube-embed-')
+              );
+              
+              if (hasYouTubeEmbed) {
+                return (
+                  <div className="mb-4">
+                    {children.map((child, i) => {
+                      if (typeof child === 'string' && child.includes('--youtube-embed-')) {
+                        return renderYouTubeComponent(child);
+                      }
+                      return <span key={i}>{child}</span>;
+                    })}
+                  </div>
+                );
+              }
+            }
+            
             return <p className="mb-4 leading-relaxed" {...props}>{children}</p>;
           },
           a: ({ href, children, ...props }) => (
