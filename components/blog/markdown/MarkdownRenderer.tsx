@@ -45,7 +45,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
     // オプション付き形式: {{youtube:VIDEO_ID:showDetails=false}}
     const processedContent = markdownContent.replace(
       /{{youtube:([^:}]+)(?::([^}]+))?}}/g,
-      (match, videoId, optionsStr, offset) => {
+      (match, videoId, optionsStr) => {
         // videoIdから余分な空白を削除
         const trimmedVideoId = videoId.trim();
         
