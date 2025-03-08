@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2, ImagePlus, X } from "lucide-react"
+import { Loader2, ImagePlus, X, Wand2 } from "lucide-react"
 import { BlogSchema } from "@/schemas"
 import { newBlog } from "@/actions/blog"
 import { useRouter } from "next/navigation"
@@ -24,6 +24,8 @@ import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import MarkdownHelp from "@/components/blog/markdown/MarkdownHelp"
+import AICustomizeDialog from "@/components/blog/AICustomizeDialog"
+import { generateBlogContent } from "@/utils/gemini"
 
 interface BlogNewProps {
   userId: string
@@ -37,6 +39,11 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  
+  // AI関連の状態
+  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generatedContent, setGeneratedContent] = useState<string | null>(null)
 
   const form = useForm<z.infer<typeof BlogSchema>>({
     resolver: zodResolver(BlogSchema),
@@ -47,15 +54,13 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   })
 
   const onSubmit = async (values: z.infer<typeof BlogSchema>) => {
-    if (isPending) return; // 処理中の場合は早期リターン
+    if (isPending) return;
     
     setError("")
     setIsPending(true)
 
     try {
-      // 画像ファイルがある場合
       if (imageFile) {
-        // Promise を使って FileReader を同期的に扱う
         const base64Image = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader()
           reader.onloadend = () => resolve(reader.result as string)
@@ -63,7 +68,6 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
           reader.readAsDataURL(imageFile)
         })
 
-        // 画像が読み込まれた後で投稿処理を実行
         startTransition(async () => {
           try {
             const res = await newBlog({
@@ -88,7 +92,6 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
           }
         })
       } else {
-        // 画像ファイルがない場合
         startTransition(async () => {
           try {
             const res = await newBlog({
@@ -123,7 +126,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      const maxFileSize = 2 * 1024 * 1024 // 2MB
+      const maxFileSize = 2 * 1024 * 1024
 
       if (file.size > maxFileSize) {
         setError("ファイルサイズは2MBを超えることはできません")
@@ -151,7 +154,6 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
     setImagePreview(null)
   }
 
-  // テキストエリアに選択した言語のコードブロックを挿入する関数
   const insertCodeBlock = (language: string) => {
     if (!textareaRef.current) return
 
@@ -160,21 +162,53 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
     const end = textarea.selectionEnd
     const text = form.getValues("content")
     
-    // コードブロックのテンプレート
     const codeBlockTemplate = `\`\`\`${language}\n\n\`\`\``
     
-    // 新しいテキスト
     const newText = text.substring(0, start) + codeBlockTemplate + text.substring(end)
     
-    // フォームの値を更新
     form.setValue("content", newText, { shouldValidate: true })
     
-    // カーソル位置を更新（言語名の後の改行の次に配置）
     setTimeout(() => {
       const newCursorPosition = start + language.length + 4
       textarea.focus()
       textarea.setSelectionRange(newCursorPosition, newCursorPosition)
     }, 0)
+  }
+
+  // AI関連の機能
+  const handleAICustomizeClick = () => {
+    const { content } = form.getValues()
+    if (!content) {
+      toast.error("記事の内容を入力してください")
+      return
+    }
+    setGeneratedContent(null)
+    setIsAIDialogOpen(true)
+  }
+
+  // BlogNew.tsxとBlogEdit.tsxの該当部分
+const handleGenerate = async (styles: string[]) => {
+  const { title, content } = form.getValues();
+  setIsGenerating(true);
+  
+  try {
+    const result = await generateBlogContent(title, content, styles.join(','));
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      setGeneratedContent(result.content);
+    }
+  } catch (error) {
+    toast.error("AIによる生成中にエラーが発生しました");
+  } finally {
+    setIsGenerating(false);
+  }
+};
+
+  const handleApplyAIContent = (content: string) => {
+    form.setValue("content", content, { shouldValidate: true })
+    setIsAIDialogOpen(false)
+    toast.success("AIが生成した内容を適用しました")
   }
 
   return (
@@ -209,7 +243,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
               </div>
             ) : (
               <div className="relative">
-                <div className="aspect-video rounded-lg overflow-hidden relative">
+                <div className="aspect-video rounded-lg overflow-hidden relative"                >
                   <Image
                     src={imagePreview}
                     alt="Selected image"
@@ -270,7 +304,19 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                 name="content"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>内容 (Markdown対応)</FormLabel>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>内容 (Markdown対応)</FormLabel>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAICustomizeClick}
+                        className="flex items-center space-x-2"
+                      >
+                        <Wand2 className="h-4 w-4" />
+                        <span>AIでカスタマイズ</span>
+                      </Button>
+                    </div>
                     <FormControl>
                       <div className="space-y-2">
                         <Textarea
@@ -306,6 +352,20 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
           </Form>
         </CardContent>
       </Card>
+
+      {/* AIカスタマイズダイアログ */}
+      <AICustomizeDialog
+        isOpen={isAIDialogOpen}
+        onClose={() => setIsAIDialogOpen(false)}
+        originalContent={{
+          title: form.getValues("title"),
+          content: form.getValues("content"),
+        }}
+        onApply={handleApplyAIContent}
+        onGenerate={handleGenerate}
+        generatedContent={generatedContent}
+        isGenerating={isGenerating}
+      />
     </div>
   )
 }

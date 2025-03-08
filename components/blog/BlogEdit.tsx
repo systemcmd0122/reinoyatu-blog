@@ -1,9 +1,14 @@
 "use client"
 
 import React, { useState, useTransition, useRef } from "react"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { useRouter } from "next/navigation"
+import { Loader2, Trash2, Wand2, ImagePlus } from "lucide-react"
+import { editBlog, deleteBlog } from "@/actions/blog"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Form,
   FormControl,
@@ -12,18 +17,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Loader2, ImagePlus, Trash2 } from "lucide-react"
-import { BlogSchema } from "@/schemas"
-import { editBlog, deleteBlog } from "@/actions/blog"
-import { useRouter } from "next/navigation"
-import { BlogType } from "@/types"
-import { toast } from "sonner"
-import Image from "next/image"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import Image from "next/image"
+import { BlogType } from "@/types"
+import { z } from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { BlogSchema } from "@/schemas"
+import MarkdownHelp from "@/components/blog/markdown/MarkdownHelp"
+import AICustomizeDialog from "@/components/blog/AICustomizeDialog"
+import { generateBlogContent } from "@/utils/gemini"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,7 +38,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import MarkdownHelp from "@/components/blog/markdown/MarkdownHelp"
 
 interface BlogEditProps {
   blog: BlogType
@@ -44,14 +46,17 @@ interface BlogEditProps {
 const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
   const router = useRouter()
   const [error, setError] = useState("")
-  const [isPending, setIsPending] = useState(false) 
+  const [isPending, setIsPending] = useState(false)
   const [, startTransition] = useTransition()
   const [isDeletePending, setIsDeletePending] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string>(
-    blog.image_url || "/noImage.png"
-  )
+  const [imagePreview, setImagePreview] = useState<string>(blog.image_url || "/noImage.png")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  
+  // AI関連の状態を追加
+  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generatedContent, setGeneratedContent] = useState<string | null>(null)
 
   const form = useForm<z.infer<typeof BlogSchema>>({
     resolver: zodResolver(BlogSchema),
@@ -61,16 +66,51 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
     },
   })
 
+  // AI関連の機能を追加
+  const handleAICustomizeClick = () => {
+    const { content } = form.getValues()
+    if (!content) {
+      toast.error("記事の内容を入力してください")
+      return
+    }
+    setGeneratedContent(null)
+    setIsAIDialogOpen(true)
+  }
+
+  // BlogNew.tsxとBlogEdit.tsxの該当部分
+const handleGenerate = async (styles: string[]) => {
+  const { title, content } = form.getValues();
+  setIsGenerating(true);
+  
+  try {
+    const result = await generateBlogContent(title, content, styles.join(','));
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      setGeneratedContent(result.content);
+    }
+  } catch (error) {
+    toast.error("AIによる生成中にエラーが発生しました");
+  } finally {
+    setIsGenerating(false);
+  }
+};
+
+  const handleApplyAIContent = (content: string) => {
+    form.setValue("content", content, { shouldValidate: true })
+    setIsAIDialogOpen(false)
+    toast.success("AIが生成した内容を適用しました")
+  }
+
+  // 既存の機能
   const onSubmit = async (values: z.infer<typeof BlogSchema>) => {
-    if (isPending) return; // 処理中の場合は早期リターン
+    if (isPending) return;
     
     setError("")
     setIsPending(true)
 
     try {
-      // 画像ファイルがある場合
       if (imageFile) {
-        // Promise を使って FileReader を同期的に扱う
         const base64Image = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader()
           reader.onloadend = () => resolve(reader.result as string)
@@ -104,7 +144,6 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
           }
         })
       } else {
-        // 画像ファイルがない場合
         startTransition(async () => {
           try {
             const res = await editBlog({
@@ -138,32 +177,6 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
     }
   }
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const maxFileSize = 2 * 1024 * 1024 // 2MB
-
-      if (file.size > maxFileSize) {
-        setError("ファイルサイズは2MBを超えることはできません")
-        return
-      }
-
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg']
-      if (!allowedTypes.includes(file.type)) {
-        setError("jpg, jpeg, pngのみ対応しています")
-        return
-      }
-
-      setImageFile(file)
-      
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
   const handleDelete = () => {
     setIsDeletePending(true)
     setError("")
@@ -193,7 +206,32 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
     })
   }
 
-  // テキストエリアに選択した言語のコードブロックを挿入する関数
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const maxFileSize = 2 * 1024 * 1024
+
+      if (file.size > maxFileSize) {
+        setError("ファイルサイズは2MBを超えることはできません")
+        return
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg']
+      if (!allowedTypes.includes(file.type)) {
+        setError("jpg, jpeg, pngのみ対応しています")
+        return
+      }
+
+      setImageFile(file)
+      
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const insertCodeBlock = (language: string) => {
     if (!textareaRef.current) return
 
@@ -202,16 +240,12 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
     const end = textarea.selectionEnd
     const text = form.getValues("content")
     
-    // コードブロックのテンプレート
     const codeBlockTemplate = `\`\`\`${language}\n\n\`\`\``
     
-    // 新しいテキスト
     const newText = text.substring(0, start) + codeBlockTemplate + text.substring(end)
     
-    // フォームの値を更新
     form.setValue("content", newText, { shouldValidate: true })
     
-    // カーソル位置を更新（言語名の後の改行の次に配置）
     setTimeout(() => {
       const newCursorPosition = start + language.length + 4
       textarea.focus()
@@ -310,7 +344,19 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
                 name="content"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>内容 (Markdown対応)</FormLabel>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>内容 (Markdown対応)</FormLabel>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAICustomizeClick}
+                        className="flex items-center space-x-2"
+                      >
+                        <Wand2 className="h-4 w-4" />
+                        <span>AIでカスタマイズ</span>
+                      </Button>
+                    </div>
                     <FormControl>
                       <div className="space-y-2">
                         <Textarea
@@ -346,6 +392,20 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
           </Form>
         </CardContent>
       </Card>
+
+      {/* AIカスタマイズダイアログ */}
+      <AICustomizeDialog
+        isOpen={isAIDialogOpen}
+        onClose={() => setIsAIDialogOpen(false)}
+        originalContent={{
+          title: form.getValues("title"),
+          content: form.getValues("content"),
+        }}
+        onApply={handleApplyAIContent}
+        onGenerate={handleGenerate}
+        generatedContent={generatedContent}
+        isGenerating={isGenerating}
+      />
     </div>
   )
 }
