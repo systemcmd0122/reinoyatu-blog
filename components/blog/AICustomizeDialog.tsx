@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,11 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Wand2, X } from "lucide-react";
+import { Loader2, Wand2, X, ChevronDown, ChevronUp } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import MarkdownRenderer from "./markdown/MarkdownRenderer";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface AICustomizeDialogProps {
   isOpen: boolean;
@@ -38,6 +41,7 @@ interface AICustomizeDialogProps {
   isGenerating: boolean;
 }
 
+// スタイルカテゴリーの型定義は同じ
 type StyleOption = {
   value: string;
   label: string;
@@ -53,6 +57,7 @@ type StyleCategories = {
   [key: string]: StyleCategory;
 };
 
+// スタイルカテゴリーの定義は同じ
 const styleCategories: StyleCategories = {
   writing: {
     label: "文章スタイル",
@@ -105,9 +110,13 @@ const AICustomizeDialog: React.FC<AICustomizeDialogProps> = ({
   isGenerating,
 }) => {
   const [selectedStyles, setSelectedStyles] = useState<Set<string>>(new Set());
-  const [resetKey, setResetKey] = useState(0); // Selectコンポーネントの強制リセット用
+  const [resetKey, setResetKey] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<'controls' | 'preview'>('controls');
+  const [isPreviewExpanded, setIsPreviewExpanded] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
-  // スタイル情報を効率的に検索するためのマップをメモ化
+  // スタイル情報のマップをメモ化
   const styleInfoMap = useMemo(() => {
     const map = new Map<string, StyleOption>();
     Object.values(styleCategories).forEach(category => {
@@ -118,26 +127,81 @@ const AICustomizeDialog: React.FC<AICustomizeDialogProps> = ({
     return map;
   }, []);
 
+  // ダイアログが開かれたときの初期化
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedStyles(new Set());
+      setError(null);
+      setResetKey(prev => prev + 1);
+      setActiveView('controls');
+      setIsPreviewExpanded(false);
+    }
+  }, [isOpen]);
+
+  // スタイル選択処理
   const handleStyleSelect = (value: string) => {
-    if (!value) return;
-    setSelectedStyles(prev => {
-      const newSet = new Set(prev);
-      newSet.add(value);
-      return newSet;
-    });
+    try {
+      if (!value) return;
+      setSelectedStyles(prev => {
+        const newSet = new Set(prev);
+        if (newSet.size >= 5) {
+          setError("スタイルは最大5つまで選択できます");
+          return prev;
+        }
+        newSet.add(value);
+        setError(null);
+        return newSet;
+      });
+    } catch (err) {
+      setError("スタイルの選択中にエラーが発生しました");
+      console.error("Style selection error:", err);
+    }
   };
 
+  // スタイル削除処理
   const handleRemoveStyle = (value: string) => {
-    setSelectedStyles(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(value);
-      return newSet;
-    });
-    // Selectコンポーネントをリセット
-    setResetKey(prev => prev + 1);
+    try {
+      setSelectedStyles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(value);
+        return newSet;
+      });
+      setResetKey(prev => prev + 1);
+      setError(null);
+    } catch (err) {
+      setError("スタイルの削除中にエラーが発生しました");
+      console.error("Style removal error:", err);
+    }
   };
 
-  // カスタムSelectItemのスタイル
+  // 生成処理
+  const handleGenerate = async () => {
+    try {
+      setError(null);
+      await onGenerate(Array.from(selectedStyles));
+      if (isMobile) {
+        setActiveView('preview');
+      }
+    } catch (err) {
+      setError("生成中にエラーが発生しました");
+      console.error("Generation error:", err);
+    }
+  };
+
+  // 適用処理
+  const handleApply = () => {
+    try {
+      if (generatedContent) {
+        onApply(generatedContent);
+        onClose();
+      }
+    } catch (err) {
+      setError("生成された内容の適用中にエラーが発生しました");
+      console.error("Apply content error:", err);
+    }
+  };
+
+  // カスタムSelectItem
   const SelectItemCustom = React.forwardRef<
     HTMLDivElement,
     React.ComponentProps<typeof SelectItem>
@@ -158,145 +222,356 @@ const AICustomizeDialog: React.FC<AICustomizeDialogProps> = ({
   ));
   SelectItemCustom.displayName = "SelectItemCustom";
 
+  // ローディングスケルトン
+  const ContentSkeleton = () => (
+    <div className="space-y-4">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-4 w-1/2" />
+      <Skeleton className="h-4 w-2/3" />
+      <Skeleton className="h-4 w-3/4" />
+    </div>
+  );
+
+  // モバイル用のタブボタン
+  const MobileTabButton = ({ view, label }: { view: 'controls' | 'preview'; label: string }) => (
+    <Button
+      variant={activeView === view ? "default" : "outline"}
+      onClick={() => setActiveView(view)}
+      className="flex-1"
+    >
+      {label}
+    </Button>
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[80vh] bg-white dark:bg-gray-900">
-        <DialogHeader>
+      <DialogContent 
+        className={cn(
+          "bg-white dark:bg-gray-900 overflow-hidden flex flex-col",
+          isMobile ? "w-full h-full max-w-none m-0 rounded-none" : "max-w-4xl h-[90vh]"
+        )}
+      >
+        <DialogHeader className="space-y-2">
           <DialogTitle>AIによる記事カスタマイズ</DialogTitle>
           <DialogDescription>
-            AIを使用して記事の内容を改善します。複数のスタイルを組み合わせて選択できます。
+            AIを使用して記事の内容を改善します。スタイルは最大5つまで組み合わせて選択できます。
           </DialogDescription>
+          {isMobile && (
+            <div className="flex gap-2 pt-2">
+              <MobileTabButton view="controls" label="スタイル選択" />
+              <MobileTabButton view="preview" label="プレビュー" />
+            </div>
+          )}
         </DialogHeader>
 
-        <div className="flex flex-col space-y-4 my-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries(styleCategories).map(([categoryKey, category]) => (
-              <div key={`${categoryKey}-${resetKey}`} className="space-y-2">
-                <Select onValueChange={handleStyleSelect}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={category.label} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel className="px-2 text-sm font-semibold">
-                        {category.label}
-                      </SelectLabel>
-                      {category.styles.map((style) => (
-                        <SelectItemCustom
-                          key={style.value}
-                          value={style.value}
-                          disabled={selectedStyles.has(style.value)}
-                          className="group"
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+          {/* モバイルビュー */}
+          {isMobile ? (
+            <div className="flex-1 overflow-hidden">
+              {activeView === 'controls' ? (
+                <div className="h-full overflow-y-auto p-4 space-y-4">
+                  {/* スタイル選択部分 */}
+                  <div className="space-y-4">
+                    {Object.entries(styleCategories).map(([categoryKey, category]) => (
+                      <div key={`${categoryKey}-${resetKey}`}>
+                        <Select
+                          onValueChange={handleStyleSelect}
+                          disabled={isGenerating}
                         >
-                          <div className="flex flex-col gap-1">
-                            <span className="font-medium group-hover:text-accent-foreground">
-                              {style.label}
-                            </span>
-                            <span className="text-xs text-muted-foreground group-hover:text-accent-foreground/70">
-                              {style.description}
-                            </span>
-                          </div>
-                        </SelectItemCustom>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
-          </div>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={category.label} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectLabel>{category.label}</SelectLabel>
+                              {category.styles.map((style) => (
+                                <SelectItemCustom
+                                  key={style.value}
+                                  value={style.value}
+                                  disabled={selectedStyles.has(style.value)}
+                                >
+                                  <div className="flex flex-col gap-1">
+                                    <span className="font-medium">{style.label}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {style.description}
+                                    </span>
+                                  </div>
+                                </SelectItemCustom>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))}
+                  </div>
 
-          {/* 選択されたスタイルの表示 */}
-          <ScrollArea className="max-h-24">
-            <div className="flex flex-wrap gap-2 p-1">
-              {Array.from(selectedStyles).map((value) => {
-                const style = styleInfoMap.get(value);
-                if (!style) return null;
-                return (
-                  <Badge
-                    key={value}
-                    variant="secondary"
-                    className="px-3 py-1 text-sm group hover:bg-accent/80 transition-colors"
+                  {/* 選択されたスタイル */}
+                  <ScrollArea className="h-24 w-full border rounded-md">
+                    <div className="flex flex-wrap gap-2 p-2">
+                      {Array.from(selectedStyles).map((value) => {
+                        const style = styleInfoMap.get(value);
+                        if (!style) return null;
+                        return (
+                          <Badge
+                            key={value}
+                            variant="secondary"
+                            className="px-3 py-1 text-sm"
+                          >
+                            <span className="mr-2">{style.label}</span>
+                            <button
+                              onClick={() => handleRemoveStyle(value)}
+                              disabled={isGenerating}
+                              className="hover:text-destructive"
+                              aria-label={`${style.label}を削除`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        );
+                      })}
+                      {selectedStyles.size === 0 && (
+                        <span className="text-sm text-muted-foreground p-1">
+                          スタイルを選択してください
+                        </span>
+                      )}
+                    </div>
+                  </ScrollArea>
+
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* 生成ボタン */}
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={isGenerating || selectedStyles.size === 0}
+                    className="w-full"
                   >
-                    <span className="mr-2">{style.label}</span>
-                    <button
-                      className="inline-flex items-center justify-center transition-colors group-hover:text-destructive"
-                      onClick={() => handleRemoveStyle(value)}
-                      disabled={isGenerating}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                );
-              })}
-            </div>
-          </ScrollArea>
-
-          <Button
-            onClick={() => onGenerate(Array.from(selectedStyles))}
-            disabled={isGenerating || selectedStyles.size === 0}
-            className="flex items-center space-x-2"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>生成中...</span>
-              </>
-            ) : (
-              <>
-                <Wand2 className="h-4 w-4" />
-                <span>
-                  {selectedStyles.size > 0
-                    ? `選択したスタイル(${selectedStyles.size}個)で生成`
-                    : "スタイルを選択してください"}
-                </span>
-              </>
-            )}
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold">オリジナル</h3>
-            <ScrollArea className="h-[40vh] border rounded-md p-4 bg-white dark:bg-gray-800">
-              <MarkdownRenderer content={originalContent.content} />
-            </ScrollArea>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold">生成された内容</h3>
-            <ScrollArea className="h-[40vh] border rounded-md p-4 bg-white dark:bg-gray-800">
-              {generatedContent ? (
-                <MarkdownRenderer content={generatedContent} />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-muted-foreground text-center">
-                    AIが生成した内容がここに表示されます
-                  </p>
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        生成中...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="mr-2 h-4 w-4" />
+                        {selectedStyles.size > 0
+                          ? `選択したスタイル(${selectedStyles.size}個)で生成`
+                          : "スタイルを選択してください"}
+                      </>
+                    )}
+                  </Button>
                 </div>
-              )}
-            </ScrollArea>
+              ) : (
+                <div className="h-full overflow-y-auto p-4 space-y-4">
+                  {/* プレビュー */}
+                  <div className="space-y-4">
+                    <div className="rounded-lg border p-4">
+                      <Button
+                        variant="ghost"
+                        onClick={() => setIsPreviewExpanded(!isPreviewExpanded)}
+                        className="w-full flex justify-between items-center mb-2"
+                        >
+                          <span className="font-medium">オリジナル</span>
+                          {isPreviewExpanded ? <ChevronUp /> : <ChevronDown />}
+                        </Button>
+                        {isPreviewExpanded && (
+                          <ScrollArea className="h-[200px]">
+                            <div className="space-y-2">
+                              <MarkdownRenderer content={originalContent.content} />
+                            </div>
+                          </ScrollArea>
+                        )}
+                      </div>
+  
+                      <div className="rounded-lg border p-4">
+                        <h3 className="font-medium mb-2">生成された内容</h3>
+                        <ScrollArea className="h-[300px]">
+                          {isGenerating ? (
+                            <ContentSkeleton />
+                          ) : generatedContent ? (
+                            <div className="space-y-2">
+                              <MarkdownRenderer content={generatedContent} />
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center h-[200px]">
+                              <p className="text-muted-foreground text-center">
+                                AIが生成した内容がここに表示されます
+                              </p>
+                            </div>
+                          )}
+                        </ScrollArea>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // デスクトップビュー
+              <div className="flex-1 overflow-hidden p-4">
+                <div className="grid grid-cols-2 gap-4 h-full">
+                  {/* スタイル選択部分 */}
+                  <div className="flex flex-col space-y-4 overflow-y-auto">
+                    <div className="grid grid-cols-1 gap-4">
+                      {Object.entries(styleCategories).map(([categoryKey, category]) => (
+                        <div key={`${categoryKey}-${resetKey}`}>
+                          <Select
+                            onValueChange={handleStyleSelect}
+                            disabled={isGenerating}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder={category.label} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectLabel>{category.label}</SelectLabel>
+                                {category.styles.map((style) => (
+                                  <SelectItemCustom
+                                    key={style.value}
+                                    value={style.value}
+                                    disabled={selectedStyles.has(style.value)}
+                                  >
+                                    <div className="flex flex-col gap-1">
+                                      <span className="font-medium">{style.label}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {style.description}
+                                      </span>
+                                    </div>
+                                  </SelectItemCustom>
+                                ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ))}
+                    </div>
+  
+                    {/* 選択されたスタイル */}
+                    <ScrollArea className="h-24 w-full border rounded-md">
+                      <div className="flex flex-wrap gap-2 p-2">
+                        {Array.from(selectedStyles).map((value) => {
+                          const style = styleInfoMap.get(value);
+                          if (!style) return null;
+                          return (
+                            <Badge
+                              key={value}
+                              variant="secondary"
+                              className="px-3 py-1 text-sm"
+                            >
+                              <span className="mr-2">{style.label}</span>
+                              <button
+                                onClick={() => handleRemoveStyle(value)}
+                                disabled={isGenerating}
+                                className="hover:text-destructive"
+                                aria-label={`${style.label}を削除`}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          );
+                        })}
+                        {selectedStyles.size === 0 && (
+                          <span className="text-sm text-muted-foreground p-1">
+                            スタイルを選択してください
+                          </span>
+                        )}
+                      </div>
+                    </ScrollArea>
+  
+                    {error && (
+                      <Alert variant="destructive">
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
+  
+                    {/* 生成ボタン */}
+                    <Button
+                      onClick={handleGenerate}
+                      disabled={isGenerating || selectedStyles.size === 0}
+                      className="w-full"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          生成中...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="mr-2 h-4 w-4" />
+                          {selectedStyles.size > 0
+                            ? `選択したスタイル(${selectedStyles.size}個)で生成`
+                            : "スタイルを選択してください"}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+  
+                  {/* プレビュー部分 */}
+                  <div className="flex flex-col space-y-4 overflow-hidden">
+                    <div className="flex-1 overflow-hidden rounded-lg border">
+                      <div className="h-1/2 border-b">
+                        <div className="p-2 border-b bg-muted/30">
+                          <h3 className="font-medium">オリジナル</h3>
+                        </div>
+                        <ScrollArea className="h-[calc(100%-2.5rem)]">
+                          <div className="p-4">
+                            <MarkdownRenderer content={originalContent.content} />
+                          </div>
+                        </ScrollArea>
+                      </div>
+                      <div className="h-1/2">
+                        <div className="p-2 border-b bg-muted/30">
+                          <h3 className="font-medium">生成された内容</h3>
+                        </div>
+                        <ScrollArea className="h-[calc(100%-2.5rem)]">
+                          <div className="p-4">
+                            {isGenerating ? (
+                              <ContentSkeleton />
+                            ) : generatedContent ? (
+                              <MarkdownRenderer content={generatedContent} />
+                            ) : (
+                              <div className="flex items-center justify-center h-full min-h-[100px]">
+                                <p className="text-muted-foreground text-center">
+                                  AIが生成した内容がここに表示されます
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-
-        <DialogFooter className="gap-2 mt-4">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isGenerating}
-          >
-            キャンセル
-          </Button>
-          <Button
-            variant="default"
-            onClick={() => onApply(generatedContent || "")}
-            disabled={!generatedContent || isGenerating}
-          >
-            この内容を使用
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-export default AICustomizeDialog;
+  
+          {/* フッター */}
+          <DialogFooter className="border-t p-4 mt-auto">
+            <div className="flex justify-end gap-2 w-full">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                disabled={isGenerating}
+                className="min-w-[100px]"
+              >
+                キャンセル
+              </Button>
+              <Button
+                variant="default"
+                onClick={handleApply}
+                disabled={!generatedContent || isGenerating}
+                className="min-w-[100px]"
+              >
+                この内容を使用
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+  
+  export default AICustomizeDialog;
