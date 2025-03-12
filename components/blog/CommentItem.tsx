@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Edit, Trash2, Reply, Loader2, Send, ChevronDown, ChevronUp } from "lucide-react"
+import { Edit, Trash2, Reply, Loader2, Send, ChevronDown, ChevronUp, Smile } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -22,6 +22,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { editComment, deleteComment, newComment } from "@/actions/comment"
 import { formatJST } from "@/utils/date"
+import data from '@emoji-mart/data'
+import Picker from '@emoji-mart/react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 interface CommentItemProps {
   comment: CommentType
@@ -36,6 +43,16 @@ interface CommentItemProps {
   maxVisibleReplies?: number
 }
 
+// Define emoji type to replace 'any'
+interface EmojiData {
+  id: string
+  name: string
+  native: string
+  unified: string
+  keywords: string[]
+  shortcodes: string
+}
+
 const CommentItem: React.FC<CommentItemProps> = ({
   comment,
   currentUserId,
@@ -45,8 +62,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
   onCommentEdited,
   onCommentDeleted,
   nestLevel = 0,
-  maxNestLevel = 3, // 最大ネストレベル
-  maxVisibleReplies = 3 // 初期表示する返信の最大数
+  maxNestLevel = 3,
+  maxVisibleReplies = 3
 }) => {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
@@ -75,6 +92,30 @@ const CommentItem: React.FC<CommentItemProps> = ({
       replyTextareaRef.current.focus()
     }
   }, [isEditing, isReplying])
+
+  // 絵文字選択時のハンドラー
+  const handleEmojiSelect = (emoji: EmojiData, isReply: boolean = false) => {
+    const textarea = isReply ? replyTextareaRef.current : textareaRef.current
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const text = isReply ? replyContent : editContent
+    const newText = text.slice(0, start) + emoji.native + text.slice(end)
+    
+    if (isReply) {
+      setReplyContent(newText)
+    } else {
+      setEditContent(newText)
+    }
+    
+    // カーソル位置を更新
+    setTimeout(() => {
+      const newPosition = start + emoji.native.length
+      textarea.focus()
+      textarea.setSelectionRange(newPosition, newPosition)
+    }, 0)
+  }
 
   const handleEdit = async () => {
     setIsLoading(true)
@@ -172,7 +213,6 @@ const CommentItem: React.FC<CommentItemProps> = ({
     }
   }
 
-  // 返信のインデントクラスを計算
   const getIndentClass = () => {
     return nestLevel > 0 ? "border-l-2 border-gray-200 pl-4 ml-2" : "";
   }
@@ -201,12 +241,33 @@ const CommentItem: React.FC<CommentItemProps> = ({
           
           {isEditing ? (
             <div className="mt-2">
-              <Textarea
-                ref={textareaRef}
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                className="min-h-24"
-              />
+              <div className="relative">
+                <Textarea
+                  ref={textareaRef}
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="min-h-24 pr-10"
+                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 bottom-2"
+                    >
+                      <Smile className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent side="top" align="end" className="w-96">
+                    <Picker
+                      data={data}
+                      onEmojiSelect={(emoji: EmojiData) => handleEmojiSelect(emoji, false)}
+                      theme="light"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
               <div className="flex justify-end gap-2 mt-2">
                 <Button
                   variant="outline"
@@ -235,7 +296,6 @@ const CommentItem: React.FC<CommentItemProps> = ({
         
         {currentUserId && !isEditing && (
           <div className="flex items-center gap-1 self-start">
-            {/* ネスティングが最大レベル未満の場合のみ返信ボタンを表示 */}
             {nestLevel < maxNestLevel && (
               <Button 
                 size="icon" 
@@ -272,27 +332,27 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="bg-white">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>コメントを削除しますか？</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      この操作は取り消せません。
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>キャンセル</AlertDialogCancel>
-                    <AlertDialogAction 
-                      onClick={handleDelete}
-                      disabled={isDeleteLoading}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      {isDeleteLoading ? (
-                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> 削除中</>
-                      ) : (
-                        "削除"
-                      )}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>コメントを削除しますか？</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        この操作は取り消せません。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleDelete}
+                        disabled={isDeleteLoading}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        {isDeleteLoading ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> 削除中</>
+                        ) : (
+                          "削除"
+                        )}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
                 </AlertDialog>
               </>
             )}
@@ -302,14 +362,33 @@ const CommentItem: React.FC<CommentItemProps> = ({
       
       {isReplying && (
         <div className="mt-3 ml-4">
-          <div className="flex items-start gap-2">
+          <div className="relative">
             <Textarea
               ref={replyTextareaRef}
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
               placeholder="返信を入力..."
-              className="min-h-24"
+              className="min-h-24 pr-10"
             />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 bottom-2"
+                >
+                  <Smile className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="top" align="end" className="w-96">
+                <Picker
+                  data={data}
+                  onEmojiSelect={(emoji: EmojiData) => handleEmojiSelect(emoji, true)}
+                  theme="light"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="flex justify-end gap-2 mt-2">
             <Button
@@ -334,10 +413,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
         </div>
       )}
       
-      {/* 返信表示 */}
       {replyCount > 0 && (
         <div className="mt-2">
-          {/* 返信が多い場合に表示/非表示の切り替えボタンを表示 */}
           {hasMoreReplies && (
             <Button
               variant="ghost"

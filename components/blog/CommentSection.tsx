@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from "react"
-import { Send, Loader2, MessageSquare } from "lucide-react"
+import { Send, Loader2, MessageSquare, Smile } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useRouter } from "next/navigation"
@@ -11,6 +11,23 @@ import CommentItem from "./CommentItem"
 import { newComment, getBlogComments } from "@/actions/comment"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import data from '@emoji-mart/data'
+import Picker from '@emoji-mart/react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+
+// Emoji データの型定義
+interface EmojiData {
+  native: string;
+  id: string;
+  name: string;
+  colons: string;
+  skin?: number;
+  unified: string;
+}
 
 interface CommentSectionProps {
   blogId: string
@@ -24,8 +41,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   blogId,
   currentUserId,
   initialComments = [],
-  maxNestLevel = 3, // 最大ネストレベル
-  maxVisibleReplies = 3 // 初期表示する返信の最大数
+  maxNestLevel = 3,
+  maxVisibleReplies = 3
 }) => {
   const router = useRouter()
   const [content, setContent] = useState("")
@@ -80,6 +97,24 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     fetchComments()
   }, [blogId, initialComments])
 
+  // 絵文字選択時のハンドラー
+  const handleEmojiSelect = (emoji: EmojiData) => {
+    if (!textareaRef.current) return
+
+    const start = textareaRef.current.selectionStart
+    const end = textareaRef.current.selectionEnd
+    const newText = content.slice(0, start) + emoji.native + content.slice(end)
+    
+    setContent(newText)
+    
+    // カーソル位置を更新
+    setTimeout(() => {
+      const newPosition = start + emoji.native.length
+      textareaRef.current?.focus()
+      textareaRef.current?.setSelectionRange(newPosition, newPosition)
+    }, 0)
+  }
+
   const handleSubmit = async () => {
     setIsLoading(true)
     setError(null)
@@ -107,7 +142,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       }
 
       if (res.comment) {
-        // 新しいコメントを追加
         setComments([...comments, res.comment])
         setContent("")
         toast.success("コメントを投稿しました")
@@ -121,7 +155,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   }
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Ctrl+Enterでコメント送信
     if (e.ctrlKey && e.key === 'Enter') {
       e.preventDefault()
       handleSubmit()
@@ -139,10 +172,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   }
 
   const handleCommentDeleted = (commentId: string) => {
-    // 削除対象のコメントとその返信を全て削除
     const deleteCommentAndReplies = (id: string) => {
       const childComments = parentComments.get(id) || []
-      // 再帰的に子コメントも削除
       childComments.forEach(child => deleteCommentAndReplies(child.id))
       setComments(prevComments => prevComments.filter(comment => comment.id !== id))
     }
@@ -188,15 +219,36 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           <label htmlFor="comment-textarea" className="text-sm font-medium mb-2 block">
             コメントを投稿
           </label>
-          <Textarea
-            id="comment-textarea"
-            ref={textareaRef}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="コメントを入力..."
-            className="min-h-32 bg-background"
-            onKeyDown={handleKeyPress}
-          />
+          <div className="relative">
+            <Textarea
+              id="comment-textarea"
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="コメントを入力..."
+              className="min-h-32 bg-background pr-10"
+              onKeyDown={handleKeyPress}
+            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 bottom-2"
+                >
+                  <Smile className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="top" align="end" className="w-96">
+                <Picker
+                  data={data}
+                  onEmojiSelect={handleEmojiSelect}
+                  theme="light"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
           <div className="flex justify-between items-center mt-2">
             <p className="text-xs text-muted-foreground">
               Ctrl+Enterで送信

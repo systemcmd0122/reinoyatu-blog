@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/utils/supabase/server"
+import { emojiToShortcode, shortcodeToEmoji } from "@/utils/emoji"
 
 interface NewCommentProps {
   blogId: string
@@ -14,6 +15,9 @@ export const newComment = async ({ blogId, userId, content, parentId }: NewComme
   try {
     const supabase = createClient()
 
+    // 絵文字をShortcodeに変換してから保存
+    const contentWithShortcodes = emojiToShortcode(content)
+
     // コメント新規作成
     const { data, error } = await supabase
       .from("comments")
@@ -21,7 +25,7 @@ export const newComment = async ({ blogId, userId, content, parentId }: NewComme
         blog_id: blogId,
         user_id: userId,
         parent_id: parentId || null,
-        content,
+        content: contentWithShortcodes,
       })
       .select()
       .single()
@@ -43,17 +47,19 @@ export const newComment = async ({ blogId, userId, content, parentId }: NewComme
         error: null, 
         comment: { 
           ...data,
+          content: shortcodeToEmoji(data.content),
           user_name: "不明なユーザー",
           user_avatar_url: null 
         } 
       }
     }
 
-    // コメントとプロフィール情報を結合
+    // コメントとプロフィール情報を結合して返す
     return { 
       error: null, 
       comment: { 
         ...data,
+        content: shortcodeToEmoji(data.content),
         user_name: profileData.name,
         user_avatar_url: profileData.avatar_url 
       } 
@@ -64,25 +70,24 @@ export const newComment = async ({ blogId, userId, content, parentId }: NewComme
   }
 }
 
-interface EditCommentProps {
+// コメント編集
+export const editComment = async ({ commentId, userId, content }: {
   commentId: string
   userId: string
   content: string
-}
-
-// コメント編集
-export const editComment = async ({ commentId, userId, content }: EditCommentProps) => {
+}) => {
   try {
     const supabase = createClient()
 
-    // コメント編集
+    // 絵文字をShortcodeに変換してから保存
+    const contentWithShortcodes = emojiToShortcode(content)
+
     const { error } = await supabase
       .from("comments")
-      .update({ content })
+      .update({ content: contentWithShortcodes })
       .eq("id", commentId)
       .eq("user_id", userId)
 
-    // エラーチェック
     if (error) {
       return { error: error.message }
     }
@@ -94,24 +99,20 @@ export const editComment = async ({ commentId, userId, content }: EditCommentPro
   }
 }
 
-interface DeleteCommentProps {
+// コメント削除（変更なし）
+export const deleteComment = async ({ commentId, userId }: {
   commentId: string
   userId: string
-}
-
-// コメント削除
-export const deleteComment = async ({ commentId, userId }: DeleteCommentProps) => {
+}) => {
   try {
     const supabase = createClient()
 
-    // コメント削除
     const { error } = await supabase
       .from("comments")
       .delete()
       .eq("id", commentId)
       .eq("user_id", userId)
 
-    // エラーチェック
     if (error) {
       return { error: error.message }
     }
@@ -137,7 +138,13 @@ export const getBlogComments = async (blogId: string) => {
       return { error: error.message, comments: [] }
     }
 
-    return { error: null, comments: data || [] }
+    // 取得したコメントのShortcodeを絵文字に変換
+    const commentsWithEmoji = data?.map((comment: { content: string }) => ({
+      ...comment,
+      content: shortcodeToEmoji(comment.content)
+    })) || []
+
+    return { error: null, comments: commentsWithEmoji }
   } catch (err) {
     console.error(err)
     return { error: "エラーが発生しました", comments: [] }
