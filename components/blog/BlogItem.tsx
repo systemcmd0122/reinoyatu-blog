@@ -3,153 +3,133 @@
 import React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Heart, Clock, ChevronRight } from "lucide-react"
-import { BlogType } from "@/types"
+import { Card } from "@/components/ui/card"
 import { formatJST } from "@/utils/date"
 import { motion } from "framer-motion"
+import { cn } from "@/lib/utils"
 
 interface BlogItemProps {
-  blog: BlogType & {
+  blog: {
+    id: string
+    title: string
+    content: string
+    image_url: string
+    updated_at: string
     profiles: {
       name: string
       avatar_url: string
     }
-    likes_count: number
   }
+  priority?: boolean
 }
 
-const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
-  const [isHovered, setIsHovered] = React.useState(false)
-
-  // ブログ内容のプレビューテキストを生成
-  const previewText = React.useMemo(() => {
-    if (!blog.content) return 'この記事を読む'
-    return blog.content
-      .replace(/#{1,6} |\*\*|\*|`|>|---|___|\|/g, '')
-      .substring(0, 100) + '...'
-  }, [blog.content])
+const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
+  const [imageLoaded, setImageLoaded] = React.useState(false)
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ 
-        duration: 0.5,
-        ease: [0.4, 0, 0.2, 1]
-      }}
-      whileHover={{ y: -5 }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ y: -8 }}
     >
-      <Card 
-        className={`
-          group relative h-[480px] w-full 
-          overflow-hidden bg-card/50 backdrop-blur-sm
-          border border-border/50 transition-all duration-300
-          hover:border-primary/30 hover:shadow-lg
-        `}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <Link href={`blog/${blog.id}`} className="block h-full">
-          <div className="relative h-[240px] w-full">
+      <Link href={`blog/${blog.id}`}>
+        <Card className={cn(
+          "group relative w-full overflow-hidden",
+          "bg-card/50 backdrop-blur-sm",
+          "border border-border/50 transition-all duration-300",
+          "hover:border-primary/30 hover:shadow-lg",
+          "rounded-2xl"
+        )}>
+          {/* カード画像部分 */}
+          <div className="relative aspect-[4/3] w-full overflow-hidden">
             <Image
               src={blog.image_url || "/noImage.png"}
-              alt="Blog cover image"
+              alt=""
               fill
-              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-              priority
+              className={cn(
+                "object-cover transition-all duration-700",
+                "group-hover:scale-105",
+                !imageLoaded && "blur-2xl scale-105",
+                imageLoaded && "blur-0 scale-100"
+              )}
+              priority={priority}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              onLoadingComplete={() => setImageLoaded(true)}
             />
-            <div 
-              className={`
-                absolute inset-0 bg-gradient-to-t 
-                from-black/60 via-black/30 to-transparent
-                transition-opacity duration-300
-                ${isHovered ? 'opacity-100' : 'opacity-0'}
-              `}
-            >
-              <motion.div
-                initial={false}
-                animate={{ 
-                  y: isHovered ? 0 : 10,
-                  opacity: isHovered ? 1 : 0
-                }}
-                transition={{ duration: 0.3 }}
-                className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white"
-              >
-                <span className="text-sm font-medium">続きを読む</span>
-                <motion.div
-                  animate={{ x: isHovered ? 5 : 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </motion.div>
-              </motion.div>
-            </div>
+            {/* 多層グラデーションオーバーレイ */}
+            <div className={cn(
+              "absolute inset-0",
+              "bg-gradient-to-t from-black/90 via-black/60 to-black/30",
+              "transition-opacity duration-300",
+              "opacity-70 group-hover:opacity-80"
+            )} />
+            
+            {/* 追加の保護レイヤー */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80" />
           </div>
 
-          <CardContent className="h-[240px] p-6 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <Badge 
-                variant="secondary" 
-                className="flex items-center gap-1.5 py-1.5 px-3 transition-colors duration-200"
-              >
-                <Clock className="w-3 h-3" />
-                <span className="text-xs">{formatJST(blog.updated_at)}</span>
-              </Badge>
+          {/* コンテンツ部分 */}
+          <div className="absolute bottom-0 left-0 right-0 p-6">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="relative">
+                <div className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-white/20">
+                  <Image
+                    src={blog.profiles.avatar_url || "/default.png"}
+                    alt=""
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="absolute -inset-0.5 rounded-full bg-gradient-to-tr from-primary/50 to-primary-foreground/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              </div>
               
-              <motion.div 
-                className="flex items-center gap-1.5"
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Heart className="h-4 w-4 text-red-500" />
-                <span className="text-sm text-muted-foreground">
-                  {blog.likes_count || 0}
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
+                  {blog.profiles.name}
                 </span>
-              </motion.div>
+                <span className="text-xs text-white/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+                  {formatJST(blog.updated_at)}
+                </span>
+              </div>
             </div>
 
-            <h3 className="text-xl font-bold mb-3 line-clamp-2 transition-colors duration-200 group-hover:text-primary">
+            <h3 className={cn(
+              "text-xl font-bold text-white",
+              "line-clamp-2 leading-tight tracking-wide",
+              "transition-colors duration-300",
+              "drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]",
+              "group-hover:text-primary-foreground"
+            )}>
               {blog.title}
             </h3>
 
-            <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-grow">
-              {previewText}
-            </p>
-
-            <div className="flex items-center gap-3 mt-auto">
-              <div className="relative">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Image
-                    src={blog.profiles.avatar_url || "/default.png"}
-                    alt="Author avatar"
-                    width={40}
-                    height={40}
-                    className="rounded-full border-2 border-background"
-                  />
-                </motion.div>
-                {isHovered && (
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1.1, opacity: 1 }}
-                    className="absolute inset-0 rounded-full border-2 border-primary"
-                  />
-                )}
-              </div>
-              <motion.span
-                animate={{ x: isHovered ? 3 : 0 }}
-                className="text-sm font-medium text-foreground/80"
-              >
-                {blog.profiles.name}
-              </motion.span>
+            {/* アクセントライン */}
+            <div className="relative mt-4">
+              <div className={cn(
+                "h-1 w-12 rounded-full",
+                "bg-gradient-to-r from-primary to-primary-foreground/80",
+                "transition-all duration-300",
+                "group-hover:w-20"
+              )} />
+              <div className={cn(
+                "absolute inset-0 blur-md",
+                "bg-gradient-to-r from-primary to-primary-foreground/80",
+                "opacity-50 transition-opacity duration-300",
+                "group-hover:opacity-100"
+              )} />
             </div>
-          </CardContent>
-        </Link>
-      </Card>
+          </div>
+
+          {/* ホバー時のオーバーレイ効果 */}
+          <div className={cn(
+            "absolute inset-0",
+            "bg-gradient-to-t from-primary/20 to-transparent",
+            "opacity-0 transition-opacity duration-300",
+            "group-hover:opacity-100"
+          )} />
+        </Card>
+      </Link>
     </motion.div>
   )
 }

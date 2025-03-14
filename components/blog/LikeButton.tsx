@@ -1,12 +1,17 @@
 "use client"
 
-import React, { useState, useEffect, useTransition } from "react"
+import React, { useState, useEffect, useTransition, useCallback } from "react"
 import { Heart, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { toggleLike, getBlogLikeStatus } from "@/actions/like"
 import { cn } from "@/lib/utils"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip"
 
 interface LikeState {
   isLiked: boolean;
@@ -19,10 +24,8 @@ interface LikeButtonProps {
   initialLikesCount: number
   initialIsLiked?: boolean
   showLabel?: boolean
-  // 共有状態の受け渡し用props
   sharedState?: LikeState
   onStateChange?: (state: LikeState) => void
-  // 初期ロード状態を外部から制御するためのフラグ
   initialIsLoaded?: boolean
 }
 
@@ -32,66 +35,57 @@ const LikeButton: React.FC<LikeButtonProps> = ({
   initialLikesCount,
   initialIsLiked = false,
   showLabel = false,
-  // 共有状態
   sharedState,
   onStateChange,
-  // 初期ロード状態
   initialIsLoaded = false
 }) => {
   const [isPending, startTransition] = useTransition()
-  // 内部状態またはpropsから受け取った共有状態を使用
   const [internalState, setInternalState] = useState<LikeState>({
     isLiked: initialIsLiked,
     likesCount: initialLikesCount
   })
-  const [isLoading, setIsLoading] = useState(!initialIsLoaded)
+  const [isInitializing, setIsInitializing] = useState(!initialIsLoaded && !!userId)
   const [isAnimating, setIsAnimating] = useState(false)
 
-  // 実際に使用する状態（共有または内部）
   const isLiked = sharedState?.isLiked ?? internalState.isLiked
   const likesCount = sharedState?.likesCount ?? internalState.likesCount
 
-  // 状態更新関数
-  const updateState = (newState: LikeState) => {
+  const updateState = useCallback((newState: LikeState) => {
     if (onStateChange) {
-      // 親コンポーネントに状態を伝える
       onStateChange(newState)
     } else {
-      // 親コンポーネントがない場合は内部状態を更新
       setInternalState(newState)
     }
-  }
+  }, [onStateChange])
 
   useEffect(() => {
-    // 既にロード済みの場合はスキップ
-    if (initialIsLoaded) {
-      return
-    }
-    
-    const fetchLikeStatus = async () => {
-      if (!userId) {
-        setIsLoading(false)
-        return
-      }
+    if (initialIsLoaded || !userId) return
 
+    let isMounted = true
+
+    const fetchLikeStatus = async () => {
       try {
         const { isLiked } = await getBlogLikeStatus({ blogId, userId })
-        // 状態の初期化
-        updateState({ 
-          isLiked, 
-          likesCount: initialLikesCount 
-        })
+        if (isMounted) {
+          updateState({ isLiked, likesCount: initialLikesCount })
+        }
       } catch (error) {
-        console.error("いいね状態の取得に失敗しました", error)
+        console.error("Error fetching like status:", error)
       } finally {
-        setIsLoading(false)
+        if (isMounted) {
+          setIsInitializing(false)
+        }
       }
     }
 
     fetchLikeStatus()
-  }, [blogId, userId, initialLikesCount, initialIsLoaded])
 
-  const handleToggleLike = () => {
+    return () => {
+      isMounted = false
+    }
+  }, [blogId, userId, initialLikesCount, initialIsLoaded, updateState])
+
+  const handleToggleLike = useCallback(() => {
     if (!userId) {
       toast.error("いいねするにはログインが必要です")
       return
@@ -100,16 +94,11 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     const newIsLiked = !isLiked
     const newLikesCount = isLiked ? likesCount - 1 : likesCount + 1
     
-    // 状態の更新
-    updateState({ 
-      isLiked: newIsLiked, 
-      likesCount: newLikesCount
-    })
+    updateState({ isLiked: newIsLiked, likesCount: newLikesCount })
     
-    // アニメーション効果
     if (newIsLiked) {
       setIsAnimating(true)
-      setTimeout(() => setIsAnimating(false), 500)
+      setTimeout(() => setIsAnimating(false), 300)
     }
 
     startTransition(async () => {
@@ -117,7 +106,6 @@ const LikeButton: React.FC<LikeButtonProps> = ({
         const result = await toggleLike({ blogId, userId })
 
         if (result.error) {
-          // エラーが発生した場合、状態を元に戻す
           updateState({ 
             isLiked: !newIsLiked, 
             likesCount: isLiked ? likesCount : likesCount - 1
@@ -125,15 +113,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({
           toast.error(result.error)
           return
         }
-
-        if (result.action === "liked") {
-          toast.success("いいねしました")
-        } else if (result.action === "unliked") {
-          toast.success("いいねを取り消しました")
-        }
       } catch (error) {
-        console.error("いいね処理中にエラーが発生しました", error)
-        // エラーが発生した場合、状態を元に戻す
         updateState({ 
           isLiked: !newIsLiked, 
           likesCount: isLiked ? likesCount : likesCount - 1
@@ -141,28 +121,20 @@ const LikeButton: React.FC<LikeButtonProps> = ({
         toast.error("エラーが発生しました")
       }
     })
-  }
+  }, [blogId, userId, isLiked, likesCount, updateState])
 
-  // ローディング中の表示
-  if (isLoading) {
-    return showLabel ? (
-      <Button
-        variant="outline"
-        size="sm"
-        className="rounded-full px-4 py-2 h-auto opacity-70 cursor-not-allowed flex items-center"
-        disabled
-      >
-        <Loader2 className="h-5 w-5 md:h-6 md:w-6 mr-2 animate-spin" />
-        <span className="text-sm">読み込み中...</span>
-      </Button>
-    ) : (
+  if (isInitializing) {
+    return (
       <Button
         variant="ghost"
         size="sm"
-        className="p-2 h-auto rounded-full opacity-70 cursor-not-allowed flex items-center"
+        className="p-2 h-auto rounded-full"
         disabled
       >
-        <Loader2 className="h-5 w-5 md:h-6 md:w-6 animate-spin" />
+        <Heart className="h-5 w-5 md:h-6 md:w-6 opacity-50" />
+        {showLabel && (
+          <span className="ml-2 text-sm opacity-50">読み込み中...</span>
+        )}
       </Button>
     )
   }
@@ -171,7 +143,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     <>
       <Heart
         className={cn(
-          "h-5 w-5 md:h-6 md:w-6 transition-transform",
+          "h-5 w-5 md:h-6 md:w-6 transition-all duration-200",
           isLiked && "fill-current",
           isAnimating && "scale-125"
         )}
@@ -185,13 +157,15 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     </>
   )
 
-  return showLabel ? (
+  const button = (
     <Button
-      variant={isLiked ? "secondary" : "outline"}
+      variant={showLabel ? (isLiked ? "secondary" : "outline") : "ghost"}
       size="sm"
       className={cn(
-        "rounded-full px-4 py-2 h-auto transition-all duration-200 shadow-sm hover:shadow",
-        isLiked ? "bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400" : "",
+        showLabel ? "rounded-full px-4 py-2" : "p-2",
+        "h-auto transition-all duration-200",
+        isLiked && showLabel && "bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400",
+        !showLabel && isLiked && "text-red-500 bg-red-50 dark:bg-red-900/20",
         isPending && "opacity-70 cursor-not-allowed",
         "flex items-center"
       )}
@@ -200,35 +174,22 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     >
       {isPending ? (
         <>
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          <span>処理中...</span>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {showLabel && <span className="ml-2">処理中...</span>}
         </>
       ) : (
         buttonContent
       )}
     </Button>
+  )
+
+  return showLabel ? (
+    button
   ) : (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "p-2 h-auto rounded-full",
-              isLiked && "text-red-500 bg-red-50 dark:bg-red-900/20",
-              isPending && "opacity-70 cursor-not-allowed",
-              "flex items-center space-x-1"
-            )}
-            onClick={handleToggleLike}
-            disabled={isPending || !userId}
-          >
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              buttonContent
-            )}
-          </Button>
+          {button}
         </TooltipTrigger>
         <TooltipContent>
           {isLiked ? "いいねを取り消す" : "いいねする"}
@@ -238,4 +199,4 @@ const LikeButton: React.FC<LikeButtonProps> = ({
   )
 }
 
-export default LikeButton
+export default React.memo(LikeButton)
