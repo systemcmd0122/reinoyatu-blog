@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
-import { CommentType } from "@/types"
+import { CommentType, ReactionType } from "@/types"
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { editComment, deleteComment, newComment } from "@/actions/comment"
+import { toggleReaction } from "@/actions/reaction"
 import { formatJST } from "@/utils/date"
 import data from '@emoji-mart/data'
 import Picker from '@emoji-mart/react'
@@ -43,14 +44,13 @@ interface CommentItemProps {
   maxVisibleReplies?: number
 }
 
-// Define emoji type to replace 'any'
 interface EmojiData {
+  native: string
   id: string
   name: string
-  native: string
+  colons: string
+  skin?: number
   unified: string
-  keywords: string[]
-  shortcodes: string
 }
 
 const CommentItem: React.FC<CommentItemProps> = ({
@@ -73,6 +73,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
   const [showAllReplies, setShowAllReplies] = useState(false)
+  const [reactions, setReactions] = useState<ReactionType[]>(comment.reactions || [])
+  const [isReactionPickerOpen, setIsReactionPickerOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const replyTextareaRef = useRef<HTMLTextAreaElement>(null)
   
@@ -115,6 +117,33 @@ const CommentItem: React.FC<CommentItemProps> = ({
       textarea.focus()
       textarea.setSelectionRange(newPosition, newPosition)
     }, 0)
+  }
+
+  // リアクション処理
+  const handleReaction = async (emoji: EmojiData) => {
+    if (!currentUserId) {
+      toast.error("リアクションするにはログインしてください")
+      return
+    }
+
+    try {
+      const res = await toggleReaction({
+        commentId: comment.id,
+        userId: currentUserId,
+        emoji: emoji.native
+      })
+
+      if (res.error) {
+        toast.error(res.error)
+        return
+      }
+
+      if (res.reactions) {
+        setReactions(res.reactions)
+      }
+    } catch (error) {
+      toast.error("エラーが発生しました")
+    }
   }
 
   const handleEdit = async () => {
@@ -214,7 +243,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   }
 
   const getIndentClass = () => {
-    return nestLevel > 0 ? "border-l-2 border-gray-200 pl-4 ml-2" : "";
+    return nestLevel > 0 ? "border-l-2 border-gray-200 pl-4 ml-2" : ""
   }
 
   return (
@@ -290,7 +319,51 @@ const CommentItem: React.FC<CommentItemProps> = ({
               </div>
             </div>
           ) : (
-            <p className="text-sm mt-1 whitespace-pre-wrap">{comment.content}</p>
+            <>
+              <p className="text-sm mt-1 whitespace-pre-wrap">{comment.content}</p>
+              
+              {/* リアクション表示部分 */}
+              <div className="mt-2 flex flex-wrap gap-1">
+                {reactions.map((reaction) => (
+                  <Button
+                    key={reaction.emoji}
+                    variant={reaction.reacted ? "default" : "outline"}
+                    size="sm"
+                    className="h-7 px-2 text-sm"
+                    onClick={() => handleReaction({ native: reaction.emoji } as EmojiData)}
+                  >
+                    {reaction.emoji} {reaction.count}
+                  </Button>
+                ))}
+                
+                {currentUserId && (
+                  <Popover
+                    open={isReactionPickerOpen}
+                    onOpenChange={setIsReactionPickerOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 w-7"
+                      >
+                        <Smile className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent side="top" align="start" className="w-96">
+                      <Picker
+                        data={data}
+                        onEmojiSelect={(emoji: EmojiData) => {
+                          handleReaction(emoji)
+                          setIsReactionPickerOpen(false)
+                        }}
+                        theme="light"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
+            </>
           )}
         </div>
         
@@ -449,12 +522,12 @@ const CommentItem: React.FC<CommentItemProps> = ({
               nestLevel={nestLevel + 1}
               maxNestLevel={maxNestLevel}
               maxVisibleReplies={maxVisibleReplies}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-export default CommentItem
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+  
+  export default CommentItem

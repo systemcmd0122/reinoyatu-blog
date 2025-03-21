@@ -37,14 +37,21 @@ export interface BookmarkType {
   created_at: string
 }
 
+export interface ReactionType {
+  emoji: string;
+  count: number;
+  reacted: boolean;
+}
+
 export interface CommentType {
-  id: string
-  blog_id: string
-  user_id: string
-  parent_id: string | null
-  content: string
-  updated_at: string
-  created_at: string
-  user_name: string
-  user_avatar_url: string | null
+  id: string;
+  blog_id: string;
+  user_id: string;
+  parent_id: string | null;
+  content: string;
+  user_name: string;
+  user_avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+  reactions: ReactionType[]; // 追加
 }

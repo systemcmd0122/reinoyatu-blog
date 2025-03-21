@@ -9,6 +9,7 @@ import { CommentType } from "@/types"
 import { toast } from "sonner"
 import CommentItem from "./CommentItem"
 import { newComment, getBlogComments } from "@/actions/comment"
+import { getCommentReactions } from "@/actions/reaction"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import data from '@emoji-mart/data'
@@ -19,14 +20,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-// Emoji データの型定義
 interface EmojiData {
-  native: string;
-  id: string;
-  name: string;
-  colons: string;
-  skin?: number;
-  unified: string;
+  native: string
+  id: string
+  name: string
+  colons: string
+  skin?: number
+  unified: string
 }
 
 interface CommentSectionProps {
@@ -87,7 +87,19 @@ const CommentSection: React.FC<CommentSectionProps> = ({
             setError(error)
             return
           }
-          setComments(fetchedComments)
+          
+          // コメントごとにリアクション情報を取得
+          const commentsWithReactions = await Promise.all(
+            fetchedComments.map(async (comment: { id: string }) => {
+              const { reactions } = await getCommentReactions(comment.id)
+              return {
+                ...comment,
+                reactions: reactions || []
+              }
+            })
+          )
+          
+          setComments(commentsWithReactions)
         } catch (error) {
           setError("コメントの取得中にエラーが発生しました")
         }
@@ -142,7 +154,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       }
 
       if (res.comment) {
-        setComments([...comments, res.comment])
+        // リアクション情報を取得
+        const { reactions } = await getCommentReactions(res.comment.id)
+        const commentWithReactions = {
+          ...res.comment,
+          reactions: reactions || []
+        }
+        
+        setComments([...comments, commentWithReactions])
         setContent("")
         toast.success("コメントを投稿しました")
         router.refresh()
@@ -181,8 +200,15 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     deleteCommentAndReplies(commentId)
   }
 
-  const handleReplyAdded = (newComment: CommentType) => {
-    setComments(prevComments => [...prevComments, newComment])
+  const handleReplyAdded = async (newComment: CommentType) => {
+    // リアクション情報を取得
+    const { reactions } = await getCommentReactions(newComment.id)
+    const commentWithReactions = {
+      ...newComment,
+      reactions: reactions || []
+    }
+    
+    setComments(prevComments => [...prevComments, commentWithReactions])
   }
 
   return (
