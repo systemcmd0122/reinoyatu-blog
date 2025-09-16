@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Globe, Mail, Calendar, Github, Twitter, Linkedin, Instagram, Facebook } from "lucide-react"
@@ -9,10 +9,9 @@ import { ProfileType } from "@/types"
 
 interface UserProfileProps {
   profile: ProfileType
-  isOwnProfile?: boolean
 }
 
-const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile }) => {
+const UserProfile: React.FC<UserProfileProps> = ({ profile }) => {
   const formatIntroduce = useCallback((text: string | null) => {
     if (!text) return null
     return text.split('\n').map((line, i) => (

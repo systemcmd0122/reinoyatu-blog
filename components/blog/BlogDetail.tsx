@@ -270,15 +270,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
     })
   }
 
-  const formatIntroduce = (text: string | null) => {
-    if (!text) return null
-    return text.split('\n').map((line, i) => (
-      <React.Fragment key={i}>
-        {line}
-        {i !== text.split('\n').length - 1 && <br />}
-      </React.Fragment>
-    ))
-  }
+  // formatIntroduce was removed because it's not used in this component
 
   return (
     <div className="container mx-auto max-w-4xl space-y-6 py-8">

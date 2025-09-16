@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { ProfileType } from "@/types"
-import Image from "next/image"
+// Image import removed because it's unused
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 
