@@ -10,9 +10,18 @@ interface BlogDetailPageProps {
   }
 }
 
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 // ページごとの動的メタデータを生成（Open Graph / Twitter Card）
 export async function generateMetadata({ params }: BlogDetailPageProps): Promise<Metadata> {
   const { blogId } = params
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  if (!blogId || blogId === "undefined" || !uuidRegex.test(blogId)) {
+    return {
+      title: "記事が見つかりません｜例のヤツ",
+      description: "指定された記事は見つかりませんでした。",
+    }
+  }
   const supabase = createClient()
 
   const { data: blogData } = await supabase
@@ -29,7 +38,7 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
       )
     `
     )
-    .eq("id", blogId)
+  .eq("id", blogId)
     .single()
 
   if (!blogData) {
@@ -75,6 +84,9 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
 
 const BlogDetailPage = async ({ params }: BlogDetailPageProps) => {
   const { blogId } = params
+  if (!blogId || blogId === "undefined" || !uuidRegex.test(blogId)) {
+    return <div className="text-center">ブログが存在しません</div>
+  }
   const supabase = createClient()
 
   const { data: userData } = await supabase.auth.getUser()
@@ -83,16 +95,16 @@ const BlogDetailPage = async ({ params }: BlogDetailPageProps) => {
   // ブログ詳細取得
   const { data: blogData } = await supabase
     .from("blogs")
-    .select(
-      `
+    .select(`
       *,
       profiles (
+        id,
         name,
         avatar_url,
-        introduce
+        introduce,
+        social_links
       )
-    `
-    )
+    `)
     .eq("id", blogId)
     .single()
 

@@ -410,45 +410,84 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
       )}
 
       <div className="border-t border-border pt-6">
-        <Link href={`/profile/${blog.profiles.id}`} className="inline-block w-full">
-          <div className="flex items-center space-x-4 p-4 rounded-lg hover:bg-accent transition-colors">
+        {/* 著者情報 */}
+        <div className="inline-block w-full">
+          <div className="flex items-center space-x-4 p-4 rounded-lg bg-muted/50">
             <Avatar className="w-16 h-16">
               <AvatarImage 
-                src={blog.profiles.avatar_url || "/noImage.png"} 
-                alt={blog.profiles.name} 
+                src={blog.profiles?.avatar_url || "/noImage.png"} 
+                alt={blog.profiles?.name || "Unknown User"} 
                 className="object-cover"
               />
-              <AvatarFallback>{blog.profiles.name[0]}</AvatarFallback>
+              <AvatarFallback>{blog.profiles?.name?.[0] || "?"}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold">{blog.profiles.name}</h3>
-              {blog.profiles.introduce && (
-                <p className="text-muted-foreground text-sm line-clamp-2">
+              <div className="flex flex-col">
+                <h3 className="text-lg font-semibold">{blog.profiles?.name || "Unknown User"}</h3>
+                <span className="text-xs text-muted-foreground italic">(プロフィール機能開発中)</span>
+              </div>
+              {blog.profiles?.introduce && (
+                <p className="text-muted-foreground text-sm line-clamp-2 mt-2">
                   {blog.profiles.introduce}
                 </p>
               )}
-              {blog.profiles.social_links && Object.keys(blog.profiles.social_links).length > 0 && (
+              {blog.profiles?.social_links && Object.keys(blog.profiles.social_links).length > 0 && (
                 <div className="flex space-x-2 mt-2">
                   {blog.profiles.social_links.twitter && (
-                    <Twitter className="h-4 w-4 text-muted-foreground" />
+                    <a 
+                      href={blog.profiles.social_links.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Twitter className="h-4 w-4" />
+                    </a>
                   )}
                   {blog.profiles.social_links.github && (
-                    <Github className="h-4 w-4 text-muted-foreground" />
+                    <a 
+                      href={blog.profiles.social_links.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Github className="h-4 w-4" />
+                    </a>
                   )}
                   {blog.profiles.social_links.linkedin && (
-                    <Linkedin className="h-4 w-4 text-muted-foreground" />
+                    <a 
+                      href={blog.profiles.social_links.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Linkedin className="h-4 w-4" />
+                    </a>
                   )}
                   {blog.profiles.social_links.instagram && (
-                    <Instagram className="h-4 w-4 text-muted-foreground" />
+                    <a 
+                      href={blog.profiles.social_links.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Instagram className="h-4 w-4" />
+                    </a>
                   )}
                   {blog.profiles.social_links.facebook && (
-                    <Facebook className="h-4 w-4 text-muted-foreground" />
+                    <a 
+                      href={blog.profiles.social_links.facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Facebook className="h-4 w-4" />
+                    </a>
                   )}
                 </div>
               )}
             </div>
           </div>
-        </Link>
+        </div>
       </div>
       
       <CommentSection

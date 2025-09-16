@@ -96,9 +96,11 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={`/profile/${user?.id}`}>プロフィール</Link>
-              </DropdownMenuItem>
+              {user?.id && (
+                <DropdownMenuItem asChild>
+                  <Link href={`/profile/${user.id}`}>プロフィール</Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem asChild>
                 <Link href="/settings/profile">プロフィール設定</Link>
               </DropdownMenuItem>

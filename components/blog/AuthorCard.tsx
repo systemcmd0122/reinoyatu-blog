@@ -14,14 +14,15 @@ const AuthorCard = ({ profile }: AuthorCardProps) => {
   return (
     <Card className="p-6 mt-8 bg-white hover:bg-gray-50 transition-colors">
       <div className="space-y-4">
-        <Link href={`/profile/${profile.id}`} className="block">
+        <div className="block">
           <div className="flex items-center space-x-4">
             <Avatar className="w-16 h-16">
-              <AvatarImage src={profile.avatar_url || "/default.png"} alt={profile.name} />
-              <AvatarFallback>{profile.name[0]}</AvatarFallback>
+              <AvatarImage src={profile?.avatar_url || "/default.png"} alt={profile?.name || "Unknown User"} />
+              <AvatarFallback>{profile?.name?.[0] || "?"}</AvatarFallback>
             </Avatar>
             <div>
               <h3 className="text-lg font-bold">{profile.name}</h3>
+              <div className="italic text-xs text-muted-foreground">(プロフィール機能開発中)</div>
               {profile.introduce && (
                 <p className="text-gray-600 text-sm line-clamp-2 mt-1">
                   {profile.introduce}
@@ -29,7 +30,7 @@ const AuthorCard = ({ profile }: AuthorCardProps) => {
               )}
             </div>
           </div>
-        </Link>
+        </div>
 
         {profile.social_links && Object.keys(profile.social_links).length > 0 && (
           <div className="flex justify-center space-x-4 pt-4 border-t border-gray-100">

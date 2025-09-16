@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation"
+import { notFound } from "next/navigation"
 import { createClient } from "@/utils/supabase/server"
 import UserProfile from "@/components/profile/UserProfile"
 import { Metadata } from "next"
@@ -10,12 +10,22 @@ const ProfilePage = async ({
 }) => {
   const supabase = createClient()
 
-  // セッション情報を取得
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (!session) {
-    redirect("/login")
+  // パラメータのバリデーション
+  const id = params?.profileId
+  if (!id || id === "undefined") {
+    console.error("Invalid profile ID: undefined or empty")
+    return notFound()
   }
+
+  // UUIDの形式チェック
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  if (!uuidRegex.test(id)) {
+    console.error(`Invalid UUID format: ${id}`)
+    return notFound()
+  }
+
+  // セッション情報を取得（任意）。未認証でもプロフィールは閲覧できるようにする。
+  const { data: { session } } = await supabase.auth.getSession()
 
   // プロフィール情報を取得
   const { data: profile, error } = await supabase
@@ -27,7 +37,6 @@ const ProfilePage = async ({
       avatar_url,
       email,
       website,
-      created_at,
       social_links,
       blogs (
         id,
@@ -35,20 +44,21 @@ const ProfilePage = async ({
         created_at
       )
     `)
-    .eq("id", params.profileId)
+  .eq("id", id)
     .single()
 
   if (error) {
-    console.error("Profile fetch error:", error)
-    redirect("/not-found")
+    console.error(`Profile fetch error for ID ${id}:`, error)
+    return notFound()
   }
 
   if (!profile) {
-    redirect("/not-found")
+    console.error(`Profile not found for ID ${id}`)
+    return notFound()
   }
 
   // プロフィール所有者かどうかを確認
-  const isOwnProfile = session.user.id === profile.id
+  const isOwnProfile = !!session && session.user && session.user.id === profile.id
 
   return (
     <div className="container max-w-4xl mx-auto py-8">
@@ -63,11 +73,29 @@ const ProfilePage = async ({
 export default ProfilePage
 
 export async function generateMetadata({ params }: { params: { profileId: string } }): Promise<Metadata> {
+  // パラメータのバリデーション
+  const id = params?.profileId
+  if (!id || id === "undefined") {
+    return {
+      title: "無効なプロフィールID｜例のヤツ",
+      description: "プロフィールIDが指定されていないか、無効です。",
+    }
+  }
+
+  // UUIDの形式チェック
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  if (!uuidRegex.test(id)) {
+    return {
+      title: "無効なプロフィールID｜例のヤツ",
+      description: "指定されたプロフィールIDの形式が正しくありません。",
+    }
+  }
+
   const supabase = createClient()
   const { data: profile } = await supabase
     .from("profiles")
-    .select(`id, name, introduce, avatar_url, created_at`)
-    .eq("id", params.profileId)
+    .select(`id, name, introduce, avatar_url`)
+    .eq("id", id)
     .single()
 
   if (!profile) {

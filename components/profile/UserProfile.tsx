@@ -12,7 +12,7 @@ interface UserProfileProps {
   isOwnProfile?: boolean
 }
 
-const UserProfile: React.FC<UserProfileProps> = ({ profile }) => {
+const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false }) => {
   const formatIntroduce = useCallback((text: string | null) => {
     if (!text) return null
     return text.split('\n').map((line, i) => (
@@ -30,12 +30,15 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile }) => {
           <div className="absolute inset-0 h-32 bg-gradient-to-r from-primary/20 to-secondary/20" />
           <div className="relative z-10 flex flex-col items-center">
             <Avatar className="w-32 h-32 border-4 border-background shadow-xl">
-              <AvatarImage 
-                src={profile.avatar_url || "/default.png"} 
-                alt={profile.name} 
-                className="object-cover"
-              />
-              <AvatarFallback>{profile.name[0]}</AvatarFallback>
+              {profile.avatar_url ? (
+                <AvatarImage
+                  src={profile.avatar_url}
+                  alt={profile.name || "User avatar"}
+                  className="object-cover"
+                />
+              ) : (
+                <AvatarFallback>{(profile.name && profile.name[0]) || "U"}</AvatarFallback>
+              )}
             </Avatar>
             <CardTitle className="mt-4 text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               {profile.name}
@@ -50,18 +53,19 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile }) => {
           )}
 
           <div className="grid gap-3">
-            {profile.email && (
+            {profile.email ? (
               <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <Mail className="w-4 h-4" />
                 <a href={`mailto:${profile.email}`} className="hover:text-primary transition-colors">
                   {profile.email}
                 </a>
               </div>
-            )}
-            {profile.website && (
+            ) : null}
+
+            {profile.website ? (
               <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <Globe className="w-4 h-4" />
-                <a 
+                <a
                   href={profile.website}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -70,11 +74,24 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile }) => {
                   {profile.website}
                 </a>
               </div>
-            )}
-            {profile.created_at && (
+            ) : null}
+
+            {profile.created_at ? (
               <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <Calendar className="w-4 h-4" />
                 <span>Joined {formatJST(profile.created_at)}</span>
+              </div>
+            ) : null}
+
+            {/* 編集ボタン（プロフィール所有者のみ） */}
+            {isOwnProfile && (
+              <div className="flex items-center justify-center pt-2">
+                <a
+                  href="/settings/profile"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90"
+                >
+                  プロフィールを編集
+                </a>
               </div>
             )}
           </div>

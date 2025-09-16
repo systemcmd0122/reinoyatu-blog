@@ -10,6 +10,8 @@ interface ToggleBookmarkProps {
 // ブックマークの切り替え（追加/削除）
 export const toggleBookmark = async ({ blogId, userId }: ToggleBookmarkProps) => {
   try {
+    if (!blogId) return { error: "blogId is required", action: null }
+    if (!userId) return { error: "userId is required", action: null }
     const supabase = createClient()
 
     // RLS (Row Level Security) を使用して、一度の操作で切り替えを実行
@@ -34,6 +36,8 @@ export const toggleBookmark = async ({ blogId, userId }: ToggleBookmarkProps) =>
 // ブログのブックマーク状態を取得
 export const getBlogBookmarkStatus = async ({ blogId, userId }: ToggleBookmarkProps) => {
   try {
+    if (!blogId) return { error: "blogId is required", isBookmarked: false }
+    if (!userId) return { error: "userId is required", isBookmarked: false }
     const supabase = createClient()
 
     // ブックマークの存在確認
@@ -77,13 +81,17 @@ export const getUserBookmarks = async (userId: string) => {
           { blog_id: blog.id }
         )
         
-        // プロフィール情報を取得
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("name, avatar_url")
-          .eq("id", blog.user_id)
-          .single()
-          
+        // プロフィール情報を取得（user_id がある場合のみ）
+        let profileData = null
+        if (blog.user_id) {
+          const { data: pd } = await supabase
+            .from("profiles")
+            .select("name, avatar_url")
+            .eq("id", blog.user_id)
+            .single()
+          profileData = pd
+        }
+
         return {
           ...blog,
           likes_count: likesCount || 0,

@@ -13,6 +13,9 @@ interface NewCommentProps {
 // コメント投稿
 export const newComment = async ({ blogId, userId, content, parentId }: NewCommentProps) => {
   try {
+    // Validate required IDs
+    if (!blogId) return { error: "blogId is required", comment: null }
+    if (!userId) return { error: "userId is required", comment: null }
     const supabase = createClient()
 
     // 絵文字をShortcodeに変換してから保存
@@ -35,12 +38,21 @@ export const newComment = async ({ blogId, userId, content, parentId }: NewComme
       return { error: error.message, comment: null }
     }
 
-    // プロフィール情報を取得
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("name, avatar_url")
-      .eq("id", userId)
-      .single()
+    // プロフィール情報を取得（userIdが有効な場合のみ）
+    let profileData: any = null
+    let profileError: any = null
+    if (userId) {
+      const res = await supabase
+        .from("profiles")
+        .select("name, avatar_url")
+        .eq("id", userId)
+        .single()
+
+      profileData = res.data
+      profileError = res.error
+    } else {
+      profileError = { message: "userId is undefined" }
+    }
 
     if (profileError) {
       return { 

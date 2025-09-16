@@ -10,6 +10,8 @@ interface ToggleLikeProps {
 // いいねの切り替え（追加/削除）
 export const toggleLike = async ({ blogId, userId }: ToggleLikeProps) => {
   try {
+    if (!blogId) return { error: "blogId is required", action: null }
+    if (!userId) return { error: "userId is required", action: null }
     const supabase = createClient()
 
     // RLS (Row Level Security) を使用して、一度の操作で切り替えを実行
@@ -34,6 +36,8 @@ export const toggleLike = async ({ blogId, userId }: ToggleLikeProps) => {
 // ブログの「いいね」状態を取得
 export const getBlogLikeStatus = async ({ blogId, userId }: ToggleLikeProps) => {
   try {
+    if (!blogId) return { error: "blogId is required", isLiked: false }
+    if (!userId) return { error: "userId is required", isLiked: false }
     const supabase = createClient()
 
     // いいねの存在確認
