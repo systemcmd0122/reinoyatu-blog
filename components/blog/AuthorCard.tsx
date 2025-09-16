@@ -3,7 +3,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card } from "@/components/ui/card"
 import { ProfileType } from "@/types"
-import Link from "next/link"
 import { Facebook, Github, Instagram, Linkedin, Twitter } from "lucide-react"
 
 interface AuthorCardProps {
