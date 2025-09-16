@@ -10,6 +10,16 @@ export interface ProfileType {
   name: string
   introduce: string | null
   avatar_url: string | null
+  email?: string
+  website?: string
+  created_at?: string
+  social_links?: {
+    twitter?: string
+    github?: string
+    linkedin?: string
+    instagram?: string
+    facebook?: string
+  }
 }
 
 export interface BlogType {

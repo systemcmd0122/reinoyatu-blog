@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2 } from "lucide-react"
+import { Globe, Loader2, Mail } from "lucide-react"
 import { ProfileSchema } from "@/schemas"
 import { updateProfile } from "@/actions/user"
 import { useRouter } from "next/navigation"
@@ -24,6 +24,7 @@ import ImageUploading, { ImageListType } from "react-images-uploading"
 import toast from "react-hot-toast"
 import Image from "next/image"
 import FormError from "@/components/auth/FormError"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface ProfileProps {
   profile: ProfileType
@@ -44,6 +45,15 @@ const Profile = ({ profile }: ProfileProps) => {
     defaultValues: {
       name: profile.name || "",
       introduce: profile.introduce || "",
+      website: profile.website || "",
+      email: profile.email || "",
+      social_links: {
+        twitter: profile.social_links?.twitter || "",
+        github: profile.social_links?.github || "",
+        linkedin: profile.social_links?.linkedin || "",
+        instagram: profile.social_links?.instagram || "",
+        facebook: profile.social_links?.facebook || ""
+      }
     },
   })
 
@@ -101,124 +111,247 @@ const Profile = ({ profile }: ProfileProps) => {
   }
 
   return (
-    <div>
-      <div className="font-bold text-xl text-center mb-10">プロフィール</div>
-
-      <div className="mb-5">
-        <ImageUploading
-          value={imageUpload}
-          onChange={onChangeImage}
-          maxNumber={1}
-          acceptType={["jpg", "png", "jpeg"]}
-        >
-          {({ imageList, onImageUpload, onImageUpdate, dragProps }) => (
-            <div className="flex flex-col items-center justify-center">
-              {imageList.length == 0 && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    onImageUpload()
-                  }}
-                  className="w-32 h-32 rounded-full bg-gray-200"
-                  {...dragProps}
-                >
-                  <div className="text-gray-400 text-xs">
-                    ファイル形式：jpg / jpeg / png
-                  </div>
-                  <div className="text-gray-400 text-xs">
-                    ファイルサイズ：2MBまで
-                  </div>
-                </button>
-              )}
-
-              {imageList.map((image, index) => (
-                <div key={index}>
-                  {image.dataURL && (
-                    <div className="w-32 h-32 relative">
-                      <Image
-                        fill
-                        src={image.dataURL}
-                        alt="thumbnail"
-                        className="object-cover rounded-full"
-                        priority
-                        sizes="128px"
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>プロフィール設定</CardTitle>
+          <CardDescription>
+            あなたのプロフィール情報を設定します。これらの情報は公開プロフィールに表示されます。
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>お名前</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="お名前"
+                        disabled={isPending}
                       />
-                    </div>
-                  )}
-                </div>
-              ))}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              {imageList.length > 0 && (
-                <div className="text-center mt-3">
-                  <Button
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      onImageUpdate(0)
-                    }}
+              <FormField
+                control={form.control}
+                name="introduce"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>自己紹介</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="自己紹介"
+                        disabled={isPending}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">プロフィール画像</h3>
+                <div>
+                  <ImageUploading
+                    value={imageUpload}
+                    onChange={onChangeImage}
+                    maxNumber={1}
+                    acceptType={["jpg", "png", "jpeg", "gif"]}
                   >
-                    画像を変更
-                  </Button>
+                    {({ imageList, onImageUpload, dragProps }) => (
+                      <div className="space-y-4">
+                        {imageList.map((image, index) => (
+                          <div key={index}>
+                            <Image
+                              src={image.dataURL || "/default.png"}
+                              alt="プロフィール画像"
+                              className="rounded-full"
+                              width={100}
+                              height={100}
+                            />
+                          </div>
+                        ))}
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={isPending}
+                          onClick={onImageUpload}
+                          {...dragProps}
+                        >
+                          画像をアップロード
+                        </Button>
+                      </div>
+                    )}
+                  </ImageUploading>
                 </div>
-              )}
-            </div>
-          )}
-        </ImageUploading>
-      </div>
+              </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-bold">名前</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="田中太郎"
-                    {...field}
-                    disabled={isPending}
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">連絡先情報</h3>
+                <div className="grid gap-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>メールアドレス</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Mail className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              {...field}
+                              placeholder="your@email.com"
+                              className="pl-8"
+                              disabled={isPending}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
-          <FormField
-            control={form.control}
-            name="introduce"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-bold">自己紹介</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="よろしくお願いします。"
-                    rows={7}
-                    {...field}
-                    disabled={isPending}
+                  <FormField
+                    control={form.control}
+                    name="website"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Webサイト</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Globe className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              {...field}
+                              placeholder="https://your-website.com"
+                              className="pl-8"
+                              disabled={isPending}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                </div>
+              </div>
 
-          <div className="space-y-4 w-full">
-            <FormError message={error} />
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">ソーシャルリンク</h3>
+                <div className="grid gap-4">
+                  <FormField
+                    control={form.control}
+                    name="social_links.twitter"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Twitter</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="https://twitter.com/username"
+                            disabled={isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <Button
-              type="submit"
-              className="w-full space-x-2 font-bold"
-              disabled={isPending}
-            >
-              {isPending && <Loader2 className="animate-spin" />}
-              <span>変更</span>
-            </Button>
-          </div>
-        </form>
-      </Form>
+                  <FormField
+                    control={form.control}
+                    name="social_links.github"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>GitHub</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="https://github.com/username"
+                            disabled={isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="social_links.linkedin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>LinkedIn</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="https://linkedin.com/in/username"
+                            disabled={isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="social_links.instagram"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Instagram</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="https://instagram.com/username"
+                            disabled={isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="social_links.facebook"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Facebook</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="https://facebook.com/username"
+                            disabled={isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <FormError message={error} />
+
+              <Button type="submit" disabled={isPending}>
+                {isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                保存する
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

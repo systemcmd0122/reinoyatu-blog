@@ -45,7 +45,21 @@ export const PasswordSchema = z
 export const ProfileSchema = z.object({
   name: z.string().min(1, { message: "お名前を入力してください" }),
   introduce: z.string().optional(),
-})
+  website: z.string().url({ message: "有効なURLを入力してください" }).optional().or(z.literal("")),
+  email: z.string().email({ message: "有効なメールアドレスを入力してください" }).optional().or(z.literal("")),
+  social_links: z.object({
+    twitter: z.string().url({ message: "有効なURLを入力してください" }).optional().or(z.literal("")),
+    github: z.string().url({ message: "有効なURLを入力してください" }).optional().or(z.literal("")),
+    linkedin: z.string().url({ message: "有効なURLを入力してください" }).optional().or(z.literal("")),
+    instagram: z.string().url({ message: "有効なURLを入力してください" }).optional().or(z.literal("")),
+    facebook: z.string().url({ message: "有効なURLを入力してください" }).optional().or(z.literal(""))
+  }).optional(),
+    twitter: z.string().url({ message: "有効なURLを入力してください" }).optional().or(z.literal("")),
+    github: z.string().url({ message: "有効なURLを入力してください" }).optional().or(z.literal("")),
+    linkedin: z.string().url({ message: "有効なURLを入力してください" }).optional().or(z.literal("")),
+    instagram: z.string().url({ message: "有効なURLを入力してください" }).optional().or(z.literal("")),
+    facebook: z.string().url({ message: "有効なURLを入力してください" }).optional().or(z.literal(""))
+  }).optional()
 
 export const EmailSchema = z.object({
   email: z.string().email({

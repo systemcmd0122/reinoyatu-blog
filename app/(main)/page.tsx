@@ -122,6 +122,7 @@ const BlogContent = async ({ }: { session: Session }) => {
       `
       *,
       profiles (
+        id,
         name,
         avatar_url
       )

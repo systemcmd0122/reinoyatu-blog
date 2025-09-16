@@ -16,6 +16,7 @@ interface BlogItemProps {
     image_url: string
     updated_at: string
     profiles: {
+      id: string
       name: string
       avatar_url: string
     }
@@ -84,14 +85,14 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
                 <div className="absolute -inset-0.5 rounded-full bg-gradient-to-tr from-primary/50 to-primary-foreground/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               </div>
               
-              <div className="flex flex-col">
+              <Link href={`/profile/${blog.profiles.id}`} className="flex flex-col hover:text-primary">
                 <span className="text-sm font-medium text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
                   {blog.profiles.name}
                 </span>
                 <span className="text-xs text-white/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
                   {formatJST(blog.updated_at)}
                 </span>
-              </div>
+              </Link>
             </div>
 
             <h3 className={cn(

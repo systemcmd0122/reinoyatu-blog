@@ -12,41 +12,19 @@ export const toggleBookmark = async ({ blogId, userId }: ToggleBookmarkProps) =>
   try {
     const supabase = createClient()
 
-    // まず、すでにブックマークしているか確認
-    const { data: existingBookmark } = await supabase
-      .from("bookmarks")
-      .select("id")
-      .eq("blog_id", blogId)
-      .eq("user_id", userId)
-      .single()
+    // RLS (Row Level Security) を使用して、一度の操作で切り替えを実行
+    const { data, error } = await supabase.rpc('toggle_bookmark', {
+      p_blog_id: blogId,
+      p_user_id: userId
+    })
 
-    if (existingBookmark) {
-      // ブックマークが存在する場合は削除
-      const { error: deleteError } = await supabase
-        .from("bookmarks")
-        .delete()
-        .eq("id", existingBookmark.id)
-
-      if (deleteError) {
-        return { error: deleteError.message, action: null }
-      }
-
-      return { error: null, action: "unbookmarked" }
-    } else {
-      // ブックマークが存在しない場合は追加
-      const { error: insertError } = await supabase
-        .from("bookmarks")
-        .insert({
-          blog_id: blogId,
-          user_id: userId,
-        })
-
-      if (insertError) {
-        return { error: insertError.message, action: null }
-      }
-
-      return { error: null, action: "bookmarked" }
+    if (error) {
+      console.error('Toggle bookmark error:', error)
+      return { error: error.message, action: null }
     }
+
+    // データベース関数から返された action を使用
+    return { error: null, action: data ? 'bookmarked' : 'unbookmarked' }
   } catch (err) {
     console.error(err)
     return { error: "エラーが発生しました", action: null }

@@ -23,7 +23,8 @@ export const signInWithGoogle = async () => {
         queryParams: {
           // 既存のアカウントとの紐付けを許可
           access_type: 'offline',
-          prompt: 'consent'
+          prompt: 'consent',
+          next: '/'
         }
       },
     })
