@@ -3,16 +3,13 @@
 import React, { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { 
-  Calendar,
   Download,
   Facebook,
   FilePenLine,
-  Globe,
   Github,
   Instagram,
   Linkedin,
   Loader2,
-  Mail,
   Trash2, 
   Twitter,
   X, 
@@ -21,7 +18,6 @@ import {
 import { deleteBlog } from "@/actions/blog"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
