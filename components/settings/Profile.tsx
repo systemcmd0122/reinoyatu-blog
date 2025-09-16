@@ -54,7 +54,7 @@ const Profile = ({ profile }: ProfileProps) => {
         instagram: profile.social_links?.instagram || "",
         facebook: profile.social_links?.facebook || ""
       }
-    },
+    } as z.infer<typeof ProfileSchema>,
   })
 
   // 送信

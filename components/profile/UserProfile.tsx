@@ -9,6 +9,7 @@ import { ProfileType } from "@/types"
 
 interface UserProfileProps {
   profile: ProfileType
+  isOwnProfile?: boolean
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({ profile }) => {

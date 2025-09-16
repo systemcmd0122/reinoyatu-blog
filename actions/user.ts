@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid"
 import { ProfileType } from "@/types"
 import { decode } from "base64-arraybuffer"
 
-interface updateProfileProps extends z.infer<typeof ProfileSchema> {
+type updateProfileProps = z.infer<typeof ProfileSchema> & {
   profile: ProfileType
   base64Image: string | undefined
 }

@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server"
 import { Suspense } from "react"
 import Link from "next/link"
+import { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
@@ -109,6 +110,31 @@ const MainPage = async () => {
       <BlogContent session={session} />
     </Suspense>
   )
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const title = "例のヤツ｜ブログ"
+  const description = "例のヤツを主催とした様々なことを投稿・共有するためのブログサイトです。"
+  const image = `${process.env.NEXT_PUBLIC_APP_URL || ""}/og-image.png`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: process.env.NEXT_PUBLIC_APP_URL || undefined,
+      images: [{ url: image, alt: title }],
+      siteName: "例のヤツ｜ブログ",
+      type: "website",
+    },
+    twitter: {
+      title,
+      description,
+      card: "summary_large_image",
+      images: [image],
+    },
+  }
 }
 
 // ブログコンテンツを別コンポーネントとして分離して、データフェッチングとレンダリングを分離

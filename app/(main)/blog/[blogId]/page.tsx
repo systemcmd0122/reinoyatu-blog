@@ -2,10 +2,74 @@ import { createClient } from "@/utils/supabase/server"
 import { Suspense } from "react"
 import BlogDetail from "@/components/blog/BlogDetail"
 import Loading from "@/app/loading"
+import { Metadata } from "next"
 
 interface BlogDetailPageProps {
   params: {
     blogId: string
+  }
+}
+
+// ページごとの動的メタデータを生成（Open Graph / Twitter Card）
+export async function generateMetadata({ params }: BlogDetailPageProps): Promise<Metadata> {
+  const { blogId } = params
+  const supabase = createClient()
+
+  const { data: blogData } = await supabase
+    .from("blogs")
+    .select(
+      `
+      id,
+      title,
+      content,
+      image_url,
+      created_at,
+      profiles (
+        name
+      )
+    `
+    )
+    .eq("id", blogId)
+    .single()
+
+  if (!blogData) {
+    return {
+      title: "記事が見つかりません｜例のヤツ",
+      description: "指定された記事は見つかりませんでした。",
+    }
+  }
+
+  const title = blogData.title || "無題の投稿"
+  // 簡易的にMarkdownや特殊文字を取り除いて説明文を生成
+  const raw = blogData.content || ""
+  const description = raw.replace(/[#_*`>\[\]()!-]/g, "").replace(/\n+/g, " ").slice(0, 160)
+
+  const image = blogData.image_url || `${process.env.NEXT_PUBLIC_APP_URL || ""}/og-image.png`
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || ""}/blog/${blogId}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "例のヤツ｜ブログ",
+      images: [
+        {
+          url: image,
+          alt: title,
+        },
+      ],
+      type: "article",
+      publishedTime: blogData.created_at,
+    },
+    twitter: {
+      title,
+      description,
+      card: "summary_large_image",
+      images: [image],
+    },
   }
 }
 
