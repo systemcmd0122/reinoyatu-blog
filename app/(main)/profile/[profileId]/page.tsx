@@ -17,7 +17,7 @@ const ProfilePage = async ({
     return notFound()
   }
 
-  // UUIDの形式チェック
+  // UUIDの形式チェック（修正版）
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
   if (!uuidRegex.test(id)) {
     console.error(`Invalid UUID format: ${id}`)
@@ -38,13 +38,14 @@ const ProfilePage = async ({
       email,
       website,
       social_links,
+      created_at,
       blogs (
         id,
         title,
         created_at
       )
     `)
-  .eq("id", id)
+    .eq("id", id)
     .single()
 
   if (error) {
@@ -82,7 +83,7 @@ export async function generateMetadata({ params }: { params: { profileId: string
     }
   }
 
-  // UUIDの形式チェック
+  // UUIDの形式チェック（修正版）
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
   if (!uuidRegex.test(id)) {
     return {
