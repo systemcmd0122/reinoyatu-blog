@@ -3,6 +3,38 @@ import { createClient } from "@/utils/supabase/server"
 import UserProfile from "@/components/profile/UserProfile"
 import { Metadata } from "next"
 
+// 安全なUUID検証関数
+const isValidUUID = (id: string): boolean => {
+  if (!id || typeof id !== 'string') return false
+  
+  // 基本的な長さとハイフンの位置をチェック
+  if (id.length !== 36) return false
+  if (id[8] !== '-' || id[13] !== '-' || id[18] !== '-' || id[23] !== '-') return false
+  
+  // 各セクションを個別に検証
+  const sections = id.split('-')
+  if (sections.length !== 5) return false
+  
+  const expectedLengths = [8, 4, 4, 4, 12]
+  
+  for (let i = 0; i < sections.length; i++) {
+    const section = sections[i]
+    
+    // 長さチェック
+    if (section.length !== expectedLengths[i]) return false
+    
+    // 16進数文字のみかチェック
+    for (let j = 0; j < section.length; j++) {
+      const char = section[j].toLowerCase()
+      if (!(char >= '0' && char <= '9') && !(char >= 'a' && char <= 'f')) {
+        return false
+      }
+    }
+  }
+  
+  return true
+}
+
 const ProfilePage = async ({
   params,
 }: {
@@ -17,9 +49,8 @@ const ProfilePage = async ({
     return notFound()
   }
 
-  // UUIDの形式チェック（修正版）
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-  if (!uuidRegex.test(id)) {
+  // UUIDの形式チェック（安全版）
+  if (!isValidUUID(id)) {
     console.error(`Invalid UUID format: ${id}`)
     return notFound()
   }
@@ -83,9 +114,8 @@ export async function generateMetadata({ params }: { params: { profileId: string
     }
   }
 
-  // UUIDの形式チェック（修正版）
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-  if (!uuidRegex.test(id)) {
+  // UUIDの形式チェック（安全版）
+  if (!isValidUUID(id)) {
     return {
       title: "無効なプロフィールID｜例のヤツ",
       description: "指定されたプロフィールIDの形式が正しくありません。",
