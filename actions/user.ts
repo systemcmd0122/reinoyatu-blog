@@ -16,14 +16,16 @@ type updateProfileProps = z.infer<typeof ProfileSchema> & {
 export const updateProfile = async (values: updateProfileProps) => {
   try {
     // バリデーション
-    const result = ProfileSchema.safeParse(values);
+    const result = ProfileSchema.safeParse(values)
     if (!result.success) {
-      return { error: result.error.errors[0].message };
+      console.error("Profile validation error:", result.error)
+      return { error: result.error.errors[0].message }
     }
 
     const supabase = createClient()
     let avatar_url = values.profile.avatar_url
 
+    // 画像処理
     if (values.base64Image) {
       // 画像サイズと形式のバリデーション
       const matches = values.base64Image.match(/^data:(.+);base64,(.+)$/)
@@ -58,13 +60,13 @@ export const updateProfile = async (values: updateProfileProps) => {
         })
 
       if (storageError) {
+        console.error("Storage upload error:", storageError)
         return { error: storageError.message }
       }
 
+      // 古い画像を削除
       if (avatar_url) {
         const fileName = avatar_url.split("/").slice(-1)[0]
-
-        // 古い画像を削除
         await supabase.storage
           .from("profile")
           .remove([`${values.profile.id}/${fileName}`])
@@ -78,16 +80,25 @@ export const updateProfile = async (values: updateProfileProps) => {
       avatar_url = urlData.publicUrl
     }
 
+    // ソーシャルリンクの処理（空文字列を除去）
+    const processedSocialLinks = values.social_links ? 
+      Object.entries(values.social_links).reduce((acc, [key, value]) => {
+        if (value && value.trim() !== "") {
+          acc[key] = value.trim()
+        }
+        return acc
+      }, {} as Record<string, string>) : {}
+
     // プロフィールアップデート
     const { error: updateError } = await supabase
       .from("profiles")
       .update({
-        name: values.name,
-        introduce: values.introduce,
+        name: values.name.trim(),
+        introduce: values.introduce?.trim() || null,
         avatar_url,
-        email: values.email || null,
-        website: values.website || null,
-        social_links: values.social_links || {},
+        email: values.email?.trim() || null,
+        website: values.website?.trim() || null,
+        social_links: processedSocialLinks,
         updated_at: new Date().toISOString()
       })
       .eq("id", values.profile.id)
@@ -98,9 +109,10 @@ export const updateProfile = async (values: updateProfileProps) => {
       return { error: updateError.message }
     }
 
+    console.log("Profile updated successfully")
     return { success: true }
   } catch (err) {
-    console.error(err)
+    console.error("Unexpected error:", err)
     return { error: "エラーが発生しました" }
   }
 }
@@ -108,6 +120,12 @@ export const updateProfile = async (values: updateProfileProps) => {
 // メールアドレス変更
 export const updateEmail = async (values: z.infer<typeof EmailSchema>) => {
   try {
+    // バリデーション
+    const result = EmailSchema.safeParse(values)
+    if (!result.success) {
+      return { error: result.error.errors[0].message }
+    }
+
     const supabase = createClient()
 
     // メールアドレス変更メールを送信
@@ -117,6 +135,7 @@ export const updateEmail = async (values: z.infer<typeof EmailSchema>) => {
     )
 
     if (updateUserError) {
+      console.error("Update email error:", updateUserError)
       return { error: updateUserError.message }
     }
 
@@ -124,10 +143,13 @@ export const updateEmail = async (values: z.infer<typeof EmailSchema>) => {
     const { error: signOutError } = await supabase.auth.signOut()
 
     if (signOutError) {
+      console.error("Sign out error:", signOutError)
       return { error: signOutError.message }
     }
+
+    return { success: true }
   } catch (err) {
-    console.error(err)
+    console.error("Unexpected error:", err)
     return { error: "エラーが発生しました" }
   }
 }

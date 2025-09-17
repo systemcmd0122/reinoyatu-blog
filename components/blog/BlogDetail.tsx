@@ -896,7 +896,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                         onClick={(e) => e.stopPropagation()}
                       >
                         <Twitter className="h-3 w-3" />
-                        <span>Twitter</span>
+                        <span>X(旧Twitter)</span>
                       </a>
                     )}
                     {blog.profiles.social_links.github && (

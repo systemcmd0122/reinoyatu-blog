@@ -5,21 +5,24 @@ export const BlogSchema = z.object({
   content: z.string().min(10, { message: "内容は10文字以上必要です" }).max(5000, { message: "内容は5000文字以内で入力してください" })
 })
 
+export interface SocialLinksType {
+  twitter?: string
+  github?: string
+  linkedin?: string
+  instagram?: string
+  facebook?: string
+}
+
 export interface ProfileType {
   id: string
   name: string
   introduce: string | null
   avatar_url: string | null
-  email?: string
-  website?: string
+  email?: string | null
+  website?: string | null
   created_at?: string
-  social_links?: {
-    twitter?: string
-    github?: string
-    linkedin?: string
-    instagram?: string
-    facebook?: string
-  }
+  updated_at?: string
+  social_links?: SocialLinksType
 }
 
 export interface BlogType {
@@ -53,20 +56,20 @@ export interface BookmarkType {
 }
 
 export interface ReactionType {
-  emoji: string;
-  count: number;
-  reacted: boolean;
+  emoji: string
+  count: number
+  reacted: boolean
 }
 
 export interface CommentType {
-  id: string;
-  blog_id: string;
-  user_id: string;
-  parent_id: string | null;
-  content: string;
-  user_name: string;
-  user_avatar_url: string | null;
-  created_at: string;
-  updated_at: string;
-  reactions: ReactionType[]; // 追加
+  id: string
+  blog_id: string
+  user_id: string
+  parent_id: string | null
+  content: string
+  user_name: string
+  user_avatar_url: string | null
+  created_at: string
+  updated_at: string
+  reactions: ReactionType[]
 }
