@@ -7,18 +7,19 @@ import { Card } from "@/components/ui/card"
 import { formatJST } from "@/utils/date"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { User } from "lucide-react"
 
 interface BlogItemProps {
   blog: {
     id: string
     title: string
     content: string
-    image_url: string
+    image_url: string | null
     updated_at: string
     profiles: {
       id: string
       name: string
-      avatar_url: string
+      avatar_url: string | null
     }
   }
   priority?: boolean
@@ -26,6 +27,12 @@ interface BlogItemProps {
 
 const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
   const [imageLoaded, setImageLoaded] = React.useState(false)
+
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    window.location.href = `/profile/${blog.profiles.id}`
+  }
 
   return (
     <motion.div
@@ -73,28 +80,40 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
           {/* コンテンツ部分 */}
           <div className="absolute bottom-0 left-0 right-0 p-6">
             <div className="mb-4 flex items-center gap-3">
-              <div className="relative">
-                <div className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-white/20">
-                  <Image
-                    src={blog.profiles?.avatar_url || "/default.png"}
-                    alt={blog.profiles?.name || "Unknown User"}
-                    fill
-                    className="object-cover"
-                  />
+              {/* 著者情報 - クリック可能エリア */}
+              <div 
+                className="flex items-center gap-3 cursor-pointer group/author transition-all duration-200 hover:scale-105"
+                onClick={handleAuthorClick}
+                title={`${blog.profiles?.name || "Unknown User"}のプロフィールを見る`}
+              >
+                <div className="relative">
+                  <div className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-white/20 transition-all duration-300 group-hover/author:border-primary/50">
+                    <Image
+                      src={blog.profiles?.avatar_url || "/default.png"}
+                      alt={blog.profiles?.name || "Unknown User"}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="absolute -inset-0.5 rounded-full bg-gradient-to-tr from-primary/50 to-primary-foreground/50 opacity-0 transition-opacity duration-300 group-hover/author:opacity-100" />
+                  
+                  {/* プロフィールアイコン */}
+                  <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-primary/90 flex items-center justify-center opacity-0 transition-all duration-300 group-hover/author:opacity-100 scale-75 group-hover/author:scale-100">
+                    <User className="h-2.5 w-2.5 text-white" />
+                  </div>
                 </div>
-                <div className="absolute -inset-0.5 rounded-full bg-gradient-to-tr from-primary/50 to-primary-foreground/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              </div>
-              
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
-                  {blog.profiles?.name || "Unknown User"}
-                </span>
-                <span className="text-xs text-white/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
-                  {formatJST(blog.updated_at)}
-                </span>
-                <span className="text-xs text-white/60 italic">
-                  (プロフィール機能開発中)
-                </span>
+                
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] transition-colors duration-300 group-hover/author:text-primary-foreground">
+                    {blog.profiles?.name || "Unknown User"}
+                  </span>
+                  <span className="text-xs text-white/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+                    {formatJST(blog.updated_at)}
+                  </span>
+                  <span className="text-xs text-white/60 italic opacity-0 transition-opacity duration-300 group-hover/author:opacity-100">
+                    プロフィールを見る
+                  </span>
+                </div>
               </div>
             </div>
 

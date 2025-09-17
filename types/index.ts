@@ -31,6 +31,11 @@ export interface BlogType {
   updated_at: string
   created_at: string
   likes_count?: number
+  profiles: {
+    id: string
+    name: string
+    avatar_url: string | null
+  }
 }
 
 export interface LikeType {

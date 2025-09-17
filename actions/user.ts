@@ -15,19 +15,35 @@ type updateProfileProps = z.infer<typeof ProfileSchema> & {
 // プロフィール更新
 export const updateProfile = async (values: updateProfileProps) => {
   try {
-    const supabase = createClient()
+    // バリデーション
+    const result = ProfileSchema.safeParse(values);
+    if (!result.success) {
+      return { error: result.error.errors[0].message };
+    }
 
+    const supabase = createClient()
     let avatar_url = values.profile.avatar_url
 
     if (values.base64Image) {
+      // 画像サイズと形式のバリデーション
       const matches = values.base64Image.match(/^data:(.+);base64,(.+)$/)
-
       if (!matches || matches.length !== 3) {
         return { error: "無効な画像データです" }
       }
 
-      const contentType = matches[1] // 例: "image/png"
+      const contentType = matches[1]
       const base64Data = matches[2]
+      
+      // 画像形式の確認
+      if (!['image/jpeg', 'image/png', 'image/gif'].includes(contentType)) {
+        return { error: "jpeg, png, gif形式のみ対応しています" }
+      }
+
+      // サイズチェック（base64データのサイズを計算）
+      const sizeInBytes = Math.ceil((base64Data.length / 4) * 3)
+      if (sizeInBytes > 5 * 1024 * 1024) { // 5MB制限
+        return { error: "画像サイズは5MB以下にしてください" }
+      }
 
       // 拡張子を取得
       const fileExt = contentType.split("/")[1] // 例: "png"
@@ -69,13 +85,20 @@ export const updateProfile = async (values: updateProfileProps) => {
         name: values.name,
         introduce: values.introduce,
         avatar_url,
+        email: values.email || null,
+        website: values.website || null,
+        social_links: values.social_links || {},
+        updated_at: new Date().toISOString()
       })
       .eq("id", values.profile.id)
 
     // エラーチェック
     if (updateError) {
+      console.error("Profile update error:", updateError)
       return { error: updateError.message }
     }
+
+    return { success: true }
   } catch (err) {
     console.error(err)
     return { error: "エラーが発生しました" }

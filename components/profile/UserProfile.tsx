@@ -1,11 +1,15 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Globe, Mail, Calendar, Github, Twitter, Linkedin, Instagram, Facebook } from "lucide-react"
 import { formatJST } from "@/utils/date"
-import { ProfileType } from "@/types"
+import { ProfileType, BlogType } from "@/types"
+import { createClient } from "@/utils/supabase/client"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
+import BlogItem from "@/components/blog/BlogItem"
 
 interface UserProfileProps {
   profile: ProfileType
@@ -13,6 +17,39 @@ interface UserProfileProps {
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false }) => {
+  const [activeTab, setActiveTab] = useState<'posts' | 'about'>('posts')
+  const [blogPosts, setBlogPosts] = useState<BlogType[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // ブログ投稿を取得
+  useEffect(() => {
+    const fetchBlogPosts = async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('blogs')
+        .select(`
+          *,
+          profiles (
+            id,
+            name,
+            avatar_url
+          )
+        `)
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('ブログ投稿の取得中にエラーが発生しました:', error)
+        return
+      }
+
+      setBlogPosts(data || [])
+      setIsLoading(false)
+    }
+
+    fetchBlogPosts()
+  }, [profile.id])
+
   const formatIntroduce = useCallback((text: string | null) => {
     if (!text) return null
     return text.split('\n').map((line, i) => (
@@ -150,6 +187,49 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
               )}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4 md:p-6">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'posts' | 'about')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="posts">投稿</TabsTrigger>
+              <TabsTrigger value="about">プロフィール</TabsTrigger>
+            </TabsList>
+            <TabsContent value="posts" className="mt-4 space-y-4">
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-48 w-full" />
+                  ))}
+                </div>
+              ) : blogPosts.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {blogPosts.map((blog) => (
+                    <BlogItem key={blog.id} blog={blog} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground py-8">
+                  まだ投稿がありません
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="about" className="mt-4">
+              <div className="space-y-4">
+                {profile.introduce ? (
+                  <div className="prose max-w-none">
+                    {formatIntroduce(profile.introduce)}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">
+                    自己紹介文はまだ設定されていません
+                  </p>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
