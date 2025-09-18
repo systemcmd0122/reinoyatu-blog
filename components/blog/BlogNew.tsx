@@ -26,6 +26,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import MarkdownHelp from "@/components/blog/markdown/MarkdownHelp"
 import AICustomizeDialog from "@/components/blog/AICustomizeDialog"
 import { generateBlogContent } from "@/utils/gemini"
+import { GenerationOptions } from "@/types";
 
 interface BlogNewProps {
   userId: string
@@ -186,24 +187,23 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
     setIsAIDialogOpen(true)
   }
 
-  // BlogNew.tsxとBlogEdit.tsxの該当部分
-const handleGenerate = async (styles: string[]) => {
-  const { title, content } = form.getValues();
-  setIsGenerating(true);
-  
-  try {
-    const result = await generateBlogContent(title, content, styles.join(','));
-    if (result.error) {
-      toast.error(result.error);
-    } else {
-      setGeneratedContent(result.content);
+  const handleGenerate = async (styles: string[], options: GenerationOptions) => {
+    const { title, content } = form.getValues();
+    setIsGenerating(true);
+    
+    try {
+      const result = await generateBlogContent(title, content, styles, options);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        setGeneratedContent(result.content);
+      }
+    } catch (error) {
+      toast.error("AIによる生成中にエラーが発生しました");
+    } finally {
+      setIsGenerating(false);
     }
-  } catch (error) {
-    toast.error("AIによる生成中にエラーが発生しました");
-  } finally {
-    setIsGenerating(false);
-  }
-};
+  };
 
   const handleApplyAIContent = (content: string) => {
     form.setValue("content", content, { shouldValidate: true })

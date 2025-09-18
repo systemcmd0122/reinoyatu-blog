@@ -73,3 +73,10 @@ export interface CommentType {
   updated_at: string
   reactions: ReactionType[]
 }
+
+export interface GenerationOptions {
+  keepStructure: boolean;
+  preserveLinks: boolean;
+  enhanceReadability: boolean;
+  summaryLength?: 'short' | 'medium' | 'long';
+}

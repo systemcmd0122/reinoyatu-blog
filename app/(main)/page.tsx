@@ -5,7 +5,47 @@ import { Button } from "@/components/ui/button"
 import BlogItem from "@/components/blog/BlogItem"
 import LandingPage from "@/components/landing/LandingPage"
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+
 const DEFAULT_PAGE_SIZE = 9 // 1ページあたりの表示件数
+
+const getPagination = (page: number, totalPages: number) => {
+  const delta = 1
+  const left = page - delta
+  const right = page + delta + 1
+  const range = []
+  const rangeWithDots: (number | string)[] = []
+  let l: number | undefined
+
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= left && i < right)) {
+      range.push(i)
+    }
+  }
+
+  for (const i of range) {
+    if (l) {
+      if (i - l === 2) {
+        rangeWithDots.push(l + 1)
+      } else if (i - l !== 1) {
+        rangeWithDots.push('...')
+      }
+    }
+    rangeWithDots.push(i)
+    l = i
+  }
+
+  return rangeWithDots
+}
+
 
 const MainPage = async ({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) => {
   const supabase = createClient()
@@ -121,18 +161,31 @@ const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: st
         ))}
       </div>
       {totalPages > 1 && (
-        <div className="flex justify-center space-x-4 mt-8">
-          {page > 1 && (
-            <Link href={{ query: { page: page - 1 } }}>
-              <Button variant="outline">前へ</Button>
-            </Link>
-          )}
-          {page < totalPages && (
-            <Link href={{ query: { page: page + 1 } }}>
-              <Button variant="outline">次へ</Button>
-            </Link>
-          )}
-        </div>
+        <Pagination className="mt-8">
+          <PaginationContent>
+            {page > 1 && (
+              <PaginationItem>
+                <PaginationPrevious href={{ query: { page: page - 1 } }} />
+              </PaginationItem>
+            )}
+            {getPagination(page, totalPages).map((item, index) => (
+              <PaginationItem key={index}>
+                {item === "..." ? (
+                  <PaginationEllipsis />
+                ) : (
+                  <PaginationLink href={{ query: { page: item } }} isActive={page === item}>
+                    {item}
+                  </PaginationLink>
+                )}
+              </PaginationItem>
+            ))}
+            {page < totalPages && (
+              <PaginationItem>
+                <PaginationNext href={{ query: { page: page + 1 } }} />
+              </PaginationItem>
+            )}
+          </PaginationContent>
+        </Pagination>
       )}
     </div>
   )
