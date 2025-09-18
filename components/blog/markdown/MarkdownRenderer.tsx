@@ -1,10 +1,12 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import Image from "next/image"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 import YouTubeEmbed from "./YouTubeEmbed"
+import { Clipboard, Check } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface MarkdownRendererProps {
   content: string;
@@ -30,6 +32,63 @@ interface YouTubeMatch {
     showDetails: boolean;
   };
 }
+
+// コードブロック用の独立したコンポーネント
+const CodeBlock: React.FC<CodeProps & { codeContent: string; language?: string }> = ({ 
+  inline, 
+  className, 
+  children, 
+  codeContent, 
+  language,
+  ...props 
+}) => {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(codeContent);
+    setIsCopied(true);
+  };
+
+  useEffect(() => {
+    if (isCopied) {
+      const timer = setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCopied]);
+
+  if (inline) {
+    return (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <SyntaxHighlighter
+        style={oneDark}
+        language={language || 'text'}
+        PreTag="div"
+        {...props}
+      >
+        {codeContent}
+      </SyntaxHighlighter>
+      <button
+        onClick={handleCopy}
+        className={cn(
+          "absolute top-2 right-2 p-1 rounded-md text-white",
+          isCopied ? "bg-green-500" : "bg-gray-700 hover:bg-gray-600"
+        )}
+        title={isCopied ? "Copied!" : "Copy code"}
+      >
+        {isCopied ? <Check size={16} /> : <Clipboard size={16} />}
+      </button>
+    </div>
+  );
+};
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ 
   content,
@@ -111,19 +170,18 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         components={{
           code({ inline, className, children, ...props }: CodeProps) {
             const match = /language-(\w+)/.exec(className || '');
-            return !inline && match ? (
-              <SyntaxHighlighter
-                style={oneDark}
-                language={match[1]}
-                PreTag="div"
+            const codeContent = String(children).replace(/\n$/, '');
+
+            return (
+              <CodeBlock
+                inline={inline}
+                className={className}
+                codeContent={codeContent}
+                language={match ? match[1] : undefined}
                 {...props}
               >
-                {String(children).replace(/\n$/, '')}
-              </SyntaxHighlighter>
-            ) : (
-              <code className={className} {...props}>
                 {children}
-              </code>
+              </CodeBlock>
             );
           },
           // 画像コンポーネントをカスタマイズ
@@ -198,7 +256,39 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
               {children}
             </blockquote>
           ),
-          hr: () => <hr className="my-6 border-t border-gray-300" />
+          hr: () => <hr className="my-6 border-t border-gray-300" />,
+          table: ({ children }) => (
+            <div className="w-full overflow-x-auto my-4">
+              <table className="w-full text-left border-collapse">
+                {children}
+              </table>
+            </div>
+          ),
+          thead: ({ children }) => (
+            <thead className="[&_tr]:border-b">
+              {children}
+            </thead>
+          ),
+          tbody: ({ children }) => (
+            <tbody className="[&_tr:last-child]:border-0">
+              {children}
+            </tbody>
+          ),
+          tr: ({ children }) => (
+            <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+              {children}
+            </tr>
+          ),
+          th: ({ children }) => (
+            <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([data-state=checked])]:pr-0">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="p-4 align-middle [&:has([data-state=checked])]:pr-0">
+              {children}
+            </td>
+          )
         }}
       >
         {processedContent}
