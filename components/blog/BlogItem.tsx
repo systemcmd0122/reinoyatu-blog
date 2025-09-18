@@ -6,7 +6,6 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { formatJST } from "@/utils/date"
 import { cn } from "@/lib/utils"
-import { User } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface BlogItemProps {
@@ -36,130 +35,85 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
   }
 
   return (
-    <div>
-      <Link href={`blog/${blog.id}`}>
-        <Card className={cn(
-          "group relative w-full overflow-hidden",
-          "bg-card/50 backdrop-blur-sm",
-          "border border-border/50 transition-all duration-300",
-          "hover:border-primary/30 hover:shadow-lg",
-          "rounded-2xl"
-        )}>
-          {/* カード画像部分 */}
-          <div className="relative aspect-[4/3] w-full overflow-hidden">
-            <Image
-              src={blog.image_url || "/noImage.png"}
-              alt=""
-              fill
-              className={cn(
-                "object-cover transition-all duration-700",
-                "group-hover:scale-105",
-                !imageLoaded && "blur-2xl scale-105",
-                imageLoaded && "blur-0 scale-100"
-              )}
-              priority={priority}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              onLoadingComplete={() => setImageLoaded(true)}
-            />
-            {/* 多層グラデーションオーバーレイ */}
-            <div className={cn(
-              "absolute inset-0",
-              "bg-gradient-to-t from-black/90 via-black/60 to-black/30",
-              "transition-opacity duration-300",
-              "opacity-70 group-hover:opacity-80"
-            )} />
-            
-            {/* 追加の保護レイヤー */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80" />
-          </div>
+    <Link href={`/blog/${blog.id}`} className="block group">
+      <Card className={cn(
+        "relative w-full h-full overflow-hidden bg-card/50 backdrop-blur-sm",
+        "border border-border/50 transition-all duration-300 ease-in-out",
+        "hover:border-primary/30 hover:shadow-xl hover:-translate-y-1",
+        "rounded-2xl"
+      )}>
+        {/* カード画像部分 */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden">
+          <Image
+            src={blog.image_url || "/noImage.png"}
+            alt={blog.title}
+            fill
+            className={cn(
+              "object-cover transition-all duration-700 ease-in-out",
+              "group-hover:scale-110",
+              !imageLoaded && "blur-xl scale-110",
+              imageLoaded && "blur-0 scale-100"
+            )}
+            priority={priority}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            onLoad={() => setImageLoaded(true)}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+        </div>
 
-          {/* コンテンツ部分 */}
-          <div className="absolute bottom-0 left-0 right-0 p-6">
-            <div className="mb-4 flex items-center gap-3">
-              {/* 著者情報 - クリック可能エリア */}
-              <div 
-                className="flex items-center gap-3 cursor-pointer group/author transition-all duration-200 hover:scale-105"
-                onClick={handleAuthorClick}
-                title={`${blog.profiles?.name || "Unknown User"}のプロフィールを見る`}
-              >
-                <div className="relative">
-                  <div className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-white/20 transition-all duration-300 group-hover/author:border-primary/50">
-                    <Image
-                      src={blog.profiles?.avatar_url || "/default.png"}
-                      alt={blog.profiles?.name || "Unknown User"}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="absolute -inset-0.5 rounded-full bg-gradient-to-tr from-primary/50 to-primary-foreground/50 opacity-0 transition-opacity duration-300 group-hover/author:opacity-100" />
-                  
-                  {/* プロフィールアイコン */}
-                  <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-primary/90 flex items-center justify-center opacity-0 transition-all duration-300 group-hover/author:opacity-100 scale-75 group-hover/author:scale-100">
-                    <User className="h-2.5 w-2.5 text-white" />
-                  </div>
-                </div>
-                
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] transition-colors duration-300 group-hover/author:text-primary-foreground">
-                    {blog.profiles?.name || "Unknown User"}
-                  </span>
-                  <span className="text-xs text-white/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
-                    {formatJST(blog.updated_at)}
-                  </span>
-                  <span className="text-xs text-white/60 italic opacity-0 transition-opacity duration-300 group-hover/author:opacity-100">
-                    プロフィールを見る
-                  </span>
-                </div>
-              </div>
-            </div>
-
+        {/* コンテンツ部分 */}
+        <div className="absolute inset-0 flex flex-col justify-end p-5 text-white">
+          {/* 上部: 著者情報 */}
+          <div className="flex-grow">
             {blog.tags && blog.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-2">
-                {blog.tags.slice(0, 3).map(tag => (
-                  <Badge key={tag.name} variant="secondary" className="text-xs backdrop-blur-sm bg-white/10 text-white border-white/20">
+              <div className="flex flex-wrap gap-1.5">
+                {blog.tags.slice(0, 2).map(tag => (
+                  <Badge key={tag.name} variant="secondary" className="text-xs backdrop-blur-sm bg-white/10 text-white border-none font-normal">
                     {tag.name}
                   </Badge>
                 ))}
               </div>
             )}
+          </div>
 
+          {/* 下部: タイトルと著者 */}
+          <div>
             <h3 className={cn(
-              "text-xl font-bold text-white",
-              "line-clamp-2 leading-tight tracking-wide",
-              "transition-colors duration-300",
-              "drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]",
-              "group-hover:text-primary-foreground"
+              "text-lg font-bold text-white mb-2",
+              "line-clamp-2 leading-tight tracking-tight",
+              "drop-shadow-md"
             )}>
               {blog.title}
             </h3>
-
-            {/* アクセントライン */}
-            <div className="relative mt-4">
-              <div className={cn(
-                "h-1 w-12 rounded-full",
-                "bg-gradient-to-r from-primary to-primary-foreground/80",
-                "transition-all duration-300",
-                "group-hover:w-20"
-              )} />
-              <div className={cn(
-                "absolute inset-0 blur-md",
-                "bg-gradient-to-r from-primary to-primary-foreground/80",
-                "opacity-50 transition-opacity duration-300",
-                "group-hover:opacity-100"
-              )} />
+            
+            <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/10">
+              <div 
+                className="flex items-center gap-2 group/author transition-opacity duration-200 hover:opacity-80"
+                onClick={handleAuthorClick}
+                title={`${blog.profiles?.name || "Unknown User"}のプロフィールを見る`}
+              >
+                <div className="relative h-7 w-7 overflow-hidden rounded-full border border-white/20">
+                  <Image
+                    src={blog.profiles?.avatar_url || "/default.png"}
+                    alt={blog.profiles?.name || "Unknown User"}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="text-xs">
+                  <div className="font-medium text-white/90 drop-shadow-sm">
+                    {blog.profiles?.name || "Unknown User"}
+                  </div>
+                  <div className="text-white/70">
+                    {formatJST(blog.updated_at)}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* ホバー時のオーバーレイ効果 */}
-          <div className={cn(
-            "absolute inset-0",
-            "bg-gradient-to-t from-primary/20 to-transparent",
-            "opacity-0 transition-opacity duration-300",
-            "group-hover:opacity-100"
-          )} />
-        </Card>
-      </Link>
-    </div>
+        </div>
+      </Card>
+    </Link>
   )
 }
 

@@ -58,37 +58,62 @@ const CodeBlock: React.FC<CodeProps & { codeContent: string; language?: string }
     }
   }, [isCopied]);
 
-  if (inline) {
-    return (
-      <code className={className} {...props}>
-        {children}
-      </code>
-    );
-  }
+    if (inline) {
+      return (
+        <code 
+          className={cn(
+            "bg-gray-200 dark:bg-gray-700 text-red-500 dark:text-red-400 px-1.5 py-0.5 rounded-md text-sm font-mono",
+            className
+          )}
+          {...props}
+        >
+          {children}
+        </code>
+      );
+    }
 
-  return (
-    <div className="relative">
-      <SyntaxHighlighter
-        style={oneDark}
-        language={language || 'text'}
-        PreTag="div"
-        {...props}
-      >
-        {codeContent}
-      </SyntaxHighlighter>
-      <button
-        onClick={handleCopy}
+    return (
+      <div className="relative">
+        <SyntaxHighlighter
+          style={oneDark}
+          language={language || 'text'}
+          PreTag="div"
+          {...props}
+        >
+          {codeContent}
+        </SyntaxHighlighter>
+        <button
+          onClick={handleCopy}
+          className={cn(
+            "absolute top-2 right-2 p-1 rounded-md text-white",
+            isCopied ? "bg-green-500" : "bg-gray-700 hover:bg-gray-600"
+          )}
+          title={isCopied ? "Copied!" : "Copy code"}
+        >
+          {isCopied ? <Check size={16} /> : <Clipboard size={16} />}
+        </button>
+      </div>
+    );
+  };
+
+  // ネタバレコンテンツ用のコンポーネント
+  const Spoiler: React.FC<{ content: string }> = ({ content }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+      <span 
         className={cn(
-          "absolute top-2 right-2 p-1 rounded-md text-white",
-          isCopied ? "bg-green-500" : "bg-gray-700 hover:bg-gray-600"
+          "transition-colors duration-300 ease-in-out",
+          isOpen ? "bg-transparent text-inherit" : "bg-gray-800 text-gray-800 dark:bg-gray-300 dark:text-gray-300",
+          "cursor-pointer rounded-md px-1"
         )}
-        title={isCopied ? "Copied!" : "Copy code"}
+        onClick={() => setIsOpen(!isOpen)}
+        title="Click to reveal spoiler"
       >
-        {isCopied ? <Check size={16} /> : <Clipboard size={16} />}
-      </button>
-    </div>
-  );
-};
+        {content}
+      </span>
+    );
+  };
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ 
   content,
@@ -143,6 +168,36 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   // null, undefined, 空文字列チェック
   const safeContent = content || '';
   const { content: processedContent, matches: youtubeMatches } = extractYouTubeEmbeds(safeContent);
+
+  // ネタバレコンテンツを抽出して処理する
+  const extractSpoilers = (markdownContent: string): {
+    content: string;
+    spoilerMatches: { [key: string]: string };
+  } => {
+    const spoilerMatches: { [key: string]: string } = {};
+    let spoilerIndex = 0;
+
+    // ||spoiler|| 形式の処理
+    let processed = markdownContent.replace(/\|\|(.+?)\|\|/g, (match, content) => {
+      const placeholder = `--spoiler-${spoilerIndex}--`;
+      spoilerMatches[placeholder] = content;
+      spoilerIndex++;
+      return placeholder;
+    });
+
+    // /spoiler 形式の処理 (行頭)
+    processed = processed.replace(/^\/spoiler\s+(.+)/gm, (match, content) => {
+      const placeholder = `--spoiler-${spoilerIndex}--`;
+      spoilerMatches[placeholder] = content;
+      spoilerIndex++;
+      return placeholder;
+    });
+
+    return { content: processed, spoilerMatches };
+  };
+
+  const { content: finalContent, spoilerMatches } = extractSpoilers(processedContent);
+
 
   // カスタムレンダリング関数
   const renderYouTubeComponent = (placeholderText: string) => {
@@ -208,32 +263,37 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           h2: ({ children, ...props }) => <h2 className="text-2xl font-semibold my-3" {...props}>{children}</h2>,
           h3: ({ children, ...props }) => <h3 className="text-xl font-semibold my-2" {...props}>{children}</h3>,
           p: ({ children, ...props }) => {
-            // YouTube埋め込みプレースホルダーを処理
-            if (typeof children === 'string' && children.includes('--youtube-embed-')) {
-              return renderYouTubeComponent(children);
+            const processChildren = (nodes: React.ReactNode[]): React.ReactNode[] => {
+              return nodes.flatMap((node, i) => {
+                if (typeof node === 'string') {
+                  const parts = node.split(/(--youtube-embed-\d+--|--spoiler-\d+--)/);
+                  return parts.map((part, j) => {
+                    if (part.match(/--youtube-embed-\d+--/)) {
+                      return renderYouTubeComponent(part);
+                    }
+                    if (part.match(/--spoiler-\d+--/)) {
+                      const spoilerContent = spoilerMatches[part.trim()];
+                      return spoilerContent ? <Spoiler key={`${i}-${j}`} content={spoilerContent} /> : part;
+                    }
+                    return part;
+                  });
+                }
+                return node;
+              });
+            };
+
+            const processedChildren = Array.isArray(children) ? processChildren(children) : processChildren([children]);
+
+            // YouTube埋め込みのみ、またはネタバレのみの場合はdivでラップ
+            const isOnlyEmbed = processedChildren.every(
+              (child: any) => child?.type === YouTubeEmbed || child?.type === Spoiler
+            );
+
+            if (isOnlyEmbed) {
+              return <div className="mb-4">{processedChildren}</div>;
             }
-            
-            // 複数の段落やテキストノードが混在する場合の処理
-            if (Array.isArray(children)) {
-              const hasYouTubeEmbed = children.some(
-                child => typeof child === 'string' && child.includes('--youtube-embed-')
-              );
-              
-              if (hasYouTubeEmbed) {
-                return (
-                  <div className="mb-4">
-                    {children.map((child, i) => {
-                      if (typeof child === 'string' && child.includes('--youtube-embed-')) {
-                        return renderYouTubeComponent(child);
-                      }
-                      return <span key={i}>{child}</span>;
-                    })}
-                  </div>
-                );
-              }
-            }
-            
-            return <p className="mb-4 leading-relaxed" {...props}>{children}</p>;
+
+            return <p className="mb-4 leading-relaxed" {...props}>{processedChildren}</p>;
           },
           a: ({ href, children, ...props }) => (
             <a 
@@ -291,7 +351,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           )
         }}
       >
-        {processedContent}
+        {finalContent}
       </ReactMarkdown>
     </div>
   );

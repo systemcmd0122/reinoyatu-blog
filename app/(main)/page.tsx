@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server"
 import Link from "next/link"
 import { Metadata } from "next"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import BlogItem from "@/components/blog/BlogItem"
 import LandingPage from "@/components/landing/LandingPage"
 
@@ -89,6 +90,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // ブログコンテンツを別コンポーネントとして分離して、データフェッチングとレンダリングを分離
 const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) => {
   const supabase = createClient()
+  const currentTag = null // どのタグも選択されていない状態を定義
   const page = typeof searchParams.page === "string" ? Number(searchParams.page) : 1
   const start = (page - 1) * DEFAULT_PAGE_SIZE
   const end = start + DEFAULT_PAGE_SIZE - 1
@@ -157,36 +159,36 @@ const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: st
   // ブログ一覧表示
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">最新のブログ記事</h1>
+      <div className="flex justify-between items-center border-b pb-6 mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">最新のブログ記事</h1>
         <Link href="/blog/new">
-          <Button>
-            新規ブログ投稿
-          </Button>
+          <Button>新規ブログ投稿</Button>
         </Link>
       </div>
 
       {/* タグフィルターUI */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">タグで絞り込む</h2>
-        <div className="flex flex-wrap gap-2 items-center">
-          <Link href="/">
-            <span className="inline-block bg-primary text-primary-foreground rounded-full px-3 py-1 text-sm font-semibold hover:bg-primary/90 transition-colors duration-200 cursor-pointer">
-              すべて
-            </span>
-          </Link>
-          {tags && tags.map((tag: { name: string; count: number }) => (
-            <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
-              <span className="inline-block bg-gray-200 dark:bg-gray-700 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
-                {tag.name} <span className="text-xs opacity-75">({tag.count})</span>
-              </span>
+      {tags && tags.length > 0 && (
+        <div className="mb-8">
+          <div className="flex flex-wrap gap-2 items-center">
+            <Link href="/">
+              <Badge variant={!currentTag ? "default" : "secondary"} className="cursor-pointer text-base px-4 py-1.5">
+                すべて
+              </Badge>
             </Link>
-          ))}
+            {tags.map((tag: { name: string; count: number }) => (
+              <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
+                <Badge variant={currentTag === tag.name ? "default" : "secondary"} className="cursor-pointer text-base px-4 py-1.5">
+                  {tag.name}
+                  <span className="ml-1.5 text-xs opacity-75">{tag.count}</span>
+                </Badge>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ブログ一覧 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {blogsWithLikes.map((blog, index) => (
           <BlogItem key={blog.id} blog={blog} priority={index < 3} />
         ))}
