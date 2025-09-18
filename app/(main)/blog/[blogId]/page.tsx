@@ -101,6 +101,9 @@ const BlogDetailPage = async ({ params }: BlogDetailPageProps) => {
         avatar_url,
         introduce,
         social_links
+      ),
+      tags (
+        name
       )
     `)
     .eq("id", blogId)

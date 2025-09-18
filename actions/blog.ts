@@ -6,9 +6,36 @@ import { z } from "zod"
 import { v4 as uuidv4 } from "uuid"
 import { decode } from "base64-arraybuffer"
 
+// タグをDBに保存し、IDを返すヘルパー関数
+const upsertTags = async (tagNames: string[]) => {
+  const supabase = createClient()
+  const cleanedTagNames = tagNames.map(name => name.trim()).filter(Boolean)
+
+  if (cleanedTagNames.length === 0) {
+    return []
+  }
+
+  // タグが存在しない場合は作成
+  const { data: tags, error: upsertError } = await supabase
+    .from("tags")
+    .upsert(
+      cleanedTagNames.map(name => ({ name })),
+      { onConflict: "name" }
+    )
+    .select("id")
+
+  if (upsertError) {
+    console.error("Error upserting tags:", upsertError)
+    return []
+  }
+
+  return tags.map(tag => tag.id)
+}
+
 interface newBlogProps extends z.infer<typeof BlogSchema> {
   base64Image: string | undefined
   userId: string
+  tags?: string[]
 }
 
 // ブログ投稿
@@ -20,18 +47,12 @@ export const newBlog = async (values: newBlogProps) => {
 
     if (values.base64Image) {
       const matches = values.base64Image.match(/^data:(.+);base64,(.+)$/)
-
       if (!matches || matches.length !== 3) {
         return { error: "無効な画像データです" }
       }
-
-      const contentType = matches[1] // 例: "image/png"
+      const contentType = matches[1]
       const base64Data = matches[2]
-
-      // 拡張子を取得
-      const fileExt = contentType.split("/")[1] // 例: "png"
-
-      // ファイル名を生成
+      const fileExt = contentType.split("/")[1]
       const fileName = `${uuidv4()}.${fileExt}`
 
       const { error: storageError } = await supabase.storage
@@ -44,26 +65,49 @@ export const newBlog = async (values: newBlogProps) => {
         return { error: storageError.message }
       }
 
-      // 画像のURLを取得
-      const { data: urlData } = await supabase.storage
+      const { data: urlData } = supabase.storage
         .from("blogs")
         .getPublicUrl(`${values.userId}/${fileName}`)
 
       image_url = urlData.publicUrl
     }
 
-    // ブログ新規作成
-    const { error: insertError } = await supabase.from("blogs").insert({
-      title: values.title,
-      content: values.content,
-      image_url,
-      user_id: values.userId,
-    })
+    // ブログを新規作成し、IDを取得
+    const { data: newBlog, error: insertError } = await supabase
+      .from("blogs")
+      .insert({
+        title: values.title,
+        content: values.content,
+        image_url,
+        user_id: values.userId,
+      })
+      .select("id")
+      .single()
 
-    // エラーチェック
     if (insertError) {
       return { error: insertError.message }
     }
+
+    // タグの処理
+    if (values.tags && values.tags.length > 0) {
+      const tagIds = await upsertTags(values.tags)
+
+      if (tagIds.length > 0) {
+        const blogTags = tagIds.map(tagId => ({
+          blog_id: newBlog.id,
+          tag_id: tagId,
+        }))
+        const { error: blogTagsError } = await supabase
+          .from("blog_tags")
+          .insert(blogTags)
+
+        if (blogTagsError) {
+          console.error("Error inserting blog tags:", blogTagsError)
+          // ここではエラーを返さず、ブログ投稿自体は成功として扱う
+        }
+      }
+    }
+
   } catch (err) {
     console.error(err)
     return { error: "エラーが発生しました" }
@@ -75,6 +119,7 @@ interface editBlogProps extends z.infer<typeof BlogSchema> {
   imageUrl: string | null
   base64Image: string | undefined
   userId: string
+  tags?: string[]
 }
 
 // ブログ編集
@@ -86,18 +131,12 @@ export const editBlog = async (values: editBlogProps) => {
 
     if (values.base64Image) {
       const matches = values.base64Image.match(/^data:(.+);base64,(.+)$/)
-
       if (!matches || matches.length !== 3) {
         return { error: "無効な画像データです" }
       }
-
-      const contentType = matches[1] // 例: "image/png"
+      const contentType = matches[1]
       const base64Data = matches[2]
-
-      // 拡張子を取得
-      const fileExt = contentType.split("/")[1] // 例: "png"
-
-      // ファイル名を生成
+      const fileExt = contentType.split("/")[1]
       const fileName = `${uuidv4()}.${fileExt}`
 
       const { error: storageError } = await supabase.storage
@@ -111,23 +150,17 @@ export const editBlog = async (values: editBlogProps) => {
       }
 
       if (image_url) {
-        const fileName = image_url.split("/").slice(-1)[0]
-
-        // 古い画像を削除
-        await supabase.storage
-          .from("blogs")
-          .remove([`${values.userId}/${fileName}`])
+        const oldFileName = image_url.split("/").slice(-1)[0]
+        await supabase.storage.from("blogs").remove([`${values.userId}/${oldFileName}`])
       }
 
-      // 画像のURLを取得
-      const { data: urlData } = await supabase.storage
+      const { data: urlData } = supabase.storage
         .from("blogs")
         .getPublicUrl(`${values.userId}/${fileName}`)
 
       image_url = urlData.publicUrl
     }
 
-    // ブログ編集
     const { error: updateError } = await supabase
       .from("blogs")
       .update({
@@ -137,10 +170,41 @@ export const editBlog = async (values: editBlogProps) => {
       })
       .eq("id", values.blogId)
 
-    // エラーチェック
     if (updateError) {
       return { error: updateError.message }
     }
+
+    // タグの処理
+    // 既存のタグ関連をすべて削除
+    const { error: deleteTagsError } = await supabase
+      .from("blog_tags")
+      .delete()
+      .eq("blog_id", values.blogId)
+
+    if (deleteTagsError) {
+      console.error("Error deleting old blog tags:", deleteTagsError)
+      return { error: "タグの更新中にエラーが発生しました" }
+    }
+
+    if (values.tags && values.tags.length > 0) {
+      const tagIds = await upsertTags(values.tags)
+
+      if (tagIds.length > 0) {
+        const blogTags = tagIds.map(tagId => ({
+          blog_id: values.blogId,
+          tag_id: tagId,
+        }))
+        const { error: blogTagsError } = await supabase
+          .from("blog_tags")
+          .insert(blogTags)
+
+        if (blogTagsError) {
+          console.error("Error inserting new blog tags:", blogTagsError)
+          return { error: "タグの更新中にエラーが発生しました" }
+        }
+      }
+    }
+
   } catch (err) {
     console.error(err)
     return { error: "エラーが発生しました" }
@@ -162,7 +226,7 @@ export const deleteBlog = async ({
   try {
     const supabase = createClient()
 
-    // ブログ削除
+    // 関連する画像も一緒に削除される（CASCADE制約による）
     const { error } = await supabase.from("blogs").delete().eq("id", blogId)
 
     if (error) {
@@ -173,13 +237,28 @@ export const deleteBlog = async ({
       return
     }
 
-    // ファイル名取得
     const fileName = imageUrl.split("/").slice(-1)[0]
-
-    // 画像を削除
     await supabase.storage.from("blogs").remove([`${userId}/${fileName}`])
+
   } catch (err) {
     console.error(err)
     return { error: "エラーが発生しました" }
   }
 }
+
+// AIによるタグ生成アクション
+export const generateTagsFromContent = async (title: string, content: string) => {
+  console.log("Checking server-side environment variable NEXT_PUBLIC_GEMINI_API_KEY:", process.env.NEXT_PUBLIC_GEMINI_API_KEY ? "Loaded" : "NOT LOADED");
+  if (!title || !content) {
+    return { error: "タイトルと内容は必須です。" };
+  }
+
+  try {
+    const { generateTags } = await import("@/utils/gemini");
+    const result = await generateTags(title, content);
+    return result;
+  } catch (error) {
+    console.error("Error in generateTagsFromContent action:", error);
+    return { error: "サーバーでタグの生成中にエラーが発生しました。" };
+  }
+};

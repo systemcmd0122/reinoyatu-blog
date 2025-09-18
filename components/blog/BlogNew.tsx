@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2, ImagePlus, X, Wand2 } from "lucide-react"
 import { BlogSchema } from "@/schemas"
-import { newBlog } from "@/actions/blog"
+import { newBlog, generateTagsFromContent } from "@/actions/blog"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import Image from "next/image"
@@ -27,6 +27,7 @@ import MarkdownHelp from "@/components/blog/markdown/MarkdownHelp"
 import AICustomizeDialog from "@/components/blog/AICustomizeDialog"
 import { generateBlogContent } from "@/utils/gemini"
 import { GenerationOptions } from "@/types";
+import TagInput from "@/components/ui/TagInput";
 
 interface BlogNewProps {
   userId: string
@@ -45,12 +46,14 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string | null>(null)
+  const [isTagGenerating, setIsTagGenerating] = useState(false);
 
   const form = useForm<z.infer<typeof BlogSchema>>({
     resolver: zodResolver(BlogSchema),
     defaultValues: {
       title: "",
       content: "",
+      tags: [],
     },
   })
 
@@ -211,6 +214,32 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
     toast.success("AIが生成した内容を適用しました")
   }
 
+  const handleGenerateTags = async () => {
+    const { title, content } = form.getValues();
+
+    if (!title || !content) {
+      toast.error("AIでタグを生成するには、タイトルと内容の両方が必要です。");
+      return;
+    }
+
+    setIsTagGenerating(true);
+    try {
+      const result = await generateTagsFromContent(title, content);
+      if (result.error) {
+        toast.error(result.error);
+      } else if ("tags" in result && result.tags) {
+        const currentTags = form.getValues("tags") || [];
+        const newTags = [...new Set([...currentTags, ...result.tags])];
+        form.setValue("tags", newTags, { shouldValidate: true });
+        toast.success("AIがタグを提案しました。");
+      }
+    } catch (error) {
+      toast.error("タグの生成中に予期せぬエラーが発生しました。");
+    } finally {
+      setIsTagGenerating(false);
+    }
+  };
+
   return (
     <div className="container mx-auto max-w-2xl py-8">
       <Card>
@@ -289,7 +318,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                     <FormLabel>タイトル</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="ブログのタイトルを入力" 
+                        placeholder="ブログのタイトルを入力"
                         {...field} 
                         disabled={isPending} 
                       />
@@ -329,6 +358,45 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                         <MarkdownHelp onInsertCodeBlock={insertCodeBlock} />
                       </div>
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex justify-between items-center mb-2">
+                      <FormLabel>タグ</FormLabel>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateTags}
+                        disabled={isTagGenerating || isPending}
+                        className="flex items-center space-x-2"
+                      >
+                        {isTagGenerating ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Wand2 className="h-4 w-4" />
+                        )}
+                        <span>AIで生成</span>
+                      </Button>
+                    </div>
+                    <FormControl>
+                      <TagInput
+                        placeholder="タグを入力してEnter"
+                        value={field.value || []}
+                        onChange={field.onChange}
+                        disabled={isPending}
+                      />
+                    </FormControl>
+                    <p className="text-sm text-muted-foreground">
+                      タグを入力後、Enterキーを押してください。
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}

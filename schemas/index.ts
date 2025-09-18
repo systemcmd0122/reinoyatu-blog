@@ -49,8 +49,9 @@ export const EmailSchema = z.object({
 })
 
 export const BlogSchema = z.object({
-  title: z.string().min(1, { message: "タイトルを入力してください" }),
-  content: z.string().min(1, { message: "内容を入力してください" }),
+  title: z.string().min(1, { message: "タイトルは必須です" }).max(100, { message: "タイトルは100文字以内で入力してください" }),
+  content: z.string().min(10, { message: "内容は10文字以上必要です" }).max(5000, { message: "内容は5000文字以内で入力してください" }),
+  tags: z.array(z.string()).optional(),
 })
 
 

@@ -93,22 +93,32 @@ const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: st
   const start = (page - 1) * DEFAULT_PAGE_SIZE
   const end = start + DEFAULT_PAGE_SIZE - 1
   
-  // ブログ一覧を取得
-  const { data: blogsData, error, count } = await supabase
-    .from("blogs")
-    .select(
-      `
-      *,
-      profiles (
-        id,
-        name,
-        avatar_url
+  // ブログ一覧とタグ一覧を並行して取得
+  const [{ data: blogsData, error, count }, { data: tags, error: tagsError }] = await Promise.all([
+    supabase
+      .from("blogs")
+      .select(
+        `
+        *,
+        profiles (
+          id,
+          name,
+          avatar_url
+        ),
+        tags (
+          name
+        )
+      `,
+        { count: "exact" }
       )
-    `,
-      { count: "exact" }
-    )
-    .order("created_at", { ascending: false })
-    .range(start, end)
+      .order("created_at", { ascending: false })
+      .range(start, end),
+    supabase.rpc('get_tags_with_counts')
+  ]);
+
+  if (tagsError) {
+    console.error("Error fetching tags:", tagsError);
+  }
 
   // 各ブログのいいね数を取得
   const blogsWithLikes = await Promise.all(
@@ -155,6 +165,27 @@ const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: st
           </Button>
         </Link>
       </div>
+
+      {/* タグフィルターUI */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">タグで絞り込む</h2>
+        <div className="flex flex-wrap gap-2 items-center">
+          <Link href="/">
+            <span className="inline-block bg-primary text-primary-foreground rounded-full px-3 py-1 text-sm font-semibold hover:bg-primary/90 transition-colors duration-200 cursor-pointer">
+              すべて
+            </span>
+          </Link>
+          {tags && tags.map((tag: { name: string; count: number }) => (
+            <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
+              <span className="inline-block bg-gray-200 dark:bg-gray-700 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                {tag.name} <span className="text-xs opacity-75">({tag.count})</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* ブログ一覧 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
         {blogsWithLikes.map((blog, index) => (
           <BlogItem key={blog.id} blog={blog} priority={index < 3} />

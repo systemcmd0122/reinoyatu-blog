@@ -3,7 +3,7 @@
 import React, { useState, useTransition, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2, Trash2, Wand2, ImagePlus } from "lucide-react"
-import { editBlog, deleteBlog } from "@/actions/blog"
+import { editBlog, deleteBlog, generateTagsFromContent } from "@/actions/blog"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,6 +27,7 @@ import { BlogSchema } from "@/schemas"
 import MarkdownHelp from "@/components/blog/markdown/MarkdownHelp"
 import AICustomizeDialog from "@/components/blog/AICustomizeDialog"
 import { generateBlogContent } from "@/utils/gemini"
+import TagInput from "@/components/ui/TagInput"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,12 +58,14 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string | null>(null)
+  const [isTagGenerating, setIsTagGenerating] = useState(false);
 
   const form = useForm<z.infer<typeof BlogSchema>>({
     resolver: zodResolver(BlogSchema),
     defaultValues: {
       title: blog.title,
       content: blog.content,
+      tags: blog.tags?.map(tag => tag.name) || [],
     },
   })
 
@@ -100,6 +103,32 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
     setIsAIDialogOpen(false)
     toast.success("AIが生成した内容を適用しました")
   }
+
+  const handleGenerateTags = async () => {
+    const { title, content } = form.getValues();
+
+    if (!title || !content) {
+      toast.error("AIでタグを生成するには、タイトルと内容の両方が必要です。");
+      return;
+    }
+
+    setIsTagGenerating(true);
+    try {
+      const result = await generateTagsFromContent(title, content);
+      if (result.error) {
+        toast.error(result.error);
+      } else if ("tags" in result && result.tags) {
+        const currentTags = form.getValues("tags") || [];
+        const newTags = [...new Set([...currentTags, ...result.tags])];
+        form.setValue("tags", newTags, { shouldValidate: true });
+        toast.success("AIがタグを提案しました。");
+      }
+    } catch (error) {
+      toast.error("タグの生成中に予期せぬエラーが発生しました。");
+    } finally {
+      setIsTagGenerating(false);
+    }
+  };
 
   // 既存の機能
   const onSubmit = async (values: z.infer<typeof BlogSchema>) => {
@@ -328,7 +357,7 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
                     <FormLabel>タイトル</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="ブログのタイトルを入力" 
+                        placeholder="ブログのタイトルを入力"
                         {...field} 
                         disabled={isPending} 
                       />
@@ -373,6 +402,45 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex justify-between items-center mb-2">
+                      <FormLabel>タグ</FormLabel>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateTags}
+                        disabled={isTagGenerating || isPending}
+                        className="flex items-center space-x-2"
+                      >
+                        {isTagGenerating ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Wand2 className="h-4 w-4" />
+                        )}
+                        <span>AIで生成</span>
+                      </Button>
+                    </div>
+                    <FormControl>
+                      <TagInput
+                        placeholder="タグを入力してEnter"
+                        value={field.value || []}
+                        onChange={field.onChange}
+                        disabled={isPending}
+                      />
+                    </FormControl>
+                    <p className="text-sm text-muted-foreground">
+                      タグを入力後、Enterキーを押してください。
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>
@@ -381,7 +449,7 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
 
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full"
                 disabled={isPending}
               >
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

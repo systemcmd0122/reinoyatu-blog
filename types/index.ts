@@ -39,6 +39,7 @@ export interface BlogType {
     name: string
     avatar_url: string | null
   }
+  tags?: { name: string }[]
 }
 
 export interface LikeType {

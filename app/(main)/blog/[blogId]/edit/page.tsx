@@ -22,7 +22,7 @@ const BlogEditPage = async ({ params }: BlogEditPageProps) => {
   // ブログ詳細取得
   const { data: blogData } = await supabase
     .from("blogs")
-    .select("*")
+    .select("*, tags(name)")
     .eq("id", blogId)
     .single()
 

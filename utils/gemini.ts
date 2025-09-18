@@ -4,7 +4,7 @@ import { GenerationOptions } from "@/types";
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
 
 export const getGeminiModel = () => {
-  return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 };
 
 // スタイルIDを具体的な指示にマッピング
@@ -77,5 +77,51 @@ ${summaryLength ? `
       content: null,
       error: "AI処理中にエラーが発生しました。時間をおいて再度お試しください。",
     };
+  }
+};
+
+export const generateTags = async (title: string, content: string): Promise<{ tags: string[] | null; error: string | null }> => {
+  const model = getGeminiModel();
+
+  const prompt = `
+あなたはプロのSEO専門家であり、コンテンツアナリストです。
+以下のブログ記事のタイトルと内容を読み込み、記事の主要なテーマ、トピック、キーワードを正確に特定してください。
+記事の内容を最もよく表す、関連性の高いタグを3〜5個生成してください。
+
+タグの条件:
+- 各タグは簡潔で、単一の単語または短いフレーズであること。
+- 記事の内容に直接関連していること。
+- SEOに役立つキーワードであること。
+- 重複するタグは避けること。
+
+出力形式:
+- 生成されたタグのみをカンマ区切りで出力してください。
+- 他のテキスト、説明、コメント、箇条書きなどは一切含めないでください。
+
+例:
+記事タイトル: Next.jsとSupabaseでブログを構築
+記事内容: この記事では、Next.jsのApp RouterとSupabaseを組み合わせて、スケーラブルなブログアプリケーションを構築する方法を解説します。認証、データベース、ストレージの統合について詳しく説明します。
+
+出力例: Next.js, Supabase, Web開発, 認証, データベース
+
+---
+記事タイトル: ${title}
+記事内容:
+${content}
+---
+
+出力:
+`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    const tags = text.split(',').map(tag => tag.trim()).filter(Boolean);
+    return { tags, error: null };
+  } catch (error) {
+    console.error("Error generating tags:", error);
+    return { tags: null, error: "タグの自動生成中にエラーが発生しました。時間をおいて再度お試しください。" };
   }
 };

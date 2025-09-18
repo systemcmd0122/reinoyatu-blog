@@ -707,6 +707,18 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
           </div>
         </div>
         <h1 className="text-3xl font-bold text-foreground">{blog.title}</h1>
+
+        {blog.tags && blog.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2">
+            {blog.tags.map(tag => (
+              <Link href={`/tags/${tag.name}`} key={tag.name}>
+                <Badge variant="secondary" className="hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                  # {tag.name}
+                </Badge>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       <div 

@@ -5,9 +5,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { formatJST } from "@/utils/date"
-import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { User } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 
 interface BlogItemProps {
   blog: {
@@ -21,6 +21,7 @@ interface BlogItemProps {
       name: string
       avatar_url: string | null
     }
+    tags?: { name: string }[]
   }
   priority?: boolean
 }
@@ -35,12 +36,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      whileHover={{ y: -8 }}
-    >
+    <div>
       <Link href={`blog/${blog.id}`}>
         <Card className={cn(
           "group relative w-full overflow-hidden",
@@ -117,6 +113,16 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
               </div>
             </div>
 
+            {blog.tags && blog.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {blog.tags.slice(0, 3).map(tag => (
+                  <Badge key={tag.name} variant="secondary" className="text-xs backdrop-blur-sm bg-white/10 text-white border-white/20">
+                    {tag.name}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
             <h3 className={cn(
               "text-xl font-bold text-white",
               "line-clamp-2 leading-tight tracking-wide",
@@ -153,7 +159,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
           )} />
         </Card>
       </Link>
-    </motion.div>
+    </div>
   )
 }
 
