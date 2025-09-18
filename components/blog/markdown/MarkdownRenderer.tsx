@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, isValidElement } from "react"
 import Image from "next/image"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
@@ -284,13 +284,20 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
             const processedChildren = Array.isArray(children) ? processChildren(children) : processChildren([children]);
 
+            const contentNodes = processedChildren.filter(node => {
+              if (typeof node === 'string' && !node.trim()) {
+                return false;
+              }
+              return true;
+            });
+
             // YouTube埋め込みのみ、またはネタバレのみの場合はdivでラップ
-            const isOnlyEmbed = processedChildren.every(
-              (child: any) => child?.type === YouTubeEmbed || child?.type === Spoiler
+            const isOnlyEmbed = contentNodes.length > 0 && contentNodes.every(
+              (child) => isValidElement(child) && (child.type === YouTubeEmbed || child.type === Spoiler)
             );
 
             if (isOnlyEmbed) {
-              return <div className="mb-4">{processedChildren}</div>;
+              return <div className="mb-4">{contentNodes}</div>;
             }
 
             return <p className="mb-4 leading-relaxed" {...props}>{processedChildren}</p>;
