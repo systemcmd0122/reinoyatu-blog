@@ -3,10 +3,11 @@ import Link from "next/link"
 import { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import BlogItem from "@/components/blog/BlogItem"
-import { Session } from "@supabase/supabase-js"
 import LandingPage from "@/components/landing/LandingPage"
 
-const MainPage = async () => {
+const DEFAULT_PAGE_SIZE = 9 // 1ページあたりの表示件数
+
+const MainPage = async ({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) => {
   const supabase = createClient()
 
   // ユーザーセッションを取得
@@ -17,7 +18,7 @@ const MainPage = async () => {
     return <LandingPage />
   }
 
-  return <BlogContent session={session} />
+  return <BlogContent searchParams={searchParams} />
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -46,11 +47,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 // ブログコンテンツを別コンポーネントとして分離して、データフェッチングとレンダリングを分離
-const BlogContent = async ({ }: { session: Session }) => {
+const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) => {
   const supabase = createClient()
+  const page = typeof searchParams.page === "string" ? Number(searchParams.page) : 1
+  const start = (page - 1) * DEFAULT_PAGE_SIZE
+  const end = start + DEFAULT_PAGE_SIZE - 1
   
   // ブログ一覧を取得
-  const { data: blogsData, error } = await supabase
+  const { data: blogsData, error, count } = await supabase
     .from("blogs")
     .select(
       `
@@ -60,9 +64,11 @@ const BlogContent = async ({ }: { session: Session }) => {
         name,
         avatar_url
       )
-    `
+    `,
+      { count: "exact" }
     )
     .order("created_at", { ascending: false })
+    .range(start, end)
 
   // 各ブログのいいね数を取得
   const blogsWithLikes = await Promise.all(
@@ -78,6 +84,9 @@ const BlogContent = async ({ }: { session: Session }) => {
       }
     })
   )
+
+  const totalCount = count || 0
+  const totalPages = Math.ceil(totalCount / DEFAULT_PAGE_SIZE)
 
   // ブログデータがない場合のメッセージ
   if (!blogsWithLikes.length || error) {
@@ -107,10 +116,24 @@ const BlogContent = async ({ }: { session: Session }) => {
         </Link>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-        {blogsWithLikes.map((blog) => (
-          <BlogItem key={blog.id} blog={blog} />
+        {blogsWithLikes.map((blog, index) => (
+          <BlogItem key={blog.id} blog={blog} priority={index < 3} />
         ))}
       </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center space-x-4 mt-8">
+          {page > 1 && (
+            <Link href={{ query: { page: page - 1 } }}>
+              <Button variant="outline">前へ</Button>
+            </Link>
+          )}
+          {page < totalPages && (
+            <Link href={{ query: { page: page + 1 } }}>
+              <Button variant="outline">次へ</Button>
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   )
 }
