@@ -1,8 +1,9 @@
 import React from "react"
+import Image from "next/image"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism"
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 import YouTubeEmbed from "./YouTubeEmbed"
 
 interface MarkdownRendererProps {
@@ -127,14 +128,18 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           },
           // 画像コンポーネントをカスタマイズ
           img({ src, alt, title, ...props }: ImageProps) {
+            if (!src) return null
+
             return (
               <div className="my-4">
-                <img
+                <Image
                   src={src}
                   alt={alt || ""}
                   title={title || ""}
-                  className="max-w-full h-auto rounded-lg shadow-sm"
-                  loading="lazy"
+                  width={1200}
+                  height={675}
+                  layout="responsive"
+                  className="rounded-lg shadow-sm"
                   {...props}
                 />
                 {alt && <p className="text-sm text-gray-500 text-center mt-2">{alt}</p>}
