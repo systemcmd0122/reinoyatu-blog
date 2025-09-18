@@ -1,8 +1,6 @@
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
-import { Suspense } from "react"
 import BlogEdit from "@/components/blog/BlogEdit"
-import Loading from "@/app/loading"
 
 interface BlogEditPageProps {
   params: {
@@ -37,11 +35,7 @@ const BlogEditPage = async ({ params }: BlogEditPageProps) => {
     redirect(`/blog/${blogData.id}`)
   }
 
-  return (
-    <Suspense fallback={<Loading />}>
-      <BlogEdit blog={blogData} />
-    </Suspense>
-  )
+  return <BlogEdit blog={blogData} />
 }
 
 export default BlogEditPage

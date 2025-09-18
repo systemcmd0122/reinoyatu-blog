@@ -78,8 +78,9 @@ interface RootLayoutProps {
 // ルートレイアウト
 const RootLayout = async ({ children }: RootLayoutProps) => {
   const supabase = createClient()
-  const { data } = await supabase.auth.getUser()
-  const user = data?.user
+  const { data: { user } } = await supabase.auth.getUser()
+
+
 
   return (
     <html lang="ja">

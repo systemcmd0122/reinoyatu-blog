@@ -12,6 +12,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ChevronRight, Loader2, EyeOffIcon, EyeIcon, Chrome } from "lucide-react"
@@ -55,7 +63,6 @@ const Login = () => {
 
         toast.success("ログインしました")
         router.push("/")
-        router.refresh()
       } catch (error) {
         console.error(error)
         setError("エラーが発生しました")
@@ -88,119 +95,121 @@ const Login = () => {
   }
 
   return (
-    <div className="w-[500px] p-5 rounded-xl border">
-      <div className="text-primary text-xl font-bold text-center border-b border-black pb-5 mb-5 mt-3">
-        ログイン
-      </div>
-
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-bold">メールアドレス</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="example@example.com"
-                    {...field}
-                    disabled={isPending || isGooglePending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+    <Card className="w-full max-w-md">
+      <CardHeader className="text-center">
+        <CardTitle>ログイン</CardTitle>
+        <CardDescription>アカウントにログインします</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full space-x-2 font-bold"
+            onClick={handleGoogleLogin}
+            disabled={isPending || isGooglePending}
+          >
+            {isGooglePending ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <Chrome className="w-5 h-5" />
             )}
-          />
+            <span>Googleでログイン</span>
+          </Button>
 
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-bold">パスワード</FormLabel>
-                <FormControl>
-                  <div className="relative">
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t"></span>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                または
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-bold">メールアドレス</FormLabel>
+                  <FormControl>
                     <Input
-                      type={passwordVisibility ? "text" : "password"}
-                      placeholder="********"
+                      placeholder="example@example.com"
                       {...field}
                       disabled={isPending || isGooglePending}
                     />
-                    <div
-                      className="absolute inset-y-0 right-0 flex cursor-pointer items-center p-3 text-muted-foreground"
-                      onClick={() => setPasswordVisibility(!passwordVisibility)}
-                    >
-                      {passwordVisibility ? (
-                        <EyeOffIcon className="w-5 h-5" />
-                      ) : (
-                        <EyeIcon className="w-5 h-5" />
-                      )}
-                    </div>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="space-y-4 w-full">
-            <FormError message={error} />
-            <Button
-              type="submit"
-              className="w-full space-x-2 font-bold"
-              disabled={isPending || isGooglePending}
-            >
-              {isPending && <Loader2 className="animate-spin" />}
-              <span>ログイン</span>
-            </Button>
-
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t"></span>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-muted-foreground">または</span>
-              </div>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full space-x-2 font-bold"
-              onClick={handleGoogleLogin}
-              disabled={isPending || isGooglePending}
-            >
-              {isGooglePending ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Chrome className="w-5 h-5" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-              <span>Googleでログイン</span>
-            </Button>
-          </div>
-        </form>
-      </Form>
+            />
 
-      <div className="text-center mt-5 space-y-2">
-        <div>
-          <Link
-            href="/reset-password"
-            className="text-sm text-primary font-bold"
-          >
-            パスワードをお忘れの方はこちら{" "}
-            <ChevronRight className="w-4 h-4 inline align-text-bottom" />
-          </Link>
-        </div>
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-bold">パスワード</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        type={passwordVisibility ? "text" : "password"}
+                        placeholder="********"
+                        {...field}
+                        disabled={isPending || isGooglePending}
+                      />
+                      <div
+                        className="absolute inset-y-0 right-0 flex cursor-pointer items-center p-3 text-muted-foreground"
+                        onClick={() =>
+                          setPasswordVisibility(!passwordVisibility)
+                        }
+                      >
+                        {passwordVisibility ? (
+                          <EyeOffIcon className="w-5 h-5" />
+                        ) : (
+                          <EyeIcon className="w-5 h-5" />
+                        )}
+                      </div>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div>
-          <Link href="/signup" className="text-sm text-primary font-bold">
-            アカウント登録はこちら{" "}
-            <ChevronRight className="w-4 h-4 inline align-text-bottom" />
-          </Link>
-        </div>
-      </div>
-    </div>
+            <div className="space-y-4 w-full">
+              <FormError message={error} />
+              <Button
+                type="submit"
+                className="w-full space-x-2 font-bold"
+                disabled={isPending || isGooglePending}
+              >
+                {isPending && <Loader2 className="animate-spin" />}
+                <span>ログイン</span>
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+      <CardFooter className="flex flex-col space-y-2">
+        <Link
+          href="/reset-password"
+          className="text-sm text-primary font-bold"
+        >
+          パスワードをお忘れの方はこちら{" "}
+          <ChevronRight className="w-4 h-4 inline align-text-bottom" />
+        </Link>
+        <Link href="/signup" className="text-sm text-primary font-bold">
+          アカウント登録はこちら{" "}
+          <ChevronRight className="w-4 h-4 inline align-text-bottom" />
+        </Link>
+      </CardFooter>
+    </Card>
   )
 }
 

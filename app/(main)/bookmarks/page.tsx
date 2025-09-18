@@ -1,10 +1,8 @@
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
-import { Suspense } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import BlogItem from "@/components/blog/BlogItem"
-import Loading from "@/app/loading"
 import { getUserBookmarks } from "@/actions/bookmark"
 
 // ユーザーのブックマーク一覧を表示するコンポーネント
@@ -64,11 +62,7 @@ const BookmarksPage = async () => {
   }
 
   // ユーザーIDを取得して、ブックマーク一覧表示コンポーネントをSuspenseで囲む
-  return (
-    <Suspense fallback={<Loading />}>
-      <BookmarksList userId={session.user.id} />
-    </Suspense>
-  )
+  return <BookmarksList userId={session.user.id} />
 }
 
 export default BookmarksPage

@@ -1,6 +1,4 @@
-import { Suspense } from "react"
 import UserProfile from "@/components/user/UserProfile"
-import Loading from "@/app/loading"
 import { createClient } from "@/utils/supabase/server"
 import { notFound } from "next/navigation"
 
@@ -27,9 +25,7 @@ const UserProfilePage = async ({ params }: UserProfilePageProps) => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Suspense fallback={<Loading />}>
-        <UserProfile profile={profile} />
-      </Suspense>
+      <UserProfile profile={profile} />
     </div>
   )
 }

@@ -1,8 +1,6 @@
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
-import { Suspense } from "react"
 import BlogNew from "@/components/blog/BlogNew"
-import Loading from "@/app/loading"
 
 const BlogNewPage = async () => {
   const supabase = createClient()
@@ -13,11 +11,7 @@ const BlogNewPage = async () => {
     redirect("/")
   }
 
-  return (
-    <Suspense fallback={<Loading />}>
-      <BlogNew userId={user.id} />
-    </Suspense>
-  )
+  return <BlogNew userId={user.id} />
 }
 
 export default BlogNewPage

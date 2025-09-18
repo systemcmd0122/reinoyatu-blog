@@ -1,7 +1,5 @@
 import { createClient } from "@/utils/supabase/server"
-import { Suspense } from "react"
 import BlogDetail from "@/components/blog/BlogDetail"
-import Loading from "@/app/loading"
 import { Metadata } from "next"
 
 interface BlogDetailPageProps {
@@ -134,14 +132,12 @@ const BlogDetailPage = async ({ params }: BlogDetailPageProps) => {
   const isMyBlog = user?.id === blogData.user_id
 
   return (
-    <Suspense fallback={<Loading />}>
-      <BlogDetail 
-        blog={blogWithLikes} 
-        isMyBlog={isMyBlog} 
-        currentUserId={user?.id} 
-        initialComments={commentsData || []}
-      />
-    </Suspense>
+    <BlogDetail 
+      blog={blogWithLikes} 
+      isMyBlog={isMyBlog} 
+      currentUserId={user?.id} 
+      initialComments={commentsData || []}
+    />
   )
 }
 

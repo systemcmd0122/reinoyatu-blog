@@ -1,8 +1,6 @@
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
-import { Suspense } from "react"
 import Email from "@/components/settings/Email"
-import Loading from "@/app/loading"
 
 const EmailPage = async () => {
   const supabase = createClient()
@@ -14,14 +12,12 @@ const EmailPage = async () => {
   }
 
   return (
-    <Suspense fallback={<Loading />}>
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-800 border-b pb-3">
-          メールアドレス変更
-        </h1>
-        <Email email={user.email} />
-      </div>
-    </Suspense>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-gray-800 border-b pb-3">
+        メールアドレス変更
+      </h1>
+      <Email email={user.email} />
+    </div>
   )
 }
 

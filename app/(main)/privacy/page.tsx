@@ -1,7 +1,5 @@
 // app/privacy-policy/page.tsx
-import { Suspense } from "react"
 import PrivacyPolicy from "@/components/privacypolicy/page"
-import Loading from "@/app/loading"
 
 export const metadata = {
   title: 'プライバシーポリシー | 例のヤツ｜ブログ',
@@ -9,11 +7,7 @@ export const metadata = {
 }
 
 const PrivacyPolicyPage = () => {
-  return (
-    <Suspense fallback={<Loading />}>
-      <PrivacyPolicy />
-    </Suspense>
-  )
+  return <PrivacyPolicy />
 }
 
 export default PrivacyPolicyPage
