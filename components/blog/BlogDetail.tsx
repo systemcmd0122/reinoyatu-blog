@@ -23,7 +23,8 @@ import {
   Minimize,
   Calendar,
   Globe,
-  ArrowRight
+  ArrowRight,
+  Wand2
 } from "lucide-react"
 import { deleteBlog } from "@/actions/blog"
 import { toast } from "sonner"
@@ -35,11 +36,36 @@ import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import Link from "next/link"
 import { BlogType, CommentType } from "@/types"
-import MarkdownRenderer from "@/components/blog/markdown/MarkdownRenderer"
+import dynamic from "next/dynamic"
+import { Skeleton } from "@/components/ui/skeleton"
 import LikeButton from "@/components/blog/LikeButton"
 import BookmarkButton from "@/components/blog/BookmarkButton"
 import CommentSection from "@/components/blog/CommentSection"
+
+const MarkdownRenderer = dynamic(
+  () => import("@/components/blog/markdown/MarkdownRenderer"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="prose prose-zinc dark:prose-invert max-w-none text-foreground break-words space-y-6">
+        <Skeleton className="h-8 w-3/4" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+      </div>
+    ),
+  }
+)
 import { formatJST } from "@/utils/date"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -720,6 +746,24 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
           </div>
         )}
       </div>
+
+      {blog.summary && (
+        <div className="my-6">
+          <Accordion type="single" collapsible className="w-full bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <AccordionItem value="item-1" className="border-b-0">
+              <AccordionTrigger className="px-6 py-4 text-lg font-semibold hover:no-underline">
+                <div className="flex items-center space-x-3">
+                  <Wand2 className="h-5 w-5 text-purple-500" />
+                  <span>AIによる要約</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-6 pb-6 text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+                {blog.summary}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      )}
 
       <div 
         className="relative aspect-video rounded-lg overflow-hidden shadow-md group cursor-pointer bg-muted/50"

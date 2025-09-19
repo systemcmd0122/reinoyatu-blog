@@ -3,7 +3,7 @@
 import React, { useState, useTransition, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2, Trash2, Wand2, ImagePlus } from "lucide-react"
-import { editBlog, deleteBlog, generateTagsFromContent } from "@/actions/blog"
+import { editBlog, deleteBlog, generateTagsFromContent, generateAndSaveSummary } from "@/actions/blog" // generateAndSaveSummary を追加
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,7 +25,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { BlogSchema } from "@/schemas"
 import MarkdownHelp from "@/components/blog/markdown/MarkdownHelp"
-import AICustomizeDialog from "@/components/blog/AICustomizeDialog"
+import dynamic from 'next/dynamic'
 import { generateBlogContent } from "@/utils/gemini"
 import TagInput from "@/components/ui/TagInput"
 import {
@@ -39,6 +39,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+
+const AICustomizeDialog = dynamic(
+  () => import('@/components/blog/AICustomizeDialog'),
+  { ssr: false }
+)
 
 interface BlogEditProps {
   blog: BlogType
@@ -59,12 +64,14 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string | null>(null)
   const [isTagGenerating, setIsTagGenerating] = useState(false);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false); // 追加
 
   const form = useForm<z.infer<typeof BlogSchema>>({
     resolver: zodResolver(BlogSchema),
     defaultValues: {
       title: blog.title,
       content: blog.content,
+      summary: blog.summary || "", // 追加
       tags: blog.tags?.map(tag => tag.name) || [],
     },
   })
@@ -127,6 +134,36 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
       toast.error("タグの生成中に予期せぬエラーが発生しました。");
     } finally {
       setIsTagGenerating(false);
+    }
+  };
+
+  // AI要約生成機能を追加
+  const handleGenerateSummary = async () => {
+    const { title, content } = form.getValues();
+
+    if (!title || !content) {
+      toast.error("AIで要約を生成するには、タイトルと内容の両方が必要です。");
+      return;
+    }
+
+    setIsGeneratingSummary(true);
+    try {
+      const result = await generateAndSaveSummary({ // 新しいサーバーアクションを呼び出す
+        blogId: blog.id,
+        title,
+        content,
+      });
+
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.summary) {
+        form.setValue("summary", result.summary, { shouldValidate: true });
+        toast.success("AIが要約を生成しました。");
+      }
+    } catch (error) {
+      toast.error("要約の生成中に予期せぬエラーが発生しました。");
+    } finally {
+      setIsGeneratingSummary(false);
     }
   };
 
@@ -397,6 +434,46 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
                         <MarkdownHelp onInsertCodeBlock={insertCodeBlock} />
                       </div>
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* summary FormField を追加 */}
+              <FormField
+                control={form.control}
+                name="summary"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex justify-between items-center mb-2">
+                      <FormLabel>AI要約</FormLabel>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateSummary}
+                        disabled={isGeneratingSummary || isPending}
+                        className="flex items-center space-x-2"
+                      >
+                        {isGeneratingSummary ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Wand2 className="h-4 w-4" />
+                        )}
+                        <span>AIで生成/更新</span>
+                      </Button>
+                    </div>
+                    <FormControl>
+                      <Textarea
+                        placeholder="AIが生成した要約、または手動で要約を入力"
+                        rows={3}
+                        {...field}
+                        disabled={isPending}
+                      />
+                    </FormControl>
+                    <p className="text-sm text-muted-foreground">
+                      AIで生成するか、手動で記事の要約を入力してください。（最大200文字）
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}

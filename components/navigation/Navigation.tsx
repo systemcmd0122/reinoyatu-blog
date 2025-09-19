@@ -52,6 +52,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   const supabase = createClient()
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
   const [user, setUser] = useState(initialUser)
+  const [profile, setProfile] = useState<{ avatar_url: string | null; name: string | null } | null>(null)
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -71,6 +72,22 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   useEffect(() => {
     setUser(initialUser)
   }, [initialUser])
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("name, avatar_url")
+          .eq("id", user.id)
+          .single()
+        setProfile(profileData)
+      } else {
+        setProfile(null)
+      }
+    }
+    fetchProfile()
+  }, [user, supabase])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -123,11 +140,11 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10">
                   <AvatarImage
-                    src={user.user_metadata.avatar_url || "/default.png"}
-                    alt={user.user_metadata.name || "User"}
+                    src={profile?.avatar_url || "/default.png"}
+                    alt={profile?.name || "User"}
                   />
                   <AvatarFallback>
-                    {user.user_metadata.name?.charAt(0).toUpperCase() ||
+                    {profile?.name?.charAt(0).toUpperCase() ||
                       user.email?.charAt(0).toUpperCase() ||
                       "U"}
                   </AvatarFallback>
@@ -138,7 +155,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">
-                    {user.user_metadata.name || "ユーザー"}
+                    {profile?.name || "ユーザー"}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {user.email}
@@ -205,18 +222,18 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-12 w-12">
                         <AvatarImage
-                          src={user.user_metadata.avatar_url || "/default.png"}
-                          alt={user.user_metadata.name || "User"}
+                          src={profile?.avatar_url || "/default.png"}
+                          alt={profile?.name || "User"}
                         />
                         <AvatarFallback>
-                          {user.user_metadata.name?.charAt(0).toUpperCase() ||
+                          {profile?.name?.charAt(0).toUpperCase() ||
                             user.email?.charAt(0).toUpperCase() ||
                             "U"}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col truncate">
                         <span className="font-semibold truncate">
-                          {user.user_metadata.name || "ユーザー"}
+                          {profile?.name || "ユーザー"}
                         </span>
                         <span className="text-sm text-muted-foreground truncate">
                           {user.email}

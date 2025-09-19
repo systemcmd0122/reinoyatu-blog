@@ -24,8 +24,13 @@ import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import MarkdownHelp from "@/components/blog/markdown/MarkdownHelp"
-import AICustomizeDialog from "@/components/blog/AICustomizeDialog"
-import { generateBlogContent } from "@/utils/gemini"
+import { generateBlogContent, generateSummaryFromContent } from "@/utils/gemini" // generateSummaryFromContent を追加
+import dynamic from "next/dynamic"
+
+const AICustomizeDialog = dynamic(
+  () => import("@/components/blog/AICustomizeDialog"), 
+  { ssr: false }
+)
 import { GenerationOptions } from "@/types";
 import TagInput from "@/components/ui/TagInput";
 
@@ -47,12 +52,14 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string | null>(null)
   const [isTagGenerating, setIsTagGenerating] = useState(false);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false); // 追加
 
   const form = useForm<z.infer<typeof BlogSchema>>({
     resolver: zodResolver(BlogSchema),
     defaultValues: {
       title: "",
       content: "",
+      summary: "", // 追加
       tags: [],
     },
   })
@@ -240,6 +247,31 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
     }
   };
 
+  // AI要約生成機能を追加
+  const handleGenerateSummary = async () => {
+    const { title, content } = form.getValues();
+
+    if (!title || !content) {
+      toast.error("AIで要約を生成するには、タイトルと内容の両方が必要です。");
+      return;
+    }
+
+    setIsGeneratingSummary(true);
+    try {
+      const result = await generateSummaryFromContent(title, content); // utils/gemini から直接呼び出す
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.summary) {
+        form.setValue("summary", result.summary, { shouldValidate: true });
+        toast.success("AIが要約を生成しました。");
+      }
+    } catch (error) {
+      toast.error("要約の生成中に予期せぬエラーが発生しました。");
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
   return (
     <div className="container mx-auto max-w-2xl py-8">
       <Card>
@@ -358,6 +390,46 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                         <MarkdownHelp onInsertCodeBlock={insertCodeBlock} />
                       </div>
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* summary FormField を追加 */}
+              <FormField
+                control={form.control}
+                name="summary"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex justify-between items-center mb-2">
+                      <FormLabel>AI要約</FormLabel>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateSummary}
+                        disabled={isGeneratingSummary || isPending}
+                        className="flex items-center space-x-2"
+                      >
+                        {isGeneratingSummary ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Wand2 className="h-4 w-4" />
+                        )}
+                        <span>AIで生成</span>
+                      </Button>
+                    </div>
+                    <FormControl>
+                      <Textarea
+                        placeholder="AIが生成した要約、または手動で要約を入力"
+                        rows={3}
+                        {...field}
+                        disabled={isPending}
+                      />
+                    </FormControl>
+                    <p className="text-sm text-muted-foreground">
+                      AIで生成するか、手動で記事の要約を入力してください。（最大200文字）
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}

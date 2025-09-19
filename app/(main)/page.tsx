@@ -15,6 +15,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 const DEFAULT_PAGE_SIZE = 9 // 1ページあたりの表示件数
 
@@ -161,29 +162,32 @@ const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: st
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center border-b pb-6 mb-6">
         <h1 className="text-3xl font-bold tracking-tight">最新のブログ記事</h1>
-        <Link href="/blog/new">
+                <Link href="/blog/new">
           <Button>新規ブログ投稿</Button>
         </Link>
       </div>
 
       {/* タグフィルターUI */}
       {tags && tags.length > 0 && (
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2 items-center">
-            <Link href="/">
-              <Badge variant={!currentTag ? "default" : "secondary"} className="cursor-pointer text-base px-4 py-1.5">
-                すべて
-              </Badge>
-            </Link>
-            {tags.map((tag: { name: string; count: number }) => (
-              <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
-                <Badge variant={currentTag === tag.name ? "default" : "secondary"} className="cursor-pointer text-base px-4 py-1.5">
-                  {tag.name}
-                  <span className="ml-1.5 text-xs opacity-75">{tag.count}</span>
+        <div className="relative mb-8">
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex w-max space-x-2 pb-4">
+              <Link href="/">
+                <Badge variant={!currentTag ? "default" : "secondary"} className="cursor-pointer text-base px-4 py-1.5">
+                  すべて
                 </Badge>
               </Link>
-            ))}
-          </div>
+              {tags.map((tag: { name: string; count: number }) => (
+                <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
+                  <Badge variant={currentTag === tag.name ? "default" : "secondary"} className="cursor-pointer text-base px-4 py-1.5">
+                    {tag.name}
+                    <span className="ml-1.5 text-xs opacity-75">{tag.count}</span>
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </div>
       )}
 

@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server"
 import { z } from "zod"
 import { v4 as uuidv4 } from "uuid"
 import { decode } from "base64-arraybuffer"
+import { generateSummaryFromContent } from "@/utils/gemini"
 
 // タグをDBに保存し、IDを返すヘルパー関数
 const upsertTags = async (tagNames: string[]) => {
@@ -36,6 +37,7 @@ interface newBlogProps extends z.infer<typeof BlogSchema> {
   base64Image: string | undefined
   userId: string
   tags?: string[]
+  summary?: string // summaryを追加
 }
 
 // ブログ投稿
@@ -78,6 +80,7 @@ export const newBlog = async (values: newBlogProps) => {
       .insert({
         title: values.title,
         content: values.content,
+        summary: values.summary || null, // フォームから受け取る
         image_url,
         user_id: values.userId,
       })
@@ -120,6 +123,7 @@ interface editBlogProps extends z.infer<typeof BlogSchema> {
   base64Image: string | undefined
   userId: string
   tags?: string[]
+  summary?: string // summaryを追加
 }
 
 // ブログ編集
@@ -166,6 +170,7 @@ export const editBlog = async (values: editBlogProps) => {
       .update({
         title: values.title,
         content: values.content,
+        summary: values.summary || null, // フォームから受け取る
         image_url,
       })
       .eq("id", values.blogId)
@@ -261,4 +266,27 @@ export const generateTagsFromContent = async (title: string, content: string) =>
     console.error("Error in generateTagsFromContent action:", error);
     return { error: "サーバーでタグの生成中にエラーが発生しました。" };
   }
+};
+
+// AIによる要約生成と保存アクション
+export const generateAndSaveSummary = async ({ blogId, title, content }: { blogId: string, title: string, content: string }) => {
+  const supabase = createClient();
+
+  const { summary, error: summaryError } = await generateSummaryFromContent(title, content);
+  if (summaryError) {
+    console.error("AI summary generation failed:", summaryError);
+    return { error: summaryError };
+  }
+
+  const { error: updateError } = await supabase
+    .from("blogs")
+    .update({ summary: summary || null })
+    .eq("id", blogId);
+
+  if (updateError) {
+    console.error("Error updating summary in DB:", updateError);
+    return { error: updateError.message };
+  }
+
+  return { summary, error: null };
 };

@@ -26,7 +26,7 @@ const getMarkdownComprehensiveGuide = (): string => {
 - **太字**: **太字** または __太字__
 - *斜体*: *斜体* または _斜体_
 - ~~取り消し線~~: ~~取り消し線~~
-- ==ハイライト==: ==ハイライト==（一部の環境でサポート）
+- 絵文字: :tada: のようにコロンで囲んで絵文字を挿入できます。
 
 **見出し（6段階）:**
 # 見出し1（最大）
@@ -249,7 +249,8 @@ export const generateBlogContent = async (
   const styleInstructions = styles.map(s => styleInstructionMap[s]).filter(Boolean);
 
   const prompt = `
-あなたはプロのブログ記事編集者であり、Markdown記法のエキスパートです。以下の指示に基づき、与えられたブログ記事を最高の品質に改善してください。
+あなたは、与えられたMarkdownの仕様に寸分違わず従うことができる、非常に優秀で厳格なブログ記事編集AIです。
+あなたの最優先事項は、以下の「サポートされているMarkdown記法の完全ガイド」に記載されたルールを**絶対に**守ることです。ガイドにない記法は絶対に使用してはいけません。
 
 ${getMarkdownComprehensiveGuide()}
 
@@ -332,11 +333,13 @@ ${summaryLength ? `
    - YouTube動画は{{youtube:VIDEO_ID}}で埋め込み
 
 ### 出力形式
-- 改善後の記事本文のみをMarkdown形式で出力してください
-- 指示に関するコメントや、前置き・後書きは一切含めないでください
-- 正確なMarkdown記法と拡張機能を使用し、上記のガイドラインに従ってください
-- 元の記事の意味と内容を変えず、構造と表現、そして視覚的魅力を大幅に改善してください
-- 拡張機能を積極的に活用し、読者にとって魅力的で使いやすい記事に仕上げてください
+- **最重要**: 改善後の記事本文のみを、提供されたMarkdownガイドに厳密に従った形式で出力してください。
+- **絶対に、出力を\`\`\`text ... \`\`\`のようなコードブロックで囲まないでください。**
+- 指示に関するコメントや、前置き・後書きは一切含めないでください。
+- 元の記事の意味と内容を変えず、構造と表現、そして視覚的魅力を大幅に改善してください。
+- 拡張機能を積極的に活用し、読者にとって魅力的で使いやすい記事に仕上げてください。
+
+**最重要**: 上記の指示、特に「サポートされているMarkdown記法の完全ガイド」に厳密に従ってください。ガイドにないMarkdown記法は絶対に使用しないでください。
 
 記事の改善を開始してください：
 `;
@@ -450,6 +453,59 @@ ${content}
     return { 
       tags: null, 
       error: "タグの自動生成中にエラーが発生しました。時間をおいて再度お試しください。" 
+    };
+  }
+};
+
+export const generateSummaryFromContent = async (title: string, content: string): Promise<{ summary: string | null; error: string | null }> => {
+  const model = getGeminiModel();
+
+  // Markdownの特殊文字を除去して、よりプレーンなテキストに近い形でAIに渡す
+  const plainContent = content
+    .replace(/---/g, ' ')
+    .replace(/#{1,6}\s/g, ' ')
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .replace(/~~/g, '')
+    .replace(/`{1,3}[^`]*`{1,3}/g, '')
+    .replace(/\|/g, ' ')
+    .replace(/\n/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  const prompt = `
+あなたは、読者の興味を引くのが得意なプロの編集者です。
+以下のブログ記事のタイトルと内容を読み、記事の核心を突いた、簡潔で魅力的な要約を生成してください。
+
+### 指示
+- 要約は日本語で、およそ150文字程度にまとめてください。
+- 記事全体を読みたくなるような、キャッチーな文章を意識してください。
+- 記事の重要なキーワードをいくつか含めてください。
+- 生成するのは要約の文章のみです。タイトルや前置き、記号などは一切含めないでください。
+
+### 記事のタイトル
+${title}
+
+### 記事の内容
+${plainContent.substring(0, 3000)}
+
+### 出力形式
+要約の文章（150文字程度）
+
+### 要約
+`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const summary = response.text().trim();
+
+    return { summary, error: null };
+  } catch (error) {
+    console.error("Error generating summary:", error);
+    return { 
+      summary: null, 
+      error: "AIによる要約の生成中にエラーが発生しました。" 
     };
   }
 };

@@ -7,6 +7,11 @@ import { Card } from "@/components/ui/card"
 import { formatJST } from "@/utils/date"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 interface BlogItemProps {
   blog: {
@@ -66,13 +71,31 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
           {/* 上部: 著者情報 */}
           <div className="flex-grow">
             {blog.tags && blog.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {blog.tags.slice(0, 2).map(tag => (
-                  <Badge key={tag.name} variant="secondary" className="text-xs backdrop-blur-sm bg-white/10 text-white border-none font-normal">
-                    {tag.name}
-                  </Badge>
-                ))}
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <div className="flex flex-wrap gap-1.5 cursor-pointer">
+                    {blog.tags.slice(0, 2).map(tag => (
+                      <Badge key={tag.name} variant="secondary" className="text-xs backdrop-blur-sm bg-white/10 text-white border-none font-normal">
+                        {tag.name}
+                      </Badge>
+                    ))}
+                    {blog.tags.length > 2 && (
+                      <Badge variant="secondary" className="text-xs backdrop-blur-sm bg-white/10 text-white border-none font-normal">
+                        +{blog.tags.length - 2}
+                      </Badge>
+                    )}
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex flex-wrap gap-1.5">
+                    {blog.tags.map(tag => (
+                      <Badge key={tag.name} variant="secondary">
+                        {tag.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
 

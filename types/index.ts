@@ -29,6 +29,7 @@ export interface BlogType {
   id: string
   title: string
   content: string
+  summary: string | null
   user_id: string
   image_url: string | null
   updated_at: string
