@@ -58,12 +58,12 @@ const ProfilePage = async ({
   const isOwnProfile = !!session && session.user && session.user.id === profile.id
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
+    <main className="min-h-screen">
       <UserProfile 
         profile={profile} 
         isOwnProfile={isOwnProfile}
       />
-    </div>
+    </main>
   )
 }
 

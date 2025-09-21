@@ -1,4 +1,4 @@
-import UserProfile from "@/components/user/UserProfile"
+import UserProfile from "@/components/profile/UserProfile"
 import { createClient } from "@/utils/supabase/server"
 import { notFound } from "next/navigation"
 
@@ -12,21 +12,41 @@ interface UserProfilePageProps {
 const UserProfilePage = async ({ params }: UserProfilePageProps) => {
   const supabase = createClient()
 
+  // セッション情報を取得
+  const { data: { session } } = await supabase.auth.getSession()
+
   // ユーザープロフィールを取得
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("*")
+    .select(`
+      id,
+      name,
+      introduce,
+      avatar_url,
+      email,
+      website,
+      social_links,
+      created_at,
+      updated_at
+    `)
     .eq("id", params.userId)
     .single()
 
   if (error || !profile) {
+    console.error(`Profile fetch error for user ID ${params.userId}:`, error)
     notFound()
   }
 
+  // プロフィール所有者かどうかを確認
+  const isOwnProfile = !!session && session.user && session.user.id === profile.id
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <UserProfile profile={profile} />
-    </div>
+    <main className="min-h-screen">
+      <UserProfile 
+        profile={profile} 
+        isOwnProfile={isOwnProfile}
+      />
+    </main>
   )
 }
 
