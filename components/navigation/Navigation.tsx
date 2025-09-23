@@ -12,6 +12,7 @@ import {
   House,
   Bookmark,
   User as UserIcon,
+  FileText,
 } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
@@ -122,6 +123,13 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
       {user ? (
         <>
           <Button variant="ghost" asChild>
+            <Link href="/guide/markdown" className="flex items-center space-x-2">
+              <FileText className="h-4 w-4" />
+              <span>マークダウンガイド</span>
+            </Link>
+          </Button>
+
+          <Button variant="ghost" asChild>
             <Link href="/blog/new" className="flex items-center space-x-2">
               <PenSquare className="h-4 w-4" />
               <span>投稿する</span>
@@ -199,6 +207,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
 
   const mobileNavItems = [
     { href: "/", icon: House, label: "ホーム" },
+    { href: "/guide/markdown", icon: FileText, label: "マークダウンガイド" },
     { href: "/blog/new", icon: PenSquare, label: "投稿する" },
     { href: "/bookmarks", icon: Bookmark, label: "ブックマーク" },
     { href: "/settings/profile", icon: Settings, label: "設定" },

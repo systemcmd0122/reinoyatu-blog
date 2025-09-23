@@ -18,6 +18,7 @@ const MarkdownHelp: React.FC<MarkdownHelpProps> = ({ onInsertCodeBlock }) => {
 
   // マークダウン例の改善：より整理されたデザイン
   const markdownExamples = [
+    // 基本的な書式
     { syntax: "# 見出し1", description: "最大の見出し" },
     { syntax: "## 見出し2", description: "2番目に大きい見出し" },
     { syntax: "### 見出し3", description: "3番目に大きい見出し" },
@@ -28,18 +29,39 @@ const MarkdownHelp: React.FC<MarkdownHelpProps> = ({ onInsertCodeBlock }) => {
     { syntax: "*斜体*", description: "斜体テキスト" },
     { syntax: "~~取り消し線~~", description: "取り消し線テキスト" },
     { syntax: "==ハイライト==", description: "ハイライトテキスト" },
+    { syntax: "`コード`", description: "インラインコード" },
+    
+    // リストと構造化
     { syntax: "- リスト項目", description: "箇条書きリスト" },
     { syntax: "1. 番号付きリスト", description: "番号付きリスト" },
-    { syntax: "- [ ] チェックボックス", description: "チェックボックス（未完了）" },
-    { syntax: "- [x] チェックボックス", description: "チェックボックス（完了）" },
-    { syntax: "[リンク](https://example.com)", description: "ハイパーリンク" },
-    { syntax: "![代替テキスト](https://example.com/image.jpg)", description: "画像" },
-    { syntax: "```言語名\nコードブロック\n```", description: "コードブロック" },
-    { syntax: "> 引用", description: "引用文" },
+    { syntax: "- [ ] タスク", description: "タスク（未完了）" },
+    { syntax: "- [x] タスク", description: "タスク（完了）" },
+    { syntax: "> 引用文", description: "引用" },
+    { syntax: ">> 二重引用", description: "ネストされた引用" },
     { syntax: "---", description: "水平線" },
-    { syntax: "| 列1 | 列2 |\n|-----|-----|\n| セル1 | セル2 |", description: "テーブル" },
-    { syntax: "||スポイラー||", description: "スポイラーテキスト（クリックで表示）" },
-    { syntax: "/spoiler 隠したいテキスト", description: "スポイラーテキスト（行頭）" },
+    
+    // リンクとメディア
+    { syntax: "[リンク](URL)", description: "ハイパーリンク" },
+    { syntax: "![代替テキスト](画像URL)", description: "画像" },
+    { syntax: "[![代替テキスト](画像URL)](リンクURL)", description: "リンク付き画像" },
+    { syntax: "{{youtube:VIDEO_ID}}", description: "YouTube埋め込み" },
+    
+    // テーブル
+    { syntax: "| 左揃え | 中央揃え | 右揃え |\n|:--|:--:|--:|\n| 左 | 中央 | 右 |", description: "整列指定付きテーブル" },
+    
+    // 数式
+    { syntax: "$x^2 + y^2 = r^2$", description: "インライン数式" },
+    { syntax: "$$E = mc^2$$", description: "ブロック数式" },
+    
+    // 脚注と参照
+    { syntax: "テキスト[^1]\n\n[^1]: 脚注の内容", description: "脚注" },
+    { syntax: "[参照リンク][ref]\n\n[ref]: URL", description: "参照リンク" },
+    
+    // コードブロック
+    { syntax: "```python\nprint('Hello')\n```", description: "シンタックスハイライト付きコード" },
+    
+    // アコーディオン
+    { syntax: "<details><summary>タイトル</summary>\n内容\n</details>", description: "折りたたみセクション" },
   ]
 
   // 警告・情報ボックスの例

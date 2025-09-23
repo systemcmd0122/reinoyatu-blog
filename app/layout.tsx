@@ -1,4 +1,5 @@
 import "./globals.css"
+import "katex/dist/katex.min.css"
 import type { Metadata, Viewport } from "next"
 import { M_PLUS_1 } from "next/font/google"
 import { createClient } from "@/utils/supabase/server"

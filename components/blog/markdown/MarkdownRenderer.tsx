@@ -4,6 +4,9 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import remarkBreaks from "remark-breaks"
 import remarkEmoji from "remark-emoji"
+import remarkMath from "remark-math"
+import rehypeKatex from "rehype-katex"
+import rehypeRaw from "rehype-raw"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
 import YouTubeEmbed from "./YouTubeEmbed"
@@ -32,6 +35,15 @@ interface MarkdownRendererProps {
   enableYouTubeDetails?: boolean;
   enableLineNumbers?: boolean;
   enableCopyButton?: boolean;
+  enableMath?: boolean;
+  enableRaw?: boolean;
+  enableFootnotes?: boolean;
+  className?: string;
+}
+
+interface ExtendedLiProps extends React.HTMLAttributes<HTMLLIElement> {
+  checked?: boolean;
+  children?: React.ReactNode;
 }
 
 interface CodeProps {
@@ -656,7 +668,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   content,
   enableYouTubeDetails = true,
   enableLineNumbers = true,
-  enableCopyButton = true
+  enableCopyButton = true,
+  enableMath = false,
+  enableRaw = false,
+  className = ""
 }) => {
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
@@ -1013,40 +1028,221 @@ type FeatureMatch = (AudioPlayerProps & { type: 'audio' }) |
     setImageErrors(prev => new Set(prev).add(src));
   };
 
+  // 脚注の処理
+  const [footnotes, setFootnotes] = useState<{ [key: string]: string }>({});
+  const [showFootnotes, setShowFootnotes] = useState(false);
+
+  // 脚注の抽出
+  useEffect(() => {
+    const footnoteRegex = /\[\^(\d+)\]: (.*?)(?=\n\[|$)/gs;
+    const matches = [...content.matchAll(footnoteRegex)];
+    const newFootnotes: { [key: string]: string } = {};
+    matches.forEach(match => {
+      newFootnotes[match[1]] = match[2].trim();
+    });
+    setFootnotes(newFootnotes);
+    setShowFootnotes(Object.keys(newFootnotes).length > 0);
+  }, [content]);
+
   return (
-    <div className="markdown-content prose prose-zinc max-w-none">
+    <div className="markdown-content prose prose-zinc dark:prose-invert max-w-none">
       <style jsx global>{`
         .markdown-content {
-          line-height: 1.7;
+          line-height: 1.8;
+          font-size: 1.125rem;
+          color: var(--foreground);
         }
+
         .markdown-content p {
-          margin-bottom: 1rem;
-          margin-top: 1rem;
+          margin: 1.25rem 0;
+          color: var(--foreground);
         }
-        .markdown-content ul {
-          margin-bottom: 1.5rem;
-          margin-top: 1.5rem;
+
+        .markdown-content h1, .markdown-content h2, .markdown-content h3,
+        .markdown-content h4, .markdown-content h5, .markdown-content h6 {
+          margin: 2rem 0 1rem;
+          font-weight: 600;
+          line-height: 1.3;
+          color: var(--foreground);
         }
+
+        .markdown-content h1 { font-size: 2.5rem; }
+        .markdown-content h2 { font-size: 2rem; }
+        .markdown-content h3 { font-size: 1.75rem; }
+        .markdown-content h4 { font-size: 1.5rem; }
+        .markdown-content h5 { font-size: 1.25rem; }
+        .markdown-content h6 { font-size: 1.1rem; }
+
+        .markdown-content ul, .markdown-content ol {
+          margin: 1.5rem 0;
+          padding-left: 2rem;
+          color: var(--foreground);
+        }
+
         .markdown-content li {
-          margin-bottom: 0.5rem;
+          margin: 0.5rem 0;
+          padding-left: 0.5rem;
         }
+
         .markdown-content li > p {
-          margin-bottom: 0.25rem;
-          margin-top: 0.25rem;
+          margin: 0.25rem 0;
         }
+
         .markdown-content pre {
-          margin-bottom: 1.5rem;
-          margin-top: 1.5rem;
+          margin: 1.5rem 0;
+          padding: 1.25rem;
+          border-radius: 0.5rem;
+          background-color: var(--code-background);
+          color: var(--code-foreground);
+          overflow-x: auto;
+          font-family: var(--font-mono);
+          font-size: 0.95rem;
+          line-height: 1.6;
         }
+
+        .markdown-content code {
+          padding: 0.2rem 0.4rem;
+          border-radius: 0.25rem;
+          background-color: var(--code-background);
+          color: var(--code-foreground);
+          font-family: var(--font-mono);
+          font-size: 0.95em;
+        }
+
         .markdown-content blockquote {
-          margin-bottom: 1.5rem;
-          margin-top: 1.5rem;
+          margin: 1.5rem 0;
+          padding: 1rem 1.5rem;
+          border-left: 4px solid var(--border-subtle);
+          background-color: var(--background-subtle);
+          color: var(--foreground-subtle);
+          font-style: italic;
+        }
+
+        .markdown-content img {
+          margin: 1.5rem 0;
+          border-radius: 0.5rem;
+          max-width: 100%;
+          height: auto;
+          border: 1px solid var(--border);
+        }
+
+        .markdown-content table {
+          width: 100%;
+          margin: 1.5rem 0;
+          border-collapse: collapse;
+          border: 1px solid var(--border);
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+          padding: 0.75rem;
+          border: 1px solid var(--border);
+          color: var(--foreground);
+        }
+
+        .markdown-content table th {
+          background-color: var(--background-subtle);
+          font-weight: 600;
+        }
+
+        .markdown-content table tr:nth-child(even) {
+          background-color: var(--background-alternate);
+        }
+
+        .markdown-content hr {
+          margin: 2rem 0;
+          border: 0;
+          border-top: 2px solid var(--border);
+        }
+
+        .markdown-content .footnotes {
+          margin-top: 3rem;
+          padding-top: 2rem;
+          border-top: 1px solid var(--border);
+          font-size: 0.95rem;
+          color: var(--foreground-subtle);
+        }
+
+        .markdown-content .math {
+          overflow-x: auto;
+          padding: 1rem 0;
+          background-color: var(--background);
+        }
+
+        .markdown-content .task-list-item {
+          list-style-type: none;
+          margin-left: -1.5rem;
+          display: flex;
+          align-items: flex-start;
+          gap: 0.5rem;
+        }
+
+        .markdown-content .task-list-item input[type="checkbox"] {
+          margin: 0.4rem 0.5rem 0 0;
+        }
+
+        /* ダークモード対応 */
+        :root[data-theme="dark"] .markdown-content {
+          --foreground: hsl(210 40% 98%);
+          --foreground-subtle: hsl(215 20% 65%);
+          --background: hsl(222.2 84% 4.9%);
+          --background-subtle: hsl(222.2 84% 4.9% / 0.1);
+          --background-alternate: hsl(222.2 84% 4.9% / 0.05);
+          --border: hsl(217.2 32.6% 17.5%);
+          --border-subtle: hsl(215 20% 65% / 0.2);
+          --code-background: hsl(222.2 84% 4.9% / 0.3);
+          --code-foreground: hsl(210 40% 98%);
+        }
+
+        /* ライトモード対応 */
+        :root[data-theme="light"] .markdown-content {
+          --foreground: hsl(222.2 84% 4.9%);
+          --foreground-subtle: hsl(215 20% 35%);
+          --background: hsl(0 0% 100%);
+          --background-subtle: hsl(210 40% 98% / 0.8);
+          --background-alternate: hsl(210 40% 98% / 0.3);
+          --border: hsl(214.3 31.8% 91.4%);
+          --border-subtle: hsl(215 20% 65% / 0.2);
+          --code-background: hsl(210 40% 98%);
+          --code-foreground: hsl(222.2 84% 4.9%);
         }
       `}</style>
       
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkBreaks, remarkEmoji]}
+        className={cn("markdown-content", className)}
+        remarkPlugins={[
+          remarkGfm,
+          remarkBreaks,
+          remarkEmoji,
+          ...(enableMath ? [remarkMath] : []),
+        ]}
+        rehypePlugins={[
+          ...(enableMath ? [rehypeKatex] : []),
+          ...(enableRaw ? [rehypeRaw] : []),
+        ]}
         components={{
+          // タスクリストとリストアイテムのレンダリング
+          li: (props: ExtendedLiProps) => {
+            const { checked, children, className, ...rest } = props;
+            if (checked !== null && checked !== undefined) {
+              return (
+                <li className={cn("task-list-item flex items-start gap-2", className)} {...rest}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    readOnly
+                    className="mt-1"
+                  />
+                  <span className="flex-1">{children}</span>
+                </li>
+              );
+            }
+            return (
+              <li className={cn("leading-relaxed flex items-start", className)} {...rest}>
+                <span className="flex-1 pl-2">{children}</span>
+              </li>
+            );
+          },
           // コードブロックのみ（インラインコードは通常のテキストとして扱う）
           code({ inline, className, children, ...props }: CodeProps) {
             // インラインコードは処理しない
@@ -1246,13 +1442,6 @@ type FeatureMatch = (AudioPlayerProps & { type: 'audio' }) |
               {children}
             </ol>
           ),
-          li: ({ children, ...props }) => (
-            <li className="leading-relaxed flex items-start" {...props}>
-              <span className="flex-1 pl-2">
-                {children}
-              </span>
-            </li>
-          ),
 
           // 引用
           blockquote: ({ children, ...props }) => (
@@ -1323,6 +1512,25 @@ type FeatureMatch = (AudioPlayerProps & { type: 'audio' }) |
       >
         {finalContent}
       </ReactMarkdown>
+
+      {/* 脚注セクション */}
+      {showFootnotes && (
+        <div className="footnotes">
+          <hr />
+          <h2 className="text-xl font-bold mb-4">脚注</h2>
+          <ol>
+            {Object.entries(footnotes).map(([id, content]) => (
+              <li key={id} id={`footnote-${id}`} className="mb-2">
+                <a href={`#footnote-ref-${id}`} className="text-sm text-gray-600">
+                  ↩
+                </a>
+                {" "}
+                <span className="text-sm">{content}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
     </div>
   );
 };
