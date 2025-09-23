@@ -14,6 +14,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import data from '@emoji-mart/data'
 import Picker from '@emoji-mart/react'
+import { hasDisplayName } from "@/utils/validation"
+import { DisplayNameDialog } from "@/components/ui/display-name-dialog"
+import { useAuth } from '@/hooks/use-auth'
 import {
   Popover,
   PopoverContent,
@@ -45,11 +48,13 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   maxVisibleReplies = 3
 }) => {
   const router = useRouter()
+  const { user } = useAuth()
   const [content, setContent] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [comments, setComments] = useState<CommentType[]>(initialComments)
   const [activeTab, setActiveTab] = useState<'newest' | 'oldest'>('newest')
+  const [isDisplayNameDialogOpen, setIsDisplayNameDialogOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // 返信をグループ化するためのマップ
@@ -139,6 +144,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 
       if (!content.trim()) {
         toast.error("コメントを入力してください")
+        return
+      }
+
+      // DisplayNameの確認
+      if (!hasDisplayName(user)) {
+        setIsDisplayNameDialogOpen(true)
         return
       }
 
@@ -332,6 +343,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           </div>
         )}
       </div>
+
+      <DisplayNameDialog
+        isOpen={isDisplayNameDialogOpen}
+        onClose={() => setIsDisplayNameDialogOpen(false)}
+      />
     </div>
   )
 }

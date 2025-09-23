@@ -42,6 +42,9 @@ const AICustomizeDialog = dynamic(
 )
 import { GenerationOptions } from "@/types";
 import TagInput from "@/components/ui/TagInput";
+import { useAuth } from "@/hooks/use-auth";
+import { hasDisplayName } from "@/utils/validation";
+import { DisplayNameDialog } from "@/components/ui/display-name-dialog";
 
 interface BlogNewProps {
   userId: string
@@ -49,12 +52,14 @@ interface BlogNewProps {
 
 const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   const router = useRouter()
+  const { user } = useAuth()
   const [error, setError] = useState("")
   const [isPending, setIsPending] = useState(false)
   const [, startTransition] = useTransition()
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
+  const [isDisplayNameDialogOpen, setIsDisplayNameDialogOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   
   // AI関連の状態
@@ -83,6 +88,12 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
 
   const onSubmit = async (values: z.infer<typeof BlogSchema>) => {
     if (isPending) return;
+
+    // DisplayNameの確認
+    if (!hasDisplayName(user)) {
+      setIsDisplayNameDialogOpen(true)
+      return
+    }
     
     setError("")
     setIsPending(true)
@@ -759,6 +770,11 @@ Markdownを使って以下のような装飾ができます：
           onGenerate={handleGenerate}
           generatedContent={generatedContent}
           isGenerating={isGenerating}
+        />
+
+        <DisplayNameDialog
+          isOpen={isDisplayNameDialogOpen}
+          onClose={() => setIsDisplayNameDialogOpen(false)}
         />
       </div>
     </TooltipProvider>
