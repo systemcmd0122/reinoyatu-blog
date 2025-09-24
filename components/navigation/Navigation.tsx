@@ -152,9 +152,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                     alt={profile?.name || "User"}
                   />
                   <AvatarFallback>
-                    {profile?.name?.charAt(0).toUpperCase() ||
-                      user.email?.charAt(0).toUpperCase() ||
-                      "U"}
+                    {profile?.name?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -235,9 +233,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                           alt={profile?.name || "User"}
                         />
                         <AvatarFallback>
-                          {profile?.name?.charAt(0).toUpperCase() ||
-                            user.email?.charAt(0).toUpperCase() ||
-                            "U"}
+                          {profile?.name?.charAt(0).toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col truncate">

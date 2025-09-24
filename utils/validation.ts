@@ -1,14 +1,4 @@
 // utils/validation.ts
-import { User } from '@supabase/supabase-js'
-
-// ユーザーのDisplayNameが設定されているかを確認する関数
-export const hasDisplayName = (user: User | null): boolean => {
-  if (!user) return false
-  return user.user_metadata?.display_name !== undefined && 
-         user.user_metadata?.display_name !== null && 
-         user.user_metadata?.display_name !== ''
-}
-
 /**
  * 最も安全で確実な UUID 検証方法
  * 正規表現の文字範囲エラーを回避

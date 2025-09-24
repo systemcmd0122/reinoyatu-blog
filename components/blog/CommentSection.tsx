@@ -14,9 +14,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import data from '@emoji-mart/data'
 import Picker from '@emoji-mart/react'
-import { hasDisplayName } from "@/utils/validation"
-import { DisplayNameDialog } from "@/components/ui/display-name-dialog"
 import { useAuth } from '@/hooks/use-auth'
+import { createClient } from "@/utils/supabase/client"
 import {
   Popover,
   PopoverContent,
@@ -48,14 +47,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   maxVisibleReplies = 3
 }) => {
   const router = useRouter()
-  const { user } = useAuth()
+  useAuth()
   const [content, setContent] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [comments, setComments] = useState<CommentType[]>(initialComments)
   const [activeTab, setActiveTab] = useState<'newest' | 'oldest'>('newest')
-  const [isDisplayNameDialogOpen, setIsDisplayNameDialogOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const supabase = createClient()
 
   // 返信をグループ化するためのマップ
   const parentComments = new Map<string, CommentType[]>()
@@ -147,9 +146,16 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         return
       }
 
-      // DisplayNameの確認
-      if (!hasDisplayName(user)) {
-        setIsDisplayNameDialogOpen(true)
+      // プロフィール名の確認
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", currentUserId)
+        .single()
+
+      if (!profile?.name) {
+        toast.error("プロフィール設定でユーザー名を設定してください")
+        router.push("/settings/profile")
         return
       }
 
@@ -344,10 +350,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         )}
       </div>
 
-      <DisplayNameDialog
-        isOpen={isDisplayNameDialogOpen}
-        onClose={() => setIsDisplayNameDialogOpen(false)}
-      />
+
     </div>
   )
 }
