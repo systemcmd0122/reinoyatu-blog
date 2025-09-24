@@ -29,7 +29,11 @@ const MarkdownHelp: React.FC<MarkdownHelpProps> = ({ onInsertCodeBlock }) => {
     { syntax: "*斜体*", description: "斜体テキスト" },
     { syntax: "~~取り消し線~~", description: "取り消し線テキスト" },
     { syntax: "==ハイライト==", description: "ハイライトテキスト" },
-    { syntax: "`コード`", description: "インラインコード" },
+    { syntax: "`highlight-yellow`テキスト`", description: "黄色のハイライト" },
+    { syntax: "`highlight-red`重要`", description: "赤色のハイライト" },
+    { syntax: "`highlight-green`成功`", description: "緑色のハイライト" },
+    { syntax: "`highlight-blue`情報`", description: "青色のハイライト" },
+    { syntax: "`highlight-purple`特別`", description: "紫色のハイライト" },
     
     // リストと構造化
     { syntax: "- リスト項目", description: "箇条書きリスト" },

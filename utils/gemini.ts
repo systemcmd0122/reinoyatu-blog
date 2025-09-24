@@ -26,6 +26,7 @@ const getMarkdownComprehensiveGuide = (): string => {
 - **太字**: **太字** または __太字__
 - *斜体*: *斜体* または _斜体_
 - ~~取り消し線~~: ~~取り消し線~~
+- ハイライト: \`highlight-color\`テキスト\` (color: yellow, red, green, blue, purple)
 - 絵文字: :tada: のようにコロンで囲んで絵文字を挿入できます。
 
 **見出し（6段階）:**
@@ -48,12 +49,19 @@ const getMarkdownComprehensiveGuide = (): string => {
 - 画像: ![代替テキスト](画像URL)
 - 参照スタイルリンク: [テキスト][参照ID]
 
-**コードブロック:**
-- インラインコード: \`code\`（バッククォートで囲む）
+**コードブロックとハイライト:**
 - コードブロック:
 \`\`\`language名
 コードの内容
 \`\`\`
+- テキストハイライト: \`highlight-yellow\`重要な部分\` のように色を指定してハイライト
+  - 利用可能な色: yellow（デフォルト）, red, green, blue, purple
+  - 用途別推奨: 
+    - yellow: 一般的な強調
+    - red: 警告・重要
+    - green: 成功・推奨
+    - blue: 情報・補足
+    - purple: 特別・特殊
 
 **サポートされるプログラミング言語:**
 javascript, typescript, jsx, tsx, html, css, scss, python, java, csharp, cpp, c, php, ruby, go, rust, kotlin, swift, sql, json, xml, yaml, bash, powershell, dockerfile, markdown, text
@@ -250,7 +258,23 @@ export const generateBlogContent = async (
 
   const prompt = `
 あなたは、与えられたMarkdownの仕様に寸分違わず従うことができる、非常に優秀で厳格なブログ記事編集AIです。
-あなたの最優先事項は、以下の「サポートされているMarkdown記法の完全ガイド」に記載されたルールを**絶対に**守ることです。ガイドにない記法は絶対に使用してはいけません。
+以下の3つの最優先事項を必ず守ってください：
+
+1. 「サポートされているMarkdown記法の完全ガイド」に記載されたルールを**絶対に**守ること。ガイドにない記法は絶対に使用してはいけません。
+
+2. 元の文章の趣旨、主張、意図を100%維持すること。以下は固く禁止されています：
+   - 文章の主張や結論の変更
+   - 重要な情報の削除や省略
+   - 事実やデータの改変
+   - 専門用語の言い換えや省略
+   - 著者の意見や立場の変更
+
+3. 文章の構造と読みやすさのみを改善すること：
+   - Markdown記法の適切な適用
+   - 段落分けの最適化
+   - 箇条書きやリストの活用
+   - 見出しレベルの適切な使用
+   - ハイライトや警告ボックスによる強調
 
 ${getMarkdownComprehensiveGuide()}
 
@@ -270,18 +294,33 @@ ${styleInstructions.map(instr => `- ${instr}`).join("\n")}
 - ${preserveLinks ? "記事内のすべてのハイパーリンクは、正しいMarkdown記法 [テキスト](URL) を使用して、URLとアンカーテキストを含めて完全に保持してください。" : "リンクは不要であれば削除しても構いません。"}
 - ${enhanceReadability ? "読者が内容を理解しやすいように、適切な見出し（h2, h3等）、リスト、段落分けを行ってください。長い文章は読みやすい長さに分割してください。" : ""}
 
-**拡張機能の積極的活用:**
-- すべてのコードブロックには適切な言語指定を付けてください（例：\`\`\`javascript, \`\`\`python等）
-- 重要な情報、注意事項、ヒントには情報ボックス（:::info, :::warning, :::tip, :::important等）を効果的に使用してください
-- 詳細な情報や補足説明は折りたたみ可能な情報ボックス（[collapsible]オプション）を使用してください
-- FAQ形式の内容や複数の詳細説明は{{accordion:質問:回答|質問2:回答2}}形式を使用してください
-- 複数の関連情報がある場合は{{tabs:タブ1:内容1|タブ2:内容2}}形式で整理してください
-- プロジェクトの進捗や達成度を示す場合は{{progress:値:最大値:ラベル:色}}を使用してください
-- 時系列の情報やスケジュールは{{timeline:日付:タイトル:説明}}形式を使用してください
-- イベントの期限や締切がある場合は{{countdown:日時:タイトル}}を使用してください
-- 音声コンテンツがある場合は{{audio:URL:タイトル}}で埋め込んでください
-- ネタバレや答えを含む内容は||スポイラータグ||を使用してください
-- YouTube動画がある場合は、{{youtube:VIDEO_ID}}形式で埋め込んでください
+**拡張機能の効果的活用（文章の趣旨を変えずに）:**
+
+1. **テキストの強調とハイライト**
+   - 重要なポイント: \`highlight-yellow\`重要な内容\`
+   - 警告や注意点: \`highlight-red\`注意事項\`
+   - ベストプラクティス: \`highlight-green\`推奨方法\`
+   - 補足情報: \`highlight-blue\`参考情報\`
+   - 特別な内容: \`highlight-purple\`特記事項\`
+
+2. **構造化と整理**
+   - コードブロック: 必ず言語指定を付ける（\`\`\`javascript, \`\`\`python等）
+   - 重要な情報: :::info, :::warning, :::tip, :::important ボックスを使用
+   - 詳細説明: 折りたたみ可能な情報ボックス [collapsible] を活用
+   - FAQ形式: {{accordion:質問:回答|質問2:回答2}}
+   - 関連情報: {{tabs:タブ1:内容1|タブ2:内容2}}
+
+3. **進捗と時系列**
+   - 進捗表示: {{progress:値:最大値:ラベル:色}}
+   - スケジュール: {{timeline:日付:タイトル:説明}}
+   - 期限設定: {{countdown:日時:タイトル}}
+
+4. **メディアとインタラクティブ要素**
+   - 音声: {{audio:URL:タイトル}}
+   - ネタバレ防止: ||スポイラー内容||
+   - 動画: {{youtube:VIDEO_ID}}
+
+※ これらの拡張機能は、元の文章の意味や主張を変えることなく、情報の整理と視覚的な理解を助けるためにのみ使用してください。
 
 **記事の種類別の拡張機能推奨使用例:**
 - **チュートリアル記事**: ステップごとのプログレスバー、重要な注意点の警告ボックス、トラブルシューティングのアコーディオン
@@ -453,6 +492,62 @@ ${content}
     return { 
       tags: null, 
       error: "タグの自動生成中にエラーが発生しました。時間をおいて再度お試しください。" 
+    };
+  }
+};
+
+export const generateChatResponse = async (
+  input: string,
+  messages: { role: 'user' | 'assistant'; content: string }[],
+  currentContent: string,
+  title: string
+): Promise<{ content: string | null; error: string | null }> => {
+  const model = getGeminiModel();
+
+  // チャット履歴を文字列に変換
+  const chatHistory = messages
+    .map(msg => `${msg.role === 'user' ? 'ユーザー' : 'アシスタント'}: ${msg.content}`)
+    .join('\n\n');
+
+  const prompt = `
+あなたは、ブログ記事の共同作成を支援する専門的なAIアシスタントです。
+現在、"${title}"というタイトルのブログ記事を作成中です。
+
+### 現在の記事内容:
+${currentContent}
+
+### これまでのチャット履歴:
+${chatHistory}
+
+### ユーザーからの新しい質問/要望:
+${input}
+
+### 指示:
+1. ユーザーの質問や要望に対して、具体的で実用的な提案や回答を提供してください。
+2. 技術的な正確性を保ちながら、分かりやすい説明を心がけてください。
+3. 提案する内容は、現在の記事の文脈や目的に沿ったものにしてください。
+4. 必要に応じて、コードブロックやMarkdown記法を使用して説明を補強してください。
+5. 回答は友好的でプロフェッショナルなトーンを維持してください。
+
+### 制約事項:
+- Markdownの記法は、このプロジェクトでサポートされているものだけを使用してください
+- コードブロックを含める場合は、必ず言語指定をしてください
+- 重要なポイントは \`highlight-色\` を使用してハイライトしてください
+- 提案は具体的で実行可能なものにしてください
+
+回答を生成してください：`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const content = response.text().trim();
+    
+    return { content, error: null };
+  } catch (error) {
+    console.error("Error generating chat response:", error);
+    return {
+      content: null,
+      error: "AI応答の生成中にエラーが発生しました。時間をおいて再度お試しください。"
     };
   }
 };

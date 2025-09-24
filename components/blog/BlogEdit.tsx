@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Trash2, Wand2, ImagePlus } from "lucide-react"
+import { Loader2, Trash2, Wand2, ImagePlus, Bot } from "lucide-react"
 import { editBlog, deleteBlog, generateTagsFromContent, generateAndSaveSummary } from "@/actions/blog" // generateAndSaveSummary を追加
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -45,6 +45,11 @@ const AICustomizeDialog = dynamic(
   { ssr: false }
 )
 
+const AIChatDialog = dynamic(
+  () => import('@/components/blog/AIChatDialog').then(mod => mod.AIChatDialog),
+  { ssr: false }
+)
+
 interface BlogEditProps {
   blog: BlogType
 }
@@ -77,6 +82,9 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
   })
 
   // AI関連の機能を追加
+  // AIチャット関連の状態
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false)
+
   const handleAICustomizeClick = () => {
     const { content } = form.getValues()
     if (!content) {
@@ -85,6 +93,11 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
     }
     setGeneratedContent(null)
     setIsAIDialogOpen(true)
+  }
+
+
+  const handleApplyChatContent = (content: string) => {
+    form.setValue('content', content, { shouldDirty: true })
   }
 
   const handleGenerate = async (styles: string[], options: GenerationOptions) => {
@@ -411,16 +424,28 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
                   <FormItem>
                     <div className="flex justify-between items-center">
                       <FormLabel>内容 (Markdown対応)</FormLabel>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAICustomizeClick}
-                        className="flex items-center space-x-2"
-                      >
-                        <Wand2 className="h-4 w-4" />
-                        <span>AIでカスタマイズ</span>
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsAIChatOpen(true)}
+                          className="flex items-center space-x-2"
+                        >
+                          <Bot className="h-4 w-4" />
+                          <span>AIチャット</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAICustomizeClick}
+                          className="flex items-center space-x-2"
+                        >
+                          <Wand2 className="h-4 w-4" />
+                          <span>AIでカスタマイズ</span>
+                        </Button>
+                      </div>
                     </div>
                     <FormControl>
                       <div className="space-y-2">
@@ -549,6 +574,15 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
         onGenerate={handleGenerate}
         generatedContent={generatedContent}
         isGenerating={isGenerating}
+      />
+
+      {/* AIチャットダイアログ */}
+      <AIChatDialog
+        open={isAIChatOpen}
+        onOpenChange={setIsAIChatOpen}
+        onApplyContent={handleApplyChatContent}
+        currentContent={form.getValues("content")}
+        title={form.getValues("title")}
       />
     </div>
   )

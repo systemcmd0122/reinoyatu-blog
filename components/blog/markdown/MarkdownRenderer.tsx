@@ -47,8 +47,12 @@ interface ExtendedLiProps extends React.HTMLAttributes<HTMLLIElement> {
 }
 
 interface CodeProps {
-  inline?: boolean;
   className?: string;
+  children?: React.ReactNode;
+}
+
+interface HighlightProps {
+  color?: string;
   children?: React.ReactNode;
 }
 
@@ -120,9 +124,6 @@ const CodeBlock: React.FC<CodeProps & {
   enableLineNumbers?: boolean;
   enableCopyButton?: boolean;
 }> = ({ 
-  inline, 
-  className, 
-  children, 
   codeContent, 
   language,
   enableLineNumbers = true,
@@ -160,29 +161,7 @@ const CodeBlock: React.FC<CodeProps & {
     }
   }, [isCopied]);
 
-  if (inline) {
-    return (
-      <code 
-        className={cn(
-          "inline-flex items-center px-1.5 py-0.5 rounded text-sm font-mono",
-          "bg-gray-800 text-gray-100",
-          "break-words",
-          className
-        )}
-        style={{
-          backgroundColor: '#2f3136',
-          color: '#dcddde',
-          fontFamily: 'Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace',
-          fontSize: '0.875rem',
-          borderRadius: '3px',
-          padding: '0.125rem 0.25rem'
-        }}
-        {...props}
-      >
-        {children}
-      </code>
-    );
-  }
+  // インラインコードの代わりにハイライト機能を使用
 
   return (
     <div className="relative group my-6 rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
@@ -270,6 +249,26 @@ const Spoiler: React.FC<{ content: string }> = ({ content }) => {
       title={isRevealed ? "クリックして隠す" : "クリックして表示"}
     >
       {isRevealed ? content : "▊ ".repeat(Math.min(content.length, 10))}
+    </span>
+  );
+};
+
+// ハイライトコンポーネント
+const Highlight: React.FC<HighlightProps> = ({ color = 'yellow', children }) => {
+  const colorStyles = {
+    yellow: 'bg-yellow-200',
+    red: 'bg-red-200',
+    green: 'bg-green-200',
+    blue: 'bg-blue-200',
+    purple: 'bg-purple-200',
+  };
+
+  return (
+    <span className={cn(
+      'px-1 rounded',
+      colorStyles[color as keyof typeof colorStyles] || colorStyles.yellow
+    )}>
+      {children}
     </span>
   );
 };
@@ -1243,19 +1242,25 @@ type FeatureMatch = (AudioPlayerProps & { type: 'audio' }) |
               </li>
             );
           },
-          // コードブロックのみ（インラインコードは通常のテキストとして扱う）
-          code({ inline, className, children, ...props }: CodeProps) {
-            // インラインコードは処理しない
-            if (inline) {
-              return <>{children}</>;
+          // コードブロックとハイライトの処理
+          code({ className, children, ...props }: CodeProps) {
+            const match = /language-(\w+)/.exec(className || '');
+            // ハイライト構文のチェック
+            const highlightMatch = /^highlight-(\w+)$/.exec(className || '');
+            
+            if (highlightMatch) {
+              // ハイライトとして処理
+              return (
+                <Highlight color={highlightMatch[1]}>
+                  {children}
+                </Highlight>
+              );
             }
 
-            const match = /language-(\w+)/.exec(className || '');
+            // 通常のコードブロックとして処理
             const codeContent = String(children).replace(/\n$/, '');
-
             return (
               <CodeBlock
-                inline={inline}
                 className={className}
                 codeContent={codeContent}
                 language={match ? match[1] : undefined}

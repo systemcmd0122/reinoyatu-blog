@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2, ImagePlus, X, Wand2, Upload, Save, Eye, HelpCircle, Sparkles } from "lucide-react"
+import { Loader2, ImagePlus, X, Wand2, Upload, Save, Eye, HelpCircle, Sparkles, MessageCircle } from "lucide-react"
 import { BlogSchema } from "@/schemas"
 import { newBlog, generateTagsFromContent } from "@/actions/blog"
 import { useRouter } from "next/navigation"
@@ -40,6 +40,11 @@ const AICustomizeDialog = dynamic(
   () => import("@/components/blog/AICustomizeDialog"), 
   { ssr: false }
 )
+
+const AIChatDialog = dynamic(
+  () => import('@/components/blog/AIChatDialog').then(mod => mod.AIChatDialog),
+  { ssr: false }
+)
 import { GenerationOptions } from "@/types";
 import TagInput from "@/components/ui/TagInput";
 import { useAuth } from "@/hooks/use-auth";
@@ -60,6 +65,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
   const [isDisplayNameDialogOpen, setIsDisplayNameDialogOpen] = useState(false)
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   
   // AI関連の状態
@@ -68,6 +74,17 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   const [generatedContent, setGeneratedContent] = useState<string | null>(null)
   const [isTagGenerating, setIsTagGenerating] = useState(false)
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
+
+  // AIチャットの応答を適用する
+  const applyAIResponse = (response: string) => {
+    const { content } = form.getValues()
+    const cursorPosition = textareaRef.current?.selectionStart || content.length
+    const newContent = 
+      content.slice(0, cursorPosition) + 
+      response + 
+      content.slice(cursorPosition)
+    form.setValue("content", newContent)
+  }
 
   const form = useForm<z.infer<typeof BlogSchema>>({
     resolver: zodResolver(BlogSchema),
@@ -223,6 +240,8 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
     setGeneratedContent(null)
     setIsAIDialogOpen(true)
   }
+
+
 
   const handleGenerate = async (styles: string[], options: GenerationOptions) => {
     const { title, content } = form.getValues();
@@ -514,16 +533,28 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                         <Eye className="h-5 w-5 text-green-500" />
                         <span>記事内容を作成</span>
                       </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAICustomizeClick}
-                        className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none hover:from-purple-600 hover:to-pink-600"
-                      >
-                        <Wand2 className="h-4 w-4" />
-                        <span>AIアシスタント</span>
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAICustomizeClick}
+                          className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none hover:from-purple-600 hover:to-pink-600"
+                        >
+                          <Wand2 className="h-4 w-4" />
+                          <span>AIアシスタント</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsAIChatOpen(true)}
+                          className="flex items-center space-x-2"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          <span>AIチャット</span>
+                        </Button>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -734,6 +765,15 @@ Markdownを使って以下のような装飾ができます：
               </TabsContent>
             </form>
           </Form>
+
+          {/* AIチャットダイアログ */}
+          <AIChatDialog
+            open={isAIChatOpen}
+            onOpenChange={setIsAIChatOpen}
+            onApplyContent={applyAIResponse}
+            currentContent={form.getValues("content")}
+            title={form.getValues("title") || "新規ブログ記事"}
+          />
 
           {/* ナビゲーションボタン */}
           <div className="flex justify-between pt-6">
