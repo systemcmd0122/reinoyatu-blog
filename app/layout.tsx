@@ -84,20 +84,20 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
 
 
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
       <body className={mPlus1.className}>
-        <ToastProvider />
-        <div className="flex min-h-screen flex-col">
-          <Navigation user={user} />
+          <ToastProvider />
+          <div className="flex min-h-screen flex-col bg-background text-foreground">
+            <Navigation user={user} />
 
-          <main className="flex-1">{children}</main>
+            <main className="flex-1">{children}</main>
 
-          <footer className="border-t py-2">
-            <div className="flex flex-col items-center justify-center text-sm space-y-5">
-              <div>©例のヤツ｜ブログ. ALL Rights Reserved.</div>
-            </div>
-          </footer>
-        </div>
+            <footer className="border-t py-2">
+              <div className="flex flex-col items-center justify-center text-sm space-y-5">
+                <div>©例のヤツ｜ブログ. ALL Rights Reserved.</div>
+              </div>
+            </footer>
+          </div>
       </body>
     </html>
   )

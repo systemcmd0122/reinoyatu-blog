@@ -1,0 +1,37 @@
+.dark {
+  /* プロフィール設定フォーム */
+  .profile-form {
+    .form-label {
+      @apply text-gray-200;
+    }
+    
+    .input-field {
+      @apply bg-gray-800 border-gray-700 text-white;
+      &:focus {
+        @apply border-blue-500 ring-blue-500/20;
+      }
+    }
+    
+    .textarea-field {
+      @apply bg-gray-800 border-gray-700 text-white;
+      &:focus {
+        @apply border-blue-500 ring-blue-500/20;
+      }
+    }
+    
+    .social-links {
+      @apply border-gray-700;
+      .social-input {
+        @apply bg-gray-800 text-white;
+      }
+    }
+  }
+  
+  /* 画像アップロード */
+  .image-upload {
+    @apply border-gray-700 bg-gray-800;
+    .upload-text {
+      @apply text-gray-300;
+    }
+  }
+}

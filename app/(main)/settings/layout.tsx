@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { usePathname } from "next/navigation"
-import { UserRoundPen, Mail, KeyRound, Menu } from "lucide-react"
+import { UserRoundPen, Mail, KeyRound, Menu, Palette } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
@@ -24,7 +24,7 @@ const subNavigation = [
     name: "パスワード変更",
     icon: KeyRound,
     href: "/settings/password",
-  }
+  },
 ]
 
 // レイアウト

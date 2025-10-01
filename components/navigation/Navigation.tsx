@@ -14,6 +14,7 @@ import {
   User as UserIcon,
   FileText,
 } from "lucide-react"
+
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import {
@@ -142,6 +143,8 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               <span>ブックマーク</span>
             </Link>
           </Button>
+
+
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
