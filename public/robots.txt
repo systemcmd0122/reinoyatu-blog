@@ -1,8 +1,0 @@
-# *
-User-agent: *
-Allow: /
-Disallow: /auth/*
-Disallow: /settings/*
-
-# Host
-Host: http://localhost:3000

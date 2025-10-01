@@ -24,7 +24,7 @@ const subNavigation = [
     name: "パスワード変更",
     icon: KeyRound,
     href: "/settings/password",
-  },
+  }
 ]
 
 // レイアウト
