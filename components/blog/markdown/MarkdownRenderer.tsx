@@ -8,7 +8,7 @@ import remarkMath from "remark-math"
 import rehypeKatex from "rehype-katex"
 import rehypeRaw from "rehype-raw"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneLight, oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
+import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
 import YouTubeEmbed from "./YouTubeEmbed"
 import { 
   Clipboard, 

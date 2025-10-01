@@ -19,3 +19,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     )
   }
 )
+
+Input.displayName = "CustomInput"
+
+export { Input }
