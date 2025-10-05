@@ -1,17 +1,19 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { formatJST } from "@/utils/date"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { Tag } from "lucide-react"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface BlogItemProps {
   blog: {
@@ -31,13 +33,23 @@ interface BlogItemProps {
 }
 
 const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
-  const [imageLoaded, setImageLoaded] = React.useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [showAllTags, setShowAllTags] = useState(false)
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     window.location.href = `/profile/${blog.profiles.id}`
   }
+
+  const handleTagClick = (e: React.MouseEvent, tagName: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    window.location.href = `/tags/${encodeURIComponent(tagName)}`
+  }
+
+  const displayedTags = showAllTags ? blog.tags : blog.tags?.slice(0, 2)
+  const hasMoreTags = blog.tags && blog.tags.length > 2
 
   return (
     <Link href={`/blog/${blog.id}`} className="block group">
@@ -68,38 +80,58 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
 
         {/* コンテンツ部分 */}
         <div className="absolute inset-0 flex flex-col justify-end p-5 text-white">
-          {/* 上部: 著者情報 */}
-          <div className="flex-grow">
-            {blog.tags && blog.tags.length > 0 && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <div className="flex flex-wrap gap-1.5 cursor-pointer">
-                    {blog.tags.slice(0, 2).map(tag => (
-                      <Badge key={tag.name} variant="secondary" className="text-xs backdrop-blur-sm bg-white/10 text-white border-none font-normal">
-                        {tag.name}
-                      </Badge>
-                    ))}
-                    {blog.tags.length > 2 && (
-                      <Badge variant="secondary" className="text-xs backdrop-blur-sm bg-white/10 text-white border-none font-normal">
-                        +{blog.tags.length - 2}
-                      </Badge>
-                    )}
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex flex-wrap gap-1.5">
-                    {blog.tags.map(tag => (
-                      <Badge key={tag.name} variant="secondary">
-                        {tag.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
-          </div>
+          {/* タグ表示エリア - コンパクト化 */}
+          {blog.tags && blog.tags.length > 0 && (
+            <div className="mb-auto pt-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div 
+                      className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md rounded-full px-3 py-1.5 cursor-pointer hover:bg-white/20 transition-colors"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setShowAllTags(!showAllTags)
+                      }}
+                    >
+                      <Tag className="h-3 w-3" />
+                      <span className="text-xs font-medium">
+                        {blog.tags.length}
+                      </span>
+                      {displayedTags?.slice(0, 1).map(tag => (
+                        <span key={tag.name} className="text-xs">
+                          {tag.name}
+                        </span>
+                      ))}
+                      {hasMoreTags && !showAllTags && (
+                        <span className="text-xs opacity-75">+{blog.tags.length - 1}</span>
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent 
+                    side="top" 
+                    className="max-w-xs p-3 bg-gray-900 border-gray-700"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex flex-wrap gap-1.5">
+                      {blog.tags.map(tag => (
+                        <Badge 
+                          key={tag.name} 
+                          variant="secondary"
+                          className="cursor-pointer hover:bg-primary/80 transition-colors text-xs"
+                          onClick={(e) => handleTagClick(e, tag.name)}
+                        >
+                          #{tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
 
-          {/* 下部: タイトルと著者 */}
+          {/* タイトルと著者 */}
           <div>
             <h3 className={cn(
               "text-lg font-bold text-white mb-2",

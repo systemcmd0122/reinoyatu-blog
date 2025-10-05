@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import BlogItem from "@/components/blog/BlogItem"
 import LandingPage from "@/components/landing/LandingPage"
-
+import { TrendingUp, Filter } from "lucide-react"
 import {
   Pagination,
   PaginationContent,
@@ -15,9 +15,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
-const DEFAULT_PAGE_SIZE = 9 // 1ページあたりの表示件数
+const DEFAULT_PAGE_SIZE = 9
 
 const getPagination = (page: number, totalPages: number) => {
   const delta = 1
@@ -48,14 +47,10 @@ const getPagination = (page: number, totalPages: number) => {
   return rangeWithDots
 }
 
-
 const MainPage = async ({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) => {
   const supabase = createClient()
-
-  // ユーザーセッションを取得
   const { data: { session } } = await supabase.auth.getSession()
 
-  // 認証されていない場合、未認証のホームページを表示
   if (!session) {
     return <LandingPage />
   }
@@ -88,15 +83,12 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-// ブログコンテンツを別コンポーネントとして分離して、データフェッチングとレンダリングを分離
 const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) => {
   const supabase = createClient()
-  const currentTag = null // どのタグも選択されていない状態を定義
   const page = typeof searchParams.page === "string" ? Number(searchParams.page) : 1
   const start = (page - 1) * DEFAULT_PAGE_SIZE
   const end = start + DEFAULT_PAGE_SIZE - 1
   
-  // ブログ一覧とタグ一覧を並行して取得
   const [{ data: blogsData, error, count }, { data: tags, error: tagsError }] = await Promise.all([
     supabase
       .from("blogs")
@@ -117,13 +109,12 @@ const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: st
       .order("created_at", { ascending: false })
       .range(start, end),
     supabase.rpc('get_tags_with_counts')
-  ]);
+  ])
 
   if (tagsError) {
-    console.error("Error fetching tags:", tagsError);
+    console.error("Error fetching tags:", tagsError)
   }
 
-  // 各ブログのいいね数を取得
   const blogsWithLikes = await Promise.all(
     (blogsData || []).map(async (blog) => {
       const { data: likesCount } = await supabase.rpc(
@@ -141,7 +132,6 @@ const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: st
   const totalCount = count || 0
   const totalPages = Math.ceil(totalCount / DEFAULT_PAGE_SIZE)
 
-  // ブログデータがない場合のメッセージ
   if (!blogsWithLikes.length || error) {
     return (
       <div className="container mx-auto py-12 text-center">
@@ -149,81 +139,154 @@ const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: st
           まだブログ投稿がありません
         </h2>
         <Link href="/blog/new">
-          <Button>
-            最初のブログを投稿する
-          </Button>
+          <Button>最初のブログを投稿する</Button>
         </Link>
       </div>
     )
   }
 
-  // ブログ一覧表示
+  // 人気タグ（上位15個）
+  const popularTags = tags ? [...tags].sort((a, b) => b.count - a.count).slice(0, 15) : []
+  const allTags = tags || []
+
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center border-b pb-6 mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">最新のブログ記事</h1>
-                <Link href="/blog/new">
-          <Button>新規ブログ投稿</Button>
-        </Link>
-      </div>
-
-      {/* タグフィルターUI */}
-      {tags && tags.length > 0 && (
-        <div className="relative mb-8">
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex w-max space-x-2 pb-4">
-              <Link href="/">
-                <Badge variant={!currentTag ? "default" : "secondary"} className="cursor-pointer text-base px-4 py-1.5">
-                  すべて
-                </Badge>
-              </Link>
-              {tags.map((tag: { name: string; count: number }) => (
-                <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
-                  <Badge variant={currentTag === tag.name ? "default" : "secondary"} className="cursor-pointer text-base px-4 py-1.5">
-                    {tag.name}
-                    <span className="ml-1.5 text-xs opacity-75">{tag.count}</span>
-                  </Badge>
-                </Link>
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
+      <div className="container mx-auto px-4 py-8">
+        {/* ヘッダーセクション */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight mb-2">
+              最新のブログ記事
+            </h1>
+            <p className="text-muted-foreground">
+              {totalCount}件の記事が投稿されています
+            </p>
+          </div>
+          
+          <Link href="/blog/new">
+            <Button size="lg" className="gap-2">
+              新規ブログ投稿
+            </Button>
+          </Link>
         </div>
-      )}
 
-      {/* ブログ一覧 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {blogsWithLikes.map((blog, index) => (
-          <BlogItem key={blog.id} blog={blog} priority={index < 3} />
-        ))}
-      </div>
-      {totalPages > 1 && (
-        <Pagination className="mt-8">
-          <PaginationContent>
-            {page > 1 && (
-              <PaginationItem>
-                <PaginationPrevious href={{ query: { page: page - 1 } }} />
-              </PaginationItem>
+        {/* タグフィルターセクション */}
+        {popularTags.length > 0 && (
+          <div className="mb-8 bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-200 dark:border-gray-800 p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-xl font-bold">人気のタグ</h2>
+              <Badge variant="secondary" className="ml-auto">
+                {allTags.length}個
+              </Badge>
+            </div>
+            
+            {/* 人気タグ一覧 - スクロール可能 */}
+            <div className="relative mb-4">
+              <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
+                <Badge 
+                  variant="default" 
+                  className="cursor-default text-sm px-5 py-2.5 whitespace-nowrap shadow-md flex-shrink-0 font-medium"
+                >
+                  <Filter className="h-3.5 w-3.5 mr-2" />
+                  すべて
+                  <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                    {totalCount}
+                  </span>
+                </Badge>
+                {popularTags.map((tag: { name: string; count: number }) => (
+                  <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
+                    <Badge 
+                      variant="outline" 
+                      className="cursor-pointer text-sm px-5 py-2.5 whitespace-nowrap hover:bg-primary/10 hover:border-primary/50 transition-all border-2 flex-shrink-0 font-medium group"
+                    >
+                      <span className="group-hover:text-primary transition-colors">
+                        {tag.name}
+                      </span>
+                      <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full opacity-75 group-hover:bg-primary/20 transition-colors">
+                        {tag.count}
+                      </span>
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+              {/* グラデーション効果 */}
+              <div className="absolute right-0 top-0 bottom-3 w-24 bg-gradient-to-l from-white dark:from-gray-900 to-transparent pointer-events-none" />
+            </div>
+
+            {/* 全タグ表示（折りたたみ可能） */}
+            {allTags.length > 15 && (
+              <details className="group mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+                <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors list-none flex items-center gap-2">
+                  <span>すべてのタグを表示</span>
+                  <Badge variant="secondary" className="text-xs">
+                    +{allTags.length - 15}
+                  </Badge>
+                  <svg className="w-4 h-4 transition-transform group-open:rotate-180 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div className="mt-4 flex flex-wrap gap-2 animate-in fade-in-50 duration-300">
+                  {allTags.map((tag: { name: string; count: number }) => (
+                    <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
+                      <Badge 
+                        variant="secondary" 
+                        className="cursor-pointer text-xs px-3 py-1.5 hover:scale-105 hover:bg-primary/20 transition-all font-medium"
+                      >
+                        {tag.name}
+                        <span className="ml-1.5 opacity-60">{tag.count}</span>
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
+              </details>
             )}
-            {getPagination(page, totalPages).map((item, index) => (
-              <PaginationItem key={index}>
-                {item === "..." ? (
-                  <PaginationEllipsis />
-                ) : (
-                  <PaginationLink href={{ query: { page: item } }} isActive={page === item}>
-                    {item}
-                  </PaginationLink>
+          </div>
+        )}
+
+        {/* ブログ一覧 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {blogsWithLikes.map((blog, index) => (
+            <BlogItem key={blog.id} blog={blog} priority={index < 6} />
+          ))}
+        </div>
+
+        {/* ページネーション */}
+        {totalPages > 1 && (
+          <div className="mt-12">
+            <Pagination>
+              <PaginationContent>
+                {page > 1 && (
+                  <PaginationItem>
+                    <PaginationPrevious href={{ query: { page: page - 1 } }} />
+                  </PaginationItem>
                 )}
-              </PaginationItem>
-            ))}
-            {page < totalPages && (
-              <PaginationItem>
-                <PaginationNext href={{ query: { page: page + 1 } }} />
-              </PaginationItem>
-            )}
-          </PaginationContent>
-        </Pagination>
-      )}
+                {getPagination(page, totalPages).map((item, index) => (
+                  <PaginationItem key={index}>
+                    {item === "..." ? (
+                      <PaginationEllipsis />
+                    ) : (
+                      <PaginationLink 
+                        href={{ query: { page: item } }} 
+                        isActive={page === item}
+                      >
+                        {item}
+                      </PaginationLink>
+                    )}
+                  </PaginationItem>
+                ))}
+                {page < totalPages && (
+                  <PaginationItem>
+                    <PaginationNext href={{ query: { page: page + 1 } }} />
+                  </PaginationItem>
+                )}
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
