@@ -150,7 +150,7 @@ const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: st
   const allTags = tags || []
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
         {/* ヘッダーセクション */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
@@ -172,7 +172,7 @@ const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: st
 
         {/* タグフィルターセクション */}
         {popularTags.length > 0 && (
-          <div className="mb-8 bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-200 dark:border-gray-800 p-6 shadow-sm">
+          <div className="mb-8 bg-gray-50 rounded-2xl border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-5">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <TrendingUp className="h-5 w-5 text-primary" />

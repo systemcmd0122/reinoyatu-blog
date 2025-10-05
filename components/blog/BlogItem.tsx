@@ -54,7 +54,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
   return (
     <Link href={`/blog/${blog.id}`} className="block group">
       <Card className={cn(
-        "relative w-full h-full overflow-hidden bg-card/50 backdrop-blur-sm",
+        "relative w-full h-full overflow-hidden bg-white",
         "border border-border/50 transition-all duration-300 ease-in-out",
         "hover:border-primary/30 hover:shadow-xl hover:-translate-y-1",
         "rounded-2xl"
@@ -75,7 +75,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             onLoad={() => setImageLoaded(true)}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
         </div>
 
         {/* コンテンツ部分 */}
@@ -87,7 +87,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div 
-                      className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md rounded-full px-3 py-1.5 cursor-pointer hover:bg-white/20 transition-colors"
+                      className="inline-flex items-center gap-1.5 bg-black/30 backdrop-blur-md rounded-full px-3 py-1.5 cursor-pointer hover:bg-black/40 transition-colors"
                       onClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()

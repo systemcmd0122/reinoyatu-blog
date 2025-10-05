@@ -727,10 +727,10 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
               "lg:block",
               showPreview ? "block" : "hidden lg:block"
             )}>
-              <div className="sticky top-8">
-                <Card className="border border-gray-200">
-                  <CardContent className="pt-6">
-                    <div className="mb-4 pb-4 border-b border-gray-200">
+              <div className="sticky top-4 h-[calc(100vh-2rem)]">
+                <Card className="border border-gray-200 h-full">
+                  <CardContent className="pt-6 h-full flex flex-col">
+                    <div className="flex-none mb-4 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                         <Eye className="h-5 w-5 mr-2 text-blue-600" />
                         プレビュー
@@ -743,7 +743,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                     </div>
 
                     {!watchedTitle && !watchedContent ? (
-                      <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="flex-1 flex flex-col items-center justify-center py-16 text-center">
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                           <Eye className="h-8 w-8 text-gray-400" />
                         </div>
@@ -755,7 +755,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-6">
+                      <div className="flex-1 overflow-y-auto pr-4 space-y-6" style={{ maxHeight: 'calc(100vh - 8rem)' }}>
                         {imagePreview && (
                           <div className="aspect-video rounded-lg overflow-hidden border border-gray-200">
                             <Image
@@ -802,7 +802,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                         )}
 
                         {watchedContent ? (
-                          <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900">
+                          <div className="prose prose-base max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 pb-8">
                             <MarkdownRenderer content={watchedContent} />
                           </div>
                         ) : (
