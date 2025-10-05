@@ -1,1543 +1,417 @@
-import React, { useState, useEffect, isValidElement } from "react"
-import Image from "next/image"
+import React, { useState, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import remarkBreaks from "remark-breaks"
-import remarkEmoji from "remark-emoji"
-import remarkMath from "remark-math"
-import rehypeKatex from "rehype-katex"
-import rehypeRaw from "rehype-raw"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
-import YouTubeEmbed from "./YouTubeEmbed"
-import { 
-  Clipboard, 
-  Check, 
-  ExternalLink, 
-  AlertTriangle,
-  Info,
-  CheckCircle,
-  XCircle,
-  Calendar,
-  Clock,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  FileText,
-  Lightbulb,
-  Star,
-  Shield} from "lucide-react"
-import { cn } from "@/lib/utils"
+import { oneLight, oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
+import { Clipboard, Check, ExternalLink, XCircle } from "lucide-react"
+import Image from "next/image"
 
 interface MarkdownRendererProps {
-  content: string;
-  enableYouTubeDetails?: boolean;
-  enableLineNumbers?: boolean;
-  enableCopyButton?: boolean;
-  enableMath?: boolean;
-  enableRaw?: boolean;
-  enableFootnotes?: boolean;
-  className?: string;
-}
-
-interface ExtendedLiProps extends React.HTMLAttributes<HTMLLIElement> {
-  checked?: boolean;
-  children?: React.ReactNode;
+  content: string
+  className?: string
+  enableMath?: boolean
+  enableRaw?: boolean
 }
 
 interface CodeProps {
-  className?: string;
-  children?: React.ReactNode;
-}
-
-interface HighlightProps {
-  color?: string;
-  children?: React.ReactNode;
+  className?: string
+  children?: React.ReactNode
 }
 
 interface ImageProps {
-  src?: string;
-  alt?: string;
-  title?: string;
+  src?: string
+  alt?: string
+  title?: string
 }
 
 interface YouTubeMatch {
-  index: number;
-  videoId: string;
-  options: {
-    showDetails: boolean;
-  };
+  index: number
+  videoId: string
+  showDetails: boolean
 }
 
+// YouTubeコンポーネント
+const YouTubeEmbed: React.FC<{
+  videoId: string
+  showDetails?: boolean
+}> = ({ videoId, showDetails = true }) => {
+  const [videoInfo, setVideoInfo] = useState<{
+    title: string
+    description: string
+  } | null>(null)
 
-interface CalloutProps {
-  type: string;
-  title?: string;
-  content: string;
-  collapsible?: boolean;
+  useEffect(() => {
+    if (showDetails) {
+      // 簡易的なタイトル表示（APIキーなしでも動作）
+      setVideoInfo({
+        title: "YouTube Video",
+        description: "動画の詳細情報"
+      })
+    }
+  }, [videoId, showDetails])
+
+  return (
+    <div className="my-6 bg-gray-50 rounded-lg overflow-hidden border">
+      <div className="relative w-full pt-[56.25%]">
+        <iframe
+          className="absolute top-0 left-0 w-full h-full"
+          src={`https://www.youtube.com/embed/${videoId}`}
+          title={videoInfo?.title || "YouTube video"}
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+      {showDetails && videoInfo && (
+        <div className="p-4">
+          <h3 className="text-lg font-semibold">{videoInfo.title}</h3>
+          <p className="text-sm text-gray-600 mt-2">{videoInfo.description}</p>
+        </div>
+      )}
+    </div>
+  )
 }
 
-interface AudioPlayerProps {
-  src: string;
-  title?: string;
-}
+// コードブロックコンポーネント
+const CodeBlock: React.FC<{
+  language?: string
+  code: string
+}> = ({ language, code }) => {
+  const [isCopied, setIsCopied] = useState(false)
+  const [isDark, setIsDark] = useState(false)
 
-interface CountdownProps {
-  targetDate: string;
-  title?: string;
-}
+  useEffect(() => {
+    // ダークモード検出
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    setIsDark(mediaQuery.matches)
 
-interface ProgressBarProps {
-  value: number;
-  max?: number;
-  label?: string;
-  color?: string;
-}
-
-interface TabsProps {
-  tabs: Array<{
-    title: string;
-    content: string;
-  }>;
-}
-
-interface TimelineProps {
-  events: Array<{
-    date: string;
-    title: string;
-    description?: string;
-  }>;
-}
-
-interface AccordionProps {
-  items: Array<{
-    title: string;
-    content: string;
-  }>;
-}
-
-// コードブロック用の独立したコンポーネント
-const CodeBlock: React.FC<CodeProps & { 
-  codeContent: string; 
-  language?: string; 
-  enableLineNumbers?: boolean;
-  enableCopyButton?: boolean;
-}> = ({ 
-  codeContent, 
-  language,
-  enableLineNumbers = true,
-  enableCopyButton = true,
-  ...props 
-}) => {
-  const [isCopied, setIsCopied] = useState(false);
+    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches)
+    mediaQuery.addEventListener('change', handler)
+    return () => mediaQuery.removeEventListener('change', handler)
+  }, [])
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(codeContent);
-      setIsCopied(true);
+      await navigator.clipboard.writeText(code)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000)
     } catch (err) {
-      const textArea = document.createElement('textarea');
-      textArea.value = codeContent;
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        setIsCopied(true);
-      } catch (fallbackErr) {
-        console.error('コピーに失敗しました', fallbackErr);
-      }
-      document.body.removeChild(textArea);
+      console.error('コピーに失敗しました', err)
     }
-  };
-
-  useEffect(() => {
-    if (isCopied) {
-      const timer = setTimeout(() => {
-        setIsCopied(false);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isCopied]);
-
-  // インラインコードの代わりにハイライト機能を使用
+  }
 
   return (
-    <div className="relative group my-6 rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="flex space-x-1.5">
-            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-          </div>
-          {language && (
-            <span className="text-xs font-medium text-gray-600 uppercase tracking-wide px-2 py-1 bg-gray-200 rounded">
-              {language}
-            </span>
-          )}
-        </div>
-        
-        {enableCopyButton && (
-          <button
-            onClick={handleCopy}
-            className={cn(
-              "flex items-center space-x-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all duration-200",
-              "opacity-0 group-hover:opacity-100",
-              isCopied 
-                ? "bg-green-100 text-green-700 border border-green-200" 
-                : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
-            )}
-            title={isCopied ? "コピーしました!" : "コードをコピー"}
-          >
-            {isCopied ? <Check size={14} /> : <Clipboard size={14} />}
-            <span>{isCopied ? "コピー済み" : "コピー"}</span>
-          </button>
+    <div className="relative group my-4 rounded-lg border overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-100 border-b">
+        {language && (
+          <span className="text-xs font-medium text-gray-600 uppercase">
+            {language}
+          </span>
         )}
-      </div>
-      
-      <div className="relative">
-        <SyntaxHighlighter
-          style={oneLight}
-          language={language || 'text'}
-          PreTag="div"
-          showLineNumbers={enableLineNumbers}
-          wrapLines={true}
-          wrapLongLines={true}
-          customStyle={{
-            margin: 0,
-            padding: '16px',
-            fontSize: '14px',
-            lineHeight: '1.6',
-            background: '#fafafa',
-            borderRadius: 0,
-          }}
-          codeTagProps={{
-            style: {
-              fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
-            }
-          }}
-          lineNumberStyle={{
-            color: '#9ca3af',
-            fontSize: '12px',
-            paddingRight: '16px',
-            minWidth: '40px',
-          }}
-          {...props}
+        <button
+          onClick={handleCopy}
+          className="flex items-center space-x-1 px-2 py-1 text-xs rounded hover:bg-gray-200 transition-colors"
         >
-          {codeContent}
-        </SyntaxHighlighter>
+          {isCopied ? <Check size={14} /> : <Clipboard size={14} />}
+          <span>{isCopied ? "コピー済み" : "コピー"}</span>
+        </button>
       </div>
-    </div>
-  );
-};
-
-// スポイラーコンテンツ用のコンポーネント
-const Spoiler: React.FC<{ content: string }> = ({ content }) => {
-  const [isRevealed, setIsRevealed] = useState(false);
-
-  return (
-    <span 
-      className={cn(
-        "inline-block px-1 py-0.5 rounded cursor-pointer transition-all duration-300 select-none",
-        isRevealed 
-          ? "bg-transparent text-inherit" 
-          : "bg-gray-900 text-gray-900 hover:bg-gray-800"
-      )}
-      onClick={() => setIsRevealed(!isRevealed)}
-      title={isRevealed ? "クリックして隠す" : "クリックして表示"}
-    >
-      {isRevealed ? content : "▊ ".repeat(Math.min(content.length, 10))}
-    </span>
-  );
-};
-
-// ハイライトコンポーネント
-const Highlight: React.FC<HighlightProps> = ({ color = 'yellow', children }) => {
-  const colorStyles = {
-    yellow: 'bg-yellow-200',
-    red: 'bg-red-200',
-    green: 'bg-green-200',
-    blue: 'bg-blue-200',
-    purple: 'bg-purple-200',
-  };
-
-  return (
-    <span className={cn(
-      'px-1 rounded',
-      colorStyles[color as keyof typeof colorStyles] || colorStyles.yellow
-    )}>
-      {children}
-    </span>
-  );
-};
-
-// カラウトコンポーネント（拡張版アラートボックス）
-const Callout: React.FC<CalloutProps> = ({ type, title, content, collapsible }) => {
-  const [isExpanded, setIsExpanded] = useState(!collapsible);
-
-  const styles = {
-    info: {
-      bg: "bg-blue-50",
-      border: "border-blue-200",
-      icon: Info,
-      iconColor: "text-blue-600",
-      titleColor: "text-blue-800",
-      textColor: "text-blue-700"
-    },
-    warning: {
-      bg: "bg-yellow-50",
-      border: "border-yellow-200",
-      icon: AlertTriangle,
-      iconColor: "text-yellow-600",
-      titleColor: "text-yellow-800",
-      textColor: "text-yellow-700"
-    },
-    error: {
-      bg: "bg-red-50",
-      border: "border-red-200",
-      icon: XCircle,
-      iconColor: "text-red-600",
-      titleColor: "text-red-800",
-      textColor: "text-red-700"
-    },
-    success: {
-      bg: "bg-green-50",
-      border: "border-green-200",
-      icon: CheckCircle,
-      iconColor: "text-green-600",
-      titleColor: "text-green-800",
-      textColor: "text-green-700"
-    },
-    note: {
-      bg: "bg-gray-50",
-      border: "border-gray-200",
-      icon: FileText,
-      iconColor: "text-gray-600",
-      titleColor: "text-gray-800",
-      textColor: "text-gray-700"
-    },
-    tip: {
-      bg: "bg-emerald-50",
-      border: "border-emerald-200",
-      icon: Lightbulb,
-      iconColor: "text-emerald-600",
-      titleColor: "text-emerald-800",
-      textColor: "text-emerald-700"
-    },
-    important: {
-      bg: "bg-purple-50",
-      border: "border-purple-200",
-      icon: Star,
-      iconColor: "text-purple-600",
-      titleColor: "text-purple-800",
-      textColor: "text-purple-700"
-    },
-    caution: {
-      bg: "bg-orange-50",
-      border: "border-orange-200",
-      icon: Shield,
-      iconColor: "text-orange-600",
-      titleColor: "text-orange-800",
-      textColor: "text-orange-700"
-    }
-  };
-
-  const style = styles[type as keyof typeof styles] || styles.info;
-  const IconComponent = style.icon;
-
-  return (
-    <div className={cn("my-6 rounded-lg border", style.bg, style.border)}>
-      <div 
-        className={cn(
-          "flex items-start space-x-3 p-4",
-          collapsible && "cursor-pointer hover:bg-opacity-80"
-        )}
-        onClick={collapsible ? () => setIsExpanded(!isExpanded) : undefined}
+      <SyntaxHighlighter
+        style={isDark ? oneDark : oneLight}
+        language={language || 'text'}
+        PreTag="div"
+        showLineNumbers
+        customStyle={{
+          margin: 0,
+          padding: '1rem',
+          fontSize: '14px',
+          lineHeight: '1.6',
+        }}
       >
-        <IconComponent className={cn("h-5 w-5 mt-0.5 flex-shrink-0", style.iconColor)} />
-        <div className="flex-1">
-          <h4 className={cn("font-semibold flex items-center justify-between", style.titleColor)}>
-            {title || type.charAt(0).toUpperCase() + type.slice(1)}
-            {collapsible && (
-              <span className="text-sm">{isExpanded ? '▼' : '▶'}</span>
-            )}
-          </h4>
-          {isExpanded && (
-            <div className={cn("text-sm mt-2", style.textColor)}>
-              <ReactMarkdown 
-                components={{
-                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                  ul: ({ children }) => <ul className="list-disc list-inside mb-2">{children}</ul>,
-                  li: ({ children }) => <li className="mb-1">{children}</li>
-                }}
-              >
-                {content}
-              </ReactMarkdown>
-            </div>
-          )}
-        </div>
-      </div>
+        {code}
+      </SyntaxHighlighter>
     </div>
-  );
-};
+  )
+}
 
-// オーディオプレイヤーコンポーネント
-const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, title }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    const audio = new Audio(src);
-    setAudioRef(audio);
-
-    const handleLoadedMetadata = () => setDuration(audio.duration);
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleEnded = () => setIsPlaying(false);
-
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('ended', handleEnded);
-
-    return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('ended', handleEnded);
-      audio.pause();
-    };
-  }, [src]);
-
-  const togglePlay = () => {
-    if (audioRef) {
-      if (isPlaying) {
-        audioRef.pause();
-      } else {
-        audioRef.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const toggleMute = () => {
-    if (audioRef) {
-      audioRef.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = parseFloat(e.target.value);
-    if (audioRef) {
-      audioRef.currentTime = newTime;
-      setCurrentTime(newTime);
-    }
-  };
-
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  return (
-    <div className="my-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200 shadow-sm">
-      <div className="flex items-center space-x-4">
-        <button
-          onClick={togglePlay}
-          className="flex-shrink-0 w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full flex items-center justify-center transition-colors"
-        >
-          {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1" />}
-        </button>
-        
-        <div className="flex-1">
-          {title && (
-            <h4 className="font-semibold text-gray-900 mb-2">{title}</h4>
-          )}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600 w-12">{formatTime(currentTime)}</span>
-            <input
-              type="range"
-              min="0"
-              max={duration || 0}
-              value={currentTime}
-              onChange={handleSeek}
-              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              style={{
-                background: `linear-gradient(to right, #9333ea 0%, #9333ea ${(currentTime / duration) * 100}%, #e5e7eb ${(currentTime / duration) * 100}%, #e5e7eb 100%)`
-              }}
-            />
-            <span className="text-sm text-gray-600 w-12">{formatTime(duration)}</span>
-          </div>
-        </div>
-        
-        <button
-          onClick={toggleMute}
-          className="flex-shrink-0 w-8 h-8 text-gray-600 hover:text-purple-600 transition-colors"
-        >
-          {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// カウントダウンタイマーコンポーネント
-const CountdownTimer: React.FC<CountdownProps> = ({ targetDate, title }) => {
-  const [timeLeft, setTimeLeft] = useState<{
-    days: number;
-    hours: number;
-    minutes: number;
-    seconds: number;
-  }>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const target = new Date(targetDate).getTime();
-      const now = new Date().getTime();
-      const difference = target - now;
-
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((difference % (1000 * 60)) / 1000)
-        });
-      } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-      }
-    };
-
-    calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
-
-    return () => clearInterval(timer);
-  }, [targetDate]);
-
-  return (
-    <div className="my-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 text-center">
-      {title && (
-        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center justify-center">
-          <Clock className="h-5 w-5 mr-2" />
-          {title}
-        </h3>
-      )}
-      <div className="grid grid-cols-4 gap-4">
-        {Object.entries(timeLeft).map(([unit, value]) => (
-          <div key={unit} className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="text-3xl font-bold text-blue-600">{value}</div>
-            <div className="text-sm text-gray-600 uppercase tracking-wide">{unit}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// プログレスバーコンポーネント
-const ProgressBar: React.FC<ProgressBarProps> = ({ value, max = 100, label, color = 'blue' }) => {
-  const percentage = Math.min((value / max) * 100, 100);
-  
-  const colorClasses = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    red: 'bg-red-500',
-    yellow: 'bg-yellow-500',
-    purple: 'bg-purple-500',
-    pink: 'bg-pink-500'
-  };
-
-  return (
-    <div className="my-4">
-      {label && (
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700">{label}</span>
-          <span className="text-sm text-gray-600">{value} / {max}</span>
-        </div>
-      )}
-      <div className="w-full bg-gray-200 rounded-full h-3">
-        <div 
-          className={cn("h-3 rounded-full transition-all duration-500", colorClasses[color as keyof typeof colorClasses])}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-      <div className="text-right text-xs text-gray-500 mt-1">{percentage.toFixed(1)}%</div>
-    </div>
-  );
-};
-
-// タブコンポーネント
-const Tabs: React.FC<TabsProps> = ({ tabs }) => {
-  const [activeTab, setActiveTab] = useState(0);
-
-  return (
-    <div className="my-6 border border-gray-200 rounded-lg overflow-hidden">
-      <div className="flex border-b border-gray-200 bg-gray-50">
-        {tabs.map((tab, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveTab(index)}
-            className={cn(
-              "px-4 py-2 text-sm font-medium transition-colors",
-              activeTab === index
-                ? "bg-white text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            )}
-          >
-            {tab.title}
-          </button>
-        ))}
-      </div>
-      <div className="p-4 bg-white">
-        <ReactMarkdown>{tabs[activeTab]?.content}</ReactMarkdown>
-      </div>
-    </div>
-  );
-};
-
-// タイムラインコンポーネント
-const Timeline: React.FC<TimelineProps> = ({ events }) => {
-  return (
-    <div className="my-6">
-      <div className="relative">
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-300"></div>
-        {events.map((event, index) => (
-          <div key={index} className="relative flex items-start space-x-4 pb-8">
-            <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <Calendar className="h-4 w-4 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm text-gray-600 mb-1">{event.date}</div>
-              <h4 className="font-semibold text-gray-900 mb-2">{event.title}</h4>
-              {event.description && (
-                <p className="text-gray-700 text-sm">{event.description}</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// アコーディオンコンポーネント
-const Accordion: React.FC<AccordionProps> = ({ items }) => {
-  const [openItems, setOpenItems] = useState<Set<number>>(new Set());
-
-  const toggleItem = (index: number) => {
-    const newOpenItems = new Set(openItems);
-    if (newOpenItems.has(index)) {
-      newOpenItems.delete(index);
-    } else {
-      newOpenItems.add(index);
-    }
-    setOpenItems(newOpenItems);
-  };
-
-  return (
-    <div className="my-6 space-y-2">
-      {items.map((item, index) => (
-        <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
-          <button
-            onClick={() => toggleItem(index)}
-            className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
-          >
-            <span className="font-medium text-gray-900">{item.title}</span>
-            <span className="text-gray-500">
-              {openItems.has(index) ? '▼' : '▶'}
-            </span>
-          </button>
-          {openItems.has(index) && (
-            <div className="p-4 bg-white border-t border-gray-200">
-              <ReactMarkdown>{item.content}</ReactMarkdown>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// メインのMarkdownRendererコンポーネント
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ 
   content,
-  enableYouTubeDetails = true,
-  enableLineNumbers = true,
-  enableCopyButton = true,
-  enableMath = false,
-  enableRaw = false,
-  className = ""
+  className = "",
+  enableRaw = false
 }) => {
-  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
 
-  // YouTubeの動画IDとオプションを抽出して保存する
+  // YouTube埋め込みの抽出
   const extractYouTubeEmbeds = (markdownContent: string): {
-    content: string;
-    matches: YouTubeMatch[];
+    content: string
+    matches: YouTubeMatch[]
   } => {
-    const matches: YouTubeMatch[] = [];
+    const matches: YouTubeMatch[] = []
     
     const processedContent = markdownContent.replace(
-      /{{youtube:([^:}]+)(?::([^}]+))?}}/g,
-      (match, videoId, optionsStr) => {
-        const trimmedVideoId = videoId.trim();
+      /\{\{youtube:([^:}]+)(?::showDetails=(true|false))?\}\}/g,
+      (match, videoId, showDetailsStr) => {
+        const trimmedVideoId = videoId.trim()
+        const showDetails = showDetailsStr !== 'false'
         
-        const options = {
-          showDetails: enableYouTubeDetails
-        };
-        
-        if (optionsStr) {
-          const optionParts = optionsStr.split(',');
-          optionParts.forEach((part: string) => {
-            const [key, value] = part.trim().split('=');
-            if (key === 'showDetails') {
-              options.showDetails = value.toLowerCase() === 'true';
-            }
-          });
-        }
-        
-        const index = matches.length;
+        const index = matches.length
         matches.push({ 
           index, 
           videoId: trimmedVideoId, 
-          options
-        });
+          showDetails
+        })
         
-        return `--youtube-embed-${index}--`;
+        return `--youtube-embed-${index}--`
       }
-    );
+    )
     
-    return { content: processedContent, matches };
-  };
-  
-  // スポイラーコンテンツを抽出して処理する
-  const extractSpoilers = (markdownContent: string): {
-    content: string;
-    spoilerMatches: { [key: string]: string };
-  } => {
-    const spoilerMatches: { [key: string]: string } = {};
-    let spoilerIndex = 0;
+    return { content: processedContent, matches }
+  }
 
-    let processed = markdownContent.replace(/\|\|(.+?)\|\|/g, (match, content) => {
-      const placeholder = `--spoiler-${spoilerIndex}--`;
-      spoilerMatches[placeholder] = content;
-      spoilerIndex++;
-      return placeholder;
-    });
+  const { content: processedContent, matches: youtubeMatches } = extractYouTubeEmbeds(content || '')
 
-    processed = processed.replace(/^\/spoiler\s+(.+)/gm, (match, content) => {
-      const placeholder = `--spoiler-${spoilerIndex}--`;
-      spoilerMatches[placeholder] = content;
-      spoilerIndex++;
-      return placeholder;
-    });
-
-    return { content: processed, spoilerMatches };
-  };
-
-  // カラウトボックスを抽出して処理する
-interface CalloutMatch {
-  type: string;
-  content: string;
-  title?: string;
-  collapsible: boolean;
-}
-
-  const extractCallouts = (markdownContent: string): {
-    content: string;
-    calloutMatches: { [key: string]: CalloutMatch };
-  } => {
-    const calloutMatches: { [key: string]: CalloutMatch } = {};
-    let calloutIndex = 0;
-
-    // ::: 形式の処理（折りたたみ可能オプション付き）
-    const processed = markdownContent.replace(
-      /:::(\w+)(?:\s+(.+?))?\s*(?:\[collapsible(?:=([^[\]]*))?\])?\n([\s\S]*?):::/g,
-      (match, type, title, collapsibleTitle, content) => {
-        const placeholder = `--callout-${calloutIndex}--`;
-        calloutMatches[placeholder] = {
-          type: type.toLowerCase(),
-          content: content.trim(),
-          title: title?.trim() || collapsibleTitle?.trim(),
-          collapsible: match.includes('[collapsible')
-        };
-        calloutIndex++;
-        return placeholder;
-      }
-    );
-
-    return { content: processed, calloutMatches };
-  };
-
-  // 新しい機能の抽出関数
-type FeatureMatch = (AudioPlayerProps & { type: 'audio' }) |
-                    (CountdownProps & { type: 'countdown' }) |
-                    (ProgressBarProps & { type: 'progress' }) |
-                    (TabsProps & { type: 'tabs' }) |
-                    (TimelineProps & { type: 'timeline' }) |
-                    (AccordionProps & { type: 'accordion' });
-
-  const extractEnhancedFeatures = (markdownContent: string): {
-    content: string;
-    featureMatches: { [key: string]: FeatureMatch };
-  } => {
-    const featureMatches: { [key: string]: FeatureMatch } = {};
-    let featureIndex = 0;
-
-    let processed = markdownContent;
-
-    // オーディオプレイヤー: {{audio:URL:title}}
-    processed = processed.replace(
-      /{{audio:([^:}]+)(?::([^}]+))?}}/g,
-      (match, src, title) => {
-        const placeholder = `--audio-${featureIndex}--`;
-        featureMatches[placeholder] = {
-          type: 'audio',
-          src: src.trim(),
-          title: title?.trim()
-        };
-        featureIndex++;
-        return placeholder;
-      }
-    );
-
-    // カウントダウンタイマー: {{countdown:YYYY-MM-DD HH:mm:title}}
-    processed = processed.replace(
-      /{{countdown:([^:}]+)(?::([^}]+))?}}/g,
-      (match, targetDate, title) => {
-        const placeholder = `--countdown-${featureIndex}--`;
-        featureMatches[placeholder] = {
-          type: 'countdown',
-          targetDate: targetDate.trim(),
-          title: title?.trim()
-        };
-        featureIndex++;
-        return placeholder;
-      }
-    );
-
-    // プログレスバー: {{progress:value:max:label:color}}
-    processed = processed.replace(
-      /{{progress:(\d+)(?::(\d+))?(?::([^:}]+))?(?::([^}]+))?}}/g,
-      (match, value, max, label, color) => {
-        const placeholder = `--progress-${featureIndex}--`;
-        featureMatches[placeholder] = {
-          type: 'progress',
-          value: parseInt(value),
-          max: max ? parseInt(max) : 100,
-          label: label?.trim(),
-          color: color?.trim() || 'blue'
-        };
-        featureIndex++;
-        return placeholder;
-      }
-    );
-
-    // タブ: {{tabs:tab1:content1|tab2:content2|tab3:content3}}
-    processed = processed.replace(
-      /{{tabs:([^}]+)}}/g,
-      (match, tabsStr) => {
-        const placeholder = `--tabs-${featureIndex}--`;
-        const tabs = tabsStr.split('|').map((tab: string) => {
-          const [title, content] = tab.split(':', 2);
-          return {
-            title: title?.trim() || '',
-            content: content?.trim() || ''
-          };
-        });
-        featureMatches[placeholder] = {
-          type: 'tabs',
-          tabs
-        };
-        featureIndex++;
-        return placeholder;
-      }
-    );
-
-    // タイムライン: {{timeline:date1:title1:desc1|date2:title2:desc2}}
-    processed = processed.replace(
-      /{{timeline:([^}]+)}}/g,
-      (match, timelineStr) => {
-        const placeholder = `--timeline-${featureIndex}--`;
-        const events = timelineStr.split('|').map((event: string) => {
-          const [date, title, description] = event.split(':', 3);
-          return {
-            date: date?.trim() || '',
-            title: title?.trim() || '',
-            description: description?.trim()
-          };
-        });
-        featureMatches[placeholder] = {
-          type: 'timeline',
-          events
-        };
-        featureIndex++;
-        return placeholder;
-      }
-    );
-
-    // アコーディオン: {{accordion:title1:content1|title2:content2}}
-    processed = processed.replace(
-      /{{accordion:([^}]+)}}/g,
-      (match, accordionStr) => {
-        const placeholder = `--accordion-${featureIndex}--`;
-        const items = accordionStr.split('|').map((item: string) => {
-          const [title, content] = item.split(':', 2);
-          return {
-            title: title?.trim() || '',
-            content: content?.trim() || ''
-          };
-        });
-        featureMatches[placeholder] = {
-          type: 'accordion',
-          items
-        };
-        featureIndex++;
-        return placeholder;
-      }
-    );
-
-    return { content: processed, featureMatches };
-  };
-
-  // null, undefined, 空文字列チェック
-  const safeContent = content || '';
-  const { content: processedContent, matches: youtubeMatches } = extractYouTubeEmbeds(safeContent);
-  const { content: spoilerContent, spoilerMatches } = extractSpoilers(processedContent);
-  const { content: calloutContent, calloutMatches } = extractCallouts(spoilerContent);
-  const { content: finalContent, featureMatches } = extractEnhancedFeatures(calloutContent);
-
-  // カスタムレンダリング関数
   const renderYouTubeComponent = (placeholderText: string) => {
-    const match = placeholderText.match(/--youtube-embed-(\d+)--/);
-    if (!match) return placeholderText;
+    const match = placeholderText.match(/--youtube-embed-(\d+)--/)
+    if (!match) return placeholderText
     
-    const index = parseInt(match[1], 10);
-    const youtubeData = youtubeMatches[index];
+    const index = parseInt(match[1], 10)
+    const youtubeData = youtubeMatches[index]
     
-    if (!youtubeData) return placeholderText;
+    if (!youtubeData) return placeholderText
     
     return (
       <YouTubeEmbed 
         key={`youtube-${index}`} 
         videoId={youtubeData.videoId}
-        showDetails={youtubeData.options.showDetails}
+        showDetails={youtubeData.showDetails}
       />
-    );
-  };
-
-  const renderFeatureComponent = (placeholderText: string) => {
-    // オーディオプレイヤー
-    const audioMatch = placeholderText.match(/--audio-(\d+)--/);
-    if (audioMatch) {
-      const featureData = featureMatches[placeholderText];
-      if (featureData && featureData.type === 'audio') {
-        return (
-          <AudioPlayer
-            key={placeholderText}
-            src={featureData.src}
-            title={featureData.title}
-          />
-        );
-      }
-    }
-
-    // カウントダウンタイマー
-    const countdownMatch = placeholderText.match(/--countdown-(\d+)--/);
-    if (countdownMatch) {
-      const featureData = featureMatches[placeholderText];
-      if (featureData && featureData.type === 'countdown') {
-        return (
-          <CountdownTimer
-            key={placeholderText}
-            targetDate={featureData.targetDate}
-            title={featureData.title}
-          />
-        );
-      }
-    }
-
-    // プログレスバー
-    const progressMatch = placeholderText.match(/--progress-(\d+)--/);
-    if (progressMatch) {
-      const featureData = featureMatches[placeholderText];
-      if (featureData && featureData.type === 'progress') {
-        return (
-          <ProgressBar
-            key={placeholderText}
-            value={featureData.value}
-            max={featureData.max}
-            label={featureData.label}
-            color={featureData.color}
-          />
-        );
-      }
-    }
-
-    // タブ
-    const tabsMatch = placeholderText.match(/--tabs-(\d+)--/);
-    if (tabsMatch) {
-      const featureData = featureMatches[placeholderText];
-      if (featureData && featureData.type === 'tabs') {
-        return (
-          <Tabs
-            key={placeholderText}
-            tabs={featureData.tabs}
-          />
-        );
-      }
-    }
-
-    // タイムライン
-    const timelineMatch = placeholderText.match(/--timeline-(\d+)--/);
-    if (timelineMatch) {
-      const featureData = featureMatches[placeholderText];
-      if (featureData && featureData.type === 'timeline') {
-        return (
-          <Timeline
-            key={placeholderText}
-            events={featureData.events}
-          />
-        );
-      }
-    }
-
-    // アコーディオン
-    const accordionMatch = placeholderText.match(/--accordion-(\d+)--/);
-    if (accordionMatch) {
-      const featureData = featureMatches[placeholderText];
-      if (featureData && featureData.type === 'accordion') {
-        return (
-          <Accordion
-            key={placeholderText}
-            items={featureData.items}
-          />
-        );
-      }
-    }
-
-    return placeholderText;
-  };
+    )
+  }
 
   const handleImageError = (src: string) => {
-    setImageErrors(prev => new Set(prev).add(src));
-  };
-
-  // 脚注の処理
-  const [footnotes, setFootnotes] = useState<{ [key: string]: string }>({});
-  const [showFootnotes, setShowFootnotes] = useState(false);
-
-  // 脚注の抽出
-  useEffect(() => {
-    const footnoteRegex = /\[\^(\d+)\]: (.*?)(?=\n\[|$)/gs;
-    const matches = [...content.matchAll(footnoteRegex)];
-    const newFootnotes: { [key: string]: string } = {};
-    matches.forEach(match => {
-      newFootnotes[match[1]] = match[2].trim();
-    });
-    setFootnotes(newFootnotes);
-    setShowFootnotes(Object.keys(newFootnotes).length > 0);
-  }, [content]);
+    setImageErrors(prev => new Set(prev).add(src))
+  }
 
   return (
-    <div className="markdown-content prose prose-zinc dark:prose-invert max-w-none">
+    <div className={`markdown-content prose prose-zinc dark:prose-invert max-w-none ${className}`}>
       <style jsx global>{`
         .markdown-content {
           line-height: 1.8;
-          font-size: 1.125rem;
-          color: var(--foreground);
+          font-size: 1rem;
         }
 
         .markdown-content p {
-          margin: 1.25rem 0;
-          color: var(--foreground);
+          margin: 1rem 0;
         }
 
-        .markdown-content h1, .markdown-content h2, .markdown-content h3,
-        .markdown-content h4, .markdown-content h5, .markdown-content h6 {
-          margin: 2rem 0 1rem;
+        .markdown-content h1, 
+        .markdown-content h2, 
+        .markdown-content h3,
+        .markdown-content h4, 
+        .markdown-content h5, 
+        .markdown-content h6 {
+          margin: 1.5rem 0 1rem;
           font-weight: 600;
           line-height: 1.3;
-          color: var(--foreground);
         }
 
-        .markdown-content h1 { font-size: 2.5rem; }
-        .markdown-content h2 { font-size: 2rem; }
-        .markdown-content h3 { font-size: 1.75rem; }
-        .markdown-content h4 { font-size: 1.5rem; }
-        .markdown-content h5 { font-size: 1.25rem; }
-        .markdown-content h6 { font-size: 1.1rem; }
+        .markdown-content h1 { font-size: 2rem; }
+        .markdown-content h2 { font-size: 1.5rem; }
+        .markdown-content h3 { font-size: 1.25rem; }
 
-        .markdown-content ul, .markdown-content ol {
-          margin: 1.5rem 0;
-          padding-left: 2rem;
-          color: var(--foreground);
+        .markdown-content ul, 
+        .markdown-content ol {
+          margin: 1rem 0;
+          padding-left: 1.5rem;
         }
 
         .markdown-content li {
-          margin: 0.5rem 0;
-          padding-left: 0.5rem;
-        }
-
-        .markdown-content li > p {
           margin: 0.25rem 0;
-        }
-
-        .markdown-content pre {
-          margin: 1.5rem 0;
-          padding: 1.25rem;
-          border-radius: 0.5rem;
-          background-color: var(--code-background);
-          color: var(--code-foreground);
-          overflow-x: auto;
-          font-family: var(--font-mono);
-          font-size: 0.95rem;
-          line-height: 1.6;
         }
 
         .markdown-content code {
           padding: 0.2rem 0.4rem;
           border-radius: 0.25rem;
-          background-color: var(--code-background);
-          color: var(--code-foreground);
-          font-family: var(--font-mono);
-          font-size: 0.95em;
+          background-color: #f3f4f6;
+          font-size: 0.875rem;
+          font-family: monospace;
         }
 
         .markdown-content blockquote {
-          margin: 1.5rem 0;
-          padding: 1rem 1.5rem;
-          border-left: 4px solid var(--border-subtle);
-          background-color: var(--background-subtle);
-          color: var(--foreground-subtle);
-          font-style: italic;
-        }
-
-        .markdown-content img {
-          margin: 1.5rem 0;
-          border-radius: 0.5rem;
-          max-width: 100%;
-          height: auto;
-          border: 1px solid var(--border);
+          margin: 1rem 0;
+          padding: 0.5rem 1rem;
+          border-left: 4px solid #3b82f6;
+          background-color: #f9fafb;
         }
 
         .markdown-content table {
           width: 100%;
-          margin: 1.5rem 0;
+          margin: 1rem 0;
           border-collapse: collapse;
-          border: 1px solid var(--border);
         }
 
         .markdown-content table th,
         .markdown-content table td {
-          padding: 0.75rem;
-          border: 1px solid var(--border);
-          color: var(--foreground);
+          padding: 0.5rem;
+          border: 1px solid #e5e7eb;
         }
 
         .markdown-content table th {
-          background-color: var(--background-subtle);
+          background-color: #f3f4f6;
           font-weight: 600;
-        }
-
-        .markdown-content table tr:nth-child(even) {
-          background-color: var(--background-alternate);
         }
 
         .markdown-content hr {
           margin: 2rem 0;
           border: 0;
-          border-top: 2px solid var(--border);
+          border-top: 1px solid #e5e7eb;
         }
 
-        .markdown-content .footnotes {
-          margin-top: 3rem;
-          padding-top: 2rem;
-          border-top: 1px solid var(--border);
-          font-size: 0.95rem;
-          color: var(--foreground-subtle);
-        }
-
-        .markdown-content .math {
-          overflow-x: auto;
-          padding: 1rem 0;
-          background-color: var(--background);
-        }
-
-        .markdown-content .task-list-item {
-          list-style-type: none;
-          margin-left: -1.5rem;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.5rem;
-        }
-
-        .markdown-content .task-list-item input[type="checkbox"] {
-          margin: 0.4rem 0.5rem 0 0;
-        }
-
-        /* ダークモード対応 */
-        :root[data-theme="dark"] .markdown-content {
-          --foreground: hsl(210 40% 98%);
-          --foreground-subtle: hsl(215 20% 65%);
-          --background: hsl(222.2 84% 4.9%);
-          --background-subtle: hsl(222.2 84% 4.9% / 0.1);
-          --background-alternate: hsl(222.2 84% 4.9% / 0.05);
-          --border: hsl(217.2 32.6% 17.5%);
-          --border-subtle: hsl(215 20% 65% / 0.2);
-          --code-background: hsl(222.2 84% 4.9% / 0.3);
-          --code-foreground: hsl(210 40% 98%);
-        }
-
-        /* ライトモード対応 */
-        :root[data-theme="light"] .markdown-content {
-          --foreground: hsl(222.2 84% 4.9%);
-          --foreground-subtle: hsl(215 20% 35%);
-          --background: hsl(0 0% 100%);
-          --background-subtle: hsl(210 40% 98% / 0.8);
-          --background-alternate: hsl(210 40% 98% / 0.3);
-          --border: hsl(214.3 31.8% 91.4%);
-          --border-subtle: hsl(215 20% 65% / 0.2);
-          --code-background: hsl(210 40% 98%);
-          --code-foreground: hsl(222.2 84% 4.9%);
+        .markdown-content img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 0.5rem;
+          margin: 1rem 0;
         }
       `}</style>
       
       <ReactMarkdown
-        className={cn("markdown-content", className)}
-        remarkPlugins={[
-          remarkGfm,
-          remarkBreaks,
-          remarkEmoji,
-          ...(enableMath ? [remarkMath] : []),
-        ]}
-        rehypePlugins={[
-          ...(enableMath ? [rehypeKatex] : []),
-          ...(enableRaw ? [rehypeRaw] : []),
-        ]}
+        remarkPlugins={[remarkGfm, remarkBreaks]}
+        skipHtml={!enableRaw}
         components={{
-          // タスクリストとリストアイテムのレンダリング
-          li: (props: ExtendedLiProps) => {
-            const { checked, children, className, ...rest } = props;
-            if (checked !== null && checked !== undefined) {
-              return (
-                <li className={cn("task-list-item flex items-start gap-2", className)} {...rest}>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    readOnly
-                    className="mt-1"
-                  />
-                  <span className="flex-1">{children}</span>
-                </li>
-              );
-            }
-            return (
-              <li className={cn("leading-relaxed flex items-start", className)} {...rest}>
-                <span className="flex-1 pl-2">{children}</span>
-              </li>
-            );
-          },
-          // コードブロックとハイライトの処理
           code({ className, children, ...props }: CodeProps) {
-            const match = /language-(\w+)/.exec(className || '');
-            // ハイライト構文のチェック
-            const highlightMatch = /^highlight-(\w+)$/.exec(className || '');
+            const match = /language-(\w+)/.exec(className || '')
+            const codeContent = String(children).replace(/\n$/, '')
             
-            if (highlightMatch) {
-              // ハイライトとして処理
+            if (match) {
               return (
-                <Highlight color={highlightMatch[1]}>
-                  {children}
-                </Highlight>
-              );
+                <CodeBlock
+                  language={match[1]}
+                  code={codeContent}
+                />
+              )
             }
-
-            // 通常のコードブロックとして処理
-            const codeContent = String(children).replace(/\n$/, '');
+            
             return (
-              <CodeBlock
-                className={className}
-                codeContent={codeContent}
-                language={match ? match[1] : undefined}
-                enableLineNumbers={enableLineNumbers}
-                enableCopyButton={enableCopyButton}
-                {...props}
-              >
+              <code className={className} {...props}>
                 {children}
-              </CodeBlock>
-            );
+              </code>
+            )
           },
 
-          // 画像コンポーネント
-          img({ src, alt, title, ...props }: ImageProps) {
-            if (!src) return null;
+          img({ src, alt, title }: ImageProps) {
+            if (!src) return null
 
             if (imageErrors.has(src)) {
               return (
-                <div className="my-6 p-6 border-2 border-dashed border-gray-300 rounded-lg text-center bg-gray-50">
-                  <div className="text-gray-500">
-                    <XCircle className="h-12 w-12 mx-auto mb-3" />
-                    <p className="text-sm font-medium">画像の読み込みに失敗しました</p>
-                    {alt && <p className="text-xs text-gray-400 mt-1">{alt}</p>}
-                  </div>
+                <div className="my-4 p-4 border-2 border-dashed rounded-lg text-center bg-gray-50">
+                  <XCircle className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm text-gray-500">画像の読み込みに失敗しました</p>
+                  {alt && <p className="text-xs text-gray-400 mt-1">{alt}</p>}
                 </div>
-              );
+              )
             }
 
             return (
-              <div className="my-8 group">
-                <div className="relative overflow-hidden rounded-lg shadow-md border border-gray-200 bg-white">
-                  <Image
-                    src={src}
-                    alt={alt || ""}
-                    title={title || ""}
-                    width={1200}
-                    height={675}
-                    layout="responsive"
-                    className="transition-transform duration-300 group-hover:scale-105"
-                    onError={() => handleImageError(src)}
-                    {...props}
-                  />
-                </div>
-                {(alt || title) && (
-                  <div className="mt-3 text-center">
-                    <p className="text-sm text-gray-600 italic font-medium">
-                      {alt || title}
-                    </p>
-                  </div>
-                )}
-              </div>
-            );
+              <Image
+                src={src}
+                alt={alt || ""}
+                title={title || ""}
+                width={800}
+                height={600}
+                onError={() => handleImageError(src)}
+                className="rounded-lg"
+              />
+            )
           },
 
-          // 見出し
-          h1: ({ children, ...props }) => (
-            <h1 className="text-3xl font-bold my-8 pb-3 border-b-2 border-gray-200 text-gray-900" {...props}>
+          h1: ({ children }) => (
+            <h1 className="text-3xl font-bold my-6 pb-2 border-b-2">
               {children}
             </h1>
           ),
-          h2: ({ children, ...props }) => (
-            <h2 className="text-2xl font-semibold my-6 pb-2 border-b border-gray-200 text-gray-900" {...props}>
+
+          h2: ({ children }) => (
+            <h2 className="text-2xl font-semibold my-5 pb-2 border-b">
               {children}
             </h2>
           ),
-          h3: ({ children, ...props }) => (
-            <h3 className="text-xl font-semibold my-5 text-gray-900" {...props}>
+
+          h3: ({ children }) => (
+            <h3 className="text-xl font-semibold my-4">
               {children}
             </h3>
           ),
-          h4: ({ children, ...props }) => (
-            <h4 className="text-lg font-semibold my-4 text-gray-900" {...props}>
-              {children}
-            </h4>
-          ),
-          h5: ({ children, ...props }) => (
-            <h5 className="text-base font-semibold my-3 text-gray-900" {...props}>
-              {children}
-            </h5>
-          ),
-          h6: ({ children, ...props }) => (
-            <h6 className="text-sm font-semibold my-2 text-gray-900" {...props}>
-              {children}
-            </h6>
-          ),
 
-          // 段落
-          p: ({ children, ...props }) => {
-            const processChildren = (nodes: React.ReactNode[]): React.ReactNode[] => {
-              return nodes.flatMap((node, i) => {
-                if (typeof node === 'string') {
-                  const parts = node.split(/(--(?:youtube-embed|spoiler|callout|audio|countdown|progress|tabs|timeline|accordion)-\d+--)/);
-                  return parts.map((part, j) => {
-                    // YouTube埋め込み
-                    if (part.match(/--youtube-embed-\d+--/)) {
-                      return renderYouTubeComponent(part);
-                    }
-                    // スポイラー
-                    if (part.match(/--spoiler-\d+--/)) {
-                      const spoilerContent = spoilerMatches[part.trim()];
-                      return spoilerContent ? <Spoiler key={`${i}-${j}`} content={spoilerContent} /> : part;
-                    }
-                    // カラウト
-                    if (part.match(/--callout-\d+--/)) {
-                      const calloutData = calloutMatches[part.trim()];
-                      return calloutData ? (
-                        <Callout 
-                          key={`${i}-${j}`} 
-                          type={calloutData.type}
-                          content={calloutData.content}
-                          title={calloutData.title}
-                          collapsible={calloutData.collapsible}
-                        />
-                      ) : part;
-                    }
-                    // その他の機能コンポーネント
-                    if (part.match(/--(?:audio|countdown|progress|tabs|timeline|accordion)-\d+--/)) {
-                      return renderFeatureComponent(part);
-                    }
-                    return part;
-                  });
-                }
-                return node;
-              });
-            };
-
-            const processedChildren = Array.isArray(children) ? processChildren(children) : processChildren([children]);
-
-            const contentNodes = processedChildren.filter(node => {
-              if (typeof node === 'string' && !node.trim()) {
-                return false;
+          p: ({ children }) => {
+            const processChildren = (nodes: React.ReactNode): React.ReactNode => {
+              if (typeof nodes === 'string') {
+                const parts = nodes.split(/(--youtube-embed-\d+--)/)
+                return parts.map((part) => {
+                  if (part.match(/--youtube-embed-\d+--/)) {
+                    return renderYouTubeComponent(part)
+                  }
+                  return part
+                })
               }
-              return true;
-            });
-
-            // 特別なコンポーネントのみの場合はdivでラップ
-            const isOnlySpecialComponent = contentNodes.length > 0 && contentNodes.every(
-              (child) => isValidElement(child) && (
-                child.type === YouTubeEmbed || 
-                child.type === Spoiler || 
-                child.type === Callout ||
-                child.type === AudioPlayer ||
-                child.type === CountdownTimer ||
-                child.type === ProgressBar ||
-                child.type === Tabs ||
-                child.type === Timeline ||
-                child.type === Accordion
-              )
-            );
-
-            if (isOnlySpecialComponent) {
-              return <div className="my-4">{contentNodes}</div>;
+              return nodes
             }
 
-            return (
-              <p className="my-4 leading-relaxed text-gray-800 text-base" {...props}>
-                {processedChildren}
-              </p>
-            );
+            const processedChildren = Array.isArray(children) 
+              ? children.map(processChildren)
+              : processChildren(children)
+
+            return <p className="my-4 leading-relaxed">{processedChildren}</p>
           },
 
-          // リンク
-          a: ({ href, children, ...props }) => (
+          a: ({ href, children }) => (
             <a 
               href={href}
-              className="text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1 transition-colors duration-200 font-medium" 
+              className="text-blue-600 hover:underline inline-flex items-center gap-1" 
               target="_blank" 
-              rel="noopener noreferrer" 
-              {...props}
+              rel="noopener noreferrer"
             >
               {children}
               <ExternalLink className="h-3 w-3" />
             </a>
           ),
 
-          // リスト
-          ul: ({ children, ...props }) => (
-            <ul className="my-6 space-y-2 text-gray-800" {...props}>
-              {children}
-            </ul>
-          ),
-          ol: ({ children, ...props }) => (
-            <ol className="my-6 space-y-2 text-gray-800" {...props}>
-              {children}
-            </ol>
-          ),
-
-          // 引用
-          blockquote: ({ children, ...props }) => (
-            <blockquote 
-              className="border-l-4 border-blue-500 pl-6 py-4 my-6 bg-blue-50 italic text-gray-700 rounded-r-lg shadow-sm" 
-              {...props}
-            >
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 italic">
               {children}
             </blockquote>
           ),
 
-          // 水平線
-          hr: () => <hr className="my-8 border-t-2 border-gray-200" />,
+          hr: () => <hr className="my-8 border-t-2" />,
 
-          // テーブル
           table: ({ children }) => (
-            <div className="w-full overflow-x-auto my-8 rounded-lg border border-gray-200 shadow-sm">
-              <table className="w-full text-left border-collapse bg-white">
+            <div className="overflow-x-auto my-4">
+              <table className="w-full border-collapse">
                 {children}
               </table>
             </div>
           ),
-          thead: ({ children }) => (
-            <thead className="bg-gray-50">
-              {children}
-            </thead>
-          ),
-          tbody: ({ children }) => (
-            <tbody className="divide-y divide-gray-200">
-              {children}
-            </tbody>
-          ),
-          tr: ({ children }) => (
-            <tr className="transition-colors hover:bg-gray-50">
-              {children}
-            </tr>
-          ),
-          th: ({ children }) => (
-            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-              {children}
-            </th>
-          ),
-          td: ({ children }) => (
-            <td className="px-6 py-4 text-sm text-gray-900">
-              {children}
-            </td>
-          ),
 
-          // 強調
-          strong: ({ children, ...props }) => (
-            <strong className="font-bold text-gray-900" {...props}>
-              {children}
-            </strong>
-          ),
-          em: ({ children, ...props }) => (
-            <em className="italic text-gray-800" {...props}>
-              {children}
-            </em>
-          ),
-
-          // 取り消し線
-          del: ({ children, ...props }) => (
-            <del className="line-through text-gray-600" {...props}>
-              {children}
-            </del>
-          ),
+          li: ({ children, ...props }) => {
+            const isTaskList = props.className?.includes('task-list-item')
+            
+            if (isTaskList) {
+              return (
+                <li className="list-none flex items-start gap-2" {...props}>
+                  {children}
+                </li>
+              )
+            }
+            
+            return <li className="my-1" {...props}>{children}</li>
+          },
         }}
       >
-        {finalContent}
+        {processedContent}
       </ReactMarkdown>
-
-      {/* 脚注セクション */}
-      {showFootnotes && (
-        <div className="footnotes">
-          <hr />
-          <h2 className="text-xl font-bold mb-4">脚注</h2>
-          <ol>
-            {Object.entries(footnotes).map(([id, content]) => (
-              <li key={id} id={`footnote-${id}`} className="mb-2">
-                <a href={`#footnote-ref-${id}`} className="text-sm text-gray-600">
-                  ↩
-                </a>
-                {" "}
-                <span className="text-sm">{content}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
     </div>
-  );
-};
+  )
+}
 
-export default MarkdownRenderer;
+export default MarkdownRenderer
