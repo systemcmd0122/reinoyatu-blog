@@ -86,6 +86,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
   return (
     <html lang="ja">
       <body className={mPlus1.className}>
+        <meta name="google-site-verification" content="HRR3HjapAEcd9RMteRtz52tQQjG5WFSMMFNap--f4vI" />
         <ToastProvider />
         <div className="flex min-h-screen flex-col">
           <Navigation user={user} />
