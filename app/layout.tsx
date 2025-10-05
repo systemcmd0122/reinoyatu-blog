@@ -5,6 +5,8 @@ import { M_PLUS_1 } from "next/font/google"
 import { createClient } from "@/utils/supabase/server"
 import Navigation from "@/components/navigation/Navigation"
 import ToastProvider from "@/components/providers/ToastProvider"
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 const mPlus1 = M_PLUS_1({
   weight: ["400", "700", "900"],
@@ -92,6 +94,8 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
           <Navigation user={user} />
 
           <main className="flex-1">{children}</main>
+          <SpeedInsights />
+          <Analytics />
 
           <footer className="border-t py-2">
             <div className="flex flex-col items-center justify-center text-sm space-y-5">
