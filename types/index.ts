@@ -2,7 +2,7 @@ import * as z from "zod"
 
 export const BlogSchema = z.object({
   title: z.string().min(1, { message: "タイトルは必須です" }).max(100, { message: "タイトルは100文字以内で入力してください" }),
-  content: z.string().min(10, { message: "内容は10文字以上必要です" }).max(5000, { message: "内容は5000文字以内で入力してください" })
+  content: z.string().min(10, { message: "内容は10文字以上必要です" })
 })
 
 export interface SocialLinksType {

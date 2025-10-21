@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useTransition, useRef } from "react"
+import React, { useState, useRef, useTransition } from "react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2, ImagePlus, X, Wand2, Upload, Save, Eye, EyeOff, Tag, FileText } from "lucide-react"
+import { Loader2, ImagePlus, X, Wand2, Upload, Eye, Tag, FileText } from "lucide-react"
 import { BlogSchema } from "@/schemas"
 import { newBlog, generateTagsFromContent } from "@/actions/blog"
 import { useRouter } from "next/navigation"
@@ -25,28 +25,16 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import MarkdownHelp from "@/components/blog/markdown/MarkdownHelp"
 import { generateBlogContent, generateSummaryFromContent } from "@/utils/gemini"
+import { LoadingState } from "@/components/ui/loading-state"
 import dynamic from "next/dynamic"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
+import PreviewDialog from "./PreviewDialog"
 import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
-const MarkdownRenderer = dynamic(
-  () => import("@/components/blog/markdown/MarkdownRenderer"),
-  { 
-    ssr: false,
-    loading: () => (
-      <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-        <div className="h-4 bg-gray-200 rounded"></div>
-        <div className="h-4 bg-gray-200 rounded"></div>
-        <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-      </div>
-    )
-  }
-)
 
 const AICustomizeDialog = dynamic(
   () => import("@/components/blog/AICustomizeDialog"), 
@@ -65,11 +53,11 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   useAuth()
   const [error, setError] = useState("")
   const [isPending, setIsPending] = useState(false)
-  const [, startTransition] = useTransition()
+  const [] = useTransition()
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
-  const [showPreview, setShowPreview] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   
   // AI関連の状態
@@ -108,65 +96,53 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
     setIsPending(true)
 
     try {
+      // 画像の処理
+      let base64Image: string | undefined = undefined;
       if (imageFile) {
-        const base64Image = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onloadend = () => resolve(reader.result as string)
-          reader.onerror = reject
-          reader.readAsDataURL(imageFile)
-        })
-
-        startTransition(async () => {
-          try {
-            const res = await newBlog({
-              ...values,
-              base64Image,
-              userId,
-            })
-
-            if (res?.error) {
-              setError(res.error)
-              setIsPending(false)
-              return
-            }
-
-            toast.success("ブログを投稿しました")
-            router.push("/")
-            router.refresh()
-          } catch (error) {
-            console.error(error)
-            setError("エラーが発生しました")
-            setIsPending(false)
-          }
-        })
-      } else {
-        startTransition(async () => {
-          try {
-            const res = await newBlog({
-              ...values,
-              base64Image: undefined,
-              userId,
-            })
-
-            if (res?.error) {
-              setError(res.error)
-              setIsPending(false)
-              return
-            }
-
-            toast.success("ブログを投稿しました")
-            router.push("/")
-            router.refresh()
-          } catch (error) {
-            console.error(error)
-            setError("エラーが発生しました")
-            setIsPending(false)
-          }
-        })
+        try {
+          base64Image = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve(reader.result as string)
+            reader.onerror = reject
+            reader.readAsDataURL(imageFile)
+          })
+        } catch (error) {
+          console.error("画像の処理中にエラーが発生:", error)
+          setError("画像の処理中にエラーが発生しました")
+          setIsPending(false)
+          return
+        }
       }
+
+      // 記事の投稿
+      const res = await newBlog({
+        ...values,
+        base64Image,
+        userId,
+      })
+
+      if (res?.error) {
+        console.error("投稿エラー:", res.error)
+        setError(res.error)
+        setIsPending(false)
+        return
+      }
+
+      // 成功時の処理
+      toast.success("ブログを投稿しました", {
+        duration: 1500,
+      })
+
+      // 少し待ってからリダイレクト
+      setTimeout(() => {
+        setIsPending(false)
+        router.push("/")
+        router.refresh()
+      }, 1500)
+
     } catch (error) {
-      console.error(error)
-      setError("画像の処理中にエラーが発生しました")
+      console.error("投稿処理中にエラーが発生:", error)
+      setError(error instanceof Error ? error.message : "エラーが発生しました")
       setIsPending(false)
     }
   }
@@ -339,10 +315,11 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
 
   const status = getCompletionStatus()
 
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-white">
-        <div className="container mx-auto max-w-7xl py-8 px-4">
+        <div className="container mx-auto py-8 px-4">
           {/* ヘッダー */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -367,11 +344,11 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* 左側: 編集エリア */}
-            <div className="lg:col-span-2 space-y-6">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* 編集エリア */}
+            <div className="space-y-6">
               {/* ステップインジケーター */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
                 <div className="flex items-center justify-between">
                   {steps.map((step, index) => {
                     const StepIcon = step.icon
@@ -410,12 +387,14 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                 </div>
               </div>
 
-              <Form {...form}>
+              {isPending && <LoadingState message="ブログを投稿中です..." />}
+      
+      <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <Tabs value={steps[currentStep].id} className="space-y-6">
                     {/* ステップ1: 基本情報 */}
                     <TabsContent value="basic" className="space-y-6">
-                      <Card className="border border-gray-200">
+                      <Card className="border border-gray-200 shadow-sm">
                         <CardContent className="pt-6 space-y-6">
                           <FormField
                             control={form.control}
@@ -527,11 +506,10 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                                       type="button"
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => setShowPreview(!showPreview)}
-                                      className="lg:hidden"
+                                      onClick={() => setIsPreviewOpen(true)}
                                     >
-                                      {showPreview ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-                                      {showPreview ? 'プレビュー非表示' : 'プレビュー'}
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      プレビュー
                                     </Button>
                                     <Button
                                       type="button"
@@ -671,7 +649,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                             </Alert>
                           )}
 
-                          <div className="flex justify-center pt-4">
+                          <div className="flex justify-center mt-8">
                             <Button 
                               type="submit" 
                               size="lg"
@@ -679,15 +657,15 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                               disabled={isPending || !watchedTitle || !watchedContent}
                             >
                               {isPending ? (
-                                <>
-                                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                  投稿中...
-                                </>
+                                <div className="flex items-center space-x-2">
+                                  <Loader2 className="h-5 w-5 animate-spin" />
+                                  <span>投稿中...</span>
+                                </div>
                               ) : (
-                                <>
-                                  <Save className="mr-2 h-5 w-5" />
-                                  記事を公開する
-                                </>
+                                <div className="flex items-center space-x-2">
+                                  <Upload className="h-5 w-5" />
+                                  <span>投稿する</span>
+                                </div>
                               )}
                             </Button>
                           </div>
@@ -721,103 +699,19 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                 </form>
               </Form>
             </div>
-
-            {/* 右側: プレビューエリア */}
-            <div className={cn(
-              "lg:block",
-              showPreview ? "block" : "hidden lg:block"
-            )}>
-              <div className="sticky top-4 h-[calc(100vh-2rem)]">
-                <Card className="border border-gray-200 h-full">
-                  <CardContent className="pt-6 h-full flex flex-col">
-                    <div className="flex-none mb-4 pb-4 border-b border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                        <Eye className="h-5 w-5 mr-2 text-blue-600" />
-                        プレビュー
-                      </h3>
-                      {watchedContent && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          {watchedContent.length} 文字
-                        </p>
-                      )}
-                    </div>
-
-                    {!watchedTitle && !watchedContent ? (
-                      <div className="flex-1 flex flex-col items-center justify-center py-16 text-center">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                          <Eye className="h-8 w-8 text-gray-400" />
-                        </div>
-                        <p className="text-gray-500 font-medium">
-                          プレビューがここに表示されます
-                        </p>
-                        <p className="text-gray-400 text-sm mt-2">
-                          タイトルや内容を入力すると<br />リアルタイムで確認できます
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="flex-1 overflow-y-auto pr-4 space-y-6" style={{ maxHeight: 'calc(100vh - 8rem)' }}>
-                        {imagePreview && (
-                          <div className="aspect-video rounded-lg overflow-hidden border border-gray-200">
-                            <Image
-                              src={imagePreview}
-                              alt="Cover preview"
-                              width={800}
-                              height={400}
-                              className="object-cover w-full h-full"
-                            />
-                          </div>
-                        )}
-
-                        {watchedTitle && (
-                          <div>
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                              {watchedTitle}
-                            </h1>
-                          </div>
-                        )}
-
-                        {watchedTags && watchedTags.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {watchedTags.map((tag, index) => (
-                              <span 
-                                key={index} 
-                                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                              >
-                                #{tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        {watchedSummary && (
-                          <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-                            <p className="text-sm text-gray-700 leading-relaxed">
-                              {watchedSummary}
-                            </p>
-                          </div>
-                        )}
-
-                        {(watchedTitle || (watchedTags && watchedTags.length > 0) || watchedSummary) && watchedContent && (
-                          <Separator />
-                        )}
-
-                        {watchedContent ? (
-                          <div className="prose prose-base max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 pb-8">
-                            <MarkdownRenderer content={watchedContent} />
-                          </div>
-                        ) : (
-                          <div className="text-center py-12">
-                            <p className="text-gray-400">記事内容を入力してください</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
           </div>
         </div>
+
+        {/* プレビューダイアログ */}
+        <PreviewDialog
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
+          title={watchedTitle}
+          content={watchedContent}
+          summary={watchedSummary}
+          tags={watchedTags}
+          imagePreview={imagePreview}
+        />
 
         {/* AIカスタマイズダイアログ */}
         <AICustomizeDialog
