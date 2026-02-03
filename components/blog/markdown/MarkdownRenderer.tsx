@@ -20,7 +20,7 @@ interface CodeProps {
 }
 
 interface ImageProps {
-  src?: string
+  src?: string | any
   alt?: string
   title?: string
 }
@@ -301,7 +301,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           },
 
           img({ src, alt, title }: ImageProps) {
-            if (!src) return null
+            if (!src || typeof src !== 'string') return null
 
             if (imageErrors.has(src)) {
               return (

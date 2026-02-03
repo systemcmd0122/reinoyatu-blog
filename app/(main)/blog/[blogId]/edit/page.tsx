@@ -3,13 +3,13 @@ import { redirect } from "next/navigation"
 import BlogEdit from "@/components/blog/BlogEdit"
 
 interface BlogEditPageProps {
-  params: {
+  params: Promise<{
     blogId: string
-  }
+  }>
 }
 
 const BlogEditPage = async ({ params }: BlogEditPageProps) => {
-  const { blogId } = params
+  const { blogId } = await params
   const supabase = createClient()
 
   const { data: userData } = await supabase.auth.getUser()

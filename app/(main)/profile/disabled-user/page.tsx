@@ -3,13 +3,14 @@ import { createClient } from "@/utils/supabase/server"
 import { notFound } from "next/navigation"
 
 interface UserProfilePageProps {
-  params: {
+  params: Promise<{
     userId: string
-  }
+  }>
 }
 
 // ユーザープロフィールページ（移動済み、非ルート）
 const UserProfilePage = async ({ params }: UserProfilePageProps) => {
+  const { userId } = await params
   const supabase = createClient()
 
   // セッション情報を取得
@@ -29,11 +30,11 @@ const UserProfilePage = async ({ params }: UserProfilePageProps) => {
       created_at,
       updated_at
     `)
-    .eq("id", params.userId)
+    .eq("id", userId)
     .single()
 
   if (error || !profile) {
-    console.error(`Profile fetch error for user ID ${params.userId}:`, error)
+    console.error(`Profile fetch error for user ID ${userId}:`, error)
     notFound()
   }
 

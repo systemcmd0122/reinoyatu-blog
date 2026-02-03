@@ -3,17 +3,16 @@ import BlogDetail from "@/components/blog/BlogDetail"
 import { Metadata } from "next"
 
 interface BlogDetailPageProps {
-  params: {
+  params: Promise<{
     blogId: string
-  }
+  }>
 }
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 // ページごとの動的メタデータを生成（Open Graph / Twitter Card）
 export async function generateMetadata({ params }: BlogDetailPageProps): Promise<Metadata> {
-  const { blogId } = params
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  const { blogId } = await params
   if (!blogId || blogId === "undefined" || !uuidRegex.test(blogId)) {
     return {
       title: "記事が見つかりません｜例のヤツ",
@@ -81,7 +80,7 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
 }
 
 const BlogDetailPage = async ({ params }: BlogDetailPageProps) => {
-  const { blogId } = params
+  const { blogId } = await params
   if (!blogId || blogId === "undefined" || !uuidRegex.test(blogId)) {
     return <div className="text-center">ブログが存在しません</div>
   }
