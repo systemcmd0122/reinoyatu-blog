@@ -47,7 +47,7 @@ const getPagination = (page: number, totalPages: number) => {
   return rangeWithDots
 }
 
-const MainPage = async ({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) => {
+const MainPage = async ({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) => {
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
 
@@ -83,9 +83,10 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-const BlogContent = async ({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) => {
+const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) => {
   const supabase = createClient()
-  const page = typeof searchParams.page === "string" ? Number(searchParams.page) : 1
+  const resolvedSearchParams = await searchParams
+  const page = typeof resolvedSearchParams.page === "string" ? Number(resolvedSearchParams.page) : 1
   const start = (page - 1) * DEFAULT_PAGE_SIZE
   const end = start + DEFAULT_PAGE_SIZE - 1
   
