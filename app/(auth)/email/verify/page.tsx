@@ -2,13 +2,13 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
 interface EmailVerifyPageProps {
-  searchParams: {
+  searchParams: Promise<{
     [key: string]: string | undefined
-  }
+  }>
 }
 
-const EmailVerifyPage = ({ searchParams }: EmailVerifyPageProps) => {
-  const { code, message } = searchParams
+const EmailVerifyPage = async ({ searchParams }: EmailVerifyPageProps) => {
+  const { code, message } = await searchParams
 
   let displayMessage = ""
 

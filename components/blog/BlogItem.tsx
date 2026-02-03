@@ -86,7 +86,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div 
+                    <div
                       className="inline-flex items-center gap-1.5 bg-black/30 backdrop-blur-md rounded-full px-3 py-1.5 cursor-pointer hover:bg-black/40 transition-colors"
                       onClick={(e) => {
                         e.preventDefault()
@@ -108,15 +108,15 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
                       )}
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent 
-                    side="top" 
+                  <TooltipContent
+                    side="top"
                     className="max-w-xs p-3 bg-gray-900 border-gray-700"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex flex-wrap gap-1.5">
                       {blog.tags.map(tag => (
-                        <Badge 
-                          key={tag.name} 
+                        <Badge
+                          key={tag.name}
                           variant="secondary"
                           className="cursor-pointer hover:bg-primary/80 transition-colors text-xs"
                           onClick={(e) => handleTagClick(e, tag.name)}
@@ -140,9 +140,9 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
             )}>
               {blog.title}
             </h3>
-            
+
             <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/10">
-              <div 
+              <div
                 className="flex items-center gap-2 group/author transition-opacity duration-200 hover:opacity-80"
                 onClick={handleAuthorClick}
                 title={`${blog.profiles?.name || "Unknown User"}のプロフィールを見る`}

@@ -7,12 +7,13 @@ import { isValidUUID } from "@/utils/validation"
 const ProfilePage = async ({
   params,
 }: {
-  params: { profileId: string }
+  params: Promise<{ profileId: string }>
 }) => {
   const supabase = createClient()
 
   // パラメータのバリデーション
-  const id = params?.profileId
+  const { profileId } = await params
+  const id = profileId
   if (!id || id === "undefined") {
     console.error("Invalid profile ID: undefined or empty")
     return notFound()
@@ -69,9 +70,10 @@ const ProfilePage = async ({
 
 export default ProfilePage
 
-export async function generateMetadata({ params }: { params: { profileId: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ profileId: string }> }): Promise<Metadata> {
   // パラメータのバリデーション
-  const id = params?.profileId
+  const { profileId } = await params
+  const id = profileId
   if (!id || id === "undefined") {
     return {
       title: "無効なプロフィールID | 例のヤツ",

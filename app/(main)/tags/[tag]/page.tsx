@@ -17,19 +17,21 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface TagPageProps {
-  params: {
+  params: Promise<{
     tag: string
-  }
-  searchParams: {
+  }>
+  searchParams: Promise<{
     sort?: string
     view?: string
-  }
+  }>
 }
 
 const TagPage = async ({ params, searchParams }: TagPageProps) => {
-  const tagName = decodeURIComponent(params.tag)
-  const sortBy = searchParams.sort || 'latest'
-  const viewMode = searchParams.view || 'grid'
+  const { tag } = await params
+  const { sort, view } = await searchParams
+  const tagName = decodeURIComponent(tag)
+  const sortBy = sort || 'latest'
+  const viewMode = view || 'grid'
   const supabase = createClient()
 
   // ブログ一覧取得のクエリ

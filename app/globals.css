@@ -30,6 +30,7 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -62,6 +63,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     height: 100%;
@@ -117,6 +119,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -156,9 +159,12 @@
 
 /* ローディング状態のスケルトン */
 @keyframes skeleton-loading {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -170,10 +176,13 @@
 
 /* バッジのパルスアニメーション */
 @keyframes pulse-badge {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.05);
     opacity: 0.9;
@@ -190,24 +199,24 @@
     transform: scale(0.98);
     transition: transform 0.1s ease-out;
   }
-  
+
   .hover\:bg-primary\/10:active {
     background-color: hsl(var(--primary) / 0.15);
   }
 }
 
 /* detailsタグのカスタムスタイル */
-details > summary {
+details>summary {
   transition: all 0.3s ease;
   user-select: none;
 }
 
-details[open] > summary {
+details[open]>summary {
   color: hsl(var(--foreground));
   margin-bottom: 0.5rem;
 }
 
-details > summary::-webkit-details-marker {
+details>summary::-webkit-details-marker {
   display: none;
 }
 
@@ -241,7 +250,7 @@ details > summary::-webkit-details-marker {
   html {
     scroll-behavior: smooth;
   }
-  
+
   * {
     scroll-padding-top: 2rem;
   }
@@ -252,16 +261,16 @@ details > summary::-webkit-details-marker {
   .no-print {
     display: none !important;
   }
-  
+
   * {
     background: white !important;
     color: black !important;
   }
-  
+
   a {
     text-decoration: underline;
   }
-  
+
   a[href]:after {
     content: " (" attr(href) ")";
   }
@@ -280,6 +289,7 @@ details > summary::-webkit-details-marker {
 
 /* トランジション最適化 */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
