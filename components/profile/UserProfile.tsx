@@ -195,15 +195,15 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
               <TabsTrigger value="about">プロフィール</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="posts" className="mt-4 space-y-4">
+            <TabsContent value="posts" className="mt-4">
               {isLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-48 w-full" />
+                    <Skeleton key={i} className="h-32 w-full" />
                   ))}
                 </div>
               ) : blogPosts.length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="bg-card border border-border rounded-xl overflow-hidden divide-y divide-border shadow-sm">
                   {blogPosts.map((blog) => (
                     <BlogItem key={blog.id} blog={blog} />
                   ))}

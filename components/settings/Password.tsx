@@ -18,7 +18,7 @@ import { Loader2, EyeOffIcon, EyeIcon } from "lucide-react"
 import { PasswordSchema } from "@/schemas"
 import { setPassword } from "@/actions/auth"
 import { useRouter } from "next/navigation"
-import toast from "react-hot-toast"
+import { toast } from "sonner"
 import FormError from "@/components/auth/FormError"
 
 // パスワード変更

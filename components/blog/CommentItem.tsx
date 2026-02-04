@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Edit, Trash2, Reply, Loader2, Send, ChevronDown, ChevronUp, Smile } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
@@ -40,6 +41,7 @@ interface CommentItemProps {
   onReplyAdded: (comment: CommentType) => void
   onCommentEdited: (commentId: string, content: string) => void
   onCommentDeleted: (commentId: string) => void
+  onReactionToggle?: (commentId: string, reactions: ReactionType[]) => void
   nestLevel?: number
   maxNestLevel?: number
   maxVisibleReplies?: number
@@ -62,6 +64,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   onReplyAdded,
   onCommentEdited,
   onCommentDeleted,
+  onReactionToggle,
   nestLevel = 0,
   maxNestLevel = 3,
   maxVisibleReplies = 3
@@ -74,7 +77,6 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
   const [showAllReplies, setShowAllReplies] = useState(false)
-  const [reactions, setReactions] = useState<ReactionType[]>(comment.reactions || [])
   const [isReactionPickerOpen, setIsReactionPickerOpen] = useState(false)
   const { theme } = useTheme()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -88,9 +90,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const visibleReplies = showAllReplies ? replies : replies.slice(0, maxVisibleReplies)
   const hasMoreReplies = replyCount > maxVisibleReplies
 
-  useEffect(() => {
-    setReactions(comment.reactions || [])
-  }, [comment.reactions])
+  const reactions = comment.reactions || []
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -132,6 +132,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
       return
     }
 
+    // 楽観的更新の代わりに即時反映を試みる (toggleReactionの結果を使用)
     try {
       const res = await toggleReaction({
         commentId: comment.id,
@@ -144,8 +145,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
         return
       }
 
-      if (res.reactions) {
-        setReactions(res.reactions)
+      if (res.reactions && onReactionToggle) {
+        onReactionToggle(comment.id, res.reactions as ReactionType[])
       }
     } catch (error) {
       toast.error("エラーが発生しました")
@@ -335,10 +336,16 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     key={reaction.emoji}
                     variant={reaction.reacted ? "default" : "outline"}
                     size="sm"
-                    className="h-7 px-2 text-sm"
+                    className={cn(
+                      "h-7 px-2 text-sm transition-all",
+                      reaction.reacted 
+                        ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20" 
+                        : "hover:bg-muted"
+                    )}
                     onClick={() => handleReaction({ native: reaction.emoji } as EmojiData)}
                   >
-                    {reaction.emoji} {reaction.count}
+                    <span className="mr-1">{reaction.emoji}</span>
+                    <span className="font-medium">{reaction.count}</span>
                   </Button>
                 ))}
                 
@@ -525,6 +532,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
               onReplyAdded={onReplyAdded}
               onCommentEdited={onCommentEdited}
               onCommentDeleted={onCommentDeleted}
+              onReactionToggle={onReactionToggle}
               nestLevel={nestLevel + 1}
               maxNestLevel={maxNestLevel}
               maxVisibleReplies={maxVisibleReplies}

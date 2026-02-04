@@ -5,11 +5,11 @@ import { M_PLUS_1 } from "next/font/google"
 import { createClient } from "@/utils/supabase/server"
 import Navigation from "@/components/navigation/Navigation"
 import Link from "next/link"
-import ToastProvider from "@/components/providers/ToastProvider"
 import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/providers/ThemeProvider"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
+import { PWAInstallBanner } from "@/components/pwa/PWAInstallBanner"
 
 const mPlus1 = M_PLUS_1({
   weight: ["400", "700", "900"],
@@ -61,6 +61,10 @@ export const metadata: Metadata = {
     ],
   },
 
+  icons: {
+    apple: "/icon.png",
+  },
+
   twitter: {
     card: "summary_large_image",
     title: siteConfig.title,
@@ -76,14 +80,46 @@ export const metadata: Metadata = {
     "discord:title": siteConfig.title,
     "discord:description": siteConfig.description,
     "discord:image": siteConfig.ogImage,
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: siteConfig.title,
+    startupImage: [
+      {
+        url: "/icon.png",
+        media: "(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)",
+      },
+      {
+        url: "/icon.png",
+        media: "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)",
+      },
+      {
+        url: "/icon.png",
+        media: "(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)",
+      },
+      {
+        url: "/icon.png",
+        media: "(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)",
+      },
+    ],
   },
 }
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 }
 
 interface RootLayoutProps {
@@ -99,6 +135,11 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
 
   return (
     <html lang="ja" suppressHydrationWarning>
+      <head>
+        <link rel="apple-touch-icon" href="/icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      </head>
       <body className={mPlus1.className}>
         <ThemeProvider
           attribute="class"
@@ -106,8 +147,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
           enableSystem
           disableTransitionOnChange
         >
-          <ToastProvider />
-          <Toaster richColors position="top-right" />
+          <Toaster richColors position="top-right" theme="system" closeButton />
 
           <div className="flex min-h-screen flex-col">
             <Navigation user={user} />
@@ -207,6 +247,9 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
               </div>
             </footer>
           </div>
+
+          {/* PWAインストールバナー */}
+          <PWAInstallBanner />
         </ThemeProvider>
       </body>
     </html>

@@ -109,8 +109,8 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([])
   const [activeId, setActiveId] = useState<string>("")
 
-  // 読了時間の計算 (1分間に500文字程度)
-  const readingTime = Math.ceil((blog.content?.length || 0) / 500)
+  // 読了時間の計算 (1分間に400文字程度に変更、より現実に即した値)
+  const readingTime = Math.ceil((blog.content?.length || 0) / 400) || 1
 
   useEffect(() => {
     const handleScroll = () => {
@@ -254,7 +254,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f6f6] dark:bg-background pb-20">
+    <div className="min-h-screen bg-muted/30 dark:bg-background pb-20">
       {/* Scroll Progress Bar */}
       <div className="fixed top-0 left-0 w-full h-1 z-[60] bg-transparent">
         <div 
@@ -333,8 +333,8 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 {/* Summary */}
                 {blog.summary && (
                   <div className="mb-10 p-6 rounded-xl bg-primary/5 border border-primary/10 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-[hsl(var(--primary))]" />
-                    <div className="flex items-center gap-2 mb-3 text-[hsl(var(--primary))]">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                    <div className="flex items-center gap-2 mb-3 text-primary">
                       <Wand2 className="h-5 w-5" />
                       <span className="font-bold">AIによる要約</span>
                     </div>
@@ -358,7 +358,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 )}
 
                 {/* Content */}
-                <div className="prose prose-zinc dark:prose-invert max-w-none text-foreground break-words prose-headings:font-black prose-a:text-[hsl(var(--primary))] prose-pre:bg-[#2d2d2d]">
+                <div className="prose prose-zinc dark:prose-invert max-w-none text-foreground break-words prose-headings:font-black prose-a:text-primary">
                   <MarkdownRenderer content={blog.content} />
                 </div>
 
@@ -434,7 +434,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
           </main>
 
           {/* Sidebar */}
-          <aside className="w-full lg:w-[320px] flex-shrink-0 space-y-6">
+          <aside className="w-full lg:w-[350px] flex-shrink-0 space-y-6">
             {/* Table of Contents */}
             {headings.length > 0 && (
               <div className="hidden lg:block sticky top-20 bg-card rounded-2xl border border-border shadow-sm overflow-hidden max-h-[calc(100vh-120px)] flex flex-col">

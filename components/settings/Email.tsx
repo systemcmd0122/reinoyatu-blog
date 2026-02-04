@@ -18,7 +18,7 @@ import { Loader2 } from "lucide-react"
 import { EmailSchema } from "@/schemas"
 import { updateEmail } from "@/actions/user"
 import { useRouter } from "next/navigation"
-import toast from "react-hot-toast"
+import { toast } from "sonner"
 import FormError from "@/components/auth/FormError"
 
 interface EmailProps {

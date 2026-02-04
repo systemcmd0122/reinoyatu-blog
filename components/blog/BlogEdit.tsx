@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useTransition, useRef } from "react"
+import React, { useState, useTransition, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2, Trash2, Wand2, ImagePlus, X, Upload, Eye, Tag, FileText } from "lucide-react"
 import { editBlog, deleteBlog, generateTagsFromContent, generateAndSaveSummary } from "@/actions/blog"
@@ -42,6 +42,7 @@ import {
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import PreviewDialog from "./PreviewDialog"
+import { motion, AnimatePresence } from "framer-motion"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { LoadingState } from "@/components/ui/loading-state"
@@ -65,6 +66,7 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
   const [imagePreview, setImagePreview] = useState<string | null>(blog.image_url || null)
   const [currentStep, setCurrentStep] = useState(0)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   
   // AI関連の状態
@@ -83,6 +85,58 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
       tags: blog.tags?.map(tag => tag.name) || [],
     },
   })
+
+  // localStorageからの復元
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(`blog-edit-draft-${blog.id}`)
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft)
+        // 既存のデータと違う場合のみ復元を確認 or 自動復元
+        // ここではシンプルに自動復元
+        if (draft.title) form.setValue("title", draft.title)
+        if (draft.content) form.setValue("content", draft.content)
+        if (draft.summary) form.setValue("summary", draft.summary)
+        if (draft.tags) form.setValue("tags", draft.tags)
+        toast.info("未保存の変更を復元しました")
+      } catch (e) {
+        console.error("Failed to restore draft", e)
+      }
+    }
+  }, [blog.id, form])
+
+  // 自動保存
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      // 変更があるかチェック
+      const isActuallyDirty = 
+        value.title !== blog.title || 
+        value.content !== blog.content || 
+        value.summary !== (blog.summary || "") ||
+        JSON.stringify(value.tags) !== JSON.stringify(blog.tags?.map(t => t.name) || [])
+
+      if (isActuallyDirty) {
+        localStorage.setItem(`blog-edit-draft-${blog.id}`, JSON.stringify(value))
+        setIsDirty(true)
+      } else {
+        localStorage.removeItem(`blog-edit-draft-${blog.id}`)
+        setIsDirty(false)
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [blog, form])
+
+  // 離脱ガード
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = ""
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [isDirty])
 
   const watchedTitle = form.watch("title")
   const watchedContent = form.watch("content")
@@ -215,6 +269,11 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
       }
 
       toast.success("ブログを編集しました")
+      
+      // 下書きを削除
+      localStorage.removeItem(`blog-edit-draft-${blog.id}`)
+      setIsDirty(false)
+
       router.push(`/blog/${blog.id}`)
       router.refresh()
     } catch (error) {
@@ -407,9 +466,16 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
       
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <AnimatePresence mode="wait">
                 <Tabs value={steps[currentStep].id} className="space-y-6">
                   {/* ステップ1: 基本情報 */}
                   <TabsContent value="basic" className="space-y-6">
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                    >
                     <Card className="border border-border shadow-sm">
                       <CardContent className="pt-6 space-y-6">
                         <FormField
@@ -502,10 +568,17 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
                         </div>
                       </CardContent>
                     </Card>
+                    </motion.div>
                   </TabsContent>
 
                   {/* ステップ2: 記事編集 */}
                   <TabsContent value="content" className="space-y-6">
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                    >
                     <Card className="border border-border">
                       <CardContent className="pt-6">
                         <FormField
@@ -558,10 +631,17 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
                         />
                       </CardContent>
                     </Card>
+                    </motion.div>
                   </TabsContent>
 
                   {/* ステップ3: 詳細設定 */}
                   <TabsContent value="details" className="space-y-6">
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                    >
                     <Card className="border border-border">
                       <CardContent className="pt-6 space-y-6">
                         <FormField
@@ -648,10 +728,17 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
                         />
                       </CardContent>
                     </Card>
+                    </motion.div>
                   </TabsContent>
 
                   {/* ステップ4: プレビュー・保存 */}
                   <TabsContent value="preview" className="space-y-6">
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                    >
                     <Card className="border border-border">
                       <CardContent className="pt-6 space-y-6">
                         <div className="text-center">
@@ -687,8 +774,10 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
                         </div>
                       </CardContent>
                     </Card>
+                    </motion.div>
                   </TabsContent>
                 </Tabs>
+                </AnimatePresence>
 
                 {/* ナビゲーションボタン */}
                 <div className="flex justify-between pt-6 border-t border-border">

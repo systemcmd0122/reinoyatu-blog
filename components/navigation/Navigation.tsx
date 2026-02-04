@@ -19,6 +19,7 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { ThemeToggle } from "./ThemeToggle"
+import { CommandMenu } from "./CommandMenu"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -156,24 +157,13 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               </span>
             </Link>
 
-            <form onSubmit={handleSearch} className="hidden md:flex relative max-w-sm w-full group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <Input
-                type="search"
-                placeholder="キーワードで検索"
-                className="pl-9 h-9 bg-muted/40 border-none focus-visible:ring-2 focus-visible:ring-primary/20 focus:bg-background transition-all rounded-md"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </form>
+            <div className="hidden md:flex flex-1 justify-center max-w-sm">
+              <CommandMenu />
+            </div>
           </div>
 
           <div className="flex items-center gap-1 md:gap-3">
             <div className="hidden md:flex items-center gap-1">
-              <Button variant="ghost" size="sm" asChild className="text-foreground font-bold hover:bg-muted">
-                <Link href="/">ホーム</Link>
-              </Button>
-              
               {user && (
                 <>
                   <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
@@ -273,17 +263,9 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               <SheetContent side="right" className="w-full max-w-xs p-0 bg-background border-l border-border">
                 <div className="flex flex-col h-full">
                   <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
-                    <ThemeToggle />
-                    <form onSubmit={handleSearch} className="relative flex-1 ml-4">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="search"
-                        placeholder="記事を検索..."
-                        className="pl-9 bg-background border-border h-10 text-sm focus-visible:ring-1 focus-visible:ring-primary"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </form>
+                    <div className="flex-1">
+                      <CommandMenu />
+                    </div>
                   </div>
                   {user ? (
                     <>

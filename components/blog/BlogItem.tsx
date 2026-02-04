@@ -4,10 +4,9 @@ import React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { formatDistanceToNow } from "date-fns"
-import { ja } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { Heart } from "lucide-react"
+import { formatRelativeTime } from "@/utils/date"
 
 interface BlogItemProps {
   blog: {
@@ -42,10 +41,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
     router.push(`/tags/${encodeURIComponent(tagName)}`)
   }
 
-  const relativeTime = formatDistanceToNow(new Date(blog.updated_at), {
-    addSuffix: true,
-    locale: ja,
-  })
+  const relativeTime = formatRelativeTime(blog.updated_at)
 
   return (
     <div className="group block bg-card hover:bg-muted/30 transition-colors duration-200">

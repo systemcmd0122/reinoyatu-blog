@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef, useTransition } from "react"
+import React, { useState, useRef, useTransition, useEffect } from "react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -30,6 +30,7 @@ import dynamic from "next/dynamic"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import PreviewDialog from "./PreviewDialog"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
@@ -58,6 +59,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   
   // AI関連の状態
@@ -76,6 +78,44 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
       tags: [],
     },
   })
+
+  // localStorageからの復元
+  useEffect(() => {
+    const savedDraft = localStorage.getItem("blog-new-draft")
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft)
+        if (draft.title) form.setValue("title", draft.title)
+        if (draft.content) form.setValue("content", draft.content)
+        if (draft.summary) form.setValue("summary", draft.summary)
+        if (draft.tags) form.setValue("tags", draft.tags)
+        toast.info("下書きを復元しました")
+      } catch (e) {
+        console.error("Failed to restore draft", e)
+      }
+    }
+  }, [form])
+
+  // 自動保存
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      localStorage.setItem("blog-new-draft", JSON.stringify(value))
+      setIsDirty(true)
+    })
+    return () => subscription.unsubscribe()
+  }, [form])
+
+  // 離脱ガード
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = ""
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [isDirty])
 
   const watchedTitle = form.watch("title")
   const watchedContent = form.watch("content")
@@ -132,6 +172,10 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
       toast.success("ブログを投稿しました", {
         duration: 1500,
       })
+      
+      // 下書きを削除
+      localStorage.removeItem("blog-new-draft")
+      setIsDirty(false)
 
       // 少し待ってからリダイレクト
       setTimeout(() => {
@@ -391,9 +435,16 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
       
       <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <AnimatePresence mode="wait">
                   <Tabs value={steps[currentStep].id} className="space-y-6">
                     {/* ステップ1: 基本情報 */}
                     <TabsContent value="basic" className="space-y-6">
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.2 }}
+                      >
                       <Card className="border border-border shadow-sm">
                         <CardContent className="pt-6 space-y-6">
                           <FormField
@@ -486,10 +537,17 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                           </div>
                         </CardContent>
                       </Card>
+                      </motion.div>
                     </TabsContent>
 
                     {/* ステップ2: 記事作成 */}
                     <TabsContent value="content" className="space-y-6">
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.2 }}
+                      >
                       <Card className="border border-border">
                         <CardContent className="pt-6">
                           <FormField
@@ -542,10 +600,17 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                           />
                         </CardContent>
                       </Card>
+                      </motion.div>
                     </TabsContent>
 
                     {/* ステップ3: 詳細設定 */}
                     <TabsContent value="details" className="space-y-6">
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.2 }}
+                      >
                       <Card className="border border-border">
                         <CardContent className="pt-6 space-y-6">
                           <FormField
@@ -632,10 +697,17 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                           />
                         </CardContent>
                       </Card>
+                      </motion.div>
                     </TabsContent>
 
                     {/* ステップ4: プレビュー・投稿 */}
                     <TabsContent value="preview" className="space-y-6">
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.2 }}
+                      >
                       <Card className="border border-border">
                         <CardContent className="pt-6 space-y-6">
                           <div className="text-center">
@@ -671,8 +743,10 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                           </div>
                         </CardContent>
                       </Card>
+                      </motion.div>
                     </TabsContent>
                   </Tabs>
+                  </AnimatePresence>
 
                   {/* ナビゲーションボタン */}
                   <div className="flex justify-between pt-6 border-t border-border">

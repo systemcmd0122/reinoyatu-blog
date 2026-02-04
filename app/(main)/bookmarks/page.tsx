@@ -31,19 +31,25 @@ const BookmarksList = async ({ userId }: { userId: string }) => {
 
   // ブックマーク一覧表示
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">ブックマークした記事</h1>
-        <Link href="/">
-          <Button variant="outline">
-            ブログ一覧に戻る
-          </Button>
-        </Link>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-        {blogs.map((blog) => (
-          <BlogItem key={blog.id} blog={blog} />
-        ))}
+    <div className="min-h-screen bg-muted/30 dark:bg-background">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-foreground">ブックマーク</h1>
+            <p className="text-muted-foreground mt-1">保存した記事の一覧です</p>
+          </div>
+          <Link href="/">
+            <Button variant="outline" size="sm" className="rounded-full">
+              ホームへ戻る
+            </Button>
+          </Link>
+        </div>
+        
+        <div className="bg-card border border-border rounded-xl overflow-hidden divide-y divide-border shadow-sm">
+          {blogs.map((blog) => (
+            <BlogItem key={blog.id} blog={blog} />
+          ))}
+        </div>
       </div>
     </div>
   )

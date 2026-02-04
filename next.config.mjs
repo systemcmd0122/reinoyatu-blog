@@ -1,7 +1,10 @@
-/** @type {import('next').NextConfig} */
-import bundleAnalyzer from '@next/bundle-analyzer';
+import withPWAInit from "@ducanh2912/next-pwa";
 
-const nextConfig = {
+const withPWA = withPWAInit({
+  dest: "public",
+});
+
+export default withPWA({
   images: {
     remotePatterns: [
       {
@@ -14,10 +17,4 @@ const nextConfig = {
       },
     ],
   },
-}
-
-const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
 });
-
-export default withBundleAnalyzer(nextConfig);
