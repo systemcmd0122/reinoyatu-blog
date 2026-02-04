@@ -29,11 +29,22 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import FormError from "@/components/auth/FormError"
 import Link from "next/link"
+import { useEffect } from "react"
+
+interface LoginProps {
+  next?: string
+}
 
 // ログイン
-const Login = () => {
+const Login = ({ next }: LoginProps) => {
   const router = useRouter()
   const [error, setError] = useState("")
+
+  useEffect(() => {
+    if (next) {
+      toast.info("ログインが必要です。続行するにはログインしてください。")
+    }
+  }, [next])
   const [passwordVisibility, setPasswordVisibility] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [isGooglePending, setIsGooglePending] = useState(false)
@@ -62,7 +73,7 @@ const Login = () => {
         }
 
         toast.success("ログインしました")
-        router.push("/")
+        router.push(next || "/")
       } catch (error) {
         console.error(error)
         setError("エラーが発生しました")
@@ -76,7 +87,7 @@ const Login = () => {
     setError("")
 
     try {
-      const res = await signInWithGoogle()
+      const res = await signInWithGoogle(next)
 
       if (res?.error) {
         setError(res.error)

@@ -8,7 +8,7 @@ const PasswordPage = async () => {
   const user = userData?.user
 
   if (!user) {
-    redirect("/")
+    redirect("/login?next=/settings/password")
   }
 
   return (

@@ -74,9 +74,12 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const [isReplying, setIsReplying] = useState(false)
   const [editContent, setEditContent] = useState(comment.content)
   const [replyContent, setReplyContent] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [isEditLoading, setIsEditLoading] = useState(false)
+  const [isReplyLoading, setIsReplyLoading] = useState(false)
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
   const [showAllReplies, setShowAllReplies] = useState(false)
+
+  const isAnyActionLoading = isEditLoading || isReplyLoading || isDeleteLoading
   const [isReactionPickerOpen, setIsReactionPickerOpen] = useState(false)
   const { theme } = useTheme()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -125,36 +128,77 @@ const CommentItem: React.FC<CommentItemProps> = ({
     }, 0)
   }
 
-  // リアクション処理
+  // リアクション処理 (楽観的更新版)
   const handleReaction = async (emoji: EmojiData) => {
     if (!currentUserId) {
       toast.error("リアクションするにはログインしてください")
       return
     }
 
-    // 楽観的更新の代わりに即時反映を試みる (toggleReactionの結果を使用)
+    if (!onReactionToggle) return
+
+    const originalReactions = [...reactions]
+    const emojiNative = emoji.native
+    
+    // 楽観的なリアクション状態の計算
+    let newReactions = [...reactions]
+    const existingIndex = newReactions.findIndex(r => r.emoji === emojiNative)
+    
+    if (existingIndex > -1) {
+      const reaction = { ...newReactions[existingIndex] }
+      if (reaction.reacted) {
+        reaction.count = Math.max(0, reaction.count - 1)
+        reaction.reacted = false
+      } else {
+        reaction.count += 1
+        reaction.reacted = true
+      }
+      
+      if (reaction.count <= 0) {
+        newReactions.splice(existingIndex, 1)
+      } else {
+        newReactions[existingIndex] = reaction
+      }
+    } else {
+      newReactions.push({
+        emoji: emojiNative,
+        count: 1,
+        reacted: true
+      })
+    }
+    
+    // 即座にUIを更新
+    onReactionToggle(comment.id, newReactions)
+
     try {
       const res = await toggleReaction({
         commentId: comment.id,
         userId: currentUserId,
-        emoji: emoji.native
+        emoji: emojiNative
       })
 
       if (res.error) {
         toast.error(res.error)
+        // 失敗した場合は元の状態に戻す
+        onReactionToggle(comment.id, originalReactions)
         return
       }
 
-      if (res.reactions && onReactionToggle) {
+      // 最終的なサーバーの状態に合わせる
+      if (res.reactions) {
         onReactionToggle(comment.id, res.reactions as ReactionType[])
       }
     } catch (error) {
+      console.error(error)
       toast.error("エラーが発生しました")
+      // 失敗した場合は元の状態に戻す
+      onReactionToggle(comment.id, originalReactions)
     }
   }
 
   const handleEdit = async () => {
-    setIsLoading(true)
+    if (isAnyActionLoading) return
+    setIsEditLoading(true)
     try {
       if (!currentUserId) {
         toast.error("ログインしてください")
@@ -178,11 +222,12 @@ const CommentItem: React.FC<CommentItemProps> = ({
     } catch (error) {
       toast.error("エラーが発生しました")
     } finally {
-      setIsLoading(false)
+      setIsEditLoading(false)
     }
   }
 
   const handleDelete = async () => {
+    if (isAnyActionLoading) return
     setIsDeleteLoading(true)
     try {
       if (!currentUserId) {
@@ -211,7 +256,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
   }
 
   const handleReply = async () => {
-    setIsLoading(true)
+    if (isAnyActionLoading) return
+    setIsReplyLoading(true)
     try {
       if (!currentUserId) {
         toast.error("ログインしてください")
@@ -245,7 +291,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
     } catch (error) {
       toast.error("エラーが発生しました")
     } finally {
-      setIsLoading(false)
+      setIsReplyLoading(false)
     }
   }
 
@@ -315,9 +361,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 <Button 
                   size="sm" 
                   onClick={handleEdit}
-                  disabled={isLoading}
+                  disabled={isAnyActionLoading}
                 >
-                  {isLoading ? (
+                  {isEditLoading ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> 更新中</>
                   ) : (
                     "更新"
@@ -343,6 +389,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                         : "hover:bg-muted"
                     )}
                     onClick={() => handleReaction({ native: reaction.emoji } as EmojiData)}
+                    disabled={isAnyActionLoading}
                   >
                     <span className="mr-1">{reaction.emoji}</span>
                     <span className="font-medium">{reaction.count}</span>
@@ -359,6 +406,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                         variant="outline"
                         size="sm"
                         className="h-7 w-7"
+                        disabled={isAnyActionLoading}
                       >
                         <Smile className="h-4 w-4" />
                       </Button>
@@ -389,6 +437,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 className="h-7 w-7" 
                 onClick={() => setIsReplying(!isReplying)}
                 aria-label="返信"
+                disabled={isAnyActionLoading}
               >
                 <Reply className="h-4 w-4" />
               </Button>
@@ -402,6 +451,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   className="h-7 w-7" 
                   onClick={() => setIsEditing(true)}
                   aria-label="編集"
+                  disabled={isAnyActionLoading}
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -413,6 +463,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                       variant="ghost" 
                       className="h-7 w-7 text-destructive" 
                       aria-label="削除"
+                      disabled={isAnyActionLoading}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -487,9 +538,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
             <Button 
               size="sm" 
               onClick={handleReply}
-              disabled={isLoading || !replyContent.trim()}
+              disabled={isAnyActionLoading || !replyContent.trim()}
             >
-              {isLoading ? (
+              {isReplyLoading ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> 送信中</>
               ) : (
                 <><Send className="mr-2 h-4 w-4" /> 返信</>

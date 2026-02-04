@@ -29,21 +29,28 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // 必要であれば、認証の判定を行いリダイレクトする
-  // const {
-  //   data: { user },
-  // } = await supabase.auth.getUser()
+  // 認証の判定を行い、保護されたルートへのアクセスを制限する
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  // if (
-  //   !user &&
-  //   !request.nextUrl.pathname.startsWith("/login") &&
-  //   !request.nextUrl.pathname.startsWith("/signup")
-  // ) {
-  //   const url = request.nextUrl.clone()
-  //   url.pathname = "/login"
+  const pathname = request.nextUrl.pathname
 
-  //   return NextResponse.redirect(url)
-  // }
+  // 保護されたルートの定義
+  const isProtectedRoute = 
+    pathname.startsWith("/blog/new") ||
+    pathname.match(/^\/blog\/[^/]+\/edit/) ||
+    pathname.startsWith("/bookmarks") ||
+    pathname.startsWith("/settings")
+
+  if (!user && isProtectedRoute) {
+    const url = request.nextUrl.clone()
+    const nextPath = url.pathname + url.search
+    url.pathname = "/login"
+    url.searchParams.set("next", nextPath)
+
+    return NextResponse.redirect(url)
+  }
 
   return supabaseResponse
 }

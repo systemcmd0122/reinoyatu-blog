@@ -8,7 +8,7 @@ const EmailPage = async () => {
   const user = userData?.user
 
   if (!user || !user.email) {
-    redirect("/")
+    redirect("/login?next=/settings/email")
   }
 
   return (
