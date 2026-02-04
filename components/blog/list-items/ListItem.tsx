@@ -7,26 +7,14 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Heart } from "lucide-react"
 import { formatRelativeTime } from "@/utils/date"
+import { BlogType } from "@/types"
 
-interface BlogItemProps {
-  blog: {
-    id: string
-    title: string
-    content: string
-    image_url: string | null
-    updated_at: string
-    likes_count?: number
-    profiles: {
-      id: string
-      name: string
-      avatar_url: string | null
-    }
-    tags?: { name: string }[]
-  }
+interface ListItemProps {
+  blog: BlogType
   priority?: boolean
 }
 
-const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
+const ListItem: React.FC<ListItemProps> = ({ blog }) => {
   const router = useRouter()
 
   const handleAuthorClick = (e: React.MouseEvent) => {
@@ -124,4 +112,4 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
   )
 }
 
-export default BlogItem
+export default ListItem
