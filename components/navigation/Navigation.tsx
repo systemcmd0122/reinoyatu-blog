@@ -148,10 +148,10 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               href="/"
               className="flex items-center space-x-2 hover:opacity-90 transition-opacity flex-shrink-0"
             >
-              <div className="bg-primary text-primary-foreground p-1 rounded font-black text-xl leading-none">
+              <div className="bg-primary text-primary-foreground p-1.5 rounded-md font-black text-xl leading-none shadow-sm">
                 RY
               </div>
-              <span className="font-black text-lg md:text-xl tracking-tighter hidden sm:inline-block">
+              <span className="font-black text-lg md:text-xl tracking-tighter hidden sm:inline-block text-foreground">
                 例のヤツ
               </span>
             </Link>
@@ -188,7 +188,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
 
             {user ? (
               <div className="flex items-center gap-2">
-                <Button variant="default" size="sm" asChild className="hidden sm:flex gap-2 rounded-md px-4 shadow-none bg-[#55c500] hover:bg-[#46a300] text-white border-none font-bold">
+                <Button variant="default" size="sm" asChild className="hidden sm:flex gap-2 rounded-md px-4 font-bold shadow-sm">
                   <Link href="/blog/new">
                     <PenSquare className="h-4 w-4" />
                     <span>投稿する</span>

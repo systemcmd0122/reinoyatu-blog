@@ -266,8 +266,8 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 {/* Summary */}
                 {blog.summary && (
                   <div className="mb-10 p-6 rounded-xl bg-primary/5 border border-primary/10 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-[#55c500]" />
-                    <div className="flex items-center gap-2 mb-3 text-[#55c500]">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-[hsl(var(--primary))]" />
+                    <div className="flex items-center gap-2 mb-3 text-[hsl(var(--primary))]">
                       <Wand2 className="h-5 w-5" />
                       <span className="font-bold">AIによる要約</span>
                     </div>
@@ -291,7 +291,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 )}
 
                 {/* Content */}
-                <div className="prose prose-zinc dark:prose-invert max-w-none text-foreground break-words prose-headings:font-black prose-a:text-[#55c500] prose-pre:bg-[#2d2d2d]">
+                <div className="prose prose-zinc dark:prose-invert max-w-none text-foreground break-words prose-headings:font-black prose-a:text-[hsl(var(--primary))] prose-pre:bg-[#2d2d2d]">
                   <MarkdownRenderer content={blog.content} />
                 </div>
 

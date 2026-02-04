@@ -204,7 +204,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
 
             {/* タブナビゲーション */}
             <div className="bg-card border border-border rounded-t-lg flex items-center px-1 h-12 mb-[-1px]">
-              <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-[#55c500] text-foreground font-bold px-6 hover:bg-transparent">
+              <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-[hsl(var(--primary))] text-foreground font-bold px-6 hover:bg-transparent">
                 最新の投稿
               </Button>
               <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground px-6 hover:bg-transparent" disabled>
@@ -259,7 +259,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
             {/* 投稿ボタン - サイドバー */}
             <div className="hidden lg:block">
               <Link href="/blog/new">
-                <Button size="lg" className="w-full gap-2 rounded-md h-12 shadow-none bg-[#55c500] hover:bg-[#46a300] text-white border-none font-bold text-lg">
+                <Button size="lg" className="w-full gap-2 rounded-md h-12 shadow-none bg-primary hover:bg-primary/90 text-primary-foreground border-none font-bold text-lg">
                   <PenSquare className="h-5 w-5" />
                   記事を投稿する
                 </Button>
@@ -271,7 +271,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
               <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-border bg-muted/30">
                   <h2 className="font-bold flex items-center gap-2 text-foreground">
-                    <TrendingUp className="h-4 w-4 text-[#55c500]" />
+                    <TrendingUp className="h-4 w-4 text-[hsl(var(--primary))]" />
                     トレンドタグ
                   </h2>
                 </div>
