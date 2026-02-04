@@ -24,7 +24,8 @@ import {
   Calendar,
   Globe,
   ArrowRight,
-  Wand2
+  Wand2,
+  ChevronUp
 } from "lucide-react"
 import { deleteBlog } from "@/actions/blog"
 import { toast } from "sonner"
@@ -590,6 +591,28 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 }) => {
   const router = useRouter()
   const [error, setError] = useState("")
+  const [showScrollTop, setShowScrollTop] = useState(false)
+  const [readingProgress, setReadingProgress] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Scroll to top button visibility
+      setShowScrollTop(window.scrollY > 400)
+
+      // Reading progress
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight
+      if (totalHeight > 0) {
+        setReadingProgress((window.scrollY / totalHeight) * 100)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
   const [, startTransition] = useTransition()
   const [isDeletePending, setIsDeletePending] = useState(false)
   const [showImageModal, setShowImageModal] = useState(false)
@@ -696,7 +719,31 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   }
 
   return (
-    <div className="container mx-auto max-w-4xl space-y-6 py-8">
+    <div className="container mx-auto max-w-4xl space-y-6 py-8 relative">
+      {/* Reading Progress Bar */}
+      <div className="fixed top-16 left-0 w-full h-1 z-[60] pointer-events-none">
+        <div
+          className="h-full bg-primary transition-all duration-150"
+          style={{ width: `${readingProgress}%` }}
+        />
+      </div>
+
+      {/* Scroll to Top Button */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={scrollToTop}
+            className="fixed bottom-8 right-8 z-50 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            aria-label="トップへ戻る"
+          >
+            <ChevronUp className="h-6 w-6" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <Badge variant="outline" className="text-sm">

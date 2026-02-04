@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { formatJST } from "@/utils/date"
 import { cn } from "@/lib/utils"
@@ -33,19 +34,20 @@ interface BlogItemProps {
 }
 
 const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
+  const router = useRouter()
   const [imageLoaded, setImageLoaded] = useState(false)
   const [showAllTags, setShowAllTags] = useState(false)
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    window.location.href = `/profile/${blog.profiles.id}`
+    router.push(`/profile/${blog.profiles.id}`)
   }
 
   const handleTagClick = (e: React.MouseEvent, tagName: string) => {
     e.preventDefault()
     e.stopPropagation()
-    window.location.href = `/tags/${encodeURIComponent(tagName)}`
+    router.push(`/tags/${encodeURIComponent(tagName)}`)
   }
 
   const displayedTags = showAllTags ? blog.tags : blog.tags?.slice(0, 2)

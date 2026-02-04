@@ -13,9 +13,12 @@ import {
   Bookmark,
   User as UserIcon,
   FileText,
+  Search,
 } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import { Input } from "@/components/ui/input"
+import { ThemeToggle } from "./ThemeToggle"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -118,8 +121,29 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
     },
   ]
 
+  const [searchQuery, setSearchQuery] = useState("")
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/?q=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
+
   const DesktopMenu = () => (
-    <div className="hidden md:flex items-center space-x-2">
+    <div className="hidden md:flex items-center space-x-4">
+      <ThemeToggle />
+      <form onSubmit={handleSearch} className="relative w-64">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="記事を検索..."
+          className="pl-9 h-9 bg-muted/50 border-none focus-visible:ring-1"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </form>
+
       {user ? (
         <>
           <Button variant="ghost" asChild>
@@ -221,6 +245,19 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
       </SheetTrigger>
       <SheetContent side="right" className="w-full max-w-xs p-0">
         <div className="flex flex-col h-full">
+          <div className="p-4 border-b flex items-center justify-between">
+            <ThemeToggle />
+            <form onSubmit={handleSearch} className="relative flex-1 ml-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="記事を検索..."
+                className="pl-9 bg-muted/50 border-none"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </form>
+          </div>
           {user ? (
             <>
               <div className="p-4 border-b">
