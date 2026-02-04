@@ -76,7 +76,7 @@ const upsertTags = async (tagNames: string[]) => {
 }
 
 interface newBlogProps extends z.infer<typeof BlogSchema> {
-  base64Image: string | undefined
+  base64Image?: string
   userId: string
   tags?: string[]
   summary?: string
@@ -168,7 +168,7 @@ export const newBlog = async (values: newBlogProps) => {
 interface editBlogProps extends z.infer<typeof BlogSchema> {
   blogId: string
   imageUrl: string | null
-  base64Image: string | undefined
+  base64Image?: string
   userId: string
   tags?: string[]
   summary?: string
