@@ -60,10 +60,10 @@ export const toggleReaction = async ({
       })
 
     if (reactionsError) {
-      return { error: reactionsError.message }
+      return { success: false, error: reactionsError.message }
     }
 
-    return { reactions }
+    return { success: true, reactions }
   } catch (err) {
     console.error(err)
     return { error: "エラーが発生しました" }

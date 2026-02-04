@@ -86,6 +86,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const router = useRouter()
   const [error, setError] = useState("")
   const [isPending, setIsPending] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image_url || null)
   const [currentStep, setCurrentStep] = useState(0)
@@ -756,6 +757,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                           type="button" 
                           variant="ghost" 
                           className="text-destructive hover:bg-destructive/10"
+                          disabled={isPending || isDeleting}
                         >
                           削除
                         </Button>
@@ -768,21 +770,34 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>キャンセル</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={() => {
-                              onDelete().then(res => {
-                                if (res.error) toast.error(res.error)
-                                else {
+                          <AlertDialogCancel disabled={isDeleting}>キャンセル</AlertDialogCancel>
+                          <Button
+                            variant="destructive"
+                            onClick={async () => {
+                              setIsDeleting(true)
+                              try {
+                                const res = await onDelete()
+                                if (res.error) {
+                                  toast.error(res.error)
+                                  setIsDeleting(false)
+                                } else {
                                   toast.success("記事を削除しました")
                                   router.push("/")
+                                  router.refresh()
                                 }
-                              })
+                              } catch (e) {
+                                toast.error("削除中にエラーが発生しました")
+                                setIsDeleting(false)
+                              }
                             }}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            disabled={isDeleting}
                           >
-                            削除する
-                          </AlertDialogAction>
+                            {isDeleting ? (
+                              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> 削除中...</>
+                            ) : (
+                              "削除する"
+                            )}
+                          </Button>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -852,7 +867,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
           isGenerating={isGenerating}
         />
         
-        {isPending && (
+        {(isPending || isDeleting) && (
           <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-500">
             <div className="flex flex-col items-center space-y-6 text-center max-w-sm px-4">
               <div className="relative">
@@ -861,10 +876,14 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
               </div>
               <div className="space-y-2">
                 <p className="text-2xl font-black tracking-tighter">
-                  {mode === "new" ? "PUBLISHING" : "SAVING CHANGES"}
+                  {isDeleting ? "DELETING" : mode === "new" ? "PUBLISHING" : "SAVING CHANGES"}
                 </p>
                 <p className="text-muted-foreground text-sm font-medium">
-                  {mode === "new" ? "素晴らしい記事を世界中に届けています。少々お待ちください..." : "変更を安全に保存しています。まもなく完了します..."}
+                  {isDeleting
+                    ? "記事を安全に削除しています。少々お待ちください..."
+                    : mode === "new"
+                      ? "素晴らしい記事を世界中に届けています。少々お待ちください..."
+                      : "変更を安全に保存しています。まもなく完了します..."}
                 </p>
               </div>
               <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">

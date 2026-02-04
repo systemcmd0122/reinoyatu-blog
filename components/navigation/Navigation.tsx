@@ -14,6 +14,7 @@ import {
   User as UserIcon,
   FileText,
   Search,
+  Loader2,
 } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
@@ -56,6 +57,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   const router = useRouter()
   const supabase = createClient()
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [user, setUser] = useState(initialUser)
   const [profile, setProfile] = useState<{ avatar_url: string | null; name: string | null } | null>(null)
 
@@ -95,10 +97,16 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   }, [user, supabase])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    router.push("/login")
-    router.refresh()
+    setIsLoggingOut(true)
+    try {
+      await supabase.auth.signOut()
+      setUser(null)
+      router.push("/login")
+      router.refresh()
+    } finally {
+      setIsLoggingOut(false)
+      setIsLogoutDialogOpen(false)
+    }
   }
 
   const userNavigationItems = [
@@ -378,13 +386,18 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleLogout} 
-              className={buttonVariants({ variant: "destructive" })}
+            <AlertDialogCancel disabled={isLoggingOut}>キャンセル</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
             >
-              ログアウト
-            </AlertDialogAction>
+              {isLoggingOut ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> 処理中...</>
+              ) : (
+                "ログアウト"
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
