@@ -347,23 +347,32 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             )
           },
 
-          h1: ({ children }) => (
-            <h1 className="text-3xl font-bold my-6 pb-2 border-b-2">
-              {children}
-            </h1>
-          ),
+          h1: ({ children }) => {
+            const id = typeof children === 'string' ? children.replace(/\s+/g, '-').toLowerCase() : ''
+            return (
+              <h1 id={id} className="text-3xl font-bold my-6 pb-2 border-b-2 scroll-mt-20">
+                {children}
+              </h1>
+            )
+          },
 
-          h2: ({ children }) => (
-            <h2 className="text-2xl font-semibold my-5 pb-2 border-b">
-              {children}
-            </h2>
-          ),
+          h2: ({ children }) => {
+            const id = typeof children === 'string' ? children.replace(/\s+/g, '-').toLowerCase() : ''
+            return (
+              <h2 id={id} className="text-2xl font-semibold my-5 pb-2 border-b scroll-mt-20">
+                {children}
+              </h2>
+            )
+          },
 
-          h3: ({ children }) => (
-            <h3 className="text-xl font-semibold my-4">
-              {children}
-            </h3>
-          ),
+          h3: ({ children }) => {
+            const id = typeof children === 'string' ? children.replace(/\s+/g, '-').toLowerCase() : ''
+            return (
+              <h3 id={id} className="text-xl font-semibold my-4 scroll-mt-20">
+                {children}
+              </h3>
+            )
+          },
 
           p: ({ children }) => {
             const processChildren = (nodes: React.ReactNode): React.ReactNode => {

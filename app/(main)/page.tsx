@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge"
 import BlogItem from "@/components/blog/BlogItem"
 import LandingPage from "@/components/landing/LandingPage"
 import { TrendingUp, Search, PenSquare, ChevronDown } from "lucide-react"
-import { cn } from "@/lib/utils"
 import {
   Pagination,
   PaginationContent,

@@ -3,8 +3,10 @@
 import React, { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { 
+  Clock,
   Facebook,
   FilePenLine,
+  List,
   Github,
   Instagram,
   Linkedin,
@@ -21,11 +23,13 @@ import {
   Bookmark
 } from "lucide-react"
 import { deleteBlog } from "@/actions/blog"
+import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import Image from "next/image"
 import Link from "next/link"
 import { BlogType, CommentType } from "@/types"
@@ -91,16 +95,66 @@ interface BlogDetailProps {
   initialComments?: CommentType[]
 }
 
-const BlogDetail: React.FC<BlogDetailProps> = ({ 
-  blog, 
-  isMyBlog, 
-  currentUserId, 
-  initialComments 
+const BlogDetail: React.FC<BlogDetailProps> = ({
+  blog,
+  isMyBlog,
+  currentUserId,
+  initialComments
 }) => {
   const router = useRouter()
   const [error, setError] = useState("")
   const [, startTransition] = useTransition()
   const [isDeletePending, setIsDeletePending] = useState(false)
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([])
+  const [activeId, setActiveId] = useState<string>("")
+
+  // 読了時間の計算 (1分間に500文字程度)
+  const readingTime = Math.ceil((blog.content?.length || 0) / 500)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight
+      const progress = (window.scrollY / totalHeight) * 100
+      setScrollProgress(progress)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  // 見出しの抽出
+  useEffect(() => {
+    const rawHeadings = blog.content.match(/^#{1,3}\s+.+$/gm) || []
+    const parsedHeadings = rawHeadings.map(heading => {
+      const level = heading.match(/^#+/)?.[0].length || 0
+      const text = heading.replace(/^#+\s+/, "")
+      const id = text.replace(/\s+/g, "-").toLowerCase()
+      return { id, text, level }
+    })
+    setHeadings(parsedHeadings)
+  }, [blog.content])
+
+  // 目次のハイライト
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveId(entry.target.id)
+          }
+        })
+      },
+      { rootMargin: "0px 0px -80% 0px" }
+    )
+
+    headings.forEach((heading) => {
+      const element = document.getElementById(heading.id)
+      if (element) observer.observe(element)
+    })
+
+    return () => observer.disconnect()
+  }, [headings])
   
   const [sharedLikeState, setSharedLikeState] = useState<{
     isLiked: boolean
@@ -201,6 +255,14 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
   return (
     <div className="min-h-screen bg-[#f5f6f6] dark:bg-background pb-20">
+      {/* Scroll Progress Bar */}
+      <div className="fixed top-0 left-0 w-full h-1 z-[60] bg-transparent">
+        <div
+          className="h-full bg-primary transition-all duration-100 ease-out"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
+
       <div className="max-w-screen-xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
@@ -222,6 +284,11 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span>{formatJST(blog.created_at)}に投稿</span>
                       {blog.created_at !== blog.updated_at && <span>(更新: {formatJST(blog.updated_at)})</span>}
+                      <span className="mx-1">•</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {readingTime}分で読めます
+                      </span>
                     </div>
                   </div>
 
@@ -368,6 +435,41 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
           {/* Sidebar */}
           <aside className="w-full lg:w-[320px] flex-shrink-0 space-y-6">
+            {/* Table of Contents */}
+            {headings.length > 0 && (
+              <div className="hidden lg:block sticky top-20 bg-card rounded-2xl border border-border shadow-sm overflow-hidden max-h-[calc(100vh-120px)] flex flex-col">
+                <div className="p-4 border-b border-border bg-muted/30 flex items-center gap-2">
+                  <List className="h-4 w-4 text-primary" />
+                  <h2 className="font-bold text-sm uppercase tracking-wider">目次</h2>
+                </div>
+                <ScrollArea className="flex-1 p-4">
+                  <nav className="space-y-1">
+                    {headings.map((heading) => (
+                      <a
+                        key={heading.id}
+                        href={`#${heading.id}`}
+                        className={cn(
+                          "block py-2 text-sm transition-all hover:text-primary leading-tight",
+                          heading.level === 1 ? "font-bold" :
+                          heading.level === 2 ? "pl-4 text-muted-foreground" :
+                          "pl-8 text-muted-foreground text-xs",
+                          activeId === heading.id && "text-primary border-l-2 border-primary pl-[14px] bg-primary/5"
+                        )}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          document.getElementById(heading.id)?.scrollIntoView({
+                            behavior: "smooth"
+                          })
+                        }}
+                      >
+                        {heading.text}
+                      </a>
+                    ))}
+                  </nav>
+                </ScrollArea>
+              </div>
+            )}
+
             {/* Author Profile Card */}
             <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
               <div className="h-20 bg-gradient-to-br from-primary/10 to-secondary/10" />

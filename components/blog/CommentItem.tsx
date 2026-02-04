@@ -89,6 +89,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const hasMoreReplies = replyCount > maxVisibleReplies
 
   useEffect(() => {
+    setReactions(comment.reactions || [])
+  }, [comment.reactions])
+
+  useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus()
     }

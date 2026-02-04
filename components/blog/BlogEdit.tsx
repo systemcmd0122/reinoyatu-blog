@@ -2,11 +2,11 @@
 
 import React, { useState, useTransition, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Trash2, Wand2, ImagePlus } from "lucide-react"
-import { editBlog, deleteBlog, generateTagsFromContent, generateAndSaveSummary } from "@/actions/blog" // generateAndSaveSummary を追加
+import { Loader2, Trash2, Wand2, ImagePlus, X, Upload, Eye, Tag, FileText } from "lucide-react"
+import { editBlog, deleteBlog, generateTagsFromContent, generateAndSaveSummary } from "@/actions/blog"
 import { toast } from "sonner"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -26,7 +26,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { BlogSchema } from "@/schemas"
 import MarkdownHelp from "@/components/blog/markdown/MarkdownHelp"
 import dynamic from 'next/dynamic'
-import { generateBlogContent } from "@/utils/gemini"
+import { generateBlogContent, generateSummaryFromContent } from "@/utils/gemini"
 import TagInput from "@/components/ui/TagInput"
 import {
   AlertDialog,
@@ -39,6 +39,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
+import { Separator } from "@/components/ui/separator"
+import PreviewDialog from "./PreviewDialog"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
+import { LoadingState } from "@/components/ui/loading-state"
 
 const AICustomizeDialog = dynamic(
   () => import('@/components/blog/AICustomizeDialog'),
@@ -56,25 +62,39 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
   const [, startTransition] = useTransition()
   const [isDeletePending, setIsDeletePending] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string>(blog.image_url || "/noImage.png")
+  const [imagePreview, setImagePreview] = useState<string | null>(blog.image_url || null)
+  const [currentStep, setCurrentStep] = useState(0)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   
-  // AI関連の状態を追加
+  // AI関連の状態
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string | null>(null)
   const [isTagGenerating, setIsTagGenerating] = useState(false);
-  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false); // 追加
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   const form = useForm<z.infer<typeof BlogSchema>>({
     resolver: zodResolver(BlogSchema),
     defaultValues: {
       title: blog.title,
       content: blog.content,
-      summary: blog.summary || "", // 追加
+      summary: blog.summary || "",
       tags: blog.tags?.map(tag => tag.name) || [],
     },
   })
+
+  const watchedTitle = form.watch("title")
+  const watchedContent = form.watch("content")
+  const watchedSummary = form.watch("summary")
+  const watchedTags = form.watch("tags")
+
+  const steps = [
+    { id: 'basic', title: '基本情報', icon: FileText },
+    { id: 'content', title: '記事編集', icon: FileText },
+    { id: 'details', title: '詳細設定', icon: Tag },
+    { id: 'preview', title: '確認・保存', icon: Eye }
+  ]
 
   const handleAICustomizeClick = () => {
     const { content } = form.getValues()
@@ -148,12 +168,7 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
 
     setIsGeneratingSummary(true);
     try {
-      const result = await generateAndSaveSummary({ // 新しいサーバーアクションを呼び出す
-        blogId: blog.id,
-        title,
-        content,
-      });
-
+      const result = await generateSummaryFromContent(title, content);
       if (result.error) {
         toast.error(result.error);
       } else if (result.summary) {
@@ -175,69 +190,36 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
     setIsPending(true)
 
     try {
+      let base64Image: string | undefined = undefined;
       if (imageFile) {
-        const base64Image = await new Promise<string>((resolve, reject) => {
+        base64Image = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader()
           reader.onloadend = () => resolve(reader.result as string)
           reader.onerror = reject
           reader.readAsDataURL(imageFile)
         })
-
-        startTransition(async () => {
-          try {
-            const res = await editBlog({
-              ...values,
-              blogId: blog.id,
-              imageUrl: blog.image_url,
-              base64Image,
-              userId: blog.user_id,
-            })
-
-            if (res?.error) {
-              setError(res.error)
-              setIsPending(false)
-              return
-            }
-
-            toast.success("ブログを編集しました")
-            router.push(`/blog/${blog.id}`)
-            router.refresh()
-          } catch (error) {
-            console.error(error)
-            setError("エラーが発生しました")
-            setIsPending(false)
-          }
-        })
-      } else {
-        startTransition(async () => {
-          try {
-            const res = await editBlog({
-              ...values,
-              blogId: blog.id,
-              imageUrl: blog.image_url,
-              base64Image: undefined,
-              userId: blog.user_id,
-            })
-
-            if (res?.error) {
-              setError(res.error)
-              setIsPending(false)
-              return
-            }
-
-            toast.success("ブログを編集しました")
-            router.push(`/blog/${blog.id}`)
-            router.refresh()
-          } catch (error) {
-            console.error(error)
-            setError("エラーが発生しました")
-            setIsPending(false)
-          }
-        })
       }
+
+      const res = await editBlog({
+        ...values,
+        blogId: blog.id,
+        imageUrl: blog.image_url,
+        base64Image,
+        userId: blog.user_id,
+      })
+
+      if (res?.error) {
+        setError(res.error)
+        setIsPending(false)
+        return
+      }
+
+      toast.success("ブログを編集しました")
+      router.push(`/blog/${blog.id}`)
+      router.refresh()
     } catch (error) {
       console.error(error)
-      setError("画像の処理中にエラーが発生しました")
+      setError("エラーが発生しました")
       setIsPending(false)
     }
   }
@@ -297,6 +279,11 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
     }
   }
 
+  const removeImage = () => {
+    setImageFile(null)
+    setImagePreview(null)
+  }
+
   const insertCodeBlock = (language: string) => {
     if (!textareaRef.current) return
 
@@ -318,242 +305,444 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
     }, 0)
   }
 
+  const canProceedToNext = (step: number): boolean => {
+    const values = form.getValues()
+    switch (step) {
+      case 0:
+        return !!values.title
+      case 1:
+        return !!values.content
+      case 2:
+        return true
+      case 3:
+        return true
+      default:
+        return false
+    }
+  }
+
   return (
-    <div className="container mx-auto max-w-2xl py-8">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>ブログ編集</CardTitle>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="icon">
-                <Trash2 className="h-5 w-5" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="bg-card text-card-foreground border rounded-lg shadow-xl">
-              <AlertDialogHeader>
-                <AlertDialogTitle>本当にブログを削除しますか？</AlertDialogTitle>
-                <AlertDialogDescription>
-                  この操作は取り消せません。ブログは完全に削除されます。
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>キャンセル</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={handleDelete}
-                  disabled={isDeletePending}
-                  className={buttonVariants({ variant: "destructive" })}
-                >
-                  {isDeletePending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    "削除"
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-6">
-            <div className="flex flex-col items-center justify-center">
-              <div className="w-full aspect-video rounded-lg overflow-hidden relative">
-                <Image
-                  src={imagePreview}
-                  alt="Blog cover image"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-                <label 
-                  htmlFor="image-upload" 
-                  className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                >
-                  <input
-                    id="image-upload"
-                    type="file"
-                    accept="image/jpeg,image/png,image/jpg"
-                    className="hidden"
-                    onChange={handleImageUpload}
-                  />
-                  <ImagePlus className="h-10 w-10 text-white" />
-                </label>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                画像をクリックして変更 (最大2MB, jpg/jpeg/png)
+    <TooltipProvider>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto py-8 px-4">
+          {/* ヘッダー */}
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-foreground mb-2">
+                記事を編集
+              </h1>
+              <p className="text-muted-foreground">
+                内容を更新して保存しましょう
               </p>
             </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  削除
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>記事を削除しますか？</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    この操作は取り消せません。
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className={buttonVariants({ variant: "destructive" })}
+                  >
+                    削除する
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>タイトル</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="ブログのタイトルを入力"
-                        {...field} 
-                        disabled={isPending} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex justify-between items-center">
-                      <FormLabel>内容 (Markdown対応)</FormLabel>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleAICustomizeClick}
-                          className="flex items-center space-x-2"
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* ステップインジケーター */}
+            <div className="bg-card border border-border rounded-lg p-6 mb-8 shadow-sm">
+              <div className="flex items-center justify-between">
+                {steps.map((step, index) => {
+                  const StepIcon = step.icon
+                  return (
+                    <React.Fragment key={step.id}>
+                      <div className="flex flex-col items-center">
+                        <button
+                          onClick={() => setCurrentStep(index)}
+                          className={cn(
+                            "flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all mb-2",
+                            index === currentStep
+                              ? 'bg-primary border-primary text-primary-foreground'
+                              : index < currentStep
+                              ? 'bg-primary/10 border-primary text-primary'
+                              : 'bg-background border-muted-foreground/30 text-muted-foreground'
+                          )}
                         >
-                          <Wand2 className="h-4 w-4" />
-                          <span>AIでカスタマイズ</span>
-                        </Button>
+                          <StepIcon className="h-5 w-5" />
+                        </button>
+                        <span className={cn(
+                          "text-xs font-medium text-center",
+                          index <= currentStep ? 'text-foreground' : 'text-muted-foreground'
+                        )}>
+                          {step.title}
+                        </span>
                       </div>
-                    </div>
-                    <FormControl>
-                      <div className="space-y-2">
-                        <Textarea
-                          placeholder="Markdownで記事を書けます。ヘッダー、リスト、コードブロックなどが使用可能です。"
-                          rows={10}
-                          {...field}
-                          disabled={isPending}
-                          ref={textareaRef}
+                      {index < steps.length - 1 && (
+                        <div className={cn(
+                          "flex-1 h-0.5 mx-2 mt-6",
+                          index < currentStep ? 'bg-primary' : 'bg-muted'
+                        )} />
+                      )}
+                    </React.Fragment>
+                  )
+                })}
+              </div>
+            </div>
+
+            {isPending && <LoadingState message="変更を保存中です..." />}
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <Tabs value={steps[currentStep].id} className="space-y-6">
+                  {/* ステップ1: 基本情報 */}
+                  <TabsContent value="basic" className="space-y-6">
+                    <Card className="border border-border shadow-sm">
+                      <CardContent className="pt-6 space-y-6">
+                        <FormField
+                          control={form.control}
+                          name="title"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-base font-semibold text-foreground">
+                                タイトル <span className="text-red-500">*</span>
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="記事のタイトルを入力してください"
+                                  className="h-12 text-lg border-input focus:ring-primary"
+                                  {...field}
+                                  disabled={isPending}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                        <MarkdownHelp onInsertCodeBlock={insertCodeBlock} />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              {/* summary FormField を追加 */}
-              <FormField
-                control={form.control}
-                name="summary"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex justify-between items-center mb-2">
-                      <FormLabel>AI要約</FormLabel>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleGenerateSummary}
-                        disabled={isGeneratingSummary || isPending}
-                        className="flex items-center space-x-2"
-                      >
-                        {isGeneratingSummary ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Wand2 className="h-4 w-4" />
+                        <Separator className="my-6" />
+
+                        <div className="space-y-4">
+                          <div>
+                            <h3 className="text-base font-semibold text-foreground mb-1">カバー画像</h3>
+                            <p className="text-sm text-muted-foreground">記事のサムネイル画像をアップロード</p>
+                          </div>
+
+                          {!imagePreview ? (
+                            <label
+                              htmlFor="image-upload"
+                              className="block w-full aspect-video border-2 border-dashed border-muted rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 transition-all"
+                            >
+                              <input
+                                id="image-upload"
+                                type="file"
+                                accept="image/jpeg,image/png,image/jpg"
+                                className="hidden"
+                                onChange={handleImageUpload}
+                              />
+                              <div className="flex flex-col items-center justify-center h-full space-y-3">
+                                <div className="p-3 bg-muted rounded-full">
+                                  <ImagePlus className="h-8 w-8 text-muted-foreground" />
+                                </div>
+                                <div className="text-center">
+                                  <p className="font-medium text-foreground">
+                                    画像をアップロード
+                                  </p>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    JPG, PNG (最大2MB)
+                                  </p>
+                                </div>
+                              </div>
+                            </label>
+                          ) : (
+                            <div className="relative group">
+                              <div className="aspect-video rounded-lg overflow-hidden border border-border">
+                                <Image
+                                  src={imagePreview}
+                                  alt="Selected image"
+                                  fill
+                                  className="object-cover"
+                                  priority
+                                />
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-3">
+                                  <label htmlFor="image-upload-replace">
+                                    <Button type="button" variant="secondary" size="sm" className="cursor-pointer">
+                                      <Upload className="h-4 w-4 mr-2" />
+                                      変更
+                                    </Button>
+                                    <input
+                                      id="image-upload-replace"
+                                      type="file"
+                                      accept="image/jpeg,image/png,image/jpg"
+                                      className="hidden"
+                                      onChange={handleImageUpload}
+                                    />
+                                  </label>
+                                  <Button type="button" variant="destructive" size="sm" onClick={removeImage}>
+                                    <X className="h-4 w-4 mr-2" />
+                                    削除
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* ステップ2: 記事編集 */}
+                  <TabsContent value="content" className="space-y-6">
+                    <Card className="border border-border">
+                      <CardContent className="pt-6">
+                        <FormField
+                          control={form.control}
+                          name="content"
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="flex items-center justify-between mb-4">
+                                <FormLabel className="text-base font-semibold text-foreground">
+                                  記事内容 <span className="text-red-500">*</span>
+                                </FormLabel>
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setIsPreviewOpen(true)}
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    プレビュー
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="default"
+                                    size="sm"
+                                    onClick={handleAICustomizeClick}
+                                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                                  >
+                                    <Wand2 className="h-4 w-4 mr-2" />
+                                    AIアシスタント
+                                  </Button>
+                                </div>
+                              </div>
+                              <FormControl>
+                                <div className="space-y-4">
+                                  <Textarea
+                                    placeholder="記事の内容をMarkdown形式で記述してください..."
+                                    rows={16}
+                                    className="text-base leading-relaxed font-mono border-input focus:ring-primary"
+                                    {...field}
+                                    disabled={isPending}
+                                    ref={textareaRef}
+                                  />
+                                  <MarkdownHelp onInsertCodeBlock={insertCodeBlock} />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* ステップ3: 詳細設定 */}
+                  <TabsContent value="details" className="space-y-6">
+                    <Card className="border border-border">
+                      <CardContent className="pt-6 space-y-6">
+                        <FormField
+                          control={form.control}
+                          name="summary"
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="flex items-center justify-between mb-3">
+                                <FormLabel className="text-base font-semibold text-foreground">
+                                  要約
+                                </FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleGenerateSummary}
+                                  disabled={isGeneratingSummary || isPending}
+                                >
+                                  {isGeneratingSummary ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  ) : (
+                                    <Wand2 className="h-4 w-4 mr-2" />
+                                  )}
+                                  AI生成
+                                </Button>
+                              </div>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="記事の要約を入力してください（200文字以内推奨）"
+                                  rows={4}
+                                  className="border-input focus:ring-primary"
+                                  {...field}
+                                  disabled={isPending}
+                                />
+                              </FormControl>
+                              <p className="text-sm text-muted-foreground">
+                                記事の概要を簡潔にまとめてください
+                              </p>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <Separator />
+
+                        <FormField
+                          control={form.control}
+                          name="tags"
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="flex items-center justify-between mb-3">
+                                <FormLabel className="text-base font-semibold text-foreground">
+                                  タグ
+                                </FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleGenerateTags}
+                                  disabled={isTagGenerating || isPending}
+                                >
+                                  {isTagGenerating ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  ) : (
+                                    <Wand2 className="h-4 w-4 mr-2" />
+                                  )}
+                                  AI提案
+                                </Button>
+                              </div>
+                              <FormControl>
+                                <TagInput
+                                  placeholder="タグを入力してEnterキーを押してください"
+                                  value={field.value || []}
+                                  onChange={field.onChange}
+                                  disabled={isPending}
+                                />
+                              </FormControl>
+                              <p className="text-sm text-gray-500">
+                                記事を見つけやすくするタグを追加してください
+                              </p>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* ステップ4: プレビュー・保存 */}
+                  <TabsContent value="preview" className="space-y-6">
+                    <Card className="border border-border">
+                      <CardContent className="pt-6 space-y-6">
+                        <div className="text-center">
+                          <h2 className="text-2xl font-bold text-foreground mb-2">更新の準備が整いました</h2>
+                          <p className="text-muted-foreground">内容を確認して、保存しましょう</p>
+                        </div>
+
+                        {error && (
+                          <Alert variant="destructive">
+                            <AlertDescription>{error}</AlertDescription>
+                          </Alert>
                         )}
-                        <span>AIで生成/更新</span>
-                      </Button>
-                    </div>
-                    <FormControl>
-                      <Textarea
-                        placeholder="AIが生成した要約、または手動で要約を入力"
-                        rows={3}
-                        {...field}
-                        disabled={isPending}
-                      />
-                    </FormControl>
-                    <p className="text-sm text-muted-foreground">
-                      AIで生成するか、手動で記事の要約を入力してください。（最大200文字）
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex justify-between items-center mb-2">
-                      <FormLabel>タグ</FormLabel>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleGenerateTags}
-                        disabled={isTagGenerating || isPending}
-                        className="flex items-center space-x-2"
-                      >
-                        {isTagGenerating ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Wand2 className="h-4 w-4" />
-                        )}
-                        <span>AIで生成</span>
-                      </Button>
-                    </div>
-                    <FormControl>
-                      <TagInput
-                        placeholder="タグを入力してEnter"
-                        value={field.value || []}
-                        onChange={field.onChange}
-                        disabled={isPending}
-                      />
-                    </FormControl>
-                    <p className="text-sm text-muted-foreground">
-                      タグを入力後、Enterキーを押してください。
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                        <div className="flex justify-center mt-8">
+                          <Button
+                            type="submit"
+                            size="lg"
+                            className="px-10 py-6 text-lg"
+                            disabled={isPending || !watchedTitle || !watchedContent}
+                          >
+                            {isPending ? (
+                              <div className="flex items-center space-x-2">
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                <span>保存中...</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center space-x-2">
+                                <Upload className="h-5 w-5" />
+                                <span>変更を保存</span>
+                              </div>
+                            )}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
 
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+                {/* ナビゲーションボタン */}
+                <div className="flex justify-between pt-6 border-t border-border">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                    disabled={currentStep === 0}
+                    className="px-6"
+                  >
+                    前へ
+                  </Button>
+                  {currentStep < steps.length - 1 && (
+                    <Button
+                      type="button"
+                      onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+                      disabled={!canProceedToNext(currentStep)}
+                      className="px-6"
+                    >
+                      次へ
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </Form>
+          </div>
+        </div>
 
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isPending}
-              >
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                編集を保存
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+        {/* プレビューダイアログ */}
+        <PreviewDialog
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
+          title={watchedTitle}
+          content={watchedContent}
+          summary={watchedSummary}
+          tags={watchedTags}
+          imagePreview={imagePreview}
+        />
 
-      {/* AIカスタマイズダイアログ */}
-      <AICustomizeDialog
-        isOpen={isAIDialogOpen}
-        onClose={() => setIsAIDialogOpen(false)}
-        originalContent={{
-          title: form.getValues("title"),
-          content: form.getValues("content"),
-        }}
-        onApply={handleApplyAIContent}
-        onGenerate={handleGenerate}
-        generatedContent={generatedContent}
-        isGenerating={isGenerating}
-      />
-
-    </div>
+        {/* AIカスタマイズダイアログ */}
+        <AICustomizeDialog
+          isOpen={isAIDialogOpen}
+          onClose={() => setIsAIDialogOpen(false)}
+          originalContent={{
+            title: form.getValues("title"),
+            content: form.getValues("content"),
+          }}
+          onApply={handleApplyAIContent}
+          onGenerate={handleGenerate}
+          generatedContent={generatedContent}
+          isGenerating={isGenerating}
+        />
+      </div>
+    </TooltipProvider>
   )
 }
 
