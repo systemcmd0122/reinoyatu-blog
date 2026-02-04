@@ -9,7 +9,7 @@ import { ProfileType, BlogType } from "@/types"
 import { createClient } from "@/utils/supabase/client"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
-import BlogItem from "@/components/blog/BlogItem"
+import BlogListView from "@/components/blog/BlogListView"
 
 interface UserProfileProps {
   profile: ProfileType
@@ -203,11 +203,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
                   ))}
                 </div>
               ) : blogPosts.length > 0 ? (
-                <div className="bg-card border border-border rounded-xl overflow-hidden divide-y divide-border shadow-sm">
-                  {blogPosts.map((blog) => (
-                    <BlogItem key={blog.id} blog={blog} />
-                  ))}
-                </div>
+                <BlogListView blogs={blogPosts} />
               ) : (
                 <div className="text-center text-muted-foreground py-12">
                   <div className="flex flex-col items-center space-y-2">

@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server"
-import BlogItem from "@/components/blog/BlogItem"
+import BlogListView from "@/components/blog/BlogListView"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -92,7 +92,7 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
             </div>
 
             {/* タブナビゲーション */}
-            <div className="bg-card border border-border rounded-t-lg flex items-center px-1 h-12 mb-[-1px]">
+            <div className="bg-card border border-border rounded-t-lg flex items-center px-1 h-12 mb-4">
               <Link href={`/tags/${tag}?sort=latest`} className="h-full">
                 <Button variant="ghost" size="sm" className={`h-full rounded-none border-b-2 px-6 hover:bg-transparent ${sortBy === 'latest' ? 'border-primary text-foreground font-bold' : 'border-transparent text-muted-foreground'}`}>
                   最新の投稿
@@ -105,18 +105,14 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
               </Link>
             </div>
 
-            {/* ブログ一覧フィード */}
-            <div className="bg-card border border-border rounded-b-lg overflow-hidden divide-y divide-border shadow-sm">
-              {blogs.length > 0 ? (
-                blogs.map((blog) => (
-                  <BlogItem key={blog.id} blog={blog} />
-                ))
-              ) : (
-                <div className="p-12 text-center text-muted-foreground">
-                  このタグに関連する記事はまだありません。
-                </div>
-              )}
-            </div>
+            {/* ブログ一覧 */}
+            {blogs.length > 0 ? (
+              <BlogListView blogs={blogs} />
+            ) : (
+              <div className="bg-card border border-border rounded-lg p-12 text-center text-muted-foreground shadow-sm">
+                このタグに関連する記事はまだありません。
+              </div>
+            )}
           </main>
 
           {/* 右サイドバー */}

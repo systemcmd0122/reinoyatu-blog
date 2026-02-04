@@ -2,7 +2,7 @@ import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import BlogItem from "@/components/blog/BlogItem"
+import BlogListView from "@/components/blog/BlogListView"
 import { getUserBookmarks } from "@/actions/bookmark"
 
 // ユーザーのブックマーク一覧を表示するコンポーネント
@@ -45,11 +45,7 @@ const BookmarksList = async ({ userId }: { userId: string }) => {
           </Link>
         </div>
         
-        <div className="bg-card border border-border rounded-xl overflow-hidden divide-y divide-border shadow-sm">
-          {blogs.map((blog) => (
-            <BlogItem key={blog.id} blog={blog} />
-          ))}
-        </div>
+        <BlogListView blogs={blogs} />
       </div>
     </div>
   )

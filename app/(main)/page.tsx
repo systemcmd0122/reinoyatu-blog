@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import BlogItem from "@/components/blog/BlogItem"
+import BlogListView from "@/components/blog/BlogListView"
 import LandingPage from "@/components/landing/LandingPage"
 import { TrendingUp, Search, PenSquare, ChevronDown } from "lucide-react"
 import {
@@ -202,7 +202,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
             )}
 
             {/* タブナビゲーション */}
-            <div className="bg-card border border-border rounded-t-lg flex items-center px-1 h-12 mb-[-1px]">
+            <div className="bg-card border border-border rounded-t-lg flex items-center px-1 h-12 mb-4">
               <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-primary text-foreground font-bold px-6 hover:bg-transparent">
                 最新の投稿
               </Button>
@@ -211,12 +211,8 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
               </Button>
             </div>
 
-            {/* ブログ一覧フィード */}
-            <div className="bg-card border border-border rounded-b-lg overflow-hidden divide-y divide-border shadow-sm">
-              {blogsWithLikes.map((blog, index) => (
-                <BlogItem key={blog.id} blog={blog} priority={index < 6} />
-              ))}
-            </div>
+            {/* ブログ一覧 */}
+            <BlogListView blogs={blogsWithLikes} />
 
             {/* ページネーション */}
             {totalPages > 1 && (

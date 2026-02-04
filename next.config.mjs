@@ -2,7 +2,10 @@ import withPWAInit from "@ducanh2912/next-pwa";
 
 const withPWA = withPWAInit({
   dest: "public",
-  disable: process.env.NODE_ENV === "public",
+  // 開発時
+  disable: process.env.NODE_ENV === "development",
+  // 公開時
+  //disable: process.env.NODE_ENV === "public",
   register: true,
   skipWaiting: true,
   cacheOnFrontEndNav: true,

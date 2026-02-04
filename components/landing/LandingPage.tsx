@@ -3,7 +3,8 @@ import { createClient } from "@/utils/supabase/server"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PenLine, Globe, BookOpen, ArrowRight } from "lucide-react"
-import BlogItem from "@/components/blog/BlogItem"
+import CardItem from "@/components/blog/list-items/CardItem"
+import { BlogType } from "@/types"
 
 const LandingPage = async () => {
   const supabase = createClient()
@@ -23,6 +24,8 @@ const LandingPage = async () => {
     )
     .order("created_at", { ascending: false })
     .limit(3)
+
+  const blogs = (blogsData || []) as unknown as BlogType[]
 
   return (
     <div className="w-full">
@@ -110,8 +113,8 @@ const LandingPage = async () => {
               <p className="mt-4 text-lg text-muted-foreground">コミュニティからの新しい声を発見しよう</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {blogsData.map((blog) => (
-                <BlogItem key={blog.id} blog={blog} />
+              {blogs.map((blog) => (
+                <CardItem key={blog.id} blog={blog} />
               ))}
             </div>
           </div>
