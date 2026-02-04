@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { LayoutGrid, List, Rows, Settings2 } from "lucide-react"
+import { LayoutGrid, List, Rows, Settings2, Newspaper, Type } from "lucide-react"
 import { ViewMode } from "@/hooks/use-view-mode"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -33,7 +33,7 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
           onValueChange={(value) => onModeChange(value as ViewMode)}
           className="w-auto"
         >
-          <TabsList className="grid grid-cols-3 w-[120px] sm:w-[150px] h-9 p-1 bg-muted/50">
+          <TabsList className="grid grid-cols-5 w-[200px] sm:w-[250px] h-9 p-1 bg-muted/50">
             <Tooltip>
               <TooltipTrigger asChild>
                 <TabsTrigger value="card" className="h-7 px-0 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
@@ -59,6 +59,24 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
                 </TabsTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">コンパクト表示</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="magazine" className="h-7 px-0 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
+                  <Newspaper className="h-4 w-4" />
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">マガジン表示</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="text" className="h-7 px-0 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
+                  <Type className="h-4 w-4" />
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">テキスト表示</TooltipContent>
             </Tooltip>
           </TabsList>
         </Tabs>

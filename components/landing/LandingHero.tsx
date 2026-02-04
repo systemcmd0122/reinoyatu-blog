@@ -86,25 +86,52 @@ export const LandingHero = () => {
                   reinoyatu-blog.vercel.app
                 </div>
               </div>
-              <div className="aspect-[16/9] bg-card p-4 md:p-8">
-                <div className="flex flex-col gap-6 animate-pulse text-left">
-                  <div className="h-10 w-3/4 bg-muted rounded-lg" />
-                  <div className="flex gap-4">
-                    <div className="h-12 w-12 rounded-full bg-muted" />
-                    <div className="flex flex-col gap-2 flex-1">
-                      <div className="h-4 w-32 bg-muted rounded" />
-                      <div className="h-3 w-24 bg-muted rounded" />
+              <div className="aspect-[16/10] bg-background p-4 md:p-10">
+                <div className="max-w-4xl mx-auto space-y-12 text-left">
+                  {/* Mock Nav */}
+                  <div className="flex items-center justify-between mb-8 opacity-40">
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-6 rounded bg-primary" />
+                      <div className="h-4 w-24 bg-muted rounded" />
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="h-2 w-10 bg-muted rounded" />
+                      <div className="h-2 w-10 bg-muted rounded" />
+                      <div className="h-6 w-16 bg-muted rounded-full" />
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="h-4 w-full bg-muted rounded" />
-                    <div className="h-4 w-full bg-muted rounded" />
-                    <div className="h-4 w-5/6 bg-muted rounded" />
+
+                  {/* Mock Article Content */}
+                  <div className="space-y-6">
+                    <div className="flex flex-wrap gap-2">
+                      <div className="h-4 w-12 bg-primary/20 rounded-full" />
+                      <div className="h-4 w-16 bg-primary/20 rounded-full" />
+                    </div>
+                    <div className="space-y-3">
+                      <div className="h-10 w-full bg-foreground/10 rounded-xl" />
+                      <div className="h-10 w-2/3 bg-foreground/10 rounded-xl" />
+                    </div>
+                    <div className="flex items-center gap-4 py-4">
+                      <div className="h-12 w-12 rounded-2xl bg-muted" />
+                      <div className="space-y-2">
+                        <div className="h-3 w-32 bg-foreground/10 rounded" />
+                        <div className="h-2 w-24 bg-muted rounded" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 mt-4">
-                    <div className="h-32 bg-muted rounded-xl" />
-                    <div className="h-32 bg-muted rounded-xl" />
-                    <div className="h-32 bg-muted rounded-xl" />
+
+                  {/* Mock Cards */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3 p-4 border border-border rounded-2xl">
+                      <div className="aspect-video bg-muted rounded-xl" />
+                      <div className="h-3 w-full bg-foreground/5 rounded" />
+                      <div className="h-3 w-2/3 bg-foreground/5 rounded" />
+                    </div>
+                    <div className="space-y-3 p-4 border border-border rounded-2xl">
+                      <div className="aspect-video bg-muted rounded-xl" />
+                      <div className="h-3 w-full bg-foreground/5 rounded" />
+                      <div className="h-3 w-2/3 bg-foreground/5 rounded" />
+                    </div>
                   </div>
                 </div>
               </div>

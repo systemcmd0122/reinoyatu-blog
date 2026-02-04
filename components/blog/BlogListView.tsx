@@ -6,6 +6,8 @@ import ViewSwitcher from "./ViewSwitcher"
 import CardItem from "./list-items/CardItem"
 import ListItem from "./list-items/ListItem"
 import CompactItem from "./list-items/CompactItem"
+import MagazineItem from "./list-items/MagazineItem"
+import TextItem from "./list-items/TextItem"
 import { BlogType } from "@/types"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -99,11 +101,27 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs }) => {
             ))}
           </div>
         )
+      case "magazine":
+        return (
+          <div className="grid grid-cols-1 gap-12 py-4">
+            {processedBlogs.map((blog, index) => (
+              <MagazineItem key={blog.id} blog={blog} priority={index < 3} />
+            ))}
+          </div>
+        )
       case "compact":
         return (
           <div className="bg-card border border-border rounded-lg overflow-hidden divide-y divide-border shadow-sm">
             {processedBlogs.map((blog) => (
               <CompactItem key={blog.id} blog={blog} />
+            ))}
+          </div>
+        )
+      case "text":
+        return (
+          <div className="bg-card border border-border rounded-lg overflow-hidden divide-y divide-border shadow-sm">
+            {processedBlogs.map((blog) => (
+              <TextItem key={blog.id} blog={blog} />
             ))}
           </div>
         )
@@ -130,7 +148,10 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs }) => {
                !isMounted && "animate-pulse"
              )} />
              <h3 className="font-bold text-foreground">
-               {viewMode === 'card' ? 'ギャラリー' : viewMode === 'compact' ? 'コンパクト' : 'フィード'}
+               {viewMode === 'card' ? 'ギャラリー' :
+                viewMode === 'compact' ? 'コンパクト' :
+                viewMode === 'magazine' ? 'マガジン' :
+                viewMode === 'text' ? 'テキストのみ' : 'フィード'}
              </h3>
           </div>
 

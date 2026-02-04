@@ -63,7 +63,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const query = typeof q === "string" ? q : ""
   const title = query ? `"${query}" の検索結果 | 例のヤツ｜ブログ` : "例のヤツ｜ブログ"
   const description = "例のヤツを主催とした様々なことを投稿・共有するためのブログサイトです。"
-  const image = `${process.env.NEXT_PUBLIC_APP_URL || ""}/og-image.png`
+  const image = `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/og?title=${encodeURIComponent(title)}`
 
   return {
     title,
