@@ -385,13 +385,16 @@ export const getAllTags = async () => {
 
 // 記事を検索
 export const searchBlogs = async (query: string) => {
+  if (!query) return { blogs: [], error: null }
+
   try {
     const supabase = createClient()
     const { data, error } = await supabase
       .from("blogs")
       .select("id, title")
-      .ilike("title", `%${query}%`)
-      .limit(5)
+      .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
+      .order("created_at", { ascending: false })
+      .limit(8)
 
     if (error) {
       console.error("検索エラー:", error)

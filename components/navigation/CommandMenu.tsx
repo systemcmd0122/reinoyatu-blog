@@ -42,7 +42,7 @@ export function CommandMenu() {
   const [loading, setLoading] = React.useState(false)
   const debouncedQuery = useDebounce(query, 300)
   const router = useRouter()
-  const { setTheme } = useTheme()
+  const { setTheme, theme } = useTheme()
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -91,10 +91,14 @@ export function CommandMenu() {
           <span className="text-xs">⌘</span>K
         </kbd>
       </button>
-      <CommandDialog open={open} onOpenChange={(open) => {
-        setOpen(open)
-        if (!open) setQuery("")
-      }}>
+      <CommandDialog
+        open={open}
+        onOpenChange={(open) => {
+          setOpen(open)
+          if (!open) setQuery("")
+        }}
+        shouldFilter={false}
+      >
         <DialogTitle className="sr-only">コマンドメニュー</DialogTitle>
         <CommandInput
           placeholder="記事や機能を検索..."
@@ -102,62 +106,82 @@ export function CommandMenu() {
           onValueChange={setQuery}
         />
         <CommandList>
-          <CommandEmpty>{loading ? "検索中..." : "見つかりませんでした。"}</CommandEmpty>
+          {loading && <div className="p-4 text-sm text-center text-muted-foreground">検索中...</div>}
+          {!loading && query && blogs.length === 0 && (
+            <CommandEmpty>記事が見つかりませんでした。</CommandEmpty>
+          )}
 
           {blogs.length > 0 && (
             <CommandGroup heading="記事">
               {blogs.map((blog) => (
                 <CommandItem
                   key={blog.id}
+                  value={blog.id}
                   onSelect={() => runCommand(() => router.push(`/blog/${blog.id}`))}
                 >
                   <FileText className="mr-2 h-4 w-4" />
-                  <span>{blog.title}</span>
+                  <span className="truncate">{blog.title}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
           )}
 
-          <CommandGroup heading="ナビゲーション">
-            <CommandItem onSelect={() => runCommand(() => router.push("/"))}>
-              <Home className="mr-2 h-4 w-4" />
-              <span>ホーム</span>
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => router.push("/blog/new"))}>
-              <Plus className="mr-2 h-4 w-4" />
-              <span>記事を投稿する</span>
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => router.push("/bookmarks"))}>
-              <Bookmark className="mr-2 h-4 w-4" />
-              <span>ブックマーク</span>
-            </CommandItem>
-          </CommandGroup>
-          <CommandSeparator />
-          <CommandGroup heading="設定・ツール">
-            <CommandItem onSelect={() => runCommand(() => router.push("/settings/profile"))}>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>プロフィール設定</span>
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => router.push("/guide/markdown"))}>
-              <FileText className="mr-2 h-4 w-4" />
-              <span>マークダウンガイド</span>
-            </CommandItem>
-          </CommandGroup>
-          <CommandSeparator />
-          <CommandGroup heading="テーマ">
-            <CommandItem onSelect={() => runCommand(() => setTheme("light"))}>
-              <Sun className="mr-2 h-4 w-4" />
-              <span>ライトモード</span>
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => setTheme("dark"))}>
-              <Moon className="mr-2 h-4 w-4" />
-              <span>ダークモード</span>
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => setTheme("system"))}>
-              <Laptop className="mr-2 h-4 w-4" />
-              <span>システム設定に従う</span>
-            </CommandItem>
-          </CommandGroup>
+          {(!query || "ホーム".includes(query)) && (
+            <CommandGroup heading="ナビゲーション">
+              <CommandItem onSelect={() => runCommand(() => router.push("/"))}>
+                <Home className="mr-2 h-4 w-4" />
+                <span>ホーム</span>
+              </CommandItem>
+              <CommandItem onSelect={() => runCommand(() => router.push("/blog/new"))}>
+                <Plus className="mr-2 h-4 w-4" />
+                <span>記事を投稿する</span>
+              </CommandItem>
+              <CommandItem onSelect={() => runCommand(() => router.push("/bookmarks"))}>
+                <Bookmark className="mr-2 h-4 w-4" />
+                <span>ブックマーク</span>
+              </CommandItem>
+            </CommandGroup>
+          )}
+
+          {(!query || "プロフィール設定".includes(query) || "マークダウンガイド".includes(query)) && (
+            <>
+              <CommandSeparator />
+              <CommandGroup heading="設定・ツール">
+                {(!query || "プロフィール設定".includes(query)) && (
+                  <CommandItem onSelect={() => runCommand(() => router.push("/settings/profile"))}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>プロフィール設定</span>
+                  </CommandItem>
+                )}
+                {(!query || "マークダウンガイド".includes(query)) && (
+                  <CommandItem onSelect={() => runCommand(() => router.push("/guide/markdown"))}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    <span>マークダウンガイド</span>
+                  </CommandItem>
+                )}
+              </CommandGroup>
+            </>
+          )}
+
+          {!query && (
+            <>
+              <CommandSeparator />
+              <CommandGroup heading="テーマ">
+                <CommandItem onSelect={() => runCommand(() => setTheme("light"))}>
+                  <Sun className="mr-2 h-4 w-4" />
+                  <span>ライトモード</span>
+                </CommandItem>
+                <CommandItem onSelect={() => runCommand(() => setTheme("dark"))}>
+                  <Moon className="mr-2 h-4 w-4" />
+                  <span>ダークモード</span>
+                </CommandItem>
+                <CommandItem onSelect={() => runCommand(() => setTheme("system"))}>
+                  <Laptop className="mr-2 h-4 w-4" />
+                  <span>システム設定に従う</span>
+                </CommandItem>
+              </CommandGroup>
+            </>
+          )}
         </CommandList>
       </CommandDialog>
     </>
