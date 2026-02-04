@@ -10,10 +10,11 @@ import { ScrollArea } from './scroll-area';
 export interface TagInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
   value: string[];
   onChange: (tags: string[]) => void;
+  maxTags?: number;
 }
 
 const TagInput = forwardRef<HTMLInputElement, TagInputProps>(
-  ({ className, value, onChange, disabled, placeholder, ...props }, ref) => {
+  ({ className, value, onChange, disabled, placeholder, maxTags = 10, ...props }, ref) => {
     const [inputValue, setInputValue] = useState('');
     const [tags, setTags] = useState(value || []);
     const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -61,6 +62,11 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>(
     const addTag = (tag: string) => {
       const newTag = tag.trim();
       if (newTag && !tags.includes(newTag)) {
+        if (tags.length >= maxTags) {
+          setInputValue('');
+          setShowSuggestions(false);
+          return;
+        }
         const newTags = [...tags, newTag];
         setTags(newTags);
         onChange(newTags);
@@ -92,19 +98,20 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>(
       <div className="relative" ref={containerRef}>
       <div className={cn(
         "flex flex-wrap gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-within:ring-1 focus-within:ring-ring min-h-[42px]",
-        disabled && "cursor-not-allowed opacity-50",
+        (disabled || tags.length >= maxTags) && inputValue === '' && "cursor-not-allowed",
+        disabled && "opacity-50",
         className
       )}>
         {tags.map(tag => (
-          <Badge key={tag} variant="secondary" className="flex items-center gap-1.5 pl-2 pr-1 py-0.5">
-            <span className="text-sm">{tag}</span>
+          <Badge key={tag} variant="secondary" className="flex items-center gap-1.5 pl-2 pr-1 py-1 group/tag">
+            <span className="text-sm font-medium">{tag}</span>
             <button
               type="button"
               onClick={() => removeTag(tag)}
-              className="rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 opacity-60 group-hover/tag:opacity-100 transition-opacity"
               disabled={disabled}
             >
-              <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+              <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
             </button>
           </Badge>
         ))}
@@ -116,10 +123,16 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>(
           onKeyDown={handleKeyDown}
           onFocus={() => inputValue.trim() && setShowSuggestions(true)}
           placeholder={tags.length === 0 ? placeholder : ''}
-          className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground min-w-[100px]"
-          disabled={disabled}
+          className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground min-w-[120px]"
+          disabled={disabled || (tags.length >= maxTags && inputValue === '')}
           {...props}
         />
+        
+        {maxTags && (
+          <div className="absolute right-3 top-2.5 text-[10px] font-bold text-muted-foreground pointer-events-none">
+            {tags.length} / {maxTags}
+          </div>
+        )}
       </div>
       
       {showSuggestions && (

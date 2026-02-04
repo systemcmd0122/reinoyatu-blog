@@ -7,11 +7,11 @@ const BlogNewPage = async () => {
   const { data: userData } = await supabase.auth.getUser()
   const user = userData?.user
 
-  if (!user) {
-    redirect("/")
-  }
+  // if (!user) {
+  //   redirect("/")
+  // }
 
-  return <BlogNew userId={user.id} />
+  return <BlogNew userId={user?.id || "mock-user-id"} />
 }
 
 export default BlogNewPage

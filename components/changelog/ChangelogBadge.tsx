@@ -13,6 +13,10 @@ export const ChangelogBadge = ({ category, className }: ChangelogBadgeProps) => 
     Improvement: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 hover:bg-green-500/20",
     Fix: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20 hover:bg-orange-500/20",
     Breaking: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20 hover:bg-red-500/20",
+    Design: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 hover:bg-purple-500/20",
+    Performance: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20 hover:bg-cyan-500/20",
+    Security: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20 hover:bg-yellow-500/20",
+    Other: "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20 hover:bg-gray-500/20",
   }
 
   const labels: Record<ChangelogCategory, string> = {
@@ -20,6 +24,10 @@ export const ChangelogBadge = ({ category, className }: ChangelogBadgeProps) => 
     Improvement: "Improvement",
     Fix: "Fix",
     Breaking: "Breaking",
+    Design: "Design",
+    Performance: "Performance",
+    Security: "Security",
+    Other: "Other",
   }
 
   return (
