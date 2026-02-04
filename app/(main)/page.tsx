@@ -58,8 +58,10 @@ const MainPage = async ({ searchParams }: { searchParams: Promise<{ [key: string
   return <BlogContent searchParams={searchParams} />
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  const title = "例のヤツ｜ブログ"
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }): Promise<Metadata> {
+  const { q } = await searchParams
+  const query = typeof q === "string" ? q : ""
+  const title = query ? `"${query}" の検索結果 | 例のヤツ｜ブログ` : "例のヤツ｜ブログ"
   const description = "例のヤツを主催とした様々なことを投稿・共有するためのブログサイトです。"
   const image = `${process.env.NEXT_PUBLIC_APP_URL || ""}/og-image.png`
 
@@ -87,26 +89,34 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
   const supabase = createClient()
   const resolvedSearchParams = await searchParams
   const page = typeof resolvedSearchParams.page === "string" ? Number(resolvedSearchParams.page) : 1
+  const queryParam = typeof resolvedSearchParams.q === "string" ? resolvedSearchParams.q : ""
+  
   const start = (page - 1) * DEFAULT_PAGE_SIZE
   const end = start + DEFAULT_PAGE_SIZE - 1
   
-  const [{ data: blogsData, error, count }, { data: tags, error: tagsError }] = await Promise.all([
-    supabase
-      .from("blogs")
-      .select(
-        `
-        *,
-        profiles (
-          id,
-          name,
-          avatar_url
-        ),
-        tags (
-          name
-        )
-      `,
-        { count: "exact" }
+  let supabaseQuery = supabase
+    .from("blogs")
+    .select(
+      `
+      *,
+      profiles (
+        id,
+        name,
+        avatar_url
+      ),
+      tags (
+        name
       )
+    `,
+      { count: "exact" }
+    )
+
+  if (queryParam) {
+    supabaseQuery = supabaseQuery.or(`title.ilike.%${queryParam}%,content.ilike.%${queryParam}%`)
+  }
+
+  const [{ data: blogsData, error, count }, { data: tags, error: tagsError }] = await Promise.all([
+    supabaseQuery
       .order("created_at", { ascending: false })
       .range(start, end),
     supabase.rpc('get_tags_with_counts')
@@ -157,10 +167,12 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-4xl font-bold tracking-tight mb-2">
-              最新のブログ記事
+              {queryParam ? `"${queryParam}" の検索結果` : "最新のブログ記事"}
             </h1>
             <p className="text-muted-foreground">
-              {totalCount}件の記事が投稿されています
+              {queryParam 
+                ? `${totalCount}件の記事が見つかりました` 
+                : `${totalCount}件の記事が投稿されています`}
             </p>
           </div>
           
@@ -261,7 +273,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
               <PaginationContent>
                 {page > 1 && (
                   <PaginationItem>
-                    <PaginationPrevious href={{ query: { page: page - 1 } }} />
+                    <PaginationPrevious href={{ query: { ...resolvedSearchParams, page: page - 1 } }} />
                   </PaginationItem>
                 )}
                 {getPagination(page, totalPages).map((item, index) => (
@@ -270,7 +282,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                       <PaginationEllipsis />
                     ) : (
                       <PaginationLink 
-                        href={{ query: { page: item } }} 
+                        href={{ query: { ...resolvedSearchParams, page: item } }} 
                         isActive={page === item}
                       >
                         {item}
@@ -280,7 +292,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                 ))}
                 {page < totalPages && (
                   <PaginationItem>
-                    <PaginationNext href={{ query: { page: page + 1 } }} />
+                    <PaginationNext href={{ query: { ...resolvedSearchParams, page: page + 1 } }} />
                   </PaginationItem>
                 )}
               </PaginationContent>
