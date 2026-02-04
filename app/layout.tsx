@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/server"
 import Navigation from "@/components/navigation/Navigation"
 import Link from "next/link"
 import ToastProvider from "@/components/providers/ToastProvider"
+import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/providers/ThemeProvider"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
@@ -106,6 +107,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
           disableTransitionOnChange
         >
           <ToastProvider />
+          <Toaster richColors position="top-right" />
 
           <div className="flex min-h-screen flex-col">
             <Navigation user={user} />

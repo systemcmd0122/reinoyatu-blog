@@ -28,7 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Sheet,
@@ -130,103 +130,6 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
     }
   }
 
-  const DesktopMenu = () => (
-    <div className="hidden md:flex items-center space-x-4">
-      <ThemeToggle />
-      <form onSubmit={handleSearch} className="relative w-64">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="記事を検索..."
-          className="pl-9 h-9 bg-muted/50 border-none focus-visible:ring-1"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </form>
-
-      {user ? (
-        <>
-          <Button variant="ghost" asChild>
-            <Link href="/guide/markdown" className="flex items-center space-x-2">
-              <FileText className="h-4 w-4" />
-              <span>マークダウンガイド</span>
-            </Link>
-          </Button>
-
-          <Button variant="ghost" asChild>
-            <Link href="/blog/new" className="flex items-center space-x-2">
-              <PenSquare className="h-4 w-4" />
-              <span>投稿する</span>
-            </Link>
-          </Button>
-
-          <Button variant="ghost" asChild>
-            <Link href="/bookmarks" className="flex items-center space-x-2">
-              <Bookmark className="h-4 w-4" />
-              <span>ブックマーク</span>
-            </Link>
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage
-                    src={profile?.avatar_url || "/default.png"}
-                    alt={profile?.name || "User"}
-                  />
-                  <AvatarFallback>
-                    {profile?.name?.charAt(0).toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {profile?.name || "ユーザー"}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user.email}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                {userNavigationItems.map((item) => (
-                  <DropdownMenuItem key={item.label} asChild>
-                    <Link href={item.href(user.id)}>
-                      <item.icon className="mr-2 h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setIsLogoutDialogOpen(true)}
-                className="text-red-500 focus:text-red-500 focus:bg-red-50/50"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>ログアウト</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </>
-      ) : (
-        <>
-          <Button variant="ghost" asChild>
-            <Link href="/login">ログイン</Link>
-          </Button>
-          <Button variant="default" asChild>
-            <Link href="/signup">新規登録</Link>
-          </Button>
-        </>
-      )}
-    </div>
-  )
-
   const mobileNavItems = [
     { href: "/", icon: House, label: "ホーム" },
     { href: "/guide/markdown", icon: FileText, label: "マークダウンガイド" },
@@ -236,136 +139,246 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
     { href: "/privacy", icon: Shield, label: "プライバシーポリシー" },
   ]
 
-  const MobileMenu = () => (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu className="h-6 w-6" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-full max-w-xs p-0 bg-background border-l border-border">
-        <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
-            <ThemeToggle />
-            <form onSubmit={handleSearch} className="relative flex-1 ml-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+  return (
+    <>
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full">
+        <div className="max-w-screen-xl mx-auto flex h-14 items-center justify-between px-4">
+          <div className="flex items-center gap-4 flex-1">
+            <Link
+              href="/"
+              className="flex items-center space-x-2 hover:opacity-90 transition-opacity flex-shrink-0"
+            >
+              <div className="bg-primary text-primary-foreground p-1.5 rounded-md font-black text-xl leading-none shadow-sm">
+                RY
+              </div>
+              <span className="font-black text-lg md:text-xl tracking-tighter hidden sm:inline-block text-foreground">
+                例のヤツ
+              </span>
+            </Link>
+
+            <form onSubmit={handleSearch} className="hidden md:flex relative max-w-sm w-full group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 type="search"
-                placeholder="記事を検索..."
-                className="pl-9 bg-background border-border h-9 text-sm focus-visible:ring-1 focus-visible:ring-primary"
+                placeholder="キーワードで検索"
+                className="pl-9 h-9 bg-muted/40 border-none focus-visible:ring-2 focus-visible:ring-primary/20 focus:bg-background transition-all rounded-md"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </form>
           </div>
-          {user ? (
-            <>
-              <div className="p-4 border-b border-border">
-                <Link href={`/profile/${user.id}`} className="block">
-                  <SheetClose asChild>
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-12 w-12">
+
+          <div className="flex items-center gap-1 md:gap-3">
+            <div className="hidden md:flex items-center gap-1">
+              <Button variant="ghost" size="sm" asChild className="text-foreground font-bold hover:bg-muted">
+                <Link href="/">ホーム</Link>
+              </Button>
+              
+              {user && (
+                <>
+                  <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
+                    <Link href="/bookmarks" title="ブックマーク">
+                      <Bookmark className="h-5 w-5" />
+                    </Link>
+                  </Button>
+                </>
+              )}
+              <ThemeToggle />
+            </div>
+
+            {user ? (
+              <div className="flex items-center gap-2">
+                <Button variant="default" size="sm" asChild className="hidden sm:flex gap-2 rounded-md px-4 font-bold shadow-sm">
+                  <Link href="/blog/new">
+                    <PenSquare className="h-4 w-4" />
+                    <span>投稿する</span>
+                  </Link>
+                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-offset-background transition-colors hover:bg-muted">
+                      <Avatar className="h-9 w-9 border border-border">
                         <AvatarImage
                           src={profile?.avatar_url || "/default.png"}
                           alt={profile?.name || "User"}
                         />
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-primary/5 text-primary text-xs">
                           {profile?.name?.charAt(0).toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex flex-col truncate">
-                        <span className="font-semibold truncate">
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-semibold leading-none">
                           {profile?.name || "ユーザー"}
-                        </span>
-                        <span className="text-sm text-muted-foreground truncate">
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground truncate">
                           {user.email}
-                        </span>
+                        </p>
                       </div>
-                    </div>
-                  </SheetClose>
-                </Link>
-              </div>
-              <nav className="flex-1 p-4 space-y-2">
-                {mobileNavItems.map((item) => (
-                  <SheetClose asChild key={item.label}>
-                    <Link
-                      href={item.href}
-                      className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/profile/${user.id}`} className="cursor-pointer">
+                          <UserIcon className="mr-2 h-4 w-4" />
+                          <span>プロフィール</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/settings/profile" className="cursor-pointer">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>設定</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="md:hidden">
+                        <Link href="/bookmarks" className="cursor-pointer">
+                          <Bookmark className="mr-2 h-4 w-4" />
+                          <span>ブックマーク</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => setIsLogoutDialogOpen(true)}
+                      className="text-destructive focus:text-destructive cursor-pointer"
                     >
-                      <item.icon className="h-5 w-5 text-muted-foreground" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SheetClose>
-                ))}
-              </nav>
-              <div className="p-4 border-t border-border mt-auto bg-muted/10">
-                <SheetClose asChild>
-                  <button
-                    onClick={() => setIsLogoutDialogOpen(true)}
-                    className="flex items-center w-full space-x-3 px-3 py-2 rounded-md text-base font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    <span>ログアウト</span>
-                  </button>
-                </SheetClose>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>ログアウト</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-            </>
-          ) : (
-            <div className="flex flex-col p-4 space-y-2 mt-6">
-              <SheetClose asChild>
-                <Link
-                  href="/login"
-                  className="px-4 py-2.5 rounded-md text-center font-medium text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                  ログイン
-                </Link>
-              </SheetClose>
-              <SheetClose asChild>
-                <Link
-                  href="/signup"
-                  className="px-4 py-2.5 rounded-md text-center font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                >
-                  新規登録
-                </Link>
-              </SheetClose>
-              <SheetClose asChild>
-                <Link
-                  href="/privacy"
-                  className="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-md hover:bg-accent text-foreground/80 hover:text-accent-foreground transition-colors"
-                >
-                  <Shield className="h-4 w-4" />
-                  <span>プライバシーポリシー</span>
-                </Link>
-              </SheetClose>
-            </div>
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
-  )
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex">
+                  <Link href="/login">ログイン</Link>
+                </Button>
+                <Button size="sm" asChild className="rounded-full px-4 shadow-sm">
+                  <Link href="/signup">はじめる</Link>
+                </Button>
+              </div>
+            )}
 
-  return (
-    <>
-      <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="mx-auto max-w-screen-lg px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link
-              href="/"
-              className="font-bold text-xl hover:opacity-80 transition-opacity"
-            >
-              例のヤツ｜ブログ
-            </Link>
-
-            <div className="flex items-center">
-              <DesktopMenu />
-              <MobileMenu />
-            </div>
+            {/* Mobile Menu Trigger */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden h-10 w-10">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full max-w-xs p-0 bg-background border-l border-border">
+                <div className="flex flex-col h-full">
+                  <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
+                    <ThemeToggle />
+                    <form onSubmit={handleSearch} className="relative flex-1 ml-4">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="search"
+                        placeholder="記事を検索..."
+                        className="pl-9 bg-background border-border h-10 text-sm focus-visible:ring-1 focus-visible:ring-primary"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </form>
+                  </div>
+                  {user ? (
+                    <>
+                      <div className="p-6 border-b border-border bg-muted/10">
+                        <Link href={`/profile/${user.id}`} className="block group">
+                          <SheetClose asChild>
+                            <div className="flex items-center space-x-4">
+                              <Avatar className="h-14 w-14 border-2 border-primary/20 transition-all group-hover:border-primary">
+                                <AvatarImage
+                                  src={profile?.avatar_url || "/default.png"}
+                                  alt={profile?.name || "User"}
+                                />
+                                <AvatarFallback>
+                                  {profile?.name?.charAt(0).toUpperCase() || "U"}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-col truncate">
+                                <span className="font-bold text-lg truncate group-hover:text-primary transition-colors">
+                                  {profile?.name || "ユーザー"}
+                                </span>
+                                <span className="text-sm text-muted-foreground truncate">
+                                  {user.email}
+                                </span>
+                              </div>
+                            </div>
+                          </SheetClose>
+                        </Link>
+                      </div>
+                      <nav className="flex-1 p-4 space-y-2">
+                        {mobileNavItems.map((item) => (
+                          <SheetClose asChild key={item.label}>
+                            <Link
+                              href={item.href}
+                              className="flex items-center space-x-4 px-4 py-3 rounded-xl text-base font-medium text-foreground/80 hover:bg-muted hover:text-foreground transition-all active:scale-95"
+                            >
+                              <div className="p-2 bg-muted-foreground/10 rounded-lg">
+                                <item.icon className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                              <span>{item.label}</span>
+                            </Link>
+                          </SheetClose>
+                        ))}
+                      </nav>
+                      <div className="p-4 border-t border-border mt-auto bg-muted/5">
+                        <SheetClose asChild>
+                          <button
+                            onClick={() => setIsLogoutDialogOpen(true)}
+                            className="flex items-center w-full space-x-4 px-4 py-3 rounded-xl text-base font-medium text-destructive hover:bg-destructive/10 transition-all active:scale-95"
+                          >
+                            <div className="p-2 bg-destructive/10 rounded-lg">
+                              <LogOut className="h-5 w-5" />
+                            </div>
+                            <span>ログアウト</span>
+                          </button>
+                        </SheetClose>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col p-6 space-y-4">
+                      <SheetClose asChild>
+                        <Link
+                          href="/login"
+                          className="flex items-center justify-center h-12 rounded-xl font-bold border border-border hover:bg-muted transition-all active:scale-95"
+                        >
+                          ログイン
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link
+                          href="/signup"
+                          className="flex items-center justify-center h-12 rounded-xl font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-md transition-all active:scale-95"
+                        >
+                          今すぐはじめる
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link
+                          href="/privacy"
+                          className="flex items-center justify-center space-x-2 py-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Shield className="h-4 w-4" />
+                          <span>プライバシーポリシー</span>
+                        </Link>
+                      </SheetClose>
+                    </div>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>
 
       <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-        <AlertDialogContent className="bg-background">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>ログアウトしますか？</AlertDialogTitle>
             <AlertDialogDescription>
@@ -374,7 +387,10 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogout} className="bg-red-500 hover:bg-red-600">
+            <AlertDialogAction 
+              onClick={handleLogout} 
+              className={buttonVariants({ variant: "destructive" })}
+            >
               ログアウト
             </AlertDialogAction>
           </AlertDialogFooter>

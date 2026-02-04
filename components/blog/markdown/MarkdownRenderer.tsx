@@ -193,12 +193,13 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
     <div className={`markdown-content prose prose-zinc dark:prose-invert max-w-none ${className}`}>
       <style jsx global>{`
         .markdown-content {
-          line-height: 1.8;
-          font-size: 1rem;
+          line-height: 1.9;
+          font-size: 1.0625rem;
+          color: hsl(var(--foreground) / 0.9);
         }
 
         .markdown-content p {
-          margin: 1rem 0;
+          margin: 1.5rem 0;
         }
 
         .markdown-content h1, 
@@ -207,70 +208,92 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         .markdown-content h4, 
         .markdown-content h5, 
         .markdown-content h6 {
-          margin: 1.5rem 0 1rem;
-          font-weight: 600;
-          line-height: 1.3;
+          margin: 2.5rem 0 1.25rem;
+          font-weight: 800;
+          line-height: 1.4;
+          color: hsl(var(--foreground));
         }
 
-        .markdown-content h1 { font-size: 2rem; }
-        .markdown-content h2 { font-size: 1.5rem; }
-        .markdown-content h3 { font-size: 1.25rem; }
+        .markdown-content h1 { font-size: 2.25rem; border-bottom: 2px solid hsl(var(--border)); padding-bottom: 0.5rem; }
+        .markdown-content h2 { font-size: 1.75rem; border-bottom: 1px solid hsl(var(--border)); padding-bottom: 0.4rem; }
+        .markdown-content h3 { font-size: 1.4rem; }
 
         .markdown-content ul, 
         .markdown-content ol {
-          margin: 1rem 0;
-          padding-left: 1.5rem;
+          margin: 1.5rem 0;
+          padding-left: 1.75rem;
         }
 
         .markdown-content li {
-          margin: 0.25rem 0;
+          margin: 0.5rem 0;
         }
 
-        .markdown-content code {
+        .markdown-content code:not(pre code) {
           padding: 0.2rem 0.4rem;
-          border-radius: 0.25rem;
+          border-radius: 0.375rem;
           background-color: hsl(var(--muted));
           color: hsl(var(--foreground));
-          font-size: 0.875rem;
-          font-family: monospace;
+          font-size: 0.9em;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+          border: 1px solid hsl(var(--border) / 0.5);
         }
 
         .markdown-content blockquote {
-          margin: 1rem 0;
-          padding: 0.5rem 1rem;
-          border-left: 4px solid hsl(var(--primary));
-          background-color: hsl(var(--muted) / 0.5);
-          color: hsl(var(--foreground) / 0.9);
+          margin: 2rem 0;
+          padding: 1rem 1.5rem;
+          border-left: 4px solid hsl(var(--muted-foreground) / 0.3);
+          background-color: hsl(var(--muted) / 0.3);
+          color: hsl(var(--muted-foreground));
+          border-radius: 0 0.5rem 0.5rem 0;
+          font-style: normal;
         }
 
         .markdown-content table {
           width: 100%;
-          margin: 1rem 0;
-          border-collapse: collapse;
+          margin: 2rem 0;
+          border-collapse: separate;
+          border-spacing: 0;
+          border: 1px solid hsl(var(--border));
+          border-radius: 0.75rem;
+          overflow: hidden;
         }
 
         .markdown-content table th,
         .markdown-content table td {
-          padding: 0.5rem;
-          border: 1px solid hsl(var(--border));
+          padding: 0.75rem 1rem;
+          border-bottom: 1px solid hsl(var(--border));
+          border-right: 1px solid hsl(var(--border));
+        }
+
+        .markdown-content table th:last-child,
+        .markdown-content table td:last-child {
+          border-right: 0;
+        }
+
+        .markdown-content table tr:last-child td {
+          border-bottom: 0;
         }
 
         .markdown-content table th {
-          background-color: hsl(var(--muted));
-          font-weight: 600;
+          background-color: hsl(var(--muted) / 0.5);
+          font-weight: 700;
+          text-align: left;
         }
 
         .markdown-content hr {
-          margin: 2rem 0;
+          margin: 3rem 0;
           border: 0;
-          border-top: 1px solid hsl(var(--border));
+          height: 1px;
+          background-color: hsl(var(--border));
         }
 
         .markdown-content img {
           max-width: 100%;
           height: auto;
-          border-radius: 0.5rem;
-          margin: 1rem 0;
+          border-radius: 0.75rem;
+          margin: 2rem auto;
+          display: block;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
       `}</style>
       
@@ -324,23 +347,32 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             )
           },
 
-          h1: ({ children }) => (
-            <h1 className="text-3xl font-bold my-6 pb-2 border-b-2">
-              {children}
-            </h1>
-          ),
+          h1: ({ children }) => {
+            const id = typeof children === 'string' ? children.replace(/\s+/g, '-').toLowerCase() : ''
+            return (
+              <h1 id={id} className="text-3xl font-bold my-6 pb-2 border-b-2 scroll-mt-20">
+                {children}
+              </h1>
+            )
+          },
 
-          h2: ({ children }) => (
-            <h2 className="text-2xl font-semibold my-5 pb-2 border-b">
-              {children}
-            </h2>
-          ),
+          h2: ({ children }) => {
+            const id = typeof children === 'string' ? children.replace(/\s+/g, '-').toLowerCase() : ''
+            return (
+              <h2 id={id} className="text-2xl font-semibold my-5 pb-2 border-b scroll-mt-20">
+                {children}
+              </h2>
+            )
+          },
 
-          h3: ({ children }) => (
-            <h3 className="text-xl font-semibold my-4">
-              {children}
-            </h3>
-          ),
+          h3: ({ children }) => {
+            const id = typeof children === 'string' ? children.replace(/\s+/g, '-').toLowerCase() : ''
+            return (
+              <h3 id={id} className="text-xl font-semibold my-4 scroll-mt-20">
+                {children}
+              </h3>
+            )
+          },
 
           p: ({ children }) => {
             const processChildren = (nodes: React.ReactNode): React.ReactNode => {

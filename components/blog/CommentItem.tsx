@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Edit, Trash2, Reply, Loader2, Send, ChevronDown, ChevronUp, Smile } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
@@ -87,6 +87,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const replyCount = replies.length
   const visibleReplies = showAllReplies ? replies : replies.slice(0, maxVisibleReplies)
   const hasMoreReplies = replyCount > maxVisibleReplies
+
+  useEffect(() => {
+    setReactions(comment.reactions || [])
+  }, [comment.reactions])
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -418,7 +422,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                       <AlertDialogAction 
                         onClick={handleDelete}
                         disabled={isDeleteLoading}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        className={buttonVariants({ variant: "destructive" })}
                       >
                         {isDeleteLoading ? (
                           <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> 削除中</>

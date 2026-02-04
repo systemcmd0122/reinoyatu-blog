@@ -1,20 +1,13 @@
 "use client"
 
-import React, { useState } from "react"
+import React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Card } from "@/components/ui/card"
-import { formatJST } from "@/utils/date"
+import { formatDistanceToNow } from "date-fns"
+import { ja } from "date-fns/locale"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import { Tag } from "lucide-react"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { Heart } from "lucide-react"
 
 interface BlogItemProps {
   blog: {
@@ -23,6 +16,7 @@ interface BlogItemProps {
     content: string
     image_url: string | null
     updated_at: string
+    likes_count?: number
     profiles: {
       id: string
       name: string
@@ -33,10 +27,8 @@ interface BlogItemProps {
   priority?: boolean
 }
 
-const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
+const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
   const router = useRouter()
-  const [imageLoaded, setImageLoaded] = useState(false)
-  const [showAllTags, setShowAllTags] = useState(false)
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -50,127 +42,89 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
     router.push(`/tags/${encodeURIComponent(tagName)}`)
   }
 
-  const displayedTags = showAllTags ? blog.tags : blog.tags?.slice(0, 2)
-  const hasMoreTags = blog.tags && blog.tags.length > 2
+  const relativeTime = formatDistanceToNow(new Date(blog.updated_at), {
+    addSuffix: true,
+    locale: ja,
+  })
 
   return (
-    <Link href={`/blog/${blog.id}`} className="block group">
-      <Card className={cn(
-        "relative w-full h-full overflow-hidden bg-card",
-        "border border-border/50 transition-all duration-300 ease-in-out",
-        "hover:border-primary/30 hover:shadow-xl hover:-translate-y-1",
-        "rounded-2xl"
-      )}>
-        {/* カード画像部分 */}
-        <div className="relative aspect-[4/3] w-full overflow-hidden">
-          <Image
-            src={blog.image_url || "/noImage.png"}
-            alt={blog.title}
-            fill
-            className={cn(
-              "object-cover transition-all duration-700 ease-in-out",
-              "group-hover:scale-110",
-              !imageLoaded && "blur-xl scale-110",
-              imageLoaded && "blur-0 scale-100"
-            )}
-            priority={priority}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            onLoad={() => setImageLoaded(true)}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+    <div className="group block bg-card hover:bg-muted/30 transition-colors duration-200">
+      <div className="p-4 sm:p-6 flex gap-4 items-start">
+        {/* Author Avatar */}
+        <div 
+          className="flex-shrink-0 cursor-pointer" 
+          onClick={handleAuthorClick}
+        >
+          <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden border border-border">
+            <Image
+              src={blog.profiles?.avatar_url || "/default.png"}
+              alt={blog.profiles?.name || "Unknown User"}
+              fill
+              className="object-cover"
+            />
+          </div>
         </div>
 
-        {/* コンテンツ部分 */}
-        <div className="absolute inset-0 flex flex-col justify-end p-5 text-white">
-          {/* タグ表示エリア - コンパクト化 */}
+        {/* Content */}
+        <div className="flex-1 min-w-0 space-y-1 sm:space-y-2">
+          {/* Author info and date */}
+          <div className="flex items-center text-xs sm:text-sm text-muted-foreground gap-2 overflow-hidden">
+            <span 
+              className="font-medium text-foreground/80 hover:text-primary transition-colors cursor-pointer truncate max-w-[120px]"
+              onClick={handleAuthorClick}
+            >
+              @{blog.profiles?.name || "unknown"}
+            </span>
+            <span>が{relativeTime}に更新</span>
+          </div>
+
+          {/* Title */}
+          <Link href={`/blog/${blog.id}`} className="block">
+            <h2 className={cn(
+              "text-lg sm:text-xl font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight",
+              "line-clamp-2"
+            )}>
+              {blog.title}
+            </h2>
+          </Link>
+
+          {/* Tags */}
           {blog.tags && blog.tags.length > 0 && (
-            <div className="mb-auto pt-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div 
-                      className="inline-flex items-center gap-1.5 bg-black/30 backdrop-blur-md rounded-full px-3 py-1.5 cursor-pointer hover:bg-black/40 transition-colors"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        setShowAllTags(!showAllTags)
-                      }}
-                    >
-                      <Tag className="h-3 w-3" />
-                      <span className="text-xs font-medium">
-                        {blog.tags.length}
-                      </span>
-                      {displayedTags?.slice(0, 1).map(tag => (
-                        <span key={tag.name} className="text-xs">
-                          {tag.name}
-                        </span>
-                      ))}
-                      {hasMoreTags && !showAllTags && (
-                        <span className="text-xs opacity-75">+{blog.tags.length - 1}</span>
-                      )}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent 
-                    side="top" 
-                    className="max-w-xs p-3 bg-popover text-popover-foreground border-border"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex flex-wrap gap-1.5">
-                      {blog.tags.map(tag => (
-                        <Badge 
-                          key={tag.name} 
-                          variant="secondary"
-                          className="cursor-pointer hover:bg-primary/80 transition-colors text-xs"
-                          onClick={(e) => handleTagClick(e, tag.name)}
-                        >
-                          #{tag.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+            <div className="flex flex-wrap gap-x-2 gap-y-1 pt-1">
+              {blog.tags.map((tag) => (
+                <span
+                  key={tag.name}
+                  onClick={(e) => handleTagClick(e, tag.name)}
+                  className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-muted/50 px-2 py-0.5 rounded"
+                >
+                  #{tag.name}
+                </span>
+              ))}
             </div>
           )}
 
-          {/* タイトルと著者 */}
-          <div>
-            <h3 className={cn(
-              "text-lg font-bold text-white mb-2",
-              "line-clamp-2 leading-tight tracking-tight",
-              "drop-shadow-md"
-            )}>
-              {blog.title}
-            </h3>
-            
-            <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/10">
-              <div 
-                className="flex items-center gap-2 group/author transition-opacity duration-200 hover:opacity-80"
-                onClick={handleAuthorClick}
-                title={`${blog.profiles?.name || "Unknown User"}のプロフィールを見る`}
-              >
-                <div className="relative h-7 w-7 overflow-hidden rounded-full border border-white/20">
-                  <Image
-                    src={blog.profiles?.avatar_url || "/default.png"}
-                    alt={blog.profiles?.name || "Unknown User"}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="text-xs">
-                  <div className="font-medium text-white/90 drop-shadow-sm">
-                    {blog.profiles?.name || "Unknown User"}
-                  </div>
-                  <div className="text-white/70">
-                    {formatJST(blog.updated_at)}
-                  </div>
-                </div>
-              </div>
+          {/* Footer - Likes */}
+          <div className="flex items-center gap-4 pt-2">
+            <div className="flex items-center gap-1.5 text-muted-foreground text-xs sm:text-sm">
+              <Heart className="h-4 w-4 fill-none" />
+              <span>{blog.likes_count || 0}</span>
             </div>
           </div>
         </div>
-      </Card>
-    </Link>
+
+        {/* Optional Thumbnail */}
+        {blog.image_url && (
+          <div className="hidden sm:block flex-shrink-0 relative h-20 w-32 rounded-lg overflow-hidden border border-border shadow-sm">
+            <Image
+              src={blog.image_url}
+              alt={blog.title}
+              fill
+              className="object-cover"
+            />
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
