@@ -60,6 +60,10 @@ export const metadata: Metadata = {
     ],
   },
 
+  icons: {
+    apple: "/icons/icon-192x192.png",
+  },
+
   twitter: {
     card: "summary_large_image",
     title: siteConfig.title,
@@ -76,6 +80,11 @@ export const metadata: Metadata = {
     "discord:description": siteConfig.description,
     "discord:image": siteConfig.ogImage,
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: siteConfig.title,
+  },
 }
 
 export const viewport: Viewport = {
@@ -83,6 +92,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 }
 
 interface RootLayoutProps {
