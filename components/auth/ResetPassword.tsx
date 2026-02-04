@@ -18,7 +18,7 @@ import { Loader2 } from "lucide-react"
 import { ResetPasswordSchema } from "@/schemas"
 import { resetPassword } from "@/actions/auth"
 import { useRouter } from "next/navigation"
-import toast from "react-hot-toast"
+import { toast } from "sonner"
 import FormError from "@/components/auth/FormError"
 
 // パスワード再設定

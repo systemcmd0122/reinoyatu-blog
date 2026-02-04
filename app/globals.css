@@ -72,6 +72,73 @@
   }
 }
 
+/* Typography and Markdown refinements */
+.prose {
+  max-width: none;
+  line-height: 1.8;
+}
+
+.prose h1, .prose h2, .prose h3 {
+  @apply font-black tracking-tight text-foreground;
+  scroll-margin-top: 5rem;
+}
+
+.prose h1 {
+  @apply border-b-2 border-border pb-2 mb-8;
+}
+
+.prose h2 {
+  @apply border-b border-border pb-2 mt-12 mb-6;
+}
+
+.prose p {
+  @apply leading-relaxed mb-6 text-foreground/90;
+}
+
+.prose a {
+  @apply text-primary no-underline hover:underline font-bold transition-all;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-primary/40 bg-muted/30 px-6 py-1 italic rounded-r-lg my-8 text-muted-foreground;
+}
+
+.prose code {
+  @apply bg-muted px-1.5 py-0.5 rounded font-mono text-sm font-medium border border-border/50 before:content-none after:content-none;
+}
+
+.prose pre {
+  @apply rounded-xl border border-border bg-[#1e1e1e] p-0 overflow-hidden my-8 shadow-lg;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0 border-none text-sm leading-relaxed;
+}
+
+.prose img {
+  @apply rounded-xl border border-border shadow-md my-10 mx-auto;
+}
+
+.prose table {
+  @apply border border-border rounded-lg overflow-hidden my-8;
+}
+
+.prose thead {
+  @apply bg-muted/50;
+}
+
+.prose th {
+  @apply px-4 py-3 text-left font-bold border-b border-border;
+}
+
+.prose td {
+  @apply px-4 py-3 border-b border-border border-r last:border-r-0;
+}
+
+.prose tr:last-child td {
+  @apply border-b-0;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

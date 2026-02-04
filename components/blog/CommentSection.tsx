@@ -99,6 +99,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         async (payload) => {
           if (payload.eventType === 'INSERT') {
             const newComment = payload.new as any
+
             // プロフィール情報を取得
             const { data: profile } = await supabase
               .from('profiles')
@@ -142,13 +143,18 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           const reaction = (payload.new || payload.old) as any
           const commentId = reaction.comment_id
           
-          // そのコメントが今のブログに含まれているか確認
-          if (comments.some(c => c.id === commentId) || true) { // 簡易化のため常にリフェッチを試みる
-             const { reactions } = await getCommentReactions(commentId)
-             setComments(prev => prev.map(c => 
-               c.id === commentId ? { ...c, reactions: reactions || [] } : c
-             ))
-          }
+          // コメントのリアクションを最新状態に更新
+          const { reactions } = await getCommentReactions(commentId)
+
+          setComments(prev => {
+            // 対象のコメントが現在のリストに存在するか確認
+            const exists = prev.some(c => c.id === commentId)
+            if (!exists) return prev
+
+            return prev.map(c =>
+              c.id === commentId ? { ...c, reactions: reactions || [] } : c
+            )
+          })
         }
       )
       .subscribe()
@@ -156,38 +162,44 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [blogId, supabase, comments])
+  }, [blogId, supabase]) // dependencyからcommentsを除去して安定化
 
-  // コメントの取得
+  // コメントとリアクションの初期取得・同期
   useEffect(() => {
-    const fetchComments = async () => {
-      if (initialComments.length === 0) {
-        try {
+    const fetchCommentsAndReactions = async () => {
+      try {
+        let baseComments = initialComments;
+
+        // initialCommentsがない場合のみコメント本体を取得
+        if (initialComments.length === 0) {
           const { comments: fetchedComments, error } = await getBlogComments(blogId)
           if (error) {
             setError(error)
             return
           }
-          
-          // コメントごとにリアクション情報を取得
-          const commentsWithReactions = await Promise.all(
-            fetchedComments.map(async (comment: { id: string }) => {
-              const { reactions } = await getCommentReactions(comment.id)
-              return {
-                ...comment,
-                reactions: reactions || []
-              }
-            })
-          )
-          
-          setComments(commentsWithReactions)
-        } catch (error) {
-          setError("コメントの取得中にエラーが発生しました")
+          baseComments = fetchedComments;
         }
+
+        // コメントごとにリアクション情報を取得（N+1だが、現状のRPC設計に合わせる）
+        // server-sideでreactionsが取得できていないため、client-sideで補完する
+        const commentsWithReactions = await Promise.all(
+          baseComments.map(async (comment) => {
+            const { reactions } = await getCommentReactions(comment.id)
+            return {
+              ...comment,
+              reactions: reactions || []
+            }
+          })
+        )
+
+        setComments(commentsWithReactions)
+      } catch (error) {
+        console.error("Fetch error:", error)
+        setError("コメントの取得中にエラーが発生しました")
       }
     }
 
-    fetchComments()
+    fetchCommentsAndReactions()
   }, [blogId, initialComments])
 
   // 絵文字選択時のハンドラー
@@ -292,6 +304,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     }
     
     deleteCommentAndReplies(commentId)
+  }
+
+  const handleReactionToggle = (commentId: string, reactions: any[]) => {
+    setComments(prev => prev.map(c =>
+      c.id === commentId ? { ...c, reactions } : c
+    ))
   }
 
   const handleReplyAdded = async (newComment: CommentType) => {
@@ -415,6 +433,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               onReplyAdded={handleReplyAdded}
               onCommentEdited={handleCommentEdited}
               onCommentDeleted={handleCommentDeleted}
+              onReactionToggle={handleReactionToggle}
               maxNestLevel={maxNestLevel}
               maxVisibleReplies={maxVisibleReplies}
             />

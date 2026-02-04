@@ -5,7 +5,6 @@ import { M_PLUS_1 } from "next/font/google"
 import { createClient } from "@/utils/supabase/server"
 import Navigation from "@/components/navigation/Navigation"
 import Link from "next/link"
-import ToastProvider from "@/components/providers/ToastProvider"
 import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/providers/ThemeProvider"
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -106,8 +105,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
           enableSystem
           disableTransitionOnChange
         >
-          <ToastProvider />
-          <Toaster richColors position="top-right" />
+          <Toaster richColors position="top-right" theme="system" closeButton />
 
           <div className="flex min-h-screen flex-col">
             <Navigation user={user} />

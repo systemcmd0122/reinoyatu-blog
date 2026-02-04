@@ -80,12 +80,12 @@ const CodeBlock: React.FC<{
   code: string
 }> = ({ language, code }) => {
   const [isCopied, setIsCopied] = useState(false)
-  const { theme } = useTheme()
-  const [isDark, setIsDark] = useState(false)
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setIsDark(theme === 'dark')
-  }, [theme])
+    setMounted(true)
+  }, [])
 
   const handleCopy = async () => {
     try {
@@ -114,7 +114,7 @@ const CodeBlock: React.FC<{
         </button>
       </div>
       <SyntaxHighlighter
-        style={isDark ? oneDark : oneLight}
+        style={mounted && resolvedTheme === 'dark' ? oneDark : oneLight}
         language={language || 'text'}
         PreTag="div"
         showLineNumbers
@@ -191,112 +191,6 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
   return (
     <div className={`markdown-content prose prose-zinc dark:prose-invert max-w-none ${className}`}>
-      <style jsx global>{`
-        .markdown-content {
-          line-height: 1.9;
-          font-size: 1.0625rem;
-          color: hsl(var(--foreground) / 0.9);
-        }
-
-        .markdown-content p {
-          margin: 1.5rem 0;
-        }
-
-        .markdown-content h1, 
-        .markdown-content h2, 
-        .markdown-content h3,
-        .markdown-content h4, 
-        .markdown-content h5, 
-        .markdown-content h6 {
-          margin: 2.5rem 0 1.25rem;
-          font-weight: 800;
-          line-height: 1.4;
-          color: hsl(var(--foreground));
-        }
-
-        .markdown-content h1 { font-size: 2.25rem; border-bottom: 2px solid hsl(var(--border)); padding-bottom: 0.5rem; }
-        .markdown-content h2 { font-size: 1.75rem; border-bottom: 1px solid hsl(var(--border)); padding-bottom: 0.4rem; }
-        .markdown-content h3 { font-size: 1.4rem; }
-
-        .markdown-content ul, 
-        .markdown-content ol {
-          margin: 1.5rem 0;
-          padding-left: 1.75rem;
-        }
-
-        .markdown-content li {
-          margin: 0.5rem 0;
-        }
-
-        .markdown-content code:not(pre code) {
-          padding: 0.2rem 0.4rem;
-          border-radius: 0.375rem;
-          background-color: hsl(var(--muted));
-          color: hsl(var(--foreground));
-          font-size: 0.9em;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-          border: 1px solid hsl(var(--border) / 0.5);
-        }
-
-        .markdown-content blockquote {
-          margin: 2rem 0;
-          padding: 1rem 1.5rem;
-          border-left: 4px solid hsl(var(--muted-foreground) / 0.3);
-          background-color: hsl(var(--muted) / 0.3);
-          color: hsl(var(--muted-foreground));
-          border-radius: 0 0.5rem 0.5rem 0;
-          font-style: normal;
-        }
-
-        .markdown-content table {
-          width: 100%;
-          margin: 2rem 0;
-          border-collapse: separate;
-          border-spacing: 0;
-          border: 1px solid hsl(var(--border));
-          border-radius: 0.75rem;
-          overflow: hidden;
-        }
-
-        .markdown-content table th,
-        .markdown-content table td {
-          padding: 0.75rem 1rem;
-          border-bottom: 1px solid hsl(var(--border));
-          border-right: 1px solid hsl(var(--border));
-        }
-
-        .markdown-content table th:last-child,
-        .markdown-content table td:last-child {
-          border-right: 0;
-        }
-
-        .markdown-content table tr:last-child td {
-          border-bottom: 0;
-        }
-
-        .markdown-content table th {
-          background-color: hsl(var(--muted) / 0.5);
-          font-weight: 700;
-          text-align: left;
-        }
-
-        .markdown-content hr {
-          margin: 3rem 0;
-          border: 0;
-          height: 1px;
-          background-color: hsl(var(--border));
-        }
-
-        .markdown-content img {
-          max-width: 100%;
-          height: auto;
-          border-radius: 0.75rem;
-          margin: 2rem auto;
-          display: block;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-      `}</style>
-      
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
         skipHtml={!enableRaw}
@@ -315,7 +209,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             }
             
             return (
-              <code className={className} {...props}>
+              <code className="bg-muted px-1.5 py-0.5 rounded-md font-mono text-[0.9em] border border-border/50" {...props}>
                 {children}
               </code>
             )
@@ -408,7 +302,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           ),
 
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-primary pl-4 py-2 my-4 bg-muted/50 italic text-foreground/90">
+            <blockquote className="border-l-4 border-primary pl-6 py-2 my-8 bg-muted/30 italic text-muted-foreground rounded-r-lg">
               {children}
             </blockquote>
           ),

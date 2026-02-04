@@ -361,3 +361,46 @@ export const generateAndSaveSummary = async ({
 
   return { summary, error: null }
 }
+
+// すべてのタグを取得
+export const getAllTags = async () => {
+  try {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("tags")
+      .select("name")
+      .order("name")
+
+    if (error) {
+      console.error("タグ取得エラー:", error)
+      return { tags: [], error: error.message }
+    }
+
+    return { tags: data.map(t => t.name), error: null }
+  } catch (err) {
+    console.error("タグ取得エラー:", err)
+    return { tags: [], error: "エラーが発生しました" }
+  }
+}
+
+// 記事を検索
+export const searchBlogs = async (query: string) => {
+  try {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("blogs")
+      .select("id, title")
+      .ilike("title", `%${query}%`)
+      .limit(5)
+
+    if (error) {
+      console.error("検索エラー:", error)
+      return { blogs: [], error: error.message }
+    }
+
+    return { blogs: data || [], error: null }
+  } catch (err) {
+    console.error("検索エラー:", err)
+    return { blogs: [], error: "エラーが発生しました" }
+  }
+}
