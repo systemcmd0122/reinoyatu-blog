@@ -16,7 +16,7 @@ const BlogEditPage = async ({ params }: BlogEditPageProps) => {
   const user = userData?.user
 
   if (!user) {
-    redirect("/")
+    redirect(`/login?next=/blog/${blogId}/edit`)
   }
 
   // ブログ詳細取得

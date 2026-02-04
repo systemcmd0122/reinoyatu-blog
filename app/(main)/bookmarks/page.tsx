@@ -60,7 +60,7 @@ const BookmarksPage = async () => {
 
   // 認証されていない場合、ログインページにリダイレクト
   if (!session) {
-    redirect("/login?callbackUrl=/bookmarks")
+    redirect("/login?next=/bookmarks")
   }
 
   // ユーザーIDを取得して、ブックマーク一覧表示コンポーネントをSuspenseで囲む

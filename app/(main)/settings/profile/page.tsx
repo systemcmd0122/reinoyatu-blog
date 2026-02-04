@@ -25,7 +25,7 @@ const ProfilePage = async () => {
   }
 
   if (!user || !profile) {
-    redirect("/")
+    redirect("/login?next=/settings/profile")
   }
 
   return (

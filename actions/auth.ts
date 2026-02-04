@@ -11,7 +11,7 @@ import { createClient } from "@/utils/supabase/server"
 import { z } from "zod"
 
 // Google OAuth ログイン
-export const signInWithGoogle = async () => {
+export const signInWithGoogle = async (next?: string) => {
   try {
     const supabase = createClient()
 
@@ -25,7 +25,7 @@ export const signInWithGoogle = async () => {
           // 既存のアカウントとの紐付けを許可
           access_type: 'offline',
           prompt: 'consent',
-          next: '/'
+          next: next || '/'
         }
       },
     })
