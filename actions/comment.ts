@@ -68,6 +68,7 @@ export const newComment = async ({ blogId, userId, content, parentId }: NewComme
 
     // コメントとプロフィール情報を結合して返す
     return { 
+      success: true,
       error: null, 
       comment: { 
         ...data,
@@ -101,10 +102,10 @@ export const editComment = async ({ commentId, userId, content }: {
       .eq("user_id", userId)
 
     if (error) {
-      return { error: error.message }
+      return { success: false, error: error.message }
     }
 
-    return { error: null }
+    return { success: true, error: null }
   } catch (err) {
     console.error(err)
     return { error: "エラーが発生しました" }
@@ -126,10 +127,10 @@ export const deleteComment = async ({ commentId, userId }: {
       .eq("user_id", userId)
 
     if (error) {
-      return { error: error.message }
+      return { success: false, error: error.message }
     }
 
-    return { error: null }
+    return { success: true, error: null }
   } catch (err) {
     console.error(err)
     return { error: "エラーが発生しました" }
