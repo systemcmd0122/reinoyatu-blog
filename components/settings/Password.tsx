@@ -20,6 +20,9 @@ import { setPassword } from "@/actions/auth"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import FormError from "@/components/auth/FormError"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import SaveStatus from "./SaveStatus"
+import { KeyRound } from "lucide-react"
 
 // パスワード変更
 const Password = () => {
@@ -62,11 +65,32 @@ const Password = () => {
     })
   }
 
-  return (
-    <div>
-      <div className="font-bold text-xl text-center mb-10">パスワード変更</div>
+  const isFormDirty = form.formState.isDirty
 
-      <Form {...form}>
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">セキュリティ</h2>
+          <p className="text-muted-foreground">
+            アカウントのセキュリティ設定を管理し、パスワードを更新します。
+          </p>
+        </div>
+        <SaveStatus status={isPending ? "saving" : isFormDirty ? "unsaved" : "saved"} />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <KeyRound className="h-5 w-5 text-primary" />
+            <CardTitle>パスワード変更</CardTitle>
+          </div>
+          <CardDescription>
+            アカウントを安全に保つために、強力なパスワードを設定してください。
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
@@ -134,19 +158,21 @@ const Password = () => {
             )}
           />
 
-          <div className="space-y-4 w-full">
-            <FormError message={error} />
-            <Button
-              type="submit"
-              className="w-full space-x-2 font-bold"
-              disabled={isPending}
-            >
-              {isPending && <Loader2 className="animate-spin" />}
-              <span>変更</span>
-            </Button>
-          </div>
-        </form>
-      </Form>
+            <div className="space-y-4 w-full">
+              <FormError message={error} />
+              <Button
+                type="submit"
+                className="space-x-2 font-bold"
+                disabled={isPending || !isFormDirty}
+              >
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <span>パスワードを更新</span>
+              </Button>
+            </div>
+          </form>
+        </Form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

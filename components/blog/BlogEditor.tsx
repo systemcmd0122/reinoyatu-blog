@@ -102,6 +102,11 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [generatedContent, setGeneratedContent] = useState<string | null>(null)
   const [isTagGenerating, setIsTagGenerating] = useState(false)
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
+  const [isTitleGenerating, setIsTitleGenerating] = useState(false)
+  const [aiSuggestion, setAiSuggestion] = useState<{
+    type: "summary" | "tags" | "titles"
+    content: string | string[]
+  } | null>(null)
 
   const form = useForm<z.infer<typeof BlogSchema>>({
     resolver: zodResolver(BlogSchema),
@@ -286,16 +291,14 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       return;
     }
     setIsTagGenerating(true);
+    setAiSuggestion(null);
     try {
       const { generateTagsFromContent } = await import("@/actions/blog")
       const result = await generateTagsFromContent(title, content);
       if (result.error) {
         toast.error(result.error);
       } else if ("tags" in result && result.tags) {
-        const currentTags = form.getValues("tags") || [];
-        const newTags = [...new Set([...currentTags, ...result.tags])];
-        form.setValue("tags", newTags, { shouldValidate: true });
-        toast.success("AIがタグを提案しました");
+        setAiSuggestion({ type: "tags", content: result.tags });
       }
     } catch (error) {
       toast.error("タグの生成中にエラーが発生しました");
@@ -311,18 +314,56 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       return;
     }
     setIsGeneratingSummary(true);
+    setAiSuggestion(null);
     try {
       const result = await generateSummaryFromContent(title, content);
       if (result.error) {
         toast.error(result.error);
       } else if (result.summary) {
-        form.setValue("summary", result.summary, { shouldValidate: true });
-        toast.success("AIが要約を生成しました");
+        setAiSuggestion({ type: "summary", content: result.summary });
       }
     } catch (error) {
       toast.error("要約の生成中にエラーが発生しました");
     } finally {
       setIsGeneratingSummary(false);
+    }
+  };
+
+  const applyAiSuggestion = () => {
+    if (!aiSuggestion) return;
+
+    if (aiSuggestion.type === "summary") {
+      form.setValue("summary", aiSuggestion.content as string, { shouldValidate: true });
+      toast.success("要約を適用しました");
+    } else if (aiSuggestion.type === "tags") {
+      const currentTags = form.getValues("tags") || [];
+      const newTags = [...new Set([...currentTags, ...(aiSuggestion.content as string[])])];
+      form.setValue("tags", newTags, { shouldValidate: true });
+      toast.success("タグを適用しました");
+    }
+    setAiSuggestion(null);
+  };
+
+  const handleGenerateTitles = async () => {
+    const content = form.getValues("content");
+    if (!content) {
+      toast.error("タイトルを提案するには本文を入力してください");
+      return;
+    }
+    setIsTitleGenerating(true);
+    setAiSuggestion(null);
+    try {
+      const { generateTitleSuggestionsFromContent } = await import("@/actions/blog")
+      const result = await generateTitleSuggestionsFromContent(content);
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.titles) {
+        setAiSuggestion({ type: "titles", content: result.titles });
+      }
+    } catch (error) {
+      toast.error("タイトルの提案中にエラーが発生しました");
+    } finally {
+      setIsTitleGenerating(false);
     }
   };
 
@@ -489,25 +530,80 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   transition={{ duration: 0.2 }}
                 >
                   {currentStep === 0 && (
-                    <Card className="border-border shadow-md">
-                      <CardContent className="pt-6 space-y-8">
-                        <FormField
-                          control={form.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-lg font-bold">タイトル</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  placeholder="タイトルを入力してください"
-                                  className="h-14 text-xl font-bold border-2 focus:ring-primary"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    <div className="space-y-6">
+                      <AnimatePresence mode="wait">
+                        {aiSuggestion && aiSuggestion.type === "titles" && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <Alert className="border-primary/50 bg-primary/5 mb-6">
+                              <Wand2 className="h-4 w-4 text-primary" />
+                              <AlertTitle className="font-bold flex items-center justify-between">
+                                AIによるタイトルの提案
+                                <Button size="sm" variant="ghost" onClick={() => setAiSuggestion(null)}>閉じる</Button>
+                              </AlertTitle>
+                              <AlertDescription className="mt-4 grid gap-2">
+                                {(aiSuggestion.content as string[]).map((title, i) => (
+                                  <Button
+                                    key={i}
+                                    variant="outline"
+                                    className="justify-start h-auto py-2 px-4 text-left whitespace-normal font-medium hover:bg-primary/10 hover:border-primary transition-all"
+                                    onClick={() => {
+                                      form.setValue("title", title, { shouldValidate: true });
+                                      setAiSuggestion(null);
+                                      toast.success("タイトルを適用しました");
+                                    }}
+                                  >
+                                    {title}
+                                  </Button>
+                                ))}
+                              </AlertDescription>
+                            </Alert>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      <Card className="border-border shadow-md">
+                        <CardContent className="pt-6 space-y-8">
+                          <FormField
+                            control={form.control}
+                            name="title"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex items-center justify-between mb-2">
+                                  <FormLabel className="text-lg font-bold">タイトル</FormLabel>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleGenerateTitles}
+                                    disabled={isTitleGenerating || !watchedContent}
+                                    className="hover:bg-primary hover:text-primary-foreground transition-colors"
+                                  >
+                                    {isTitleGenerating ? (
+                                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> 提案中...</>
+                                    ) : (
+                                      <><Wand2 className="h-4 w-4 mr-2" /> AIにタイトルを相談</>
+                                    )}
+                                  </Button>
+                                </div>
+                                <FormControl>
+                                  <Input
+                                    placeholder="タイトルを入力してください"
+                                    className="h-14 text-xl font-bold border-2 focus:ring-primary"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                                {!watchedContent && (
+                                  <p className="text-xs text-muted-foreground">※タイトル相談機能は本文の入力後に利用可能です</p>
+                                )}
+                              </FormItem>
+                            )}
+                          />
 
                         <div className="space-y-4">
                           <FormLabel className="text-lg font-bold block">カバー画像</FormLabel>
@@ -544,6 +640,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                         </div>
                       </CardContent>
                     </Card>
+                    </div>
                   )}
 
                   {currentStep === 1 && (
@@ -633,71 +730,114 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   )}
 
                   {currentStep === 2 && (
-                    <Card className="border-border shadow-md">
-                      <CardContent className="pt-6 space-y-8">
-                        <FormField
-                          control={form.control}
-                          name="summary"
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="flex items-center justify-between">
-                                <FormLabel className="text-lg font-bold">要約</FormLabel>
-                                <Button 
-                                  type="button" 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={handleGenerateSummary}
-                                  disabled={isGeneratingSummary}
-                                >
-                                  {isGeneratingSummary ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
-                                  AIで生成
-                                </Button>
-                              </div>
-                              <FormControl>
-                                <Textarea 
-                                  placeholder="内容を簡潔にまとめてください..."
-                                  className="h-32 text-base border-2"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    <div className="space-y-6">
+                      <AnimatePresence mode="wait">
+                        {aiSuggestion && (aiSuggestion.type === "summary" || aiSuggestion.type === "tags") && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <Alert className="border-primary/50 bg-primary/5 mb-6">
+                              <Wand2 className="h-4 w-4 text-primary" />
+                              <AlertTitle className="font-bold flex items-center justify-between">
+                                AIによる{aiSuggestion.type === "summary" ? "要約" : "タグ"}の提案
+                                <div className="flex items-center gap-2">
+                                  <Button size="sm" variant="ghost" onClick={() => setAiSuggestion(null)}>破棄</Button>
+                                  <Button size="sm" onClick={applyAiSuggestion}>適用する</Button>
+                                </div>
+                              </AlertTitle>
+                              <AlertDescription className="mt-2">
+                                {aiSuggestion.type === "summary" ? (
+                                  <p className="text-sm italic leading-relaxed">{aiSuggestion.content as string}</p>
+                                ) : (
+                                  <div className="flex flex-wrap gap-2">
+                                    {(aiSuggestion.content as string[]).map(tag => (
+                                      <span key={tag} className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-md font-medium">#{tag}</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </AlertDescription>
+                            </Alert>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
-                        <FormField
-                          control={form.control}
-                          name="tags"
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="flex items-center justify-between">
-                                <FormLabel className="text-lg font-bold">タグ</FormLabel>
-                                <Button 
-                                  type="button" 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={handleGenerateTags}
-                                  disabled={isTagGenerating}
-                                >
-                                  {isTagGenerating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Tag className="h-4 w-4 mr-2" />}
-                                  AIで提案
-                                </Button>
-                              </div>
-                              <FormControl>
-                                <TagInput 
-                                  value={field.value || []}
-                                  onChange={field.onChange}
-                                  placeholder="タグを入力（Enterで追加）"
-                                  className="border-2"
-                                />
-                              </FormControl>
-                              <p className="text-sm text-muted-foreground mt-2">最大10個まで設定できます</p>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </CardContent>
-                    </Card>
+                      <Card className="border-border shadow-md">
+                        <CardContent className="pt-6 space-y-8">
+                          <FormField
+                            control={form.control}
+                            name="summary"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex items-center justify-between mb-2">
+                                  <FormLabel className="text-lg font-bold">要約</FormLabel>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleGenerateSummary}
+                                    disabled={isGeneratingSummary || isTagGenerating}
+                                    className="hover:bg-primary hover:text-primary-foreground transition-colors"
+                                  >
+                                    {isGeneratingSummary ? (
+                                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> 生成中...</>
+                                    ) : (
+                                      <><Wand2 className="h-4 w-4 mr-2" /> AIで生成</>
+                                    )}
+                                  </Button>
+                                </div>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="内容を簡潔にまとめてください..."
+                                    className="h-32 text-base border-2 focus-visible:ring-primary"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="tags"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex items-center justify-between mb-2">
+                                  <FormLabel className="text-lg font-bold">タグ</FormLabel>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleGenerateTags}
+                                    disabled={isTagGenerating || isGeneratingSummary}
+                                    className="hover:bg-primary hover:text-primary-foreground transition-colors"
+                                  >
+                                    {isTagGenerating ? (
+                                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> 提案中...</>
+                                    ) : (
+                                      <><Tag className="h-4 w-4 mr-2" /> AIで提案</>
+                                    )}
+                                  </Button>
+                                </div>
+                                <FormControl>
+                                  <TagInput
+                                    value={field.value || []}
+                                    onChange={field.onChange}
+                                    placeholder="タグを入力（Enterで追加）"
+                                    className="border-2"
+                                  />
+                                </FormControl>
+                                <p className="text-sm text-muted-foreground mt-2">最大10個まで設定できます</p>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </CardContent>
+                      </Card>
+                    </div>
                   )}
 
                   {currentStep === 3 && (

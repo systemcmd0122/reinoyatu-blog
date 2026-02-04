@@ -315,9 +315,24 @@ export const deleteBlog = async ({
 }
 
 // AIによるタグ生成アクション
+export const generateTitleSuggestionsFromContent = async (content: string) => {
+  if (!content) {
+    return { titles: null, error: "内容は必須です。" }
+  }
+
+  try {
+    const { generateTitleSuggestions } = await import("@/utils/gemini")
+    const result = await generateTitleSuggestions(content)
+    return result
+  } catch (error) {
+    console.error("タイトル生成エラー:", error)
+    return { titles: null, error: "サーバーでタイトルの提案中にエラーが発生しました。" }
+  }
+}
+
 export const generateTagsFromContent = async (title: string, content: string) => {
   if (!title || !content) {
-    return { error: "タイトルと内容は必須です。" }
+    return { tags: null, error: "タイトルと内容は必須です。" }
   }
 
   try {
@@ -326,7 +341,7 @@ export const generateTagsFromContent = async (title: string, content: string) =>
     return result
   } catch (error) {
     console.error("タグ生成エラー:", error)
-    return { error: "サーバーでタグの生成中にエラーが発生しました。" }
+    return { tags: null, error: "サーバーでタグの生成中にエラーが発生しました。" }
   }
 }
 
