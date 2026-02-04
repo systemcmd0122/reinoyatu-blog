@@ -16,7 +16,8 @@ import {
   LogOut,
   Moon,
   Sun,
-  Laptop
+  Laptop,
+  Rocket
 } from "lucide-react"
 
 import { DialogTitle } from "@/components/ui/dialog"
@@ -34,8 +35,13 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { searchBlogs } from "@/actions/blog"
 import { useDebounce } from "@/hooks/use-debounce"
+import { User as SupabaseUser } from "@supabase/supabase-js"
 
-export function CommandMenu() {
+interface CommandMenuProps {
+  user: SupabaseUser | null
+}
+
+export function CommandMenu({ user }: CommandMenuProps) {
   const [open, setOpen] = React.useState(false)
   const [query, setQuery] = React.useState("")
   const [blogs, setBlogs] = React.useState<{id: string, title: string}[]>([])
@@ -132,22 +138,26 @@ export function CommandMenu() {
                 <Home className="mr-2 h-4 w-4" />
                 <span>ホーム</span>
               </CommandItem>
-              <CommandItem onSelect={() => runCommand(() => router.push("/blog/new"))}>
-                <Plus className="mr-2 h-4 w-4" />
-                <span>記事を投稿する</span>
-              </CommandItem>
-              <CommandItem onSelect={() => runCommand(() => router.push("/bookmarks"))}>
-                <Bookmark className="mr-2 h-4 w-4" />
-                <span>ブックマーク</span>
-              </CommandItem>
+              {user && (
+                <>
+                  <CommandItem onSelect={() => runCommand(() => router.push("/blog/new"))}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    <span>記事を投稿する</span>
+                  </CommandItem>
+                  <CommandItem onSelect={() => runCommand(() => router.push("/bookmarks"))}>
+                    <Bookmark className="mr-2 h-4 w-4" />
+                    <span>ブックマーク</span>
+                  </CommandItem>
+                </>
+              )}
             </CommandGroup>
           )}
 
-          {(!query || "プロフィール設定".includes(query) || "マークダウンガイド".includes(query)) && (
+          {(!query || (user && "プロフィール設定".includes(query)) || "マークダウンガイド".includes(query) || "アップデートログ".includes(query)) && (
             <>
               <CommandSeparator />
               <CommandGroup heading="設定・ツール">
-                {(!query || "プロフィール設定".includes(query)) && (
+                {user && (!query || "プロフィール設定".includes(query)) && (
                   <CommandItem onSelect={() => runCommand(() => router.push("/settings/profile"))}>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>プロフィール設定</span>
@@ -157,6 +167,12 @@ export function CommandMenu() {
                   <CommandItem onSelect={() => runCommand(() => router.push("/guide/markdown"))}>
                     <FileText className="mr-2 h-4 w-4" />
                     <span>マークダウンガイド</span>
+                  </CommandItem>
+                )}
+                {(!query || "アップデートログ".includes(query)) && (
+                  <CommandItem onSelect={() => runCommand(() => router.push("/changelog"))}>
+                    <Rocket className="mr-2 h-4 w-4" />
+                    <span>アップデートログ</span>
                   </CommandItem>
                 )}
               </CommandGroup>

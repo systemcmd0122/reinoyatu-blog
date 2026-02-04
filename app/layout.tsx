@@ -153,6 +153,14 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
                       </li>
                       <li>
                         <Link
+                          href="/changelog"
+                          className="hover:text-primary transition-colors"
+                        >
+                          アップデート
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
                           href="/guide/markdown"
                           className="hover:text-primary transition-colors"
                         >
@@ -200,7 +208,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
                   </div>
                   <div className="flex items-center space-x-6">
                     <a
-                      href="https://twitter.com/reinoyatu"
+                      href="https://x.com/min_brother2158"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:text-primary transition-colors"
@@ -208,7 +216,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
                       X (Twitter)
                     </a>
                     <a
-                      href="https://github.com"
+                      href="https://github.com/Reinoaytu"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:text-primary transition-colors"

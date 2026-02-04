@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
   const raw = blogData.content || ""
   const description = raw.replace(/[#_*`>\[\]()!-]/g, "").replace(/\n+/g, " ").slice(0, 160)
 
-  const image = blogData.image_url || `${process.env.NEXT_PUBLIC_APP_URL || ""}/og-image.png`
+  const image = blogData.image_url || `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/og?title=${encodeURIComponent(title)}&author=${encodeURIComponent((blogData.profiles as any)?.name || "")}`
   const url = `${process.env.NEXT_PUBLIC_APP_URL || ""}/blog/${blogId}`
 
   return {

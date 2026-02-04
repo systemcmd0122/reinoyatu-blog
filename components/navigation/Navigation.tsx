@@ -133,6 +133,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
 
   const mobileNavItems = [
     { href: "/", icon: House, label: "ホーム" },
+    { href: "/changelog", icon: FileText, label: "アップデート" },
     { href: "/guide/markdown", icon: FileText, label: "マークダウンガイド" },
     { href: "/blog/new", icon: PenSquare, label: "投稿する" },
     { href: "/bookmarks", icon: Bookmark, label: "ブックマーク" },
@@ -157,8 +158,17 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               </span>
             </Link>
 
-            <div className="hidden md:flex flex-1 justify-center max-w-sm">
-              <CommandMenu />
+            <nav className="hidden lg:flex items-center gap-6 ml-4">
+              <Link
+                href="/changelog"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                アップデート
+              </Link>
+            </nav>
+
+            <div className="hidden md:flex flex-1 justify-center max-w-sm ml-4">
+              <CommandMenu user={user} />
             </div>
           </div>
 
@@ -264,7 +274,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                 <div className="flex flex-col h-full">
                   <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
                     <div className="flex-1">
-                      <CommandMenu />
+                      <CommandMenu user={user} />
                     </div>
                   </div>
                   {user ? (
