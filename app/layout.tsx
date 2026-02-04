@@ -62,7 +62,7 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    apple: "/icon.png",
+    apple: "/icons/icon-512x512.png",
   },
 
   twitter: {
@@ -80,33 +80,11 @@ export const metadata: Metadata = {
     "discord:title": siteConfig.title,
     "discord:description": siteConfig.description,
     "discord:image": siteConfig.ogImage,
-    "mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-status-bar-style": "black-translucent",
   },
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: siteConfig.title,
-    startupImage: [
-      {
-        url: "/icon.png",
-        media: "(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)",
-      },
-      {
-        url: "/icon.png",
-        media: "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)",
-      },
-      {
-        url: "/icon.png",
-        media: "(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)",
-      },
-      {
-        url: "/icon.png",
-        media: "(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)",
-      },
-    ],
   },
 }
 
@@ -135,11 +113,6 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
 
   return (
     <html lang="ja" suppressHydrationWarning>
-      <head>
-        <link rel="apple-touch-icon" href="/icon.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-      </head>
       <body className={mPlus1.className}>
         <ThemeProvider
           attribute="class"
