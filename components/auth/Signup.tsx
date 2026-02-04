@@ -118,12 +118,23 @@ const Signup = () => {
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle>アカウント登録</CardTitle>
-        <CardDescription>新しいアカウントを作成します</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="relative w-full max-w-md">
+      {/* Decorative background elements */}
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+
+      <Card className="relative w-full shadow-xl border-border/50 bg-background/80 backdrop-blur-sm overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/20 via-primary to-primary/20" />
+
+        <CardHeader className="text-center pt-8 pb-2">
+          <CardTitle className="text-2xl font-black tracking-tight mb-2">
+            自由な表現、ここから。
+          </CardTitle>
+          <CardDescription className="text-base">
+            新しいアカウントを作成して、世界と繋がりましょう。
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
         <div className="space-y-4">
           <Button
             type="button"
@@ -259,23 +270,24 @@ const Signup = () => {
               <FormError message={error} />
               <Button
                 type="submit"
-                className="w-full space-x-2 font-bold"
+                className="w-full space-x-2 font-bold h-11 text-base shadow-md transition-all active:scale-[0.98]"
                 disabled={isPending || isGooglePending}
               >
                 {isPending && <Loader2 className="animate-spin" />}
-                <span>新規登録</span>
+                <span>表現をはじめる</span>
               </Button>
             </div>
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex justify-center">
+      <CardFooter className="flex justify-center pb-8">
         <Link href="/login" className="text-sm text-primary font-bold">
           既にアカウントをお持ちの方はこちら{" "}
           <ChevronRight className="w-4 h-4 inline align-text-bottom" />
         </Link>
       </CardFooter>
     </Card>
+    </div>
   )
 }
 

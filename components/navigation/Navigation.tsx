@@ -168,7 +168,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
             </nav>
 
             <div className="hidden md:flex flex-1 justify-center max-w-sm ml-4">
-              <CommandMenu />
+              <CommandMenu user={user} />
             </div>
           </div>
 
@@ -274,7 +274,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                 <div className="flex flex-col h-full">
                   <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
                     <div className="flex-1">
-                      <CommandMenu />
+                      <CommandMenu user={user} />
                     </div>
                   </div>
                   {user ? (

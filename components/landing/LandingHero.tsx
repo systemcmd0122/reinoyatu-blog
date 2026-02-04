@@ -46,15 +46,15 @@ export const LandingHero = () => {
           </motion.div>
 
           <motion.h1 variants={itemVariants} className="text-5xl md:text-7xl font-black tracking-tighter text-foreground mb-8 leading-[1.1]">
-            想いを言葉に、<br />
+            自由な表現を、<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
-              価値をリアルタイムに。
+              すべての人へ。
             </span>
           </motion.h1>
 
           <motion.p variants={itemVariants} className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-            「例のヤツ」は、モダンな技術スタックで構築されたブログプラットフォームです。
-            あなたの知見や物語を、もっとも美しく、もっとも速く共有しましょう。
+            「例のヤツ」は、あなたの声が誰かに届くための最高の舞台です。
+            制約のない自由な執筆体験と、リアルタイムな繋がりで、あなたのストーリーを広げましょう。
           </motion.p>
 
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row justify-center gap-4">
