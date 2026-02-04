@@ -26,6 +26,7 @@ import { toast } from "sonner"
 import Image from "next/image"
 import FormError from "@/components/auth/FormError"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import SaveStatus from "./SaveStatus"
 
 interface ProfileProps {
   profile: ProfileType
@@ -235,11 +236,21 @@ const Profile = ({ profile }: ProfileProps) => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">プロフィール</h2>
+          <p className="text-muted-foreground">
+            あなたの公開プロフィールをカスタマイズして、読者に自分を伝えましょう。
+          </p>
+        </div>
+        <SaveStatus status={isSaving ? "saving" : isDirty ? "unsaved" : "saved"} />
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>プロフィール設定</CardTitle>
+          <CardTitle>プロフィール情報</CardTitle>
           <CardDescription>
-            あなたのプロフィール情報を設定します。これらの情報は公開プロフィールに表示されます。
+            これらの情報はあなたのプロフィールページで一般に公開されます。
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -511,10 +522,10 @@ const Profile = ({ profile }: ProfileProps) => {
 
               <FormError message={error} />
 
-              <div className="flex items-center gap-4 pt-6 border-t">
+              <div className="flex items-center justify-end gap-4 pt-6 border-t">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   onClick={handleCancel}
                   disabled={isSaving}
                 >
@@ -523,7 +534,7 @@ const Profile = ({ profile }: ProfileProps) => {
                 <Button
                   type="submit"
                   disabled={isSaving || (!isDirty && !imageUpload[0]?.dataURL?.startsWith("data:image"))}
-                  className="min-w-[120px]"
+                  className="min-w-[120px] bg-primary text-primary-foreground"
                 >
                   {isSaving ? (
                     <>
@@ -531,7 +542,7 @@ const Profile = ({ profile }: ProfileProps) => {
                       保存中...
                     </>
                   ) : (
-                    "保存する"
+                    "プロフィールを保存"
                   )}
                 </Button>
               </div>

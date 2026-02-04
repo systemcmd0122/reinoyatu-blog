@@ -19,7 +19,7 @@ export const updateProfile = async (values: updateProfileProps) => {
     const result = ProfileSchema.safeParse(values)
     if (!result.success) {
       console.error("Profile validation error:", result.error)
-      return { error: result.error.errors[0].message }
+      return { success: false, error: result.error.errors[0].message }
     }
 
     const supabase = createClient()
@@ -30,7 +30,7 @@ export const updateProfile = async (values: updateProfileProps) => {
       // 画像サイズと形式のバリデーション
       const matches = values.base64Image.match(/^data:(.+);base64,(.+)$/)
       if (!matches || matches.length !== 3) {
-        return { error: "無効な画像データです" }
+        return { success: false, error: "無効な画像データです" }
       }
 
       const contentType = matches[1]
@@ -38,13 +38,13 @@ export const updateProfile = async (values: updateProfileProps) => {
       
       // 画像形式の確認
       if (!['image/jpeg', 'image/png', 'image/gif'].includes(contentType)) {
-        return { error: "jpeg, png, gif形式のみ対応しています" }
+        return { success: false, error: "jpeg, png, gif形式のみ対応しています" }
       }
 
       // サイズチェック（base64データのサイズを計算）
       const sizeInBytes = Math.ceil((base64Data.length / 4) * 3)
       if (sizeInBytes > 5 * 1024 * 1024) { // 5MB制限
-        return { error: "画像サイズは5MB以下にしてください" }
+        return { success: false, error: "画像サイズは5MB以下にしてください" }
       }
 
       // 拡張子を取得
@@ -61,7 +61,7 @@ export const updateProfile = async (values: updateProfileProps) => {
 
       if (storageError) {
         console.error("Storage upload error:", storageError)
-        return { error: storageError.message }
+        return { success: false, error: storageError.message }
       }
 
       // 古い画像を削除
@@ -106,14 +106,45 @@ export const updateProfile = async (values: updateProfileProps) => {
     // エラーチェック
     if (updateError) {
       console.error("Profile update error:", updateError)
-      return { error: updateError.message }
+      return { success: false, error: updateError.message }
     }
 
     console.log("Profile updated successfully")
-    return { success: true }
+    return { success: true, error: null }
   } catch (err) {
     console.error("Unexpected error:", err)
-    return { error: "エラーが発生しました" }
+    return { success: false, error: "エラーが発生しました" }
+  }
+}
+
+// アカウント削除
+export const deleteAccount = async () => {
+  try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: "ユーザーが見つかりません" }
+    }
+
+    // プロフィールを削除（CASCADE制約により関連データも削除される想定）
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .delete()
+      .eq("id", user.id)
+
+    if (profileError) {
+      console.error("Profile deletion error:", profileError)
+      return { success: false, error: profileError.message }
+    }
+
+    // ログアウト
+    await supabase.auth.signOut()
+
+    return { success: true, error: null }
+  } catch (err) {
+    console.error("Account deletion error:", err)
+    return { success: false, error: "アカウントの削除中にエラーが発生しました" }
   }
 }
 
@@ -123,7 +154,7 @@ export const updateEmail = async (values: z.infer<typeof EmailSchema>) => {
     // バリデーション
     const result = EmailSchema.safeParse(values)
     if (!result.success) {
-      return { error: result.error.errors[0].message }
+      return { success: false, error: result.error.errors[0].message }
     }
 
     const supabase = createClient()
@@ -136,7 +167,7 @@ export const updateEmail = async (values: z.infer<typeof EmailSchema>) => {
 
     if (updateUserError) {
       console.error("Update email error:", updateUserError)
-      return { error: updateUserError.message }
+      return { success: false, error: updateUserError.message }
     }
 
     // ログアウト
@@ -144,12 +175,12 @@ export const updateEmail = async (values: z.infer<typeof EmailSchema>) => {
 
     if (signOutError) {
       console.error("Sign out error:", signOutError)
-      return { error: signOutError.message }
+      return { success: false, error: signOutError.message }
     }
 
-    return { success: true }
+    return { success: true, error: null }
   } catch (err) {
     console.error("Unexpected error:", err)
-    return { error: "エラーが発生しました" }
+    return { success: false, error: "エラーが発生しました" }
   }
 }
