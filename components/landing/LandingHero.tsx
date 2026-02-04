@@ -26,7 +26,7 @@ export const LandingHero = () => {
   }
 
   return (
-    <section className="relative pt-20 pb-32 md:pt-32 md:pb-48">
+    <section className="relative pt-32 pb-48 md:pt-48 md:pb-64">
       {/* Background Gradients */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />

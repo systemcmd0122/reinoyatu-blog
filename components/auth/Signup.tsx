@@ -126,7 +126,7 @@ const Signup = () => {
       <Card className="relative w-full shadow-xl border-border/50 bg-background/80 backdrop-blur-sm overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/20 via-primary to-primary/20" />
 
-        <CardHeader className="text-center pt-8 pb-2">
+        <CardHeader className="text-center pt-10 pb-6">
           <CardTitle className="text-2xl font-black tracking-tight mb-2">
             自由な表現、ここから。
           </CardTitle>
@@ -134,7 +134,7 @@ const Signup = () => {
             新しいアカウントを作成して、世界と繋がりましょう。
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="p-10 pt-4">
         <div className="space-y-4">
           <Button
             type="button"
@@ -151,7 +151,7 @@ const Signup = () => {
             <span>Googleで登録</span>
           </Button>
 
-          <div className="relative my-4">
+          <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t"></span>
             </div>
@@ -164,7 +164,7 @@ const Signup = () => {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-7">
             <FormField
               control={form.control}
               name="name"
@@ -280,7 +280,7 @@ const Signup = () => {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex justify-center pb-8">
+      <CardFooter className="flex justify-center pb-12">
         <Link href="/login" className="text-sm text-primary font-bold">
           既にアカウントをお持ちの方はこちら{" "}
           <ChevronRight className="w-4 h-4 inline align-text-bottom" />

@@ -44,7 +44,7 @@ export const LandingFeatures = () => {
   return (
     <>
       {/* Features Grid */}
-      <section className="py-24 bg-muted/30 relative">
+      <section className="py-40 bg-muted/30 relative">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-20">
             <h2 className="text-3xl md:text-5xl font-black text-foreground mb-6">
@@ -63,7 +63,7 @@ export const LandingFeatures = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                className="bg-card border border-border p-8 rounded-3xl hover:shadow-xl hover:shadow-primary/5 transition-all group"
+                className="bg-card border border-border p-10 rounded-3xl hover:shadow-xl hover:shadow-primary/5 transition-all group"
               >
                 <div className={`w-14 h-14 ${feature.bg} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                   <feature.icon className={`h-7 w-7 ${feature.color}`} />
@@ -79,7 +79,7 @@ export const LandingFeatures = () => {
       </section>
 
       {/* Social Proof / Target Audience */}
-      <section className="py-24 border-y border-border bg-background">
+      <section className="py-40 border-y border-border bg-background">
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center gap-16">
             <div className="flex-1 space-y-8">

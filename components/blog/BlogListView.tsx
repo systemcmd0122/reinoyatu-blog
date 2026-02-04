@@ -94,7 +94,7 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs }) => {
       case "card":
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 py-2">
-            {blogs.map((blog, index) => (
+            {processedBlogs.map((blog, index) => (
               <CardItem key={blog.id} blog={blog} priority={index < 6} />
             ))}
           </div>
@@ -102,7 +102,7 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs }) => {
       case "compact":
         return (
           <div className="bg-card border border-border rounded-lg overflow-hidden divide-y divide-border shadow-sm">
-            {blogs.map((blog) => (
+            {processedBlogs.map((blog) => (
               <CompactItem key={blog.id} blog={blog} />
             ))}
           </div>
@@ -111,7 +111,7 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs }) => {
       default:
         return (
           <div className="bg-card border border-border rounded-lg overflow-hidden divide-y divide-border shadow-sm">
-            {blogs.map((blog, index) => (
+            {processedBlogs.map((blog, index) => (
               <ListItem key={blog.id} blog={blog} priority={index < 6} />
             ))}
           </div>
@@ -120,9 +120,9 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-12">
       {/* Control Panel */}
-      <div className="space-y-4 bg-card/50 border border-border/50 p-4 rounded-xl shadow-sm">
+      <div className="space-y-6 bg-card/50 border border-border/50 p-8 rounded-2xl shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
              <div className={cn(
@@ -155,7 +155,7 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs }) => {
 
         {/* Tag Filters */}
         {allTags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50">
+          <div className="flex flex-wrap items-center gap-2 pt-6 border-t border-border/50">
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mr-1">
               タグで絞り込む:
             </span>

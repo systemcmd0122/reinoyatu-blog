@@ -41,7 +41,7 @@ export const ChangelogItem = ({ entry, isLatest }: ChangelogItemProps) => {
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-10">
           {entry.items.map((item, index) => (
             <div key={index} className="flex flex-col gap-2">
               <div className="flex items-start gap-3">
@@ -51,7 +51,7 @@ export const ChangelogItem = ({ entry, isLatest }: ChangelogItemProps) => {
                 </h3>
               </div>
               {item.description && (
-                <p className="text-muted-foreground text-sm leading-relaxed pl-[92px]">
+                <p className="text-muted-foreground text-sm leading-relaxed mt-2 pl-0 md:pl-[92px]">
                   {item.description}
                 </p>
               )}
