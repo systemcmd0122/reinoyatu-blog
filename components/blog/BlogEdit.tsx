@@ -329,7 +329,7 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
                 <Trash2 className="h-5 w-5" />
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+            <AlertDialogContent className="bg-card text-card-foreground border rounded-lg shadow-xl">
               <AlertDialogHeader>
                 <AlertDialogTitle>本当にブログを削除しますか？</AlertDialogTitle>
                 <AlertDialogDescription>

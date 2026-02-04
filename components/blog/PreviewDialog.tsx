@@ -30,14 +30,14 @@ const PreviewDialog: React.FC<PreviewDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[90vh] p-0">
         <div className="h-full flex flex-col">
-          <div className="flex-none p-6 border-b">
+          <div className="flex-none p-6 border-b border-border">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                <Eye className="h-5 w-5 mr-2 text-blue-600" />
+              <h2 className="text-lg font-semibold text-foreground flex items-center">
+                <Eye className="h-5 w-5 mr-2 text-primary" />
                 プレビュー
               </h2>
               {content && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   {content.length} 文字
                 </p>
               )}
@@ -47,20 +47,20 @@ const PreviewDialog: React.FC<PreviewDialogProps> = ({
           <div className="flex-1 overflow-y-auto p-6">
             {!title && !content ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <Eye className="h-8 w-8 text-gray-400" />
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                  <Eye className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <p className="text-gray-500 font-medium">
+                <p className="text-muted-foreground font-medium">
                   プレビューがここに表示されます
                 </p>
-                <p className="text-gray-400 text-sm mt-2">
+                <p className="text-muted-foreground/60 text-sm mt-2">
                   タイトルや内容を入力するとプレビューできます
                 </p>
               </div>
             ) : (
               <div className="space-y-6">
                 {imagePreview && (
-                  <div className="aspect-video rounded-lg overflow-hidden border border-gray-200">
+                  <div className="aspect-video rounded-lg overflow-hidden border border-border">
                     <Image
                       src={imagePreview}
                       alt="Cover preview"
@@ -73,7 +73,7 @@ const PreviewDialog: React.FC<PreviewDialogProps> = ({
 
                 {title && (
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl font-bold text-foreground mb-2">
                       {title}
                     </h1>
                   </div>
@@ -84,7 +84,7 @@ const PreviewDialog: React.FC<PreviewDialogProps> = ({
                     {tags.map((tag, index) => (
                       <span 
                         key={index} 
-                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary"
                       >
                         #{tag}
                       </span>
@@ -93,8 +93,8 @@ const PreviewDialog: React.FC<PreviewDialogProps> = ({
                 )}
 
                 {summary && (
-                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-                    <p className="text-sm text-gray-700 leading-relaxed">
+                  <div className="bg-muted/50 border border-border p-4 rounded-lg">
+                    <p className="text-sm text-foreground/80 leading-relaxed">
                       {summary}
                     </p>
                   </div>
@@ -105,7 +105,7 @@ const PreviewDialog: React.FC<PreviewDialogProps> = ({
                 )}
 
                 {content ? (
-                  <div className="prose prose-base max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900">
+                  <div className="prose prose-base max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-a:text-primary prose-strong:text-foreground dark:prose-invert">
                     <MarkdownRenderer content={content} />
                   </div>
                 ) : (

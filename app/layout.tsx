@@ -115,7 +115,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
             <SpeedInsights />
             <Analytics />
 
-            <footer className="border-t py-12 bg-gray-50 dark:bg-gray-900/50">
+            <footer className="border-t py-12 bg-muted/30">
               <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                   <div className="space-y-4">

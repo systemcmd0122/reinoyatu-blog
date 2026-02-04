@@ -161,12 +161,12 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
   const allTags = tags || []
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* ヘッダーセクション */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight mb-2">
+            <h1 className="text-4xl font-bold tracking-tight mb-2 text-foreground">
               {queryParam ? `"${queryParam}" の検索結果` : "最新のブログ記事"}
             </h1>
             <p className="text-muted-foreground">
@@ -185,12 +185,12 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
 
         {/* タグフィルターセクション */}
         {popularTags.length > 0 && (
-          <div className="mb-8 bg-gray-50 rounded-2xl border border-gray-200 p-6">
+          <div className="mb-8 bg-muted/30 rounded-2xl border border-border p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-5">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <TrendingUp className="h-5 w-5 text-primary" />
               </div>
-              <h2 className="text-xl font-bold">人気のタグ</h2>
+              <h2 className="text-xl font-bold text-foreground">人気のタグ</h2>
               <Badge variant="secondary" className="ml-auto">
                 {allTags.length}個
               </Badge>
@@ -198,14 +198,14 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
             
             {/* 人気タグ一覧 - スクロール可能 */}
             <div className="relative mb-4">
-              <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
+              <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent">
                 <Badge 
                   variant="default" 
                   className="cursor-default text-sm px-5 py-2.5 whitespace-nowrap shadow-md flex-shrink-0 font-medium"
                 >
                   <Filter className="h-3.5 w-3.5 mr-2" />
                   すべて
-                  <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                  <span className="ml-2 text-xs bg-primary-foreground/20 px-2 py-0.5 rounded-full">
                     {totalCount}
                   </span>
                 </Badge>
@@ -213,12 +213,12 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                   <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
                     <Badge 
                       variant="outline" 
-                      className="cursor-pointer text-sm px-5 py-2.5 whitespace-nowrap hover:bg-primary/10 hover:border-primary/50 transition-all border-2 flex-shrink-0 font-medium group"
+                      className="cursor-pointer text-sm px-5 py-2.5 whitespace-nowrap hover:bg-primary/10 hover:border-primary/50 transition-all border-2 flex-shrink-0 font-medium group bg-background"
                     >
                       <span className="group-hover:text-primary transition-colors">
                         {tag.name}
                       </span>
-                      <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full opacity-75 group-hover:bg-primary/20 transition-colors">
+                      <span className="ml-2 text-xs bg-muted px-2 py-0.5 rounded-full opacity-75 group-hover:bg-primary/20 transition-colors">
                         {tag.count}
                       </span>
                     </Badge>
@@ -226,12 +226,12 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                 ))}
               </div>
               {/* グラデーション効果 */}
-              <div className="absolute right-0 top-0 bottom-3 w-24 bg-gradient-to-l from-white dark:from-gray-900 to-transparent pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-3 w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
             </div>
 
             {/* 全タグ表示（折りたたみ可能） */}
             {allTags.length > 15 && (
-              <details className="group mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+              <details className="group mt-4 pt-4 border-t border-border">
                 <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors list-none flex items-center gap-2">
                   <span>すべてのタグを表示</span>
                   <Badge variant="secondary" className="text-xs">

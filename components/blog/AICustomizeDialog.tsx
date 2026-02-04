@@ -199,7 +199,7 @@ const AICustomizeDialog: React.FC<AICustomizeDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn(
-        "bg-white dark:bg-gray-900",
+        "bg-card text-card-foreground",
         isMobile ? "w-[95vw] max-w-none" : "max-w-4xl"
       )}>
         <DialogHeader>
@@ -321,7 +321,7 @@ const AICustomizeDialog: React.FC<AICustomizeDialogProps> = ({
                     <select
                       value={options.summaryLength || ''}
                       onChange={e => setOptions(prev => ({ ...prev, summaryLength: e.target.value as typeof options.summaryLength }))}
-                      className="w-full rounded-md border p-2 text-sm bg-white dark:bg-gray-800"
+                      className="w-full rounded-md border border-input p-2 text-sm bg-background text-foreground"
                       disabled={isGenerating}
                     >
                       <option value="">追加しない</option>

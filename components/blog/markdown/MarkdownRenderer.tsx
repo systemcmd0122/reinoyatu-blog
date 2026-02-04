@@ -6,6 +6,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneLight, oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { Clipboard, Check, ExternalLink, XCircle } from "lucide-react"
 import Image from "next/image"
+import { useTheme } from "next-themes"
 
 interface MarkdownRendererProps {
   content: string
@@ -52,7 +53,7 @@ const YouTubeEmbed: React.FC<{
   }, [videoId, showDetails])
 
   return (
-    <div className="my-6 bg-gray-50 rounded-lg overflow-hidden border">
+    <div className="my-6 bg-muted/30 rounded-lg overflow-hidden border border-border">
       <div className="relative w-full pt-[56.25%]">
         <iframe
           className="absolute top-0 left-0 w-full h-full"
@@ -65,8 +66,8 @@ const YouTubeEmbed: React.FC<{
       </div>
       {showDetails && videoInfo && (
         <div className="p-4">
-          <h3 className="text-lg font-semibold">{videoInfo.title}</h3>
-          <p className="text-sm text-gray-600 mt-2">{videoInfo.description}</p>
+          <h3 className="text-lg font-semibold text-foreground">{videoInfo.title}</h3>
+          <p className="text-sm text-muted-foreground mt-2">{videoInfo.description}</p>
         </div>
       )}
     </div>
@@ -79,17 +80,12 @@ const CodeBlock: React.FC<{
   code: string
 }> = ({ language, code }) => {
   const [isCopied, setIsCopied] = useState(false)
+  const { theme } = useTheme()
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
-    // ダークモード検出
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    setIsDark(mediaQuery.matches)
-
-    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches)
-    mediaQuery.addEventListener('change', handler)
-    return () => mediaQuery.removeEventListener('change', handler)
-  }, [])
+    setIsDark(theme === 'dark')
+  }, [theme])
 
   const handleCopy = async () => {
     try {
@@ -102,16 +98,16 @@ const CodeBlock: React.FC<{
   }
 
   return (
-    <div className="relative group my-4 rounded-lg border overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-100 border-b">
+    <div className="relative group my-4 rounded-lg border border-border overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 bg-muted border-b border-border">
         {language && (
-          <span className="text-xs font-medium text-gray-600 uppercase">
+          <span className="text-xs font-medium text-muted-foreground uppercase">
             {language}
           </span>
         )}
         <button
           onClick={handleCopy}
-          className="flex items-center space-x-1 px-2 py-1 text-xs rounded hover:bg-gray-200 transition-colors"
+          className="flex items-center space-x-1 px-2 py-1 text-xs rounded hover:bg-accent hover:text-accent-foreground transition-colors"
         >
           {isCopied ? <Check size={14} /> : <Clipboard size={14} />}
           <span>{isCopied ? "コピー済み" : "コピー"}</span>
@@ -233,7 +229,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         .markdown-content code {
           padding: 0.2rem 0.4rem;
           border-radius: 0.25rem;
-          background-color: #f3f4f6;
+          background-color: hsl(var(--muted));
+          color: hsl(var(--foreground));
           font-size: 0.875rem;
           font-family: monospace;
         }
@@ -241,8 +238,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         .markdown-content blockquote {
           margin: 1rem 0;
           padding: 0.5rem 1rem;
-          border-left: 4px solid #3b82f6;
-          background-color: #f9fafb;
+          border-left: 4px solid hsl(var(--primary));
+          background-color: hsl(var(--muted) / 0.5);
+          color: hsl(var(--foreground) / 0.9);
         }
 
         .markdown-content table {
@@ -254,18 +252,18 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         .markdown-content table th,
         .markdown-content table td {
           padding: 0.5rem;
-          border: 1px solid #e5e7eb;
+          border: 1px solid hsl(var(--border));
         }
 
         .markdown-content table th {
-          background-color: #f3f4f6;
+          background-color: hsl(var(--muted));
           font-weight: 600;
         }
 
         .markdown-content hr {
           margin: 2rem 0;
           border: 0;
-          border-top: 1px solid #e5e7eb;
+          border-top: 1px solid hsl(var(--border));
         }
 
         .markdown-content img {
@@ -305,10 +303,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
             if (imageErrors.has(src)) {
               return (
-                <div className="my-4 p-4 border-2 border-dashed rounded-lg text-center bg-gray-50">
-                  <XCircle className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm text-gray-500">画像の読み込みに失敗しました</p>
-                  {alt && <p className="text-xs text-gray-400 mt-1">{alt}</p>}
+                <div className="my-4 p-4 border-2 border-dashed border-border rounded-lg text-center bg-muted/30">
+                  <XCircle className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">画像の読み込みに失敗しました</p>
+                  {alt && <p className="text-xs text-muted-foreground/80 mt-1">{alt}</p>}
                 </div>
               )
             }
@@ -368,7 +366,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           a: ({ href, children }) => (
             <a 
               href={href}
-              className="text-blue-600 hover:underline inline-flex items-center gap-1" 
+              className="text-primary hover:underline inline-flex items-center gap-1 font-medium" 
               target="_blank" 
               rel="noopener noreferrer"
             >
@@ -378,7 +376,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           ),
 
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 italic">
+            <blockquote className="border-l-4 border-primary pl-4 py-2 my-4 bg-muted/50 italic text-foreground/90">
               {children}
             </blockquote>
           ),

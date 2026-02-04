@@ -67,8 +67,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
           </SheetTrigger>
           <SheetContent 
             side="left" 
-            className="w-[270px] bg-white" 
-            style={{ backgroundColor: 'white' }}
+            className="w-[270px] bg-card text-card-foreground border-r"
           >
             <div className="flex flex-col space-y-2 pt-8">
               <NavButtons />
@@ -85,7 +84,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
 
         {/* Content Area */}
-        <div className="md:col-span-2 bg-white shadow-sm rounded-lg p-6 border">
+        <div className="md:col-span-2 bg-card text-card-foreground shadow-sm rounded-lg p-6 border border-border">
           {children}
         </div>
       </div>

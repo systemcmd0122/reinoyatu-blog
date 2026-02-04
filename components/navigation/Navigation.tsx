@@ -243,16 +243,16 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
           <Menu className="h-6 w-6" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full max-w-xs p-0">
+      <SheetContent side="right" className="w-full max-w-xs p-0 bg-background border-l border-border">
         <div className="flex flex-col h-full">
-          <div className="p-4 border-b flex items-center justify-between">
+          <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
             <ThemeToggle />
             <form onSubmit={handleSearch} className="relative flex-1 ml-4">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="記事を検索..."
-                className="pl-9 bg-muted/50 border-none"
+                className="pl-9 bg-background border-border h-9 text-sm focus-visible:ring-1 focus-visible:ring-primary"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -260,7 +260,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
           </div>
           {user ? (
             <>
-              <div className="p-4 border-b">
+              <div className="p-4 border-b border-border">
                 <Link href={`/profile/${user.id}`} className="block">
                   <SheetClose asChild>
                     <div className="flex items-center space-x-3">
@@ -290,19 +290,19 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                   <SheetClose asChild key={item.label}>
                     <Link
                       href={item.href}
-                      className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
-                      <item.icon className="h-5 w-5 text-gray-500" />
+                      <item.icon className="h-5 w-5 text-muted-foreground" />
                       <span>{item.label}</span>
                     </Link>
                   </SheetClose>
                 ))}
               </nav>
-              <div className="p-4 border-t mt-auto">
+              <div className="p-4 border-t border-border mt-auto bg-muted/10">
                 <SheetClose asChild>
                   <button
                     onClick={() => setIsLogoutDialogOpen(true)}
-                    className="flex items-center w-full space-x-3 px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50/80"
+                    className="flex items-center w-full space-x-3 px-3 py-2 rounded-md text-base font-medium text-destructive hover:bg-destructive/10 transition-colors"
                   >
                     <LogOut className="h-5 w-5" />
                     <span>ログアウト</span>
@@ -315,7 +315,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               <SheetClose asChild>
                 <Link
                   href="/login"
-                  className="px-4 py-2.5 rounded-md text-center font-medium text-gray-700 hover:bg-gray-100"
+                  className="px-4 py-2.5 rounded-md text-center font-medium text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
                 >
                   ログイン
                 </Link>
@@ -323,7 +323,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               <SheetClose asChild>
                 <Link
                   href="/signup"
-                  className="px-4 py-2.5 rounded-md text-center font-medium text-white bg-gray-900 hover:bg-gray-800"
+                  className="px-4 py-2.5 rounded-md text-center font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   新規登録
                 </Link>
@@ -331,7 +331,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               <SheetClose asChild>
                 <Link
                   href="/privacy"
-                  className="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-md hover:bg-gray-100"
+                  className="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-md hover:bg-accent text-foreground/80 hover:text-accent-foreground transition-colors"
                 >
                   <Shield className="h-4 w-4" />
                   <span>プライバシーポリシー</span>

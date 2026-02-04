@@ -11,19 +11,19 @@ interface AuthorCardProps {
 
 const AuthorCard = ({ profile }: AuthorCardProps) => {
   return (
-    <Card className="p-6 mt-8 bg-white hover:bg-gray-50 transition-colors">
+    <Card className="p-6 mt-8 bg-card hover:bg-muted/50 transition-colors">
       <div className="space-y-4">
         <div className="block">
           <div className="flex items-center space-x-4">
-            <Avatar className="w-16 h-16">
+            <Avatar className="w-16 h-16 border border-border">
               <AvatarImage src={profile?.avatar_url || "/default.png"} alt={profile?.name || "Unknown User"} />
               <AvatarFallback>{profile?.name?.[0] || "?"}</AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="text-lg font-bold">{profile.name}</h3>
+              <h3 className="text-lg font-bold text-foreground">{profile.name}</h3>
               <div className="italic text-xs text-muted-foreground">(プロフィール機能開発中)</div>
               {profile.introduce && (
-                <p className="text-gray-600 text-sm line-clamp-2 mt-1">
+                <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
                   {profile.introduce}
                 </p>
               )}
@@ -32,13 +32,13 @@ const AuthorCard = ({ profile }: AuthorCardProps) => {
         </div>
 
         {profile.social_links && Object.keys(profile.social_links).length > 0 && (
-          <div className="flex justify-center space-x-4 pt-4 border-t border-gray-100">
+          <div className="flex justify-center space-x-4 pt-4 border-t border-border">
             {profile.social_links.twitter && (
               <a
                 href={profile.social_links.twitter}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-primary transition-colors"
+                className="text-muted-foreground hover:text-primary transition-colors"
               >
                 <Twitter className="w-5 h-5" />
               </a>

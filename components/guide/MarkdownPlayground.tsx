@@ -16,10 +16,10 @@ const MarkdownRenderer = dynamic(
     ssr: false,
     loading: () => (
       <div className="animate-pulse space-y-4 p-4">
-        <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-        <div className="h-4 bg-gray-200 rounded"></div>
-        <div className="h-4 bg-gray-200 rounded"></div>
-        <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+        <div className="h-8 bg-muted rounded w-3/4"></div>
+        <div className="h-4 bg-muted rounded"></div>
+        <div className="h-4 bg-muted rounded"></div>
+        <div className="h-4 bg-muted rounded w-5/6"></div>
       </div>
     )
   }
@@ -320,11 +320,11 @@ def hello():
             </TabsContent>
 
             <TabsContent value="preview" className="space-y-4">
-              <div className="prose prose-sm max-w-none border rounded-lg p-6 min-h-[600px] bg-white dark:bg-gray-900">
+              <div className="prose prose-sm max-w-none border border-border rounded-lg p-6 min-h-[600px] bg-card text-card-foreground">
                 {markdown ? (
                   <MarkdownRenderer content={markdown} />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-400">
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
                     <p>Markdownを入力するとプレビューが表示されます</p>
                   </div>
                 )}
@@ -355,11 +355,11 @@ def hello():
                       レンダリング結果
                     </Badge>
                   </div>
-                  <div className="prose prose-sm max-w-none border rounded-lg p-6 min-h-[600px] overflow-y-auto bg-white dark:bg-gray-900">
+                  <div className="prose prose-sm max-w-none border border-border rounded-lg p-6 min-h-[600px] overflow-y-auto bg-card text-card-foreground">
                     {markdown ? (
                       <MarkdownRenderer content={markdown} />
                     ) : (
-                      <div className="flex items-center justify-center h-full text-gray-400">
+                      <div className="flex items-center justify-center h-full text-muted-foreground">
                         <p>Markdownを入力するとプレビューが表示されます</p>
                       </div>
                     )}

@@ -114,15 +114,15 @@ const MarkdownHelp: React.FC<MarkdownHelpProps> = ({ onInsertCodeBlock }) => {
           type="button" 
           variant="ghost" 
           size="sm" 
-          className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="flex items-center space-x-2 hover:bg-muted"
         >
           <HelpCircle className="w-4 h-4" />
           <span>Markdownヘルプ</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[600px] p-0 shadow-lg">
+      <PopoverContent className="w-[600px] p-0 shadow-lg bg-card text-card-foreground">
         <Tabs defaultValue="basic" className="w-full">
-          <TabsList className="w-full grid grid-cols-3 bg-gray-50 dark:bg-gray-800 rounded-t-lg p-1">
+          <TabsList className="w-full grid grid-cols-3 bg-muted rounded-t-lg p-1">
             <TabsTrigger value="basic" className="py-2 text-sm">基本構文</TabsTrigger>
             <TabsTrigger value="code" className="py-2 text-sm">コード</TabsTrigger>
             <TabsTrigger value="youtube" className="py-2 text-sm">YouTube</TabsTrigger>
@@ -133,11 +133,11 @@ const MarkdownHelp: React.FC<MarkdownHelpProps> = ({ onInsertCodeBlock }) => {
               <h3 className="text-lg font-semibold mb-4">Markdownの使い方</h3>
               <div className="space-y-3 max-h-[450px] overflow-y-auto pr-2">
                 {markdownExamples.map((example, index) => (
-                  <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <code className="block w-full bg-white dark:bg-gray-900 border p-2 rounded text-sm font-mono mb-2 whitespace-pre-wrap">
+                  <div key={index} className="p-3 bg-muted rounded-md hover:bg-accent transition-colors">
+                    <code className="block w-full bg-background border border-border p-2 rounded text-sm font-mono mb-2 whitespace-pre-wrap text-foreground">
                       {example.syntax}
                     </code>
-                    <span className="text-gray-600 dark:text-gray-400 text-sm">{example.description}</span>
+                    <span className="text-muted-foreground text-sm">{example.description}</span>
                   </div>
                 ))}
               </div>
@@ -146,18 +146,18 @@ const MarkdownHelp: React.FC<MarkdownHelpProps> = ({ onInsertCodeBlock }) => {
             <TabsContent value="code">
               <h3 className="text-lg font-semibold mb-4">コードブロック</h3>
               <div className="mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <p className="text-sm text-muted-foreground mb-2">
                   コードブロックは3つのバッククォート(```)で囲み、最初の行に言語名を指定します:
                 </p>
-                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md border mb-4">
+                <div className="bg-muted p-3 rounded-md border border-border mb-4">
                   <pre className="text-sm font-mono">```python{'\n'}print(&quot;Hello, World!&quot;){'\n'}```</pre>
                 </div>
               </div>
               
               {onInsertCodeBlock && (
-                <div className="mb-5 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md border border-blue-200 dark:border-blue-800">
-                  <h4 className="font-medium mb-2 text-blue-800 dark:text-blue-300">コードブロックを挿入</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                <div className="mb-5 p-3 bg-primary/10 rounded-md border border-primary/20">
+                  <h4 className="font-medium mb-2 text-primary">コードブロックを挿入</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
                     言語を選択してコードブロックのテンプレートを挿入できます
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -177,13 +177,13 @@ const MarkdownHelp: React.FC<MarkdownHelpProps> = ({ onInsertCodeBlock }) => {
               )}
               
               <h4 className="font-medium mb-2">サポートされている言語</h4>
-              <div className="grid grid-cols-2 gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-md max-h-64 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-2 bg-muted p-3 rounded-md max-h-64 overflow-y-auto">
                 {codeLanguages.map((lang, index) => (
                   <div key={index} className="text-sm flex items-center">
-                    <code className="bg-white dark:bg-gray-900 px-1.5 py-0.5 rounded text-xs border mr-1.5 font-mono">
+                    <code className="bg-background px-1.5 py-0.5 rounded text-xs border border-border mr-1.5 font-mono text-foreground">
                       {lang.name}
                     </code>
-                    <span className="text-gray-600 dark:text-gray-400 truncate">{lang.description}</span>
+                    <span className="text-muted-foreground truncate">{lang.description}</span>
                   </div>
                 ))}
               </div>
@@ -197,40 +197,40 @@ const MarkdownHelp: React.FC<MarkdownHelpProps> = ({ onInsertCodeBlock }) => {
               
               <div className="space-y-4 max-h-[400px] overflow-y-auto">
                 {youtubeExamples.map((example, index) => (
-                  <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <code className="block w-full bg-white dark:bg-gray-900 border p-2 rounded text-sm font-mono mb-2">
+                  <div key={index} className="p-3 bg-muted rounded-md hover:bg-accent transition-colors">
+                    <code className="block w-full bg-background border border-border p-2 rounded text-sm font-mono mb-2 text-foreground">
                       {example.syntax}
                     </code>
-                    <span className="text-gray-700 dark:text-gray-300 text-sm">{example.description}</span>
+                    <span className="text-muted-foreground text-sm">{example.description}</span>
                   </div>
                 ))}
               </div>
               
-              <div className="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-md border border-yellow-200 dark:border-yellow-800 text-sm mt-4">
-                <p className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">使用方法の詳細:</p>
+              <div className="bg-yellow-500/10 p-4 rounded-md border border-yellow-500/20 text-sm mt-4">
+                <p className="font-semibold text-yellow-600 dark:text-yellow-500 mb-2">使用方法の詳細:</p>
                 <div className="space-y-3">
                   <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">ビデオIDの見つけ方:</p>
-                    <p className="text-gray-600 dark:text-gray-400 mb-2">
+                    <p className="font-medium text-foreground/80 mb-1">ビデオIDの見つけ方:</p>
+                    <p className="text-muted-foreground mb-2">
                       ビデオIDはYouTubeのURLの「v=」パラメータ後の部分、または短縮URLの最後の部分です。
                     </p>
-                    <div className="bg-white dark:bg-gray-900 p-2 rounded border">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">例1: 通常URL</p>
-                      <code className="text-xs">
+                    <div className="bg-background p-2 rounded border border-border">
+                      <p className="text-xs text-muted-foreground mb-1">例1: 通常URL</p>
+                      <code className="text-xs text-foreground">
                         https://www.youtube.com/watch?v=<span className="font-bold text-red-600">dQw4w9WgXcQ</span>
                       </code>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1 mt-2">例2: 短縮URL</p>
-                      <code className="text-xs">
+                      <p className="text-xs text-muted-foreground mb-1 mt-2">例2: 短縮URL</p>
+                      <code className="text-xs text-foreground">
                         https://youtu.be/<span className="font-bold text-red-600">dQw4w9WgXcQ</span>
                       </code>
                     </div>
                   </div>
                   
                   <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">オプション設定:</p>
-                    <ul className="text-gray-600 dark:text-gray-400 space-y-1 text-sm">
+                    <p className="font-medium text-foreground/80 mb-1">オプション設定:</p>
+                    <ul className="text-muted-foreground space-y-1 text-sm">
                       <li>• デフォルトで詳細情報が表示されます</li>
-                      <li>• <code className="bg-white dark:bg-gray-900 px-1 py-0.5 rounded text-xs">showDetails=false</code> で詳細情報を非表示</li>
+                      <li>• <code className="bg-background px-1 py-0.5 rounded text-xs border border-border">showDetails=false</code> で詳細情報を非表示</li>
                     </ul>
                   </div>
                 </div>

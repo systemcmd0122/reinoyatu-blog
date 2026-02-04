@@ -63,7 +63,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
   // ソーシャルリンクアイコンとリンクのマッピング
   const socialLinkIcons = {
     twitter: { icon: Twitter, color: "hover:text-blue-400" },
-    github: { icon: Github, color: "hover:text-gray-900 dark:hover:text-white" },
+    github: { icon: Github, color: "hover:text-foreground" },
     linkedin: { icon: Linkedin, color: "hover:text-blue-600" },
     instagram: { icon: Instagram, color: "hover:text-pink-600" },
     facebook: { icon: Facebook, color: "hover:text-blue-700" }
@@ -139,7 +139,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
               <div className="flex items-center justify-center pt-2">
                 <a
                   href="/settings/profile"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-colors"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 transition-colors"
                 >
                   プロフィールを編集
                 </a>
@@ -216,7 +216,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
                     {isOwnProfile && (
                       <a
                         href="/blog/new"
-                        className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-colors"
+                        className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 transition-colors"
                       >
                         最初の投稿を作成
                       </a>

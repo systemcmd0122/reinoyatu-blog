@@ -83,7 +83,7 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
   const popularTags = tags ? [...tags].sort((a, b) => b.count - a.count).slice(0, 10) : []
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* ヘッダーセクション */}
         <div className="mb-8">
@@ -114,7 +114,7 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
             
             {/* タグ一覧 - スクロール可能 */}
             <div className="relative">
-              <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
+              <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent">
                 <Link href="/">
                   <Badge 
                     variant="outline" 
@@ -145,7 +145,7 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
                 })}
               </div>
               {/* グラデーション効果 */}
-              <div className="absolute right-0 top-0 bottom-4 w-20 bg-gradient-to-l from-white dark:from-gray-950 to-transparent pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-4 w-20 bg-gradient-to-l from-background to-transparent pointer-events-none" />
             </div>
 
             {/* 全タグ表示（折りたたみ可能） */}
@@ -179,7 +179,7 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
         )}
 
         {/* コントロールバー */}
-        <div className="flex items-center justify-between mb-6 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between mb-6 p-4 bg-card text-card-foreground rounded-xl border border-border">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">表示:</span>
             <Tabs defaultValue={viewMode} className="w-auto">
@@ -243,8 +243,8 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
           </div>
         ) : (
           <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full mb-6">
-              <Tag className="h-10 w-10 text-gray-400" />
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-muted rounded-full mb-6">
+              <Tag className="h-10 w-10 text-muted-foreground" />
             </div>
             <h2 className="text-2xl font-bold mb-2">記事が見つかりません</h2>
             <p className="text-lg text-muted-foreground mb-6">

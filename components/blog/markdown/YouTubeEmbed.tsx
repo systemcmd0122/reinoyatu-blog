@@ -51,15 +51,15 @@ const YouTubeEmbed: React.FC<YouTubeEmbedProps> = ({ videoId, showDetails = true
 
   if (error) {
     return (
-      <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg">
-        <p className="text-red-500">{error}</p>
-        <p className="text-sm text-gray-600">指定された値: {videoId}</p>
+      <div className="w-full p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+        <p className="text-destructive font-medium">{error}</p>
+        <p className="text-sm text-muted-foreground">指定された値: {videoId}</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full mb-6 bg-gray-50 rounded-lg overflow-hidden border">
+    <div className="w-full mb-6 bg-muted/30 rounded-lg overflow-hidden border border-border">
       {/* 動画プレーヤー */}
       <div className="relative w-full pt-[56.25%]">
         {videoId ? (
@@ -72,8 +72,8 @@ const YouTubeEmbed: React.FC<YouTubeEmbedProps> = ({ videoId, showDetails = true
             allowFullScreen
           ></iframe>
         ) : (
-          <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-100">
-            <p className="text-gray-500">動画を読み込めません</p>
+          <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-muted">
+            <p className="text-muted-foreground">動画を読み込めません</p>
           </div>
         )}
       </div>
@@ -91,13 +91,13 @@ const YouTubeEmbed: React.FC<YouTubeEmbedProps> = ({ videoId, showDetails = true
             <>
               {videoDetails && (
                 <>
-                  <h3 className="text-lg font-semibold mb-2">{videoDetails.title}</h3>
-                  <div className="flex items-center text-sm text-gray-600 mb-2">
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">{videoDetails.title}</h3>
+                  <div className="flex items-center text-sm text-muted-foreground mb-2">
                     <span>{videoDetails.channelTitle}</span>
                     <span className="mx-2">•</span>
                     <span>{new Date(videoDetails.publishedAt).toLocaleDateString()}</span>
                   </div>
-                  <p className="text-sm text-gray-700 line-clamp-2">{videoDetails.description}</p>
+                  <p className="text-sm text-foreground/80 line-clamp-2">{videoDetails.description}</p>
                 </>
               )}
             </>

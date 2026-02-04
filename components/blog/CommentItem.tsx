@@ -25,6 +25,7 @@ import { toggleReaction } from "@/actions/reaction"
 import { formatJST } from "@/utils/date"
 import data from '@emoji-mart/data'
 import Picker from '@emoji-mart/react'
+import { useTheme } from "next-themes"
 import {
   Popover,
   PopoverContent,
@@ -75,6 +76,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const [showAllReplies, setShowAllReplies] = useState(false)
   const [reactions, setReactions] = useState<ReactionType[]>(comment.reactions || [])
   const [isReactionPickerOpen, setIsReactionPickerOpen] = useState(false)
+  const { theme } = useTheme()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const replyTextareaRef = useRef<HTMLTextAreaElement>(null)
   
@@ -243,7 +245,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   }
 
   const getIndentClass = () => {
-    return nestLevel > 0 ? "border-l-2 border-gray-200 pl-4 ml-2" : ""
+    return nestLevel > 0 ? "border-l-2 border-border pl-4 ml-2" : ""
   }
 
   return (
@@ -288,11 +290,11 @@ const CommentItem: React.FC<CommentItemProps> = ({
                       <Smile className="h-4 w-4" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent side="top" align="end" className="w-96">
+                  <PopoverContent side="top" align="end" className="w-[350px] p-0 border-none shadow-none">
                     <Picker
                       data={data}
                       onEmojiSelect={(emoji: EmojiData) => handleEmojiSelect(emoji, false)}
-                      theme="light"
+                      theme={theme === 'dark' ? 'dark' : 'light'}
                     />
                   </PopoverContent>
                 </Popover>
@@ -350,14 +352,14 @@ const CommentItem: React.FC<CommentItemProps> = ({
                         <Smile className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent side="top" align="start" className="w-96">
+                    <PopoverContent side="top" align="start" className="w-[350px] p-0 border-none shadow-none">
                       <Picker
                         data={data}
                         onEmojiSelect={(emoji: EmojiData) => {
                           handleReaction(emoji)
                           setIsReactionPickerOpen(false)
                         }}
-                        theme="light"
+                        theme={theme === 'dark' ? 'dark' : 'light'}
                       />
                     </PopoverContent>
                   </Popover>
@@ -404,7 +406,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="bg-white">
+                  <AlertDialogContent className="bg-card text-card-foreground border">
                     <AlertDialogHeader>
                       <AlertDialogTitle>コメントを削除しますか？</AlertDialogTitle>
                       <AlertDialogDescription>
@@ -454,11 +456,11 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   <Smile className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent side="top" align="end" className="w-96">
+            <PopoverContent side="top" align="end" className="w-[350px] p-0 border-none shadow-none">
                 <Picker
                   data={data}
                   onEmojiSelect={(emoji: EmojiData) => handleEmojiSelect(emoji, true)}
-                  theme="light"
+                theme={theme === 'dark' ? 'dark' : 'light'}
                 />
               </PopoverContent>
             </Popover>
