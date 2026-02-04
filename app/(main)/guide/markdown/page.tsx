@@ -259,8 +259,8 @@ $E = mc^2$
       <Separator className="my-8" />
 
       <section className="mt-8">
-        <h2 className="text-3xl font-bold mb-4">マークダウンを試してみる</h2>
-        <p className="text-gray-600 mb-4">
+        <h2 className="text-3xl font-bold mb-4 text-foreground">マークダウンを試してみる</h2>
+        <p className="text-muted-foreground mb-4">
           以下のエディターでマークダウンを自由に試すことができます。
           入力した内容はリアルタイムでプレビューされます。
         </p>

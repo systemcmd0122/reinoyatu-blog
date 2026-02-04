@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import BlogItem from "@/components/blog/BlogItem"
 import LandingPage from "@/components/landing/LandingPage"
-import { TrendingUp, Filter } from "lucide-react"
+import { TrendingUp, Filter, Search, PenSquare, ChevronDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
   Pagination,
   PaginationContent,
@@ -145,13 +146,33 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
 
   if (!blogsWithLikes.length || error) {
     return (
-      <div className="container mx-auto py-12 text-center">
-        <h2 className="text-2xl font-semibold mb-4">
-          まだブログ投稿がありません
+      <div className="min-h-[60vh] flex flex-col items-center justify-center container mx-auto px-4 py-12 text-center">
+        <div className="p-6 bg-muted rounded-full mb-6">
+          <Search className="h-12 w-12 text-muted-foreground" />
+        </div>
+        <h2 className="text-3xl font-bold mb-3 text-foreground">
+          {queryParam ? `"${queryParam}" に一致する記事は見つかりませんでした` : "まだブログ投稿がありません"}
         </h2>
-        <Link href="/blog/new">
-          <Button>最初のブログを投稿する</Button>
-        </Link>
+        <p className="text-muted-foreground mb-8 max-w-md">
+          {queryParam
+            ? "キーワードを変えて検索するか、トップページに戻ってみてください。"
+            : "最初のブログ記事を投稿して、あなたのストーリーを共有しましょう！"}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          {queryParam ? (
+            <Link href="/">
+              <Button size="lg" variant="outline" className="rounded-full px-8">
+                すべての記事を表示
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/blog/new">
+              <Button size="lg" className="rounded-full px-8 shadow-md">
+                最初のブログを投稿する
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
     )
   }
@@ -161,102 +182,121 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
   const allTags = tags || []
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* ヘッダーセクション */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight mb-2">
-              {queryParam ? `"${queryParam}" の検索結果` : "最新のブログ記事"}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-12">
+          <div className="space-y-2">
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
+              {queryParam ? (
+                <span className="flex items-center gap-3">
+                  <Search className="h-8 w-8 text-primary" />
+                  <span>&ldquo;{queryParam}&rdquo;</span>
+                </span>
+              ) : (
+                "最新のブログ記事"
+              )}
             </h1>
-            <p className="text-muted-foreground">
-              {queryParam 
-                ? `${totalCount}件の記事が見つかりました` 
-                : `${totalCount}件の記事が投稿されています`}
-            </p>
+            <div className="flex items-center gap-3">
+              <p className="text-muted-foreground text-lg">
+                {queryParam
+                  ? `${totalCount}件の記事が見つかりました`
+                  : `${totalCount}件の記事が投稿されています`}
+              </p>
+              {queryParam && (
+                <Link href="/">
+                  <Button variant="ghost" size="sm" className="h-8 rounded-full text-xs">
+                    検索をクリア
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
           
           <Link href="/blog/new">
-            <Button size="lg" className="gap-2">
-              新規ブログ投稿
+            <Button size="lg" className="gap-2 rounded-full px-8 shadow-lg hover:shadow-xl transition-all active:scale-95">
+              <PenSquare className="h-5 w-5" />
+              記事を投稿する
             </Button>
           </Link>
         </div>
 
-        {/* タグフィルターセクション */}
+        {/* タグフィルターセクション - 刷新版 */}
         {popularTags.length > 0 && (
-          <div className="mb-8 bg-gray-50 rounded-2xl border border-gray-200 p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-primary" />
+          <section className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-primary/10 rounded-xl">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">トレンドタグ</h2>
               </div>
-              <h2 className="text-xl font-bold">人気のタグ</h2>
-              <Badge variant="secondary" className="ml-auto">
-                {allTags.length}個
+              <Badge variant="outline" className="rounded-full px-4 border-primary/20 text-primary">
+                {allTags.length} トピック
               </Badge>
             </div>
             
-            {/* 人気タグ一覧 - スクロール可能 */}
-            <div className="relative mb-4">
-              <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
-                <Badge 
-                  variant="default" 
-                  className="cursor-default text-sm px-5 py-2.5 whitespace-nowrap shadow-md flex-shrink-0 font-medium"
-                >
-                  <Filter className="h-3.5 w-3.5 mr-2" />
-                  すべて
-                  <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded-full">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              <Link href="/">
+                <div className={cn(
+                  "flex items-center justify-between p-4 rounded-2xl border-2 transition-all group",
+                  !queryParam
+                    ? "bg-primary border-primary text-primary-foreground shadow-lg scale-[1.02]"
+                    : "bg-card border-border hover:border-primary/50 text-foreground"
+                )}>
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    <span className="font-bold">すべて</span>
+                  </div>
+                  <span className={cn(
+                    "text-xs px-2 py-1 rounded-full",
+                    !queryParam ? "bg-primary-foreground/20" : "bg-muted"
+                  )}>
                     {totalCount}
                   </span>
-                </Badge>
-                {popularTags.map((tag: { name: string; count: number }) => (
-                  <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
-                    <Badge 
-                      variant="outline" 
-                      className="cursor-pointer text-sm px-5 py-2.5 whitespace-nowrap hover:bg-primary/10 hover:border-primary/50 transition-all border-2 flex-shrink-0 font-medium group"
-                    >
-                      <span className="group-hover:text-primary transition-colors">
-                        {tag.name}
-                      </span>
-                      <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full opacity-75 group-hover:bg-primary/20 transition-colors">
-                        {tag.count}
-                      </span>
-                    </Badge>
-                  </Link>
-                ))}
-              </div>
-              {/* グラデーション効果 */}
-              <div className="absolute right-0 top-0 bottom-3 w-24 bg-gradient-to-l from-white dark:from-gray-900 to-transparent pointer-events-none" />
+                </div>
+              </Link>
+
+              {popularTags.map((tag: { name: string; count: number }) => (
+                <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
+                  <div className="flex items-center justify-between p-4 rounded-2xl border-2 border-border bg-card hover:bg-muted/50 hover:border-primary/30 hover:shadow-md transition-all active:scale-95 group">
+                    <span className="font-semibold truncate mr-2 group-hover:text-primary transition-colors">
+                      #{tag.name}
+                    </span>
+                    <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                      {tag.count}
+                    </span>
+                  </div>
+                </Link>
+              ))}
             </div>
 
-            {/* 全タグ表示（折りたたみ可能） */}
-            {allTags.length > 15 && (
-              <details className="group mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-                <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors list-none flex items-center gap-2">
-                  <span>すべてのタグを表示</span>
-                  <Badge variant="secondary" className="text-xs">
-                    +{allTags.length - 15}
-                  </Badge>
-                  <svg className="w-4 h-4 transition-transform group-open:rotate-180 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+            {allTags.length > popularTags.length && (
+              <details className="group mt-6">
+                <summary className="flex justify-center">
+                  <Button variant="ghost" size="sm" className="rounded-full px-8 text-muted-foreground hover:text-foreground list-none cursor-pointer">
+                    すべてのタグを表示
+                    <ChevronDown className="ml-2 h-4 w-4 transition-transform group-open:rotate-180" />
+                  </Button>
                 </summary>
-                <div className="mt-4 flex flex-wrap gap-2 animate-in fade-in-50 duration-300">
-                  {allTags.map((tag: { name: string; count: number }) => (
-                    <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
-                      <Badge 
-                        variant="secondary" 
-                        className="cursor-pointer text-xs px-3 py-1.5 hover:scale-105 hover:bg-primary/20 transition-all font-medium"
-                      >
-                        {tag.name}
-                        <span className="ml-1.5 opacity-60">{tag.count}</span>
-                      </Badge>
-                    </Link>
-                  ))}
+                <div className="mt-6 p-6 rounded-2xl bg-muted/30 border border-dashed border-border animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex flex-wrap gap-2">
+                    {allTags.map((tag: { name: string; count: number }) => (
+                      <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
+                        <Badge
+                          variant="secondary"
+                          className="px-4 py-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer"
+                        >
+                          {tag.name}
+                          <span className="ml-2 opacity-60 text-[10px]">{tag.count}</span>
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </details>
             )}
-          </div>
+          </section>
         )}
 
         {/* ブログ一覧 */}

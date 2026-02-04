@@ -28,7 +28,7 @@ import {
 } from "lucide-react"
 import { deleteBlog } from "@/actions/blog"
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -150,7 +150,7 @@ const CopyrightDialog: React.FC<{
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         transition={{ type: "spring", duration: 0.3 }}
-        className="relative bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700"
+        className="relative bg-card rounded-xl shadow-2xl max-w-md w-full mx-4 border border-border"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
@@ -159,8 +159,8 @@ const CopyrightDialog: React.FC<{
               <AlertTriangle className="h-6 w-6 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">著作権に関する確認</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">画像のダウンロード前にご確認ください</p>
+              <h3 className="text-lg font-semibold text-foreground">著作権に関する確認</h3>
+              <p className="text-sm text-muted-foreground">画像のダウンロード前にご確認ください</p>
             </div>
           </div>
 
@@ -169,8 +169,8 @@ const CopyrightDialog: React.FC<{
               <div className="flex items-start space-x-3">
                 <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-gray-100 mb-2">この画像について：</p>
-                  <ul className="space-y-1 text-gray-700 dark:text-gray-300 text-sm">
+                  <p className="font-medium text-foreground mb-2">この画像について：</p>
+                  <ul className="space-y-1 text-foreground/80 text-sm">
                     <li>• 作成者：{authorName}</li>
                     <li>• この画像には著作権が存在する可能性があります</li>
                     <li>• 適切な利用のため、以下の条件をご確認ください</li>
@@ -180,46 +180,46 @@ const CopyrightDialog: React.FC<{
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <div className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted transition-colors">
                 <Checkbox
                   id="personal-use"
                   checked={personalUseChecked}
                   onCheckedChange={(checked) => setPersonalUseChecked(!!checked)}
                   className="mt-1"
                 />
-                <label htmlFor="personal-use" className="text-sm text-gray-900 dark:text-gray-100 cursor-pointer flex-1">
+                <label htmlFor="personal-use" className="text-sm text-foreground cursor-pointer flex-1">
                   <span className="font-medium">個人利用のみ</span>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     この画像を個人的な用途でのみ使用し、再配布は行いません
                   </p>
                 </label>
               </div>
 
-              <div className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <div className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted transition-colors">
                 <Checkbox
                   id="no-commercial"
                   checked={noCommercialChecked}
                   onCheckedChange={(checked) => setNoCommercialChecked(!!checked)}
                   className="mt-1"
                 />
-                <label htmlFor="no-commercial" className="text-sm text-gray-900 dark:text-gray-100 cursor-pointer flex-1">
+                <label htmlFor="no-commercial" className="text-sm text-foreground cursor-pointer flex-1">
                   <span className="font-medium">商用利用禁止</span>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     この画像を商業目的では使用しません
                   </p>
                 </label>
               </div>
 
-              <div className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <div className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted transition-colors">
                 <Checkbox
                   id="attribution"
                   checked={attributionChecked}
                   onCheckedChange={(checked) => setAttributionChecked(!!checked)}
                   className="mt-1"
                 />
-                <label htmlFor="attribution" className="text-sm text-gray-900 dark:text-gray-100 cursor-pointer flex-1">
+                <label htmlFor="attribution" className="text-sm text-foreground cursor-pointer flex-1">
                   <span className="font-medium">著作者の明記</span>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     使用時には作成者（{authorName}）を適切に明記します
                   </p>
                 </label>
@@ -738,8 +738,8 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
           <div className="flex flex-wrap gap-2 pt-2">
             {blog.tags.map(tag => (
               <Link href={`/tags/${tag.name}`} key={tag.name}>
-                <Badge variant="secondary" className="hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                  # {tag.name}
+                <Badge variant="secondary" className="px-4 py-1.5 rounded-full bg-muted/50 hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-none shadow-sm cursor-pointer">
+                  #{tag.name}
                 </Badge>
               </Link>
             ))}
@@ -749,7 +749,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
       {blog.summary && (
         <div className="my-6">
-          <Accordion type="single" collapsible className="w-full bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <Accordion type="single" collapsible className="w-full bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200">
             <AccordionItem value="item-1" className="border-b-0">
               <AccordionTrigger className="px-6 py-4 text-lg font-semibold hover:no-underline">
                 <div className="flex items-center space-x-3">
@@ -757,7 +757,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                   <span>AIによる要約</span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="px-6 pb-6 text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+              <AccordionContent className="px-6 pb-6 text-base text-foreground/80 leading-relaxed">
                 {blog.summary}
               </AccordionContent>
             </AccordionItem>
@@ -839,7 +839,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 <span>削除</span>
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-white dark:bg-slate-900 border shadow-lg">
+            <AlertDialogContent className="bg-card text-card-foreground border shadow-lg">
               <AlertDialogHeader>
                 <AlertDialogTitle>本当にブログを削除しますか？</AlertDialogTitle>
                 <AlertDialogDescription>
@@ -851,7 +851,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 <AlertDialogAction 
                   onClick={handleDelete}
                   disabled={isDeletePending}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  className={buttonVariants({ variant: "destructive" })}
                 >
                   {isDeletePending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -873,7 +873,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
       <div className="border-t border-border pt-8">
         {/* 著者情報 - シンプルで見やすいプロフィールカード */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
           <Link 
             href={`/profile/${blog.profiles.id}`}
             className="block group"
@@ -882,7 +882,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
               <div className="flex items-center space-x-4">
                 {/* アバター */}
                 <div className="relative flex-shrink-0">
-                  <Avatar className="w-16 h-16 border-2 border-gray-100 dark:border-gray-700">
+                  <Avatar className="w-16 h-16 border-2 border-muted">
                     <AvatarImage 
                       src={blog.profiles?.avatar_url || "/noImage.png"} 
                       alt={blog.profiles?.name || "Unknown User"} 
@@ -897,7 +897,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 {/* プロフィール情報 */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200 truncate">
+                    <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors duration-200 truncate">
                       {blog.profiles?.name || "Unknown User"}
                     </h3>
                     <Badge variant="secondary" className="text-xs">
@@ -907,13 +907,13 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                   
                   {/* 自己紹介 */}
                   {blog.profiles?.introduce && (
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
+                    <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
                       {blog.profiles.introduce}
                     </p>
                   )}
                   
                   {/* 詳細情報 */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     {blog.profiles?.created_at && (
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-3 w-3" />
@@ -960,7 +960,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                         href={blog.profiles.social_links.github}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center space-x-1 px-2 py-1 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200 text-xs"
+                        className="inline-flex items-center space-x-1 px-2 py-1 bg-muted hover:bg-accent rounded-md text-muted-foreground hover:text-accent-foreground transition-colors duration-200 text-xs"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <Github className="h-3 w-3" />

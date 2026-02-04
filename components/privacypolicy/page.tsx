@@ -12,12 +12,12 @@ const PrivacySection = ({
   children: React.ReactNode, 
   icon?: React.ComponentType<{ className?: string }> 
 }) => (
-  <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm hover:shadow-md transition-all duration-300">
+  <div className="bg-card border border-border rounded-lg p-6 mb-6 shadow-sm hover:shadow-md transition-all duration-300">
     <div className="flex items-center mb-4">
-      <Icon className="w-6 h-6 mr-3 text-blue-600" />
-      <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+      <Icon className="w-6 h-6 mr-3 text-primary" />
+      <h2 className="text-xl font-semibold text-foreground">{title}</h2>
     </div>
-    <div className="text-gray-600 space-y-3">{children}</div>
+    <div className="text-muted-foreground space-y-3">{children}</div>
   </div>
 );
 
@@ -30,8 +30,8 @@ const getFormattedDate = () => {
 // メインのプライバシーポリシーコンポーネント
 const PrivacyPolicy = () => {
   return (
-    <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto bg-card border border-border shadow-xl rounded-xl overflow-hidden">
         {/* ヘッダーセクション */}
         <div className="bg-gradient-to-r from-blue-700 to-blue-500 text-white p-8 text-center">
           <div className="flex justify-center mb-4">
@@ -44,7 +44,7 @@ const PrivacyPolicy = () => {
         {/* ポリシー内容セクション */}
         <div className="p-8 space-y-6">
           {/* イントロダクション */}
-          <div className="text-gray-700 mb-6">
+          <div className="text-foreground/90 mb-6">
             <p>当サービスをご利用いただき、ありがとうございます。ユーザーの皆様のプライバシーを尊重し、個人情報の保護に努めています。このプライバシーポリシーでは、当サービスが収集する情報とその利用方法について説明します。</p>
           </div>
 
@@ -112,20 +112,20 @@ const PrivacyPolicy = () => {
           </PrivacySection>
 
           {/* お問い合わせと注意事項 */}
-          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+          <div className="bg-muted/50 rounded-lg p-6 border border-border">
             <div className="flex items-center mb-4">
-              <Mail className="w-6 h-6 mr-3 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-800">お問い合わせ</h2>
+              <Mail className="w-6 h-6 mr-3 text-primary" />
+              <h2 className="text-xl font-semibold text-foreground">お問い合わせ</h2>
             </div>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               個人情報に関するお問い合わせは、サイト管理者までご連絡ください。
             </p>
             
             <div className="flex items-center mt-6 mb-3">
               <AlertCircle className="w-6 h-6 mr-3 text-amber-500" />
-              <h3 className="text-lg font-semibold text-gray-800">注意事項</h3>
+              <h3 className="text-lg font-semibold text-foreground">注意事項</h3>
             </div>
-            <ul className="list-disc list-inside pl-4 space-y-2 text-gray-600">
+            <ul className="list-disc list-inside pl-4 space-y-2 text-muted-foreground">
               <li>サイト上での画像の使用などに関しての著作権などに関してはサイト作成者は一切責任を負いません。</li>
               <li>ボットが24時間投稿監視を行っています。規約や法律などに抵触してる場合は投稿を自動で削除する際がございますのでご理解ください。</li>
             </ul>
@@ -133,7 +133,7 @@ const PrivacyPolicy = () => {
         </div>
 
         {/* フッター */}
-        <div className="bg-gray-800 text-white p-4 text-center text-sm">
+        <div className="bg-muted text-muted-foreground p-4 text-center text-sm border-t border-border">
           <p>© {new Date().getFullYear()} 例のヤツ｜ブログ. All Rights Reserved.</p>
         </div>
       </div>

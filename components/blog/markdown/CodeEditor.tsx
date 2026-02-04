@@ -55,8 +55,8 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   };
 
   return (
-    <div className="rounded-lg overflow-hidden border border-gray-200 mb-4">
-      <div className="bg-gray-100 p-2 flex justify-between items-center">
+    <div className="rounded-lg overflow-hidden border border-border mb-4">
+      <div className="bg-muted p-2 flex justify-between items-center">
         <Select value={language} onValueChange={setLanguage}>
           <SelectTrigger className="w-40 h-8">
             <SelectValue placeholder="言語を選択" />

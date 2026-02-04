@@ -56,7 +56,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
   return (
     <Link href={`/blog/${blog.id}`} className="block group">
       <Card className={cn(
-        "relative w-full h-full overflow-hidden bg-white",
+        "relative w-full h-full overflow-hidden bg-card",
         "border border-border/50 transition-all duration-300 ease-in-out",
         "hover:border-primary/30 hover:shadow-xl hover:-translate-y-1",
         "rounded-2xl"
@@ -112,7 +112,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog, priority = false }) => {
                   </TooltipTrigger>
                   <TooltipContent 
                     side="top" 
-                    className="max-w-xs p-3 bg-gray-900 border-gray-700"
+                    className="max-w-xs p-3 bg-popover text-popover-foreground border-border"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex flex-wrap gap-1.5">

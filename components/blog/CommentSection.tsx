@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import data from '@emoji-mart/data'
 import Picker from '@emoji-mart/react'
 import { useAuth } from '@/hooks/use-auth'
+import { useTheme } from "next-themes"
 import { createClient } from "@/utils/supabase/client"
 import {
   Popover,
@@ -48,6 +49,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 }) => {
   const router = useRouter()
   useAuth()
+  const { theme } = useTheme()
   const [content, setContent] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -283,11 +285,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                   <Smile className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent side="top" align="end" className="w-96">
+              <PopoverContent side="top" align="end" className="w-[350px] p-0 border-none shadow-none">
                 <Picker
                   data={data}
                   onEmojiSelect={handleEmojiSelect}
-                  theme="light"
+                  theme={theme === 'dark' ? 'dark' : 'light'}
                 />
               </PopoverContent>
             </Popover>

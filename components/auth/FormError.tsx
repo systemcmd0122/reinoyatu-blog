@@ -1,8 +1,5 @@
 'use client'
 
-// FormError.tsx
-'use client'
-
 import { useEffect } from "react"
 import { AlertCircle } from "lucide-react"
 
@@ -25,9 +22,9 @@ const FormError = ({ message }: FormErrorProps) => {
 
   return (
     <div className="error-container transition-all duration-300 ease-in-out transform">
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex items-center gap-x-3">
-        <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-        <p className="text-sm text-red-700">{message}</p>
+      <div className="bg-destructive/10 border-l-4 border-destructive p-4 rounded-md flex items-center gap-x-3">
+        <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0" />
+        <p className="text-sm text-destructive font-medium">{message}</p>
       </div>
       <style jsx>{`
         .shake {

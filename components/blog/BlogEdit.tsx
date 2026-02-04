@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Loader2, Trash2, Wand2, ImagePlus } from "lucide-react"
 import { editBlog, deleteBlog, generateTagsFromContent, generateAndSaveSummary } from "@/actions/blog" // generateAndSaveSummary を追加
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -329,7 +329,7 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
                 <Trash2 className="h-5 w-5" />
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+            <AlertDialogContent className="bg-card text-card-foreground border rounded-lg shadow-xl">
               <AlertDialogHeader>
                 <AlertDialogTitle>本当にブログを削除しますか？</AlertDialogTitle>
                 <AlertDialogDescription>
@@ -341,7 +341,7 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
                 <AlertDialogAction 
                   onClick={handleDelete}
                   disabled={isDeletePending}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  className={buttonVariants({ variant: "destructive" })}
                 >
                   {isDeletePending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

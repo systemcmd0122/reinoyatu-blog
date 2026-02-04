@@ -318,14 +318,14 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto py-8 px-4">
           {/* ヘッダー */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-4xl font-bold text-foreground mb-2">
               新しい記事を作成
             </h1>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               ステップに従って記事を作成しましょう
             </p>
           </div>
@@ -333,12 +333,12 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
           {/* プログレスバー */}
           <div className="mb-12">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-700">進捗状況</span>
-              <span className="text-sm text-gray-500">{status.completed} / {status.total} 完了</span>
+              <span className="text-sm font-medium text-foreground/80">進捗状況</span>
+              <span className="text-sm text-muted-foreground">{status.completed} / {status.total} 完了</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="w-full bg-muted rounded-full h-2.5">
               <div 
-                className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out"
+                className="bg-primary h-2.5 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${status.percentage}%` }}
               />
             </div>
@@ -348,7 +348,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
             {/* 編集エリア */}
             <div className="space-y-6">
               {/* ステップインジケーター */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+              <div className="bg-card border border-border rounded-lg p-6 mb-8 shadow-sm">
                 <div className="flex items-center justify-between">
                   {steps.map((step, index) => {
                     const StepIcon = step.icon
@@ -360,17 +360,17 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                             className={cn(
                               "flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all mb-2",
                               index === currentStep
-                                ? 'bg-blue-600 border-blue-600 text-white'
+                                ? 'bg-primary border-primary text-primary-foreground'
                                 : index < currentStep
-                                ? 'bg-blue-50 border-blue-600 text-blue-600'
-                                : 'bg-white border-gray-300 text-gray-400'
+                                ? 'bg-primary/10 border-primary text-primary'
+                                : 'bg-background border-muted-foreground/30 text-muted-foreground'
                             )}
                           >
                             <StepIcon className="h-5 w-5" />
                           </button>
                           <span className={cn(
                             "text-xs font-medium text-center",
-                            index <= currentStep ? 'text-gray-900' : 'text-gray-400'
+                            index <= currentStep ? 'text-foreground' : 'text-muted-foreground'
                           )}>
                             {step.title}
                           </span>
@@ -378,7 +378,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                         {index < steps.length - 1 && (
                           <div className={cn(
                             "flex-1 h-0.5 mx-2 mt-6",
-                            index < currentStep ? 'bg-blue-600' : 'bg-gray-300'
+                            index < currentStep ? 'bg-primary' : 'bg-muted'
                           )} />
                         )}
                       </React.Fragment>
@@ -394,20 +394,20 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                   <Tabs value={steps[currentStep].id} className="space-y-6">
                     {/* ステップ1: 基本情報 */}
                     <TabsContent value="basic" className="space-y-6">
-                      <Card className="border border-gray-200 shadow-sm">
+                      <Card className="border border-border shadow-sm">
                         <CardContent className="pt-6 space-y-6">
                           <FormField
                             control={form.control}
                             name="title"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-base font-semibold text-gray-900">
+                                <FormLabel className="text-base font-semibold text-foreground">
                                   タイトル <span className="text-red-500">*</span>
                                 </FormLabel>
                                 <FormControl>
                                   <Input 
                                     placeholder="記事のタイトルを入力してください"
-                                    className="h-12 text-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                    className="h-12 text-lg border-input focus:ring-primary"
                                     {...field} 
                                     disabled={isPending} 
                                   />
@@ -421,14 +421,14 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
 
                           <div className="space-y-4">
                             <div>
-                              <h3 className="text-base font-semibold text-gray-900 mb-1">カバー画像</h3>
-                              <p className="text-sm text-gray-500">記事のサムネイル画像をアップロード</p>
+                              <h3 className="text-base font-semibold text-foreground mb-1">カバー画像</h3>
+                              <p className="text-sm text-muted-foreground">記事のサムネイル画像をアップロード</p>
                             </div>
 
                             {!imagePreview ? (
                               <label 
                                 htmlFor="image-upload" 
-                                className="block w-full aspect-video border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all"
+                                className="block w-full aspect-video border-2 border-dashed border-muted rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 transition-all"
                               >
                                 <input
                                   id="image-upload"
@@ -438,14 +438,14 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                                   onChange={handleImageUpload}
                                 />
                                 <div className="flex flex-col items-center justify-center h-full space-y-3">
-                                  <div className="p-3 bg-gray-100 rounded-full">
-                                    <ImagePlus className="h-8 w-8 text-gray-600" />
+                                  <div className="p-3 bg-muted rounded-full">
+                                    <ImagePlus className="h-8 w-8 text-muted-foreground" />
                                   </div>
                                   <div className="text-center">
-                                    <p className="font-medium text-gray-700">
+                                    <p className="font-medium text-foreground">
                                       画像をアップロード
                                     </p>
-                                    <p className="text-sm text-gray-500 mt-1">
+                                    <p className="text-sm text-muted-foreground mt-1">
                                       JPG, PNG (最大2MB)
                                     </p>
                                   </div>
@@ -453,7 +453,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                               </label>
                             ) : (
                               <div className="relative group">
-                                <div className="aspect-video rounded-lg overflow-hidden border border-gray-200">
+                                <div className="aspect-video rounded-lg overflow-hidden border border-border">
                                   <Image
                                     src={imagePreview}
                                     alt="Selected image"
@@ -490,7 +490,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
 
                     {/* ステップ2: 記事作成 */}
                     <TabsContent value="content" className="space-y-6">
-                      <Card className="border border-gray-200">
+                      <Card className="border border-border">
                         <CardContent className="pt-6">
                           <FormField
                             control={form.control}
@@ -498,7 +498,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                             render={({ field }) => (
                               <FormItem>
                                 <div className="flex items-center justify-between mb-4">
-                                  <FormLabel className="text-base font-semibold text-gray-900">
+                                  <FormLabel className="text-base font-semibold text-foreground">
                                     記事内容 <span className="text-red-500">*</span>
                                   </FormLabel>
                                   <div className="flex items-center space-x-2">
@@ -516,7 +516,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                                       variant="default"
                                       size="sm"
                                       onClick={handleAICustomizeClick}
-                                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
                                     >
                                       <Wand2 className="h-4 w-4 mr-2" />
                                       AIアシスタント
@@ -528,7 +528,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                                     <Textarea
                                       placeholder="記事の内容をMarkdown形式で記述してください..."
                                       rows={16}
-                                      className="text-base leading-relaxed font-mono border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                      className="text-base leading-relaxed font-mono border-input focus:ring-primary"
                                       {...field}
                                       disabled={isPending}
                                       ref={textareaRef}
@@ -546,7 +546,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
 
                     {/* ステップ3: 詳細設定 */}
                     <TabsContent value="details" className="space-y-6">
-                      <Card className="border border-gray-200">
+                      <Card className="border border-border">
                         <CardContent className="pt-6 space-y-6">
                           <FormField
                             control={form.control}
@@ -554,7 +554,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                             render={({ field }) => (
                               <FormItem>
                                 <div className="flex items-center justify-between mb-3">
-                                  <FormLabel className="text-base font-semibold text-gray-900">
+                                  <FormLabel className="text-base font-semibold text-foreground">
                                     要約
                                   </FormLabel>
                                   <Button
@@ -576,12 +576,12 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                                   <Textarea
                                     placeholder="記事の要約を入力してください（200文字以内推奨）"
                                     rows={4}
-                                    className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                    className="border-input focus:ring-primary"
                                     {...field}
                                     disabled={isPending}
                                   />
                                 </FormControl>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-sm text-muted-foreground">
                                   記事の概要を簡潔にまとめてください
                                 </p>
                                 <FormMessage />
@@ -597,7 +597,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                             render={({ field }) => (
                               <FormItem>
                                 <div className="flex items-center justify-between mb-3">
-                                  <FormLabel className="text-base font-semibold text-gray-900">
+                                  <FormLabel className="text-base font-semibold text-foreground">
                                     タグ
                                   </FormLabel>
                                   <Button
@@ -636,11 +636,11 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
 
                     {/* ステップ4: プレビュー・投稿 */}
                     <TabsContent value="preview" className="space-y-6">
-                      <Card className="border border-gray-200">
+                      <Card className="border border-border">
                         <CardContent className="pt-6 space-y-6">
                           <div className="text-center">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">投稿の準備が整いました</h2>
-                            <p className="text-gray-600">内容を確認して、公開しましょう</p>
+                            <h2 className="text-2xl font-bold text-foreground mb-2">投稿の準備が整いました</h2>
+                            <p className="text-muted-foreground">内容を確認して、公開しましょう</p>
                           </div>
 
                           {error && (
@@ -653,7 +653,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                             <Button 
                               type="submit" 
                               size="lg"
-                              className="px-10 py-6 text-lg bg-blue-600 hover:bg-blue-700"
+                              className="px-10 py-6 text-lg"
                               disabled={isPending || !watchedTitle || !watchedContent}
                             >
                               {isPending ? (
@@ -675,7 +675,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                   </Tabs>
 
                   {/* ナビゲーションボタン */}
-                  <div className="flex justify-between pt-6 border-t border-gray-200">
+                  <div className="flex justify-between pt-6 border-t border-border">
                     <Button 
                       type="button"
                       variant="outline" 
@@ -690,7 +690,7 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
                         type="button"
                         onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
                         disabled={!canProceedToNext(currentStep)}
-                        className="px-6 bg-blue-600 hover:bg-blue-700"
+                        className="px-6"
                       >
                         次へ
                       </Button>

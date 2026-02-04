@@ -27,12 +27,12 @@ const LandingPage = async () => {
   return (
     <div className="w-full">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-white to-gray-100 dark:from-gray-900 dark:to-gray-800 py-20 md:py-32">
+      <section className="relative bg-gradient-to-b from-background to-muted/50 py-20 md:py-32">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-foreground">
             あなたの知識と情熱を、世界へ
           </h1>
-          <p className="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-gray-600 dark:text-gray-300">
+          <p className="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground">
             「例のヤツ」は、あなたのアイデア、ストーリー、専門知識を共有し、同じ興味を持つ人々と繋がるためのブログプラットフォームです。
           </p>
           <div className="mt-10 flex justify-center gap-4">
@@ -51,11 +51,11 @@ const LandingPage = async () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white dark:bg-gray-900">
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">主な機能</h2>
-            <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">ブログ作成をサポートするパワフルな機能</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground">主な機能</h2>
+            <p className="mt-4 text-lg text-muted-foreground">ブログ作成をサポートするパワフルな機能</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="text-center">
@@ -103,11 +103,11 @@ const LandingPage = async () => {
 
       {/* Recent Posts Section */}
       {blogsData && blogsData.length > 0 && (
-        <section className="py-20 bg-gray-50 dark:bg-gray-800">
+        <section className="py-20 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">最新の投稿</h2>
-              <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">コミュニティからの新しい声を発見しよう</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">最新の投稿</h2>
+              <p className="mt-4 text-lg text-muted-foreground">コミュニティからの新しい声を発見しよう</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {blogsData.map((blog) => (
@@ -119,10 +119,10 @@ const LandingPage = async () => {
       )}
 
       {/* Final CTA Section */}
-      <section className="py-20 bg-white dark:bg-gray-900">
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">さあ、あなたの物語を始めよう</h2>
-          <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-600 dark:text-gray-300">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground">さあ、あなたの物語を始めよう</h2>
+          <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
             今すぐ無料でアカウントを作成し、あなたのユニークな視点を世界と共有しましょう。
           </p>
           <div className="mt-8">

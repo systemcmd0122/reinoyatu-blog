@@ -1,7 +1,7 @@
 const EmailSuccessPage = () => {
   return (
-    <div className="w-[500px] bg-white p-5 rounded-xl border">
-      <div className="text-primary text-xl font-bold text-center border-b border-black pb-5 mb-5 mt-3">
+    <div className="w-[500px] bg-card text-card-foreground p-5 rounded-xl border">
+      <div className="text-primary text-xl font-bold text-center border-b pb-5 mb-5 mt-3">
         メールアドレス変更メール送信
       </div>
 
