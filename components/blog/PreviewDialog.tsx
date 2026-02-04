@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Eye } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
@@ -32,10 +32,10 @@ const PreviewDialog: React.FC<PreviewDialogProps> = ({
         <div className="h-full flex flex-col">
           <div className="flex-none p-6 border-b border-border">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground flex items-center">
+              <DialogTitle className="text-lg font-semibold text-foreground flex items-center">
                 <Eye className="h-5 w-5 mr-2 text-primary" />
                 プレビュー
-              </h2>
+              </DialogTitle>
               {content && (
                 <p className="text-sm text-muted-foreground">
                   {content.length} 文字

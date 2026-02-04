@@ -58,7 +58,6 @@
     "react-dom": "19.2.4",
     "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.53.0",
-    "react-hot-toast": "^2.4.1",
     "react-image-crop": "^11.0.7",
     "react-images-uploading": "^3.1.7",
     "react-markdown": "^9.0.3",

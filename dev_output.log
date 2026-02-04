@@ -1,0 +1,18 @@
+
+> nextjs-supabase-blog@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+✓ Ready in 1386ms
+○ Compiling / ...
+ GET / 200 in 8.3s (compile: 7.1s, proxy.ts: 273ms, render: 895ms)
+○ Compiling /blog/new ...
+ GET /blog/new 200 in 6.2s (compile: 6.0s, proxy.ts: 9ms, render: 188ms)
+ GET / 200 in 260ms (compile: 5ms, proxy.ts: 6ms, render: 248ms)
+✓ Compiled in 420ms
+✓ Compiled in 255ms
+✓ Compiled in 205ms

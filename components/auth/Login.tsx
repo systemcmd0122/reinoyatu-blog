@@ -26,7 +26,7 @@ import { ChevronRight, Loader2, EyeOffIcon, EyeIcon, Chrome } from "lucide-react
 import { LoginSchema } from "@/schemas"
 import { login, signInWithGoogle } from "@/actions/auth"
 import { useRouter } from "next/navigation"
-import toast from "react-hot-toast"
+import { toast } from "sonner"
 import FormError from "@/components/auth/FormError"
 import Link from "next/link"
 

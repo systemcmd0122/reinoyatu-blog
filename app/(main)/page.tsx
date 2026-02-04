@@ -181,7 +181,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
   const allTags = tags || []
 
   return (
-    <div className="min-h-screen bg-[#f5f6f6] dark:bg-background">
+    <div className="min-h-screen bg-muted/30 dark:bg-background">
       <div className="max-w-screen-xl mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* メインコンテンツ - フィード */}
@@ -203,7 +203,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
 
             {/* タブナビゲーション */}
             <div className="bg-card border border-border rounded-t-lg flex items-center px-1 h-12 mb-[-1px]">
-              <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-[hsl(var(--primary))] text-foreground font-bold px-6 hover:bg-transparent">
+              <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-primary text-foreground font-bold px-6 hover:bg-transparent">
                 最新の投稿
               </Button>
               <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground px-6 hover:bg-transparent" disabled>
@@ -270,7 +270,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
               <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-border bg-muted/30">
                   <h2 className="font-bold flex items-center gap-2 text-foreground">
-                    <TrendingUp className="h-4 w-4 text-[hsl(var(--primary))]" />
+                    <TrendingUp className="h-4 w-4 text-primary" />
                     トレンドタグ
                   </h2>
                 </div>

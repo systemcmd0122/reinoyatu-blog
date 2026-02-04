@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Tag, TrendingUp, ChevronLeft, Search, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 interface TagPageProps {
   params: Promise<{
@@ -64,7 +65,7 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
   const popularTags = allTagsData ? [...allTagsData].sort((a, b) => b.count - a.count).slice(0, 20) : []
 
   return (
-    <div className="min-h-screen bg-[#f5f6f6] dark:bg-background">
+    <div className="min-h-screen bg-muted/30 dark:bg-background">
       <div className="max-w-screen-xl mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* メインコンテンツ - フィード */}
@@ -93,12 +94,12 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
             {/* タブナビゲーション */}
             <div className="bg-card border border-border rounded-t-lg flex items-center px-1 h-12 mb-[-1px]">
               <Link href={`/tags/${tag}?sort=latest`} className="h-full">
-                <Button variant="ghost" size="sm" className={`h-full rounded-none border-b-2 px-6 hover:bg-transparent ${sortBy === 'latest' ? 'border-[hsl(var(--primary))] text-foreground font-bold' : 'border-transparent text-muted-foreground'}`}>
+                <Button variant="ghost" size="sm" className={`h-full rounded-none border-b-2 px-6 hover:bg-transparent ${sortBy === 'latest' ? 'border-primary text-foreground font-bold' : 'border-transparent text-muted-foreground'}`}>
                   最新の投稿
                 </Button>
               </Link>
               <Link href={`/tags/${tag}?sort=oldest`} className="h-full">
-                <Button variant="ghost" size="sm" className={`h-full rounded-none border-b-2 px-6 hover:bg-transparent ${sortBy === 'oldest' ? 'border-[hsl(var(--primary))] text-foreground font-bold' : 'border-transparent text-muted-foreground'}`}>
+                <Button variant="ghost" size="sm" className={`h-full rounded-none border-b-2 px-6 hover:bg-transparent ${sortBy === 'oldest' ? 'border-primary text-foreground font-bold' : 'border-transparent text-muted-foreground'}`}>
                   古い順
                 </Button>
               </Link>
@@ -125,7 +126,7 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
               <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-border bg-muted/30">
                   <h2 className="font-bold flex items-center gap-2 text-foreground">
-                    <TrendingUp className="h-4 w-4 text-[hsl(var(--primary))]" />
+                    <TrendingUp className="h-4 w-4 text-primary" />
                     トレンドタグ
                   </h2>
                 </div>
@@ -138,7 +139,10 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
                       >
                         <Badge 
                           variant={t.name === tagName ? "default" : "secondary"}
-                          className={`rounded-full px-3 py-1 cursor-pointer transition-all ${t.name === tagName ? 'bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)]' : 'hover:bg-muted-foreground/10'}`}
+                          className={cn(
+                            "rounded-full px-3 py-1 cursor-pointer transition-all",
+                            t.name === tagName ? "bg-primary hover:bg-primary/90" : "hover:bg-muted-foreground/10"
+                          )}
                         >
                           #{t.name}
                         </Badge>
