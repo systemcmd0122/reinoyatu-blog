@@ -153,6 +153,14 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
                       </li>
                       <li>
                         <Link
+                          href="/changelog"
+                          className="hover:text-primary transition-colors"
+                        >
+                          アップデート
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
                           href="/guide/markdown"
                           className="hover:text-primary transition-colors"
                         >

@@ -16,7 +16,8 @@ import {
   LogOut,
   Moon,
   Sun,
-  Laptop
+  Laptop,
+  Rocket
 } from "lucide-react"
 
 import { DialogTitle } from "@/components/ui/dialog"
@@ -143,7 +144,7 @@ export function CommandMenu() {
             </CommandGroup>
           )}
 
-          {(!query || "プロフィール設定".includes(query) || "マークダウンガイド".includes(query)) && (
+          {(!query || "プロフィール設定".includes(query) || "マークダウンガイド".includes(query) || "アップデートログ".includes(query)) && (
             <>
               <CommandSeparator />
               <CommandGroup heading="設定・ツール">
@@ -157,6 +158,12 @@ export function CommandMenu() {
                   <CommandItem onSelect={() => runCommand(() => router.push("/guide/markdown"))}>
                     <FileText className="mr-2 h-4 w-4" />
                     <span>マークダウンガイド</span>
+                  </CommandItem>
+                )}
+                {(!query || "アップデートログ".includes(query)) && (
+                  <CommandItem onSelect={() => runCommand(() => router.push("/changelog"))}>
+                    <Rocket className="mr-2 h-4 w-4" />
+                    <span>アップデートログ</span>
                   </CommandItem>
                 )}
               </CommandGroup>
