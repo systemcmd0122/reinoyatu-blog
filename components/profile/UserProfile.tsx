@@ -139,7 +139,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
               <div className="flex items-center justify-center pt-2">
                 <a
                   href="/settings/profile"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 transition-colors"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-md text-white bg-[#55c500] hover:bg-[#46a300] transition-colors"
                 >
                   プロフィールを編集
                 </a>
@@ -216,7 +216,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
                     {isOwnProfile && (
                       <a
                         href="/blog/new"
-                        className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 transition-colors"
+                        className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-md text-white bg-[#55c500] hover:bg-[#46a300] transition-colors"
                       >
                         最初の投稿を作成
                       </a>

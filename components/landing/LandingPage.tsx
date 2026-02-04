@@ -37,7 +37,7 @@ const LandingPage = async () => {
           </p>
           <div className="mt-10 flex justify-center gap-4">
             <Link href="/signup">
-              <Button size="lg" className="gap-2">
+              <Button size="lg" className="gap-2 bg-[#55c500] hover:bg-[#46a300] text-white border-none font-bold">
                 今すぐ始める <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
@@ -127,7 +127,7 @@ const LandingPage = async () => {
           </p>
           <div className="mt-8">
             <Link href="/signup">
-              <Button size="lg" className="gap-2">
+              <Button size="lg" className="gap-2 bg-[#55c500] hover:bg-[#46a300] text-white border-none font-bold">
                 アカウント登録へ <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>

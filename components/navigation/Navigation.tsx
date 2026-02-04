@@ -142,32 +142,37 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   return (
     <>
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-4 md:gap-8">
+        <div className="max-w-screen-xl mx-auto flex h-14 items-center justify-between px-4">
+          <div className="flex items-center gap-4 flex-1">
             <Link
               href="/"
-              className="flex items-center space-x-2 hover:opacity-90 transition-opacity"
+              className="flex items-center space-x-2 hover:opacity-90 transition-opacity flex-shrink-0"
             >
-              <span className="font-bold text-lg md:text-xl tracking-tight whitespace-nowrap">
-                例のヤツ<span className="text-primary">｜</span>ブログ
+              <div className="bg-primary text-primary-foreground p-1 rounded font-black text-xl leading-none">
+                RY
+              </div>
+              <span className="font-black text-lg md:text-xl tracking-tighter hidden sm:inline-block">
+                例のヤツ
               </span>
             </Link>
 
-            <form onSubmit={handleSearch} className="hidden md:flex relative w-64 lg:w-80 group">
+            <form onSubmit={handleSearch} className="hidden md:flex relative max-w-sm w-full group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 type="search"
-                placeholder="キーワードで検索..."
-                className="pl-9 h-10 bg-muted/50 border-border focus-visible:ring-1 focus-visible:ring-primary focus:bg-background transition-all"
+                placeholder="キーワードで検索"
+                className="pl-9 h-9 bg-muted/40 border-none focus-visible:ring-2 focus-visible:ring-primary/20 focus:bg-background transition-all rounded-md"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </form>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-1 md:gap-3">
             <div className="hidden md:flex items-center gap-1">
-              <ThemeToggle />
+              <Button variant="ghost" size="sm" asChild className="text-foreground font-bold hover:bg-muted">
+                <Link href="/">ホーム</Link>
+              </Button>
 
               {user && (
                 <>
@@ -176,21 +181,17 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                       <Bookmark className="h-5 w-5" />
                     </Link>
                   </Button>
-                  <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
-                    <Link href="/guide/markdown" title="ガイド">
-                      <FileText className="h-5 w-5" />
-                    </Link>
-                  </Button>
                 </>
               )}
+              <ThemeToggle />
             </div>
 
             {user ? (
-              <div className="flex items-center gap-3">
-                <Button variant="default" size="sm" asChild className="hidden sm:flex gap-2 rounded-full px-4 shadow-sm">
+              <div className="flex items-center gap-2">
+                <Button variant="default" size="sm" asChild className="hidden sm:flex gap-2 rounded-md px-4 shadow-none bg-[#55c500] hover:bg-[#46a300] text-white border-none font-bold">
                   <Link href="/blog/new">
                     <PenSquare className="h-4 w-4" />
-                    <span>投稿</span>
+                    <span>投稿する</span>
                   </Link>
                 </Button>
 

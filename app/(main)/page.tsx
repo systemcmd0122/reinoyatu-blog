@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import BlogItem from "@/components/blog/BlogItem"
 import LandingPage from "@/components/landing/LandingPage"
-import { TrendingUp, Filter, Search, PenSquare, ChevronDown } from "lucide-react"
+import { TrendingUp, Search, PenSquare, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Pagination,
@@ -182,163 +182,157 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
   const allTags = tags || []
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* ヘッダーセクション */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-12">
-          <div className="space-y-2">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
-              {queryParam ? (
-                <span className="flex items-center gap-3">
-                  <Search className="h-8 w-8 text-primary" />
-                  <span>&ldquo;{queryParam}&rdquo;</span>
-                </span>
-              ) : (
-                "最新のブログ記事"
-              )}
-            </h1>
-            <div className="flex items-center gap-3">
-              <p className="text-muted-foreground text-lg">
-                {queryParam
-                  ? `${totalCount}件の記事が見つかりました`
-                  : `${totalCount}件の記事が投稿されています`}
-              </p>
-              {queryParam && (
-                <Link href="/">
-                  <Button variant="ghost" size="sm" className="h-8 rounded-full text-xs">
-                    検索をクリア
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </div>
-          
-          <Link href="/blog/new">
-            <Button size="lg" className="gap-2 rounded-full px-8 shadow-lg hover:shadow-xl transition-all active:scale-95">
-              <PenSquare className="h-5 w-5" />
-              記事を投稿する
-            </Button>
-          </Link>
-        </div>
-
-        {/* タグフィルターセクション - 刷新版 */}
-        {popularTags.length > 0 && (
-          <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-primary/10 rounded-xl">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                </div>
-                <h2 className="text-2xl font-bold tracking-tight">トレンドタグ</h2>
-              </div>
-              <Badge variant="outline" className="rounded-full px-4 border-primary/20 text-primary">
-                {allTags.length} トピック
-              </Badge>
-            </div>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              <Link href="/">
-                <div className={cn(
-                  "flex items-center justify-between p-4 rounded-2xl border-2 transition-all group",
-                  !queryParam
-                    ? "bg-primary border-primary text-primary-foreground shadow-lg scale-[1.02]"
-                    : "bg-card border-border hover:border-primary/50 text-foreground"
-                )}>
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4" />
-                    <span className="font-bold">すべて</span>
-                  </div>
-                  <span className={cn(
-                    "text-xs px-2 py-1 rounded-full",
-                    !queryParam ? "bg-primary-foreground/20" : "bg-muted"
-                  )}>
-                    {totalCount}
+    <div className="min-h-screen bg-[#f5f6f6] dark:bg-background">
+      <div className="max-w-screen-xl mx-auto px-4 py-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* メインコンテンツ - フィード */}
+          <main className="flex-1 min-w-0">
+            {queryParam && (
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
+                  <Search className="h-6 w-6" />
+                  <span>&ldquo;{queryParam}&rdquo; の検索結果</span>
+                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                    {totalCount}件
                   </span>
-                </div>
-              </Link>
-
-              {popularTags.map((tag: { name: string; count: number }) => (
-                <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
-                  <div className="flex items-center justify-between p-4 rounded-2xl border-2 border-border bg-card hover:bg-muted/50 hover:border-primary/30 hover:shadow-md transition-all active:scale-95 group">
-                    <span className="font-semibold truncate mr-2 group-hover:text-primary transition-colors">
-                      #{tag.name}
-                    </span>
-                    <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                      {tag.count}
-                    </span>
-                  </div>
+                </h1>
+                <Link href="/" className="text-sm text-primary hover:underline mt-1 inline-block">
+                  検索をクリア
                 </Link>
+              </div>
+            )}
+
+            {/* タブナビゲーション */}
+            <div className="bg-card border border-border rounded-t-lg flex items-center px-1 h-12 mb-[-1px]">
+              <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-[#55c500] text-foreground font-bold px-6 hover:bg-transparent">
+                最新の投稿
+              </Button>
+              <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground px-6 hover:bg-transparent" disabled>
+                トレンド
+              </Button>
+            </div>
+
+            {/* ブログ一覧フィード */}
+            <div className="bg-card border border-border rounded-b-lg overflow-hidden divide-y divide-border shadow-sm">
+              {blogsWithLikes.map((blog, index) => (
+                <BlogItem key={blog.id} blog={blog} priority={index < 6} />
               ))}
             </div>
 
-            {allTags.length > popularTags.length && (
-              <details className="group mt-6">
-                <summary className="flex justify-center">
-                  <Button variant="ghost" size="sm" className="rounded-full px-8 text-muted-foreground hover:text-foreground list-none cursor-pointer">
-                    すべてのタグを表示
-                    <ChevronDown className="ml-2 h-4 w-4 transition-transform group-open:rotate-180" />
-                  </Button>
-                </summary>
-                <div className="mt-6 p-6 rounded-2xl bg-muted/30 border border-dashed border-border animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="flex flex-wrap gap-2">
-                    {allTags.map((tag: { name: string; count: number }) => (
-                      <Link key={tag.name} href={`/tags/${encodeURIComponent(tag.name)}`}>
-                        <Badge
-                          variant="secondary"
-                          className="px-4 py-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer"
-                        >
-                          {tag.name}
-                          <span className="ml-2 opacity-60 text-[10px]">{tag.count}</span>
-                        </Badge>
+            {/* ページネーション */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    {page > 1 && (
+                      <PaginationItem>
+                        <PaginationPrevious href={{ query: { ...resolvedSearchParams, page: page - 1 } }} />
+                      </PaginationItem>
+                    )}
+                    {getPagination(page, totalPages).map((item, index) => (
+                      <PaginationItem key={index}>
+                        {item === "..." ? (
+                          <PaginationEllipsis />
+                        ) : (
+                          <PaginationLink
+                            href={{ query: { ...resolvedSearchParams, page: item } }}
+                            isActive={page === item}
+                          >
+                            {item}
+                          </PaginationLink>
+                        )}
+                      </PaginationItem>
+                    ))}
+                    {page < totalPages && (
+                      <PaginationItem>
+                        <PaginationNext href={{ query: { ...resolvedSearchParams, page: page + 1 } }} />
+                      </PaginationItem>
+                    )}
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </main>
+
+          {/* 右サイドバー */}
+          <aside className="w-full lg:w-[300px] flex-shrink-0 space-y-6">
+            {/* 投稿ボタン - サイドバー */}
+            <div className="hidden lg:block">
+              <Link href="/blog/new">
+                <Button size="lg" className="w-full gap-2 rounded-md h-12 shadow-none bg-[#55c500] hover:bg-[#46a300] text-white border-none font-bold text-lg">
+                  <PenSquare className="h-5 w-5" />
+                  記事を投稿する
+                </Button>
+              </Link>
+            </div>
+
+            {/* トレンドタグセクション */}
+            {popularTags.length > 0 && (
+              <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-border bg-muted/30">
+                  <h2 className="font-bold flex items-center gap-2 text-foreground">
+                    <TrendingUp className="h-4 w-4 text-[#55c500]" />
+                    トレンドタグ
+                  </h2>
+                </div>
+                <div className="p-2">
+                  <div className="flex flex-col">
+                    {popularTags.map((tag: { name: string; count: number }) => (
+                      <Link
+                        key={tag.name}
+                        href={`/tags/${encodeURIComponent(tag.name)}`}
+                        className="flex items-center justify-between p-3 rounded-md hover:bg-muted transition-colors group"
+                      >
+                        <span className="text-sm font-medium text-foreground/80 group-hover:text-primary transition-colors">
+                          #{tag.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                          {tag.count}
+                        </span>
                       </Link>
                     ))}
                   </div>
+
+                  {allTags.length > popularTags.length && (
+                    <details className="group border-t border-border mt-2">
+                      <summary className="flex justify-center p-3 text-xs text-muted-foreground hover:text-primary cursor-pointer list-none">
+                        すべてのタグを表示
+                        <ChevronDown className="ml-1 h-3 w-3 transition-transform group-open:rotate-180" />
+                      </summary>
+                      <div className="p-2 grid grid-cols-2 gap-1 animate-in fade-in slide-in-from-top-1">
+                        {allTags.slice(15, 40).map((tag: { name: string; count: number }) => (
+                          <Link
+                            key={tag.name}
+                            href={`/tags/${encodeURIComponent(tag.name)}`}
+                            className="text-[11px] p-2 hover:bg-muted rounded truncate text-foreground/70"
+                          >
+                            #{tag.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </details>
+                  )}
                 </div>
-              </details>
+              </div>
             )}
-          </section>
-        )}
 
-        {/* ブログ一覧 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {blogsWithLikes.map((blog, index) => (
-            <BlogItem key={blog.id} blog={blog} priority={index < 6} />
-          ))}
+            {/* ガイド・規約など */}
+            <div className="bg-card border border-border rounded-lg p-4 shadow-sm">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Links</h3>
+              <nav className="space-y-2">
+                <Link href="/guide/markdown" className="block text-sm text-foreground/80 hover:text-primary transition-colors">
+                  マークダウンガイド
+                </Link>
+                <Link href="/privacy" className="block text-sm text-foreground/80 hover:text-primary transition-colors">
+                  プライバシーポリシー
+                </Link>
+              </nav>
+              <div className="mt-4 pt-4 border-t border-border text-[10px] text-muted-foreground">
+                © {new Date().getFullYear()} 例のヤツ｜ブログ
+              </div>
+            </div>
+          </aside>
         </div>
-
-        {/* ページネーション */}
-        {totalPages > 1 && (
-          <div className="mt-12">
-            <Pagination>
-              <PaginationContent>
-                {page > 1 && (
-                  <PaginationItem>
-                    <PaginationPrevious href={{ query: { ...resolvedSearchParams, page: page - 1 } }} />
-                  </PaginationItem>
-                )}
-                {getPagination(page, totalPages).map((item, index) => (
-                  <PaginationItem key={index}>
-                    {item === "..." ? (
-                      <PaginationEllipsis />
-                    ) : (
-                      <PaginationLink 
-                        href={{ query: { ...resolvedSearchParams, page: item } }} 
-                        isActive={page === item}
-                      >
-                        {item}
-                      </PaginationLink>
-                    )}
-                  </PaginationItem>
-                ))}
-                {page < totalPages && (
-                  <PaginationItem>
-                    <PaginationNext href={{ query: { ...resolvedSearchParams, page: page + 1 } }} />
-                  </PaginationItem>
-                )}
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
       </div>
     </div>
   )
