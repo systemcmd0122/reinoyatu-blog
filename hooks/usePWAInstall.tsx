@@ -11,15 +11,20 @@ export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isInstallable, setIsInstallable] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
+  const [isIOS, setIsIOS] = useState(false)
 
   useEffect(() => {
-    // PWAが既にインストールされているかチェック
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    // Check if running on iOS
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !((window as any).MSStream)
+    setIsIOS(ios)
+
+    // Check if already installed
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true) {
       setIsInstalled(true)
       return
     }
 
-    // インストールプロンプトイベントをリッスン
+    // Listen for the beforeinstallprompt event (Android/Chrome)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
       const promptEvent = e as BeforeInstallPromptEvent
@@ -27,7 +32,7 @@ export function usePWAInstall() {
       setIsInstallable(true)
     }
 
-    // アプリがインストールされたときのイベント
+    // Listen for the appinstalled event
     const handleAppInstalled = () => {
       setIsInstalled(true)
       setIsInstallable(false)
@@ -63,6 +68,7 @@ export function usePWAInstall() {
   return {
     isInstallable,
     isInstalled,
+    isIOS,
     promptInstall,
   }
 }
