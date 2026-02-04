@@ -78,6 +78,10 @@
     "zod": "^3.23.8",
     "zustand": "^5.0.3"
   },
+  "overrides": {
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
   "devDependencies": {
     "@next/bundle-analyzer": "16.1.6",
     "@types/lodash": "^4.17.15",
