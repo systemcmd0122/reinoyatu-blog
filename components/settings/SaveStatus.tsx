@@ -29,12 +29,20 @@ const SaveStatus = ({ status, className }: SaveStatusProps) => {
           <motion.div
             key="saving"
             initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
             exit={{ opacity: 0, y: -5 }}
-            className="flex items-center text-primary bg-primary/10 px-3 py-1 rounded-full"
+            className="flex items-center text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 shadow-sm shadow-primary/5 relative overflow-hidden"
           >
-            <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-            <span>保存中...</span>
+            <motion.div
+              className="absolute inset-0 bg-primary/10"
+              animate={{ opacity: [0.3, 0.7, 0.3] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            />
+            <Loader2 className="h-3 w-3 mr-2 animate-spin relative z-10" />
+            <span className="tabular-nums relative z-10">保存中...</span>
           </motion.div>
         )}
         {status === "saved" && (
@@ -43,7 +51,7 @@ const SaveStatus = ({ status, className }: SaveStatusProps) => {
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
-            className="flex items-center text-green-500 bg-green-500/10 px-3 py-1 rounded-full"
+            className="flex items-center text-green-600 dark:text-green-400 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20"
           >
             <CheckCircle2 className="h-3 w-3 mr-2" />
             <span>保存済み</span>

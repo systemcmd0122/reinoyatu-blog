@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
 import { 
   Loader2, 
   ImagePlus, 
@@ -109,7 +110,7 @@ interface BlogEditorProps {
   mode: "new" | "edit"
   userId: string
   onSubmit: (values: z.infer<typeof BlogSchema> & { base64Image?: string }) => Promise<{ error?: string; success?: boolean; id?: string }>
-  onDelete?: () => Promise<{ error?: string; success?: boolean }>
+  onDelete?: (id?: string) => Promise<{ error?: string; success?: boolean }>
 }
 
 type EditorStatus = "idle" | "saving-draft" | "publishing" | "deleting" | "saved" | "unsaved" | "error"
@@ -122,6 +123,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   onDelete
 }) => {
   const router = useRouter()
+  const [internalMode, setInternalMode] = useState<"new" | "edit">(mode)
+  const [currentBlogId, setCurrentBlogId] = useState<string | undefined>(initialData?.id)
   const [error, setError] = useState("")
   const [status, setStatus] = useState<EditorStatus>("idle")
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -228,16 +231,20 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       setLastSaved(new Date())
       setStatus("saved")
 
+      // 新規作成から編集モードへの内部状態移行
+      if (internalMode === "new" && res.id) {
+        setInternalMode("edit")
+        setCurrentBlogId(res.id)
+        // URLを静かに更新（履歴を置き換え）
+        window.history.replaceState(null, "", `/blog/${res.id}/edit`)
+      }
+
       if (isPublished) {
+        // 公開時はトップへ（これはユーザーの意図した明示的なアクション後の遷移）
         setTimeout(() => {
           router.push("/")
           router.refresh()
-        }, 1000)
-      } else if (mode === "new" && res.id) {
-        setTimeout(() => {
-          router.push(`/blog/${res.id}/edit`)
-          router.refresh()
-        }, 1000)
+        }, 1500)
       }
 
     } catch (error) {
@@ -398,9 +405,19 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
             </Button>
             <Separator orientation="vertical" className="h-6" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">
-                {mode === "new" ? "Create New Story" : "Editing Story"}
-              </span>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none">
+                  {internalMode === "new" ? "New Story" : "Edit Story"}
+                </span>
+                {internalMode === "edit" && (
+                  <Badge variant="outline" className={cn(
+                    "text-[8px] h-3.5 px-1 font-bold border-none uppercase tracking-tighter",
+                    watchedIsPublished ? "bg-green-500/10 text-green-500" : "bg-amber-500/10 text-amber-500"
+                  )}>
+                    {watchedIsPublished ? "Published" : "Draft"}
+                  </Badge>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold truncate max-w-[200px] md:max-w-[400px]">
                   {watchedTitle || "無題の記事"}
@@ -499,15 +516,21 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                     <Sparkles className="h-4 w-4 mr-2" /> AIで文章改善
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  {mode === "edit" && onDelete && (
+                  {internalMode === "edit" && onDelete && (
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
                       onClick={async () => {
                         if (confirm("本当に削除しますか？")) {
                           setStatus("deleting")
-                          const res = await onDelete()
-                          if (res.success) router.push("/")
-                          else setStatus("idle")
+                          const res = await onDelete(currentBlogId)
+                          if (res.success) {
+                            toast.success("記事を削除しました")
+                            router.push("/")
+                            router.refresh()
+                          } else {
+                            setStatus("idle")
+                            toast.error(res.error || "削除に失敗しました")
+                          }
                         }
                       }}
                     >
