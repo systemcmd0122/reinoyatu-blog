@@ -73,19 +73,19 @@ ${currentContent || '(まだ記事本文がありません)'}
 
   return (
     <div className="flex flex-col h-full bg-card border-l border-border relative">
-      <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Sparkles className="h-5 w-5 text-primary" />
+      <div className="p-8 border-b border-border flex items-center justify-between bg-muted/20">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-primary/10 rounded-xl shadow-inner">
+            <Sparkles className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h3 className="font-bold text-sm">AI共同執筆アシスタント</h3>
-            <p className="text-[10px] text-muted-foreground">Gemini 2.0 Flash Powered</p>
+            <h3 className="font-black text-lg tracking-tight">AI共同執筆アシスタント</h3>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest opacity-70">Gemini Powered Intelligence</p>
           </div>
         </div>
       </div>
 
-      <ScrollArea className="flex-1 px-4 py-6" ref={scrollRef}>
+      <ScrollArea className="flex-1 px-6 py-10" ref={scrollRef}>
         <div className="space-y-8 pb-4">
           <AnimatePresence mode="popLayout">
             {/* ウェルカムメッセージ */}
@@ -243,25 +243,25 @@ ${currentContent || '(まだ記事本文がありません)'}
         </div>
       </ScrollArea>
 
-      <div className="p-6 border-t border-border bg-background/80 backdrop-blur-sm">
+      <div className="p-8 border-t border-border bg-background/80 backdrop-blur-md">
         <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="relative">
           <Input
             placeholder="AIに相談する..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}
-            className="flex-1 pr-12 h-12 bg-muted/30 border-border focus-visible:ring-primary rounded-xl"
+            className="flex-1 pr-16 h-16 text-lg bg-muted/30 border-border focus-visible:ring-primary rounded-2xl shadow-inner transition-all"
           />
           <Button
             type="submit"
             size="icon"
             disabled={isLoading || !input.trim()}
             className={cn(
-              "absolute right-1 top-1 h-10 w-10 rounded-lg transition-all",
-              input.trim() ? "bg-primary text-primary-foreground" : "bg-transparent text-muted-foreground"
+              "absolute right-2 top-2 h-12 w-12 rounded-xl transition-all shadow-lg",
+              input.trim() ? "bg-primary text-primary-foreground scale-100" : "bg-transparent text-muted-foreground scale-90"
             )}
           >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Send className="h-6 w-6" />}
           </Button>
         </form>
         <div className="flex items-center justify-center gap-1.5 mt-3">

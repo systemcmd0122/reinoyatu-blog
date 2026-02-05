@@ -383,21 +383,21 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       <div className="min-h-screen bg-background flex flex-col">
         {/* スティッキーヘッダー */}
         <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
-            <div className="flex items-center space-x-4 flex-1 min-w-0">
+          <div className="max-w-screen-2xl mx-auto px-8 h-20 flex items-center justify-between gap-8">
+            <div className="flex items-center space-x-6 flex-1 min-w-0">
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={() => router.back()}
-                className="hover:bg-muted shrink-0"
+                className="hover:bg-muted shrink-0 h-12 w-12"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-6 w-6" />
               </Button>
               <div className="flex flex-col flex-1 min-w-0">
-                <h1 className="text-xs font-medium text-muted-foreground truncate uppercase tracking-widest">
+                <h1 className="text-xs font-bold text-muted-foreground truncate uppercase tracking-[0.2em] mb-1">
                   {mode === "new" ? "New Story" : "Edit Story"}
                 </h1>
-                <p className="text-lg font-bold truncate">
+                <p className="text-xl font-black tracking-tight truncate">
                   {watchedTitle || "無題の記事"}
                 </p>
               </div>
@@ -464,10 +464,10 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
 
         <div className="flex-1 flex overflow-hidden">
           {/* メイン編集エリア */}
-          <main className="flex-1 overflow-y-auto py-8 px-4">
-            <div className="max-w-4xl mx-auto pb-20">
+          <main className="flex-1 overflow-y-auto py-8 px-8">
+            <div className="max-w-screen-2xl mx-auto pb-20">
               {/* ステップナビゲーション */}
-              <div className="grid grid-cols-4 gap-2 mb-10">
+              <div className="grid grid-cols-4 gap-6 mb-16">
                 {steps.map((step, index) => {
                   const StepIcon = step.icon
                   const isActive = currentStep === index
@@ -479,16 +479,16 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                       type="button"
                       onClick={() => index <= currentStep || canProceed(currentStep) ? setCurrentStep(index) : null}
                       className={cn(
-                        "flex flex-col items-center p-3 rounded-lg border-2 transition-all group",
+                        "flex flex-col items-center p-5 rounded-xl border-2 transition-all group",
                         isActive 
-                          ? "border-primary bg-primary/5 text-primary shadow-sm" 
+                          ? "border-primary bg-primary/5 text-primary shadow-md ring-4 ring-primary/5"
                           : isCompleted
-                            ? "border-primary/50 bg-background text-primary/70 hover:border-primary"
+                            ? "border-primary/40 bg-background text-primary/80 hover:border-primary hover:bg-primary/5"
                             : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
                       )}
                     >
-                      <StepIcon className={cn("h-5 w-5 mb-1", isActive && "animate-pulse")} />
-                      <span className="text-[10px] font-bold hidden md:block uppercase tracking-tighter">{step.title}</span>
+                      <StepIcon className={cn("h-7 w-7 mb-2", isActive && "animate-pulse")} />
+                      <span className="text-xs font-black hidden md:block uppercase tracking-widest">{step.title}</span>
                     </button>
                   )
                 })}
@@ -570,7 +570,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                           </AnimatePresence>
 
                           <Card className="border-border shadow-md">
-                            <CardContent className="pt-6 space-y-8">
+                            <CardContent className="p-10 space-y-12">
                               <FormField
                                 control={form.control}
                                 name="title"
@@ -595,8 +595,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                                     </div>
                                     <FormControl>
                                       <Input 
-                                        placeholder="タイトルを入力してください"
-                                        className="h-14 text-xl font-bold border-2 focus:ring-primary"
+                                        placeholder="物語のタイトルを入力..."
+                                        className="h-20 text-3xl font-black border-2 focus:ring-primary px-6 rounded-xl shadow-inner bg-muted/5"
                                         {...field}
                                       />
                                     </FormControl>
@@ -709,7 +709,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                                         ref={textareaRef}
                                         placeholder="ここから物語が始まります..."
                                         className={cn(
-                                          "min-h-[600px] h-[70vh] text-lg leading-relaxed font-mono border-0 rounded-none focus-visible:ring-0 resize-none p-6",
+                                          "min-h-[700px] h-[75vh] text-xl leading-relaxed font-mono border-0 rounded-none focus-visible:ring-0 resize-none p-10 bg-muted/5",
                                           viewMode === 'split' && "lg:border-r border-border"
                                         )}
                                       />
@@ -722,7 +722,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
 
                             {(viewMode === 'preview' || viewMode === 'split') && (
                               <div className={cn(
-                                "bg-card p-8 overflow-y-auto prose prose-lg dark:prose-invert max-w-none min-h-[600px] h-[70vh]",
+                                "bg-card p-12 overflow-y-auto prose prose-xl dark:prose-invert max-w-none min-h-[700px] h-[75vh]",
                                 viewMode === 'split' ? "lg:border-l-0" : ""
                               )}>
                                 <MarkdownRenderer content={watchedContent || "*プレビューする内容がありません*"} />
@@ -768,7 +768,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                           </AnimatePresence>
 
                           <Card className="border-border shadow-md">
-                            <CardContent className="pt-6 space-y-8">
+                            <CardContent className="p-10 space-y-12">
                               <FormField
                                 control={form.control}
                                 name="summary"
@@ -793,8 +793,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                                     </div>
                                     <FormControl>
                                       <Textarea 
-                                        placeholder="内容を簡潔にまとめてください..."
-                                        className="h-32 text-base border-2 focus-visible:ring-primary"
+                                        placeholder="物語のあらすじを簡潔にまとめてください..."
+                                        className="h-48 text-lg border-2 focus-visible:ring-primary p-6 rounded-xl bg-muted/5 leading-relaxed"
                                         {...field}
                                       />
                                     </FormControl>
@@ -853,11 +853,11 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                           <Card className="border-border overflow-hidden shadow-xl">
                             <div className="aspect-video relative">
                               <Image src={imagePreview || "/placeholder-blog.jpg"} alt="Hero" fill className="object-cover" />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-8">
-                                <h3 className="text-3xl md:text-4xl font-bold text-white line-clamp-2">{watchedTitle}</h3>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex items-end p-12">
+                                <h3 className="text-4xl md:text-6xl font-black text-white line-clamp-2 tracking-tight">{watchedTitle}</h3>
                               </div>
                             </div>
-                            <CardContent className="p-8 space-y-6">
+                            <CardContent className="p-12 space-y-10">
                               {watchedTags && watchedTags.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
                                   {watchedTags.map(tag => (
@@ -865,11 +865,11 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                                   ))}
                                 </div>
                               )}
-                              <p className="text-muted-foreground text-lg leading-relaxed italic border-l-4 border-primary pl-4">
+                              <p className="text-muted-foreground text-2xl leading-relaxed italic border-l-8 border-primary pl-8 py-2">
                                 {watchedSummary || "要約が設定されていません。"}
                               </p>
                               <Separator />
-                              <div className="prose prose-lg dark:prose-invert max-w-none">
+                              <div className="prose prose-2xl dark:prose-invert max-w-none">
                                 <MarkdownRenderer content={watchedContent} />
                               </div>
                             </CardContent>
@@ -882,14 +882,14 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
               </Form>
 
               {/* フッターナビゲーション */}
-              <div className="flex items-center justify-between pt-10 border-t border-border mt-10">
+              <div className="flex items-center justify-between pt-16 border-t border-border mt-16">
                 <Button 
                   type="button" 
                   variant="ghost" 
                   size="lg"
                   onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
                   disabled={currentStep === 0}
-                  className="px-8"
+                  className="px-10 h-14 font-bold"
                 >
                   戻る
                 </Button>
@@ -950,19 +950,19 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                       size="lg"
                       onClick={() => setCurrentStep(currentStep + 1)}
                       disabled={!canProceed(currentStep)}
-                      className="px-10"
+                      className="px-16 h-14 font-black text-lg shadow-xl shadow-primary/10 transition-all hover:scale-[1.02]"
                     >
                       次へ
-                      <ChevronRight className="h-5 w-5 ml-2" />
+                      <ChevronRight className="h-6 w-6 ml-2" />
                     </Button>
                   ) : (
-                    <div className="flex gap-4">
+                    <div className="flex gap-6">
                       <Button 
                         variant="outline"
                         size="lg" 
                         disabled={status !== "idle" || !watchedTitle || !watchedContent}
                         onClick={() => handleAction(false)}
-                        className="px-8"
+                        className="px-10 h-14 font-bold border-2"
                       >
                         {status === "saving-draft" ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />}
                         下書き保存
@@ -971,7 +971,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                         size="lg" 
                         disabled={status !== "idle" || !watchedTitle || !watchedContent}
                         onClick={() => handleAction(true)}
-                        className="px-10 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 font-bold"
+                        className="px-16 h-14 bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xl shadow-primary/30 font-black text-lg transition-all hover:scale-[1.02]"
                       >
                         {status === "publishing" ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Upload className="h-5 w-5 mr-2" />}
                         {watchedIsPublished ? "更新する" : "公開する"}
@@ -988,7 +988,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
             {isChatOpen && (
               <motion.aside
                 initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 400, opacity: 1 }}
+                animate={{ width: 480, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 className="hidden lg:block border-l border-border h-full overflow-hidden"
               >

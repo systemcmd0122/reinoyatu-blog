@@ -456,7 +456,7 @@ export const chatWithAI = async (messages: { role: 'user' | 'model', content: st
   try {
     const { GoogleGenerativeAI } = await import("@google/generative-ai")
     const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "")
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" })
 
     // 履歴を準備（最後のメッセージは除く）
     let history = messages.slice(0, -1).map(m => ({
@@ -501,8 +501,17 @@ export const chatWithAI = async (messages: { role: 'user' | 'model', content: st
     const text = response.text()
 
     return { content: text, error: null }
-  } catch (error) {
+  } catch (error: any) {
     console.error("AIチャットエラー:", error)
+
+    if (error.status === 429) {
+      return { content: null, error: "AIの利用制限（リクエスト過多）に達しました。少し時間をおいてから再度お試しください。" }
+    }
+
+    if (error.status === 404) {
+      return { content: null, error: "指定されたAIモデルが見つかりませんでした。管理者にお問い合わせください。" }
+    }
+
     return { content: null, error: "AIとの通信中にエラーが発生しました。" }
   }
 }

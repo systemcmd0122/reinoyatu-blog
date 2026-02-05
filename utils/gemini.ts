@@ -4,7 +4,7 @@ import { GenerationOptions } from "@/types";
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
 
 export const getGeminiModel = () => {
-  return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  return genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 };
 
 // スタイルIDを具体的な指示にマッピング

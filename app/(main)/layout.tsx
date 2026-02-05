@@ -3,7 +3,7 @@ interface MainLayoutProps {
 }
 
 const MainLayout = async ({ children }: MainLayoutProps) => {
-  return <div className="mx-auto max-w-screen-lg px-2 my-10">{children}</div>
+  return <div className="mx-auto max-w-screen-2xl px-4 md:px-8 my-10">{children}</div>
 }
 
 export default MainLayout
