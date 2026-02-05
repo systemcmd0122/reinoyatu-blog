@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server"
 import BlogListView from "@/components/blog/BlogListView"
 import { notFound } from "next/navigation"
+import { Metadata } from "next"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Tag, TrendingUp, ChevronLeft, Search, Filter } from "lucide-react"
@@ -14,6 +15,28 @@ interface TagPageProps {
   searchParams: Promise<{
     sort?: string
   }>
+}
+
+export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
+  const { tag } = await params
+  const tagName = decodeURIComponent(tag)
+  const title = `#${tagName}`
+  const description = `「#${tagName}」タグが付いた記事の一覧です。例のヤツ｜ブログで最新の情報をチェックしましょう。`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} | 例のヤツ｜ブログ`,
+      description,
+      type: "website",
+    },
+    twitter: {
+      title: `${title} | 例のヤツ｜ブログ`,
+      description,
+      card: "summary",
+    },
+  }
 }
 
 const TagPage = async ({ params, searchParams }: TagPageProps) => {
