@@ -451,11 +451,19 @@ export const getDrafts = async (userId: string) => {
   }
 }
 
-// AIとのチャット（完全修正版）
+// AIとのチャット（完全修正版 - 環境変数の正しい使用）
 export const chatWithAI = async (messages: { role: 'user' | 'model', content: string }[]) => {
   try {
+    // サーバーサイドでGEMINI_API_KEYを取得（NEXT_PUBLIC_を使わない）
+    const apiKey = process.env.GEMINI_API_KEY;
+    
+    if (!apiKey) {
+      console.error("GEMINI_API_KEY環境変数が設定されていません");
+      return { content: null, error: "APIキーが設定されていません。管理者に連絡してください。" }
+    }
+
     const { GoogleGenerativeAI } = await import("@google/generative-ai")
-    const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "")
+    const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 
     // 履歴を準備（最後のメッセージは除く）
@@ -510,6 +518,10 @@ export const chatWithAI = async (messages: { role: 'user' | 'model', content: st
     
     if (error.status === 404) {
       return { content: null, error: "指定されたAIモデルが見つかりませんでした。管理者にお問い合わせください。" }
+    }
+    
+    if (error.status === 401 || error.status === 403) {
+      return { content: null, error: "APIキーが無効です。環境変数を確認してください。" }
     }
 
     return { content: null, error: "AIとの通信中にエラーが発生しました。" }

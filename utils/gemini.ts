@@ -1,9 +1,17 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GenerationOptions } from "@/types";
 
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
+// サーバーサイド専用のAPI Key取得（NEXT_PUBLIC_を使わない）
+const getApiKey = () => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY environment variable is not set");
+  }
+  return apiKey;
+};
 
 export const getGeminiModel = () => {
+  const genAI = new GoogleGenerativeAI(getApiKey());
   return genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 };
 
@@ -197,8 +205,24 @@ ${summaryLength ? `
     const text = response.text();
     
     return { content: text.trim(), error: null };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating content:", error);
+    
+    // より詳細なエラーハンドリング
+    if (error.status === 429) {
+      return {
+        content: null,
+        error: "APIの利用制限に達しました。しばらく時間をおいてから再度お試しください。",
+      };
+    }
+    
+    if (error.status === 401 || error.status === 403) {
+      return {
+        content: null,
+        error: "APIキーが無効です。環境変数を確認してください。",
+      };
+    }
+    
     return {
       content: null,
       error: "AI処理中にエラーが発生しました。時間をおいて再度お試しください。",
@@ -267,8 +291,23 @@ ${content}
       .slice(0, 7);
 
     return { tags, error: null };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating tags:", error);
+    
+    if (error.status === 429) {
+      return { 
+        tags: null, 
+        error: "APIの利用制限に達しました。しばらく時間をおいてから再度お試しください。" 
+      };
+    }
+    
+    if (error.status === 401 || error.status === 403) {
+      return { 
+        tags: null, 
+        error: "APIキーが無効です。環境変数を確認してください。" 
+      };
+    }
+    
     return { 
       tags: null, 
       error: "タグの自動生成中にエラーが発生しました。時間をおいて再度お試しください。" 
@@ -312,8 +351,23 @@ ${content.substring(0, 3000)}
       .slice(0, 5);
 
     return { titles, error: null };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating titles:", error);
+    
+    if (error.status === 429) {
+      return { 
+        titles: null, 
+        error: "APIの利用制限に達しました。しばらく時間をおいてから再度お試しください。" 
+      };
+    }
+    
+    if (error.status === 401 || error.status === 403) {
+      return { 
+        titles: null, 
+        error: "APIキーが無効です。環境変数を確認してください。" 
+      };
+    }
+    
     return { 
       titles: null, 
       error: "タイトルの提案中にエラーが発生しました。" 
@@ -364,8 +418,23 @@ ${plainContent.substring(0, 3000)}
     const summary = response.text().trim();
 
     return { summary, error: null };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating summary:", error);
+    
+    if (error.status === 429) {
+      return { 
+        summary: null, 
+        error: "APIの利用制限に達しました。しばらく時間をおいてから再度お試しください。" 
+      };
+    }
+    
+    if (error.status === 401 || error.status === 403) {
+      return { 
+        summary: null, 
+        error: "APIキーが無効です。環境変数を確認してください。" 
+      };
+    }
+    
     return { 
       summary: null, 
       error: "AIによる要約の生成中にエラーが発生しました。" 
