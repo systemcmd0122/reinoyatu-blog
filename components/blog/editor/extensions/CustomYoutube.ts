@@ -1,5 +1,7 @@
 import Youtube from '@tiptap/extension-youtube';
 import { mergeAttributes } from '@tiptap/core';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import YoutubeView from './YoutubeView';
 
 export const CustomYoutube = Youtube.extend({
   addAttributes() {
@@ -16,26 +18,20 @@ export const CustomYoutube = Youtube.extend({
   },
 
   renderHTML({ HTMLAttributes }) {
-    const embedUrl = `https://www.youtube.com/embed/${HTMLAttributes.src}`;
-    
     return [
       'div',
       { 
         'data-youtube-video': '',
+        'data-id': HTMLAttributes.src,
         'data-show-details': HTMLAttributes.showDetails,
         class: 'youtube-container my-6' 
       },
-      [
-        'iframe',
-        mergeAttributes(HTMLAttributes, {
-          src: embedUrl,
-          width: this.options.width,
-          height: this.options.height,
-          allowfullscreen: this.options.allowFullscreen,
-          frameborder: 0,
-        }),
-      ],
+      `{{youtube:${HTMLAttributes.src}:showDetails=${HTMLAttributes.showDetails}}}`,
     ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(YoutubeView);
   },
 
   addStorage() {

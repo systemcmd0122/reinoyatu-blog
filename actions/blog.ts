@@ -466,7 +466,7 @@ export const chatWithAI = async (messages: { role: 'user' | 'model', content: st
 
     const { GoogleGenerativeAI } = await import("@google/generative-ai")
     const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" })
 
     // 履歴を準備（最後のメッセージは除く）
     let history = messages.slice(0, -1).map(m => ({

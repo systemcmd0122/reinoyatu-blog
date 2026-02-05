@@ -83,11 +83,10 @@ export const TimelineItem = Node.create({
       'div',
       mergeAttributes(HTMLAttributes, {
         'data-type': 'timeline-item',
-        class: 'timeline-item relative pl-10 pb-8 last:pb-0',
+        'data-time': node.attrs.time,
+        class: 'timeline-item',
       }),
-      ['div', { class: 'absolute left-[13px] top-1.5 w-2 h-2 rounded-full bg-primary border-4 border-background ring-2 ring-primary/20' }],
-      ['div', { class: 'text-xs font-black text-muted-foreground mb-1 uppercase tracking-wider' }, node.attrs.time],
-      ['div', { class: 'timeline-content' }, 0],
+      0,
     ];
   },
 });
