@@ -1,9 +1,14 @@
-import * as z from "zod"
+import { z } from "zod"
 
 export const BlogSchema = z.object({
-  title: z.string().min(1, { message: "タイトルは必須です" }).max(100, { message: "タイトルは100文字以内で入力してください" }),
-  content: z.string().min(10, { message: "内容は10文字以上必要です" })
+  title: z.string().min(1, "タイトルは必須です"),
+  content: z.string().min(1, "内容は必須です"),
+  summary: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  is_published: z.boolean().default(false),
 })
+
+export type BlogSchemaType = z.infer<typeof BlogSchema>
 
 export interface SocialLinksType {
   twitter?: string
@@ -32,6 +37,7 @@ export interface BlogType {
   summary: string | null
   user_id: string
   image_url: string | null
+  is_published: boolean
   updated_at: string
   created_at: string
   likes_count?: number

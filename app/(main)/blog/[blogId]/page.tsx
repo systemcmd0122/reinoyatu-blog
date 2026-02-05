@@ -1,6 +1,8 @@
 import { createClient } from "@/utils/supabase/server"
 import BlogDetail from "@/components/blog/BlogDetail"
 import { Metadata } from "next"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 interface BlogDetailPageProps {
   params: Promise<{
@@ -132,6 +134,19 @@ const BlogDetailPage = async ({ params }: BlogDetailPageProps) => {
 
   // ログインユーザーがブログ作成者かどうか
   const isMyBlog = user?.id === blogData.user_id
+
+  // 非公開記事の権限チェック
+  if (!blogData.is_published && !isMyBlog) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center container mx-auto px-4 py-12 text-center">
+        <h2 className="text-2xl font-bold mb-4">この記事は非公開です</h2>
+        <p className="text-muted-foreground mb-8">お探しの記事は現在下書き保存されているか、公開されていません。</p>
+        <Link href="/">
+          <Button variant="outline">トップページに戻る</Button>
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <BlogDetail 

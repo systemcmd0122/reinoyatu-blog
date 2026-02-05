@@ -28,14 +28,7 @@ const ProfilePage = async () => {
     redirect("/login?next=/settings/profile")
   }
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800 border-b pb-3">
-        プロフィール設定
-      </h1>
-      <Profile profile={profile} />
-    </div>
-  )
+  return <Profile profile={profile} />
 }
 
 export default ProfilePage

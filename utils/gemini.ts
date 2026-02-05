@@ -276,6 +276,51 @@ ${content}
   }
 };
 
+export const generateTitleSuggestions = async (content: string): Promise<{ titles: string[] | null; error: string | null }> => {
+  const model = getGeminiModel();
+
+  const prompt = `
+あなたは、読者の目を引く魅力的な記事タイトルを考えるプロのコピーライターです。
+以下の記事の内容を分析し、内容を的確に表しつつ、クリックしたくなるようなタイトルを5つ提案してください。
+
+### 指示
+- タイトルは30〜50文字程度で、具体的かつ魅力的なものにしてください
+- ターゲット読者が興味を持ちそうなキーワードを含めてください
+- 異なる切り口（例：ハウツー、疑問解決、驚きの事実、包括的ガイドなど）で提案してください
+- 日本語で記述してください
+
+### 記事の内容
+${content.substring(0, 3000)}
+
+### 出力形式
+- タイトルのみを改行区切りで5つ出力してください
+- 番号や記号、説明、前置きなどは一切含めないでください
+- 1行に1つのタイトルのみを記述してください
+
+### タイトル案
+`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text().trim();
+
+    const titles = text
+      .split('\n')
+      .map(t => t.trim())
+      .filter(t => t.length > 0)
+      .slice(0, 5);
+
+    return { titles, error: null };
+  } catch (error) {
+    console.error("Error generating titles:", error);
+    return { 
+      titles: null, 
+      error: "タイトルの提案中にエラーが発生しました。" 
+    };
+  }
+};
+
 export const generateSummaryFromContent = async (title: string, content: string): Promise<{ summary: string | null; error: string | null }> => {
   const model = getGeminiModel();
 
