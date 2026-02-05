@@ -10,7 +10,8 @@ import {
   LayoutDashboard,
   Bell,
   ShieldCheck,
-  UserCircle
+  UserCircle,
+  FileText
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -28,6 +29,12 @@ const navigation = [
         icon: UserRoundPen,
         href: "/settings/profile",
         description: "名前、自己紹介、アイコンの設定"
+      },
+      {
+        name: "下書き一覧",
+        icon: FileText,
+        href: "/settings/drafts",
+        description: "未公開の記事を編集・管理"
       },
       {
         name: "アカウント",

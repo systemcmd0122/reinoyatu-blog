@@ -32,6 +32,7 @@ export interface BlogType {
   summary: string | null
   user_id: string
   image_url: string | null
+  is_published: boolean
   updated_at: string
   created_at: string
   likes_count?: number

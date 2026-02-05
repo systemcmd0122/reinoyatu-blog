@@ -127,6 +127,7 @@ export const newBlog = async (values: newBlogProps) => {
         summary: values.summary || null,
         image_url,
         user_id: values.userId,
+        is_published: values.is_published,
       })
       .select("id")
       .single()
@@ -158,7 +159,7 @@ export const newBlog = async (values: newBlogProps) => {
       }
     }
 
-    return { success: true }
+    return { success: true, id: newBlog.id }
   } catch (err) {
     console.error("ブログ投稿エラー:", err)
     return { error: "エラーが発生しました" }
@@ -226,6 +227,7 @@ export const editBlog = async (values: editBlogProps) => {
         content: values.content,
         summary: values.summary || null,
         image_url,
+        is_published: values.is_published,
       })
       .eq("id", values.blogId)
 
@@ -407,6 +409,7 @@ export const searchBlogs = async (query: string) => {
     const { data, error } = await supabase
       .from("blogs")
       .select("id, title")
+      .eq("is_published", true)
       .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
       .order("created_at", { ascending: false })
       .limit(8)
@@ -420,5 +423,54 @@ export const searchBlogs = async (query: string) => {
   } catch (err) {
     console.error("検索エラー:", err)
     return { blogs: [], error: "エラーが発生しました" }
+  }
+}
+
+// 下書き記事を取得
+export const getDrafts = async (userId: string) => {
+  try {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("blogs")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("is_published", false)
+      .order("updated_at", { ascending: false })
+
+    if (error) {
+      console.error("下書き取得エラー:", error)
+      return { drafts: [], error: error.message }
+    }
+
+    return { drafts: data || [], error: null }
+  } catch (err) {
+    console.error("下書き取得エラー:", err)
+    return { drafts: [], error: "エラーが発生しました" }
+  }
+}
+
+// AIとのチャット
+export const chatWithAI = async (messages: { role: 'user' | 'model', content: string }[]) => {
+  try {
+    const { GoogleGenerativeAI } = await import("@google/generative-ai")
+    const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "")
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+
+    const chat = model.startChat({
+      history: messages.slice(0, -1).map(m => ({
+        role: m.role,
+        parts: [{ text: m.content }]
+      })),
+    })
+
+    const lastMessage = messages[messages.length - 1].content
+    const result = await chat.sendMessage(lastMessage)
+    const response = await result.response
+    const text = response.text()
+
+    return { content: text, error: null }
+  } catch (error) {
+    console.error("AIチャットエラー:", error)
+    return { content: null, error: "AIとの通信中にエラーが発生しました。" }
   }
 }

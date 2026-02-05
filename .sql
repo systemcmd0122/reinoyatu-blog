@@ -39,7 +39,9 @@ create table blogs (
   user_id uuid not null references profiles(id),
   title text not null,
   content text not null,
-  image_url text not null,
+  image_url text,
+  summary text,
+  is_published boolean default false not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -61,7 +63,7 @@ execute function update_updated_at_column();
 
 -- blogsテーブルRLS設定
 alter table blogs enable row level security;
-create policy "ブログは誰でも参照可能" on blogs for select using ( true );
+create policy "ブログは誰でも参照可能" on blogs for select using ( is_published = true or auth.uid() = user_id );
 create policy "自身のブログを追加" on blogs for insert with check (auth.uid() = user_id);
 create policy "自身のブログを更新" on blogs for update using (auth.uid() = user_id);
 create policy "自身のブログを削除" on blogs for delete using (auth.uid() = user_id);

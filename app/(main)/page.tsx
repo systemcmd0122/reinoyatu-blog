@@ -110,6 +110,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
     `,
       { count: "exact" }
     )
+    .eq("is_published", true)
 
   if (queryParam) {
     supabaseQuery = supabaseQuery.or(`title.ilike.%${queryParam}%,content.ilike.%${queryParam}%`)

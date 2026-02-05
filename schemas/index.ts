@@ -53,6 +53,7 @@ export const BlogSchema = z.object({
   content: z.string().min(1, { message: "内容は必須です" }),
   summary: z.string().max(200, { message: "要約は200文字以内で入力してください" }).optional(),
   tags: z.array(z.string()).optional(),
+  is_published: z.boolean().default(false),
 })
 
 
