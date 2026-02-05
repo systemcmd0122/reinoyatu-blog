@@ -1,13 +1,14 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from "react"
-import { Send, User, Bot, Loader2, PlusCircle, CheckCircle2, MessageSquare } from "lucide-react"
+import { Send, User, Bot, Loader2, PlusCircle, CheckCircle2, MessageSquare, Sparkles, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { chatWithAI } from "@/actions/blog"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import MarkdownRenderer from "./markdown/MarkdownRenderer"
 
 interface Message {
   role: 'user' | 'model'
@@ -71,134 +72,204 @@ ${currentContent || '(まだ記事本文がありません)'}
   }
 
   return (
-    <div className="flex flex-col h-full bg-card border-l border-border">
-      <div className="p-4 border-b border-border flex items-center gap-2 bg-muted/30">
-        <MessageSquare className="h-5 w-5 text-primary" />
-        <h3 className="font-bold">AI共同執筆アシスタント</h3>
+    <div className="flex flex-col h-full bg-card border-l border-border relative">
+      <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Sparkles className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm">AI共同執筆アシスタント</h3>
+            <p className="text-[10px] text-muted-foreground">Gemini 2.0 Flash Powered</p>
+          </div>
+        </div>
       </div>
 
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
-          {/* ウェルカムメッセージ */}
-          {showWelcome && messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-8">
-              <Bot className="h-12 w-12 text-primary opacity-50" />
-              <div className="space-y-2">
-                <h4 className="font-semibold text-lg">こんにちは！</h4>
-                <p className="text-sm text-muted-foreground max-w-xs">
-                  記事の執筆をお手伝いします。構成の相談や、具体的な文章の作成など、何でも聞いてください。
-                </p>
-              </div>
-              <div className="grid grid-cols-1 gap-2 w-full max-w-xs mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs justify-start h-auto py-2 px-3"
-                  onClick={() => setInput("記事の導入部分を書いてください")}
-                >
-                  💡 記事の導入部分を書いてください
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs justify-start h-auto py-2 px-3"
-                  onClick={() => setInput("記事の構成案を提案してください")}
-                >
-                  📝 記事の構成案を提案してください
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs justify-start h-auto py-2 px-3"
-                  onClick={() => setInput("内容をより詳しく説明してください")}
-                >
-                  ✨ 内容をより詳しく説明してください
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* チャットメッセージ */}
-          {messages.map((m, i) => (
-            <div key={i} className={cn(
-              "flex flex-col gap-2 max-w-[90%]",
-              m.role === 'user' ? "ml-auto items-end" : "mr-auto items-start"
-            )}>
-              <div className={cn(
-                "flex items-center gap-2 mb-1",
-                m.role === 'user' ? "flex-row-reverse" : "flex-row"
-              )}>
-                {m.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4 text-primary" />}
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  {m.role === 'user' ? 'You' : 'Assistant'}
-                </span>
-              </div>
-              <div className={cn(
-                "p-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap",
-                m.role === 'user' 
-                  ? "bg-primary text-primary-foreground rounded-tr-none" 
-                  : "bg-muted text-foreground rounded-tl-none border border-border shadow-sm"
-              )}>
-                {m.content}
-              </div>
-              
-              {/* AIの回答にのみアクションボタンを表示（ウェルカムメッセージを除く） */}
-              {m.role === 'model' && (
-                <div className="flex gap-2 mt-1">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-7 text-[10px] font-bold gap-1 rounded-full"
-                    onClick={() => onApplySuggestion(m.content, 'append')}
-                  >
-                    <PlusCircle className="h-3 w-3" />
-                    末尾に追加
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-7 text-[10px] font-bold gap-1 rounded-full"
-                    onClick={() => onApplySuggestion(m.content, 'replace')}
-                  >
-                    <CheckCircle2 className="h-3 w-3" />
-                    本文を置換
-                  </Button>
+      <ScrollArea className="flex-1 px-4 py-6" ref={scrollRef}>
+        <div className="space-y-8 pb-4">
+          <AnimatePresence mode="popLayout">
+            {/* ウェルカムメッセージ */}
+            {showWelcome && messages.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-6"
+              >
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
+                  <div className="relative bg-background p-5 rounded-full border border-border shadow-xl">
+                    <Bot className="h-10 w-10 text-primary" />
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
 
-          {/* ローディング中の表示 */}
-          {isLoading && (
-            <div className="flex flex-col gap-2 max-w-[90%] mr-auto items-start animate-pulse">
-              <div className="flex items-center gap-2 mb-1">
-                <Bot className="h-4 w-4 text-primary" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Assistant is typing...</span>
-              </div>
-              <div className="bg-muted p-4 rounded-2xl rounded-tl-none border border-border flex items-center justify-center min-w-[60px]">
-                <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              </div>
-            </div>
-          )}
+                <div className="space-y-2">
+                  <h4 className="font-black text-xl tracking-tight">AIが執筆をサポートします</h4>
+                  <p className="text-sm text-muted-foreground max-w-[280px] leading-relaxed mx-auto">
+                    構成の相談、文章の改善、アイデア出しなど、執筆に関するあらゆるお手伝いをします。
+                  </p>
+                </div>
+
+                <div className="w-full max-w-[320px] space-y-3 pt-4">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left ml-1 mb-2">試してみる</p>
+                  {[
+                    { text: "記事の導入部分を書いてください", icon: "✍️" },
+                    { text: "記事の構成案を提案してください", icon: "📋" },
+                    { text: "内容をより詳しく説明してください", icon: "✨" }
+                  ].map((suggestion, idx) => (
+                    <motion.button
+                      key={idx}
+                      whileHover={{ x: 5, backgroundColor: "var(--primary-foreground)" }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setInput(suggestion.text)}
+                      className="w-full flex items-center justify-between p-3 text-xs font-medium bg-muted/50 border border-border rounded-xl transition-colors hover:border-primary/30"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>{suggestion.icon}</span>
+                        {suggestion.text}
+                      </span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* チャットメッセージ */}
+            {messages.map((m, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                layout
+                className={cn(
+                  "flex flex-col gap-3 max-w-[95%]",
+                  m.role === 'user' ? "ml-auto items-end" : "mr-auto items-start"
+                )}
+              >
+                <div className={cn(
+                  "flex items-center gap-2 px-1",
+                  m.role === 'user' ? "flex-row-reverse" : "flex-row"
+                )}>
+                  <div className={cn(
+                    "p-1 rounded-md",
+                    m.role === 'user' ? "bg-muted" : "bg-primary/10"
+                  )}>
+                    {m.role === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3 text-primary" />}
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                    {m.role === 'user' ? 'YOU' : 'AI ASSISTANT'}
+                  </span>
+                </div>
+
+                <div className={cn(
+                  "p-4 rounded-[2rem] text-sm leading-relaxed shadow-sm",
+                  m.role === 'user'
+                    ? "bg-primary text-primary-foreground rounded-tr-none"
+                    : "bg-primary/5 text-foreground rounded-tl-none border border-primary/10"
+                )}>
+                  {m.role === 'model' ? (
+                    <MarkdownRenderer content={m.content} className="prose-sm max-w-none" />
+                  ) : (
+                    <div className="whitespace-pre-wrap">{m.content}</div>
+                  )}
+                </div>
+
+                {m.role === 'model' && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="flex gap-2 mt-1 px-1"
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[10px] font-bold gap-2 rounded-full border-primary/20 hover:bg-primary/5 hover:text-primary transition-all"
+                      onClick={() => onApplySuggestion(m.content, 'append')}
+                    >
+                      <PlusCircle className="h-3.5 w-3.5" />
+                      末尾に追加
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[10px] font-bold gap-2 rounded-full border-primary/20 hover:bg-primary/5 hover:text-primary transition-all"
+                      onClick={() => onApplySuggestion(m.content, 'replace')}
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      本文を置換
+                    </Button>
+                  </motion.div>
+                )}
+              </motion.div>
+            ))}
+
+            {/* ローディング中の表示 */}
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col gap-3 max-w-[95%] mr-auto items-start"
+              >
+                <div className="flex items-center gap-2 px-1">
+                  <div className="p-1 rounded-md bg-primary/10">
+                    <Bot className="h-3 w-3 text-primary" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 animate-pulse">Assistant is thinking...</span>
+                </div>
+                <div className="bg-primary/5 p-5 rounded-[2rem] rounded-tl-none border border-primary/10 flex items-center justify-center min-w-[80px]">
+                  <div className="flex gap-1.5">
+                    <motion.div
+                      animate={{ scale: [1, 1.5, 1] }}
+                      transition={{ repeat: Infinity, duration: 1, times: [0, 0.5, 1] }}
+                      className="h-1.5 w-1.5 bg-primary rounded-full"
+                    />
+                    <motion.div
+                      animate={{ scale: [1, 1.5, 1] }}
+                      transition={{ repeat: Infinity, duration: 1, times: [0, 0.5, 1], delay: 0.2 }}
+                      className="h-1.5 w-1.5 bg-primary rounded-full"
+                    />
+                    <motion.div
+                      animate={{ scale: [1, 1.5, 1] }}
+                      transition={{ repeat: Infinity, duration: 1, times: [0, 0.5, 1], delay: 0.4 }}
+                      className="h-1.5 w-1.5 bg-primary rounded-full"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t border-border bg-background">
-        <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex gap-2">
+      <div className="p-6 border-t border-border bg-background/80 backdrop-blur-sm">
+        <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="relative">
           <Input
             placeholder="AIに相談する..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 pr-12 h-12 bg-muted/30 border-border focus-visible:ring-primary rounded-xl"
           />
-          <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-            <Send className="h-4 w-4" />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={isLoading || !input.trim()}
+            className={cn(
+              "absolute right-1 top-1 h-10 w-10 rounded-lg transition-all",
+              input.trim() ? "bg-primary text-primary-foreground" : "bg-transparent text-muted-foreground"
+            )}
+          >
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>
-        <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
-          ※AIは本文の内容を参照して回答します
-        </p>
+        <div className="flex items-center justify-center gap-1.5 mt-3">
+          <div className="h-1 w-1 bg-green-500 rounded-full animate-pulse" />
+          <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-tighter">
+            AI is ready to assist your creative process
+          </p>
+        </div>
       </div>
     </div>
   )
