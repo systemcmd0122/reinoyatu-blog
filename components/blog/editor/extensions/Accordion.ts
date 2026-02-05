@@ -1,4 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import AccordionView from './AccordionView';
 
 export interface AccordionOptions {
   HTMLAttributes: Record<string, any>;
@@ -50,9 +52,13 @@ export const Accordion = Node.create<AccordionOptions>({
     return [
       'details',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
-      ['summary', { class: 'p-3 font-bold cursor-pointer bg-muted/50 hover:bg-muted transition-colors' }, node.attrs.title],
-      ['div', { class: 'p-4 border-t border-border bg-background' }, 0],
+      ['summary', {}, node.attrs.title],
+      0,
     ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(AccordionView);
   },
 
   addCommands() {

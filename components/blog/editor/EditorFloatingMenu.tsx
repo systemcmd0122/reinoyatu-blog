@@ -33,7 +33,12 @@ const EditorFloatingMenu: React.FC<EditorFloatingMenuProps> = ({ editor }) => {
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full bg-background shadow-md">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 w-8 p-0 rounded-full bg-background shadow-md hover:scale-110 transition-transform"
+            aria-label="コンテンツを挿入"
+          >
             <Plus className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
