@@ -98,6 +98,7 @@ import MarkdownRenderer from "./markdown/MarkdownRenderer"
 import { format } from "date-fns"
 import EditorChat from "./EditorChat"
 import SaveStatus from "@/components/settings/SaveStatus"
+import RichTextEditor, { RichTextEditorRef } from "./editor/RichTextEditor"
 
 
 const AICustomizeDialog = dynamic(
@@ -135,7 +136,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [sidebarTab, setSidebarTab] = useState("settings")
   const [isMounted, setIsMounted] = useState(false)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const editorRef = useRef<RichTextEditorRef>(null)
 
   useEffect(() => {
     setIsMounted(true)
@@ -158,6 +159,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     defaultValues: {
       title: initialData?.title || "",
       content: initialData?.content || "",
+      content_json: initialData?.content_json || "",
       summary: initialData?.summary || "",
       tags: initialData?.tags?.map(t => t.name) || [],
       is_published: initialData?.is_published || false,
@@ -277,19 +279,9 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   }
 
   const insertCodeBlock = (language: string) => {
-    if (!textareaRef.current) return
-    const textarea = textareaRef.current
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const text = form.getValues("content")
-    const codeBlockTemplate = `\n\`\`\`${language}\n\n\`\`\`\n`
-    const newText = text.substring(0, start) + codeBlockTemplate + text.substring(end)
-    form.setValue("content", newText, { shouldValidate: true })
-    setTimeout(() => {
-      const newCursorPosition = start + language.length + 5
-      textarea.focus()
-      textarea.setSelectionRange(newCursorPosition, newCursorPosition)
-    }, 0)
+    const editor = editorRef.current?.getEditor()
+    if (!editor) return
+    editor.chain().focus().toggleCodeBlock({ language }).run()
   }
 
   const handleGenerateTags = async () => {
@@ -596,14 +588,15 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                         render={({ field }) => (
                           <FormItem className="flex-1 flex flex-col space-y-0">
                             <FormControl className="flex-1">
-                              <Textarea 
-                                {...field}
-                                ref={textareaRef}
+                              <RichTextEditor
+                                ref={editorRef}
+                                content={field.value}
+                                initialJson={form.getValues("content_json")}
+                                onChange={(markdown, json) => {
+                                  field.onChange(markdown);
+                                  if (json) form.setValue("content_json", json);
+                                }}
                                 placeholder="ここから物語を始めましょう..."
-                                className={cn(
-                                  "flex-1 text-xl leading-relaxed font-serif border-none bg-transparent focus-visible:ring-0 resize-none px-0 shadow-none min-h-[500px]",
-                                  viewMode === "split" && "overflow-y-auto custom-scrollbar"
-                                )}
                               />
                             </FormControl>
                             <FormMessage />

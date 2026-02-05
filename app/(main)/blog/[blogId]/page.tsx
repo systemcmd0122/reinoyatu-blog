@@ -120,9 +120,9 @@ const BlogDetailPage = async ({ params }: BlogDetailPageProps) => {
     { blog_id: blogId }
   )
 
-  // コメントを取得
+  // コメントを取得 (V2: リアクション同梱)
   const { data: commentsData } = await supabase.rpc(
-    'get_blog_comments_with_replies',
+    'get_blog_comments_v2',
     { blog_uuid: blogId }
   )
 

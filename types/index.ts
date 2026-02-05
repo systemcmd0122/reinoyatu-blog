@@ -3,6 +3,7 @@ import { z } from "zod"
 export const BlogSchema = z.object({
   title: z.string().min(1, "タイトルは必須です"),
   content: z.string().min(1, "内容は必須です"),
+  content_json: z.string().optional(),
   summary: z.string().optional(),
   tags: z.array(z.string()).optional(),
   is_published: z.boolean().default(false),
@@ -34,6 +35,7 @@ export interface BlogType {
   id: string
   title: string
   content: string
+  content_json: string | null;
   summary: string | null
   user_id: string
   image_url: string | null
