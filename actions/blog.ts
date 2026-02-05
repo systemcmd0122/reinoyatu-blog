@@ -454,9 +454,14 @@ export const getDrafts = async (userId: string) => {
 // AIとのチャット（完全修正版）
 export const chatWithAI = async (messages: { role: 'user' | 'model', content: string }[]) => {
   try {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY
+    if (!apiKey) {
+      return { content: null, error: "AIのAPIキーが設定されていません。Vercelの環境変数を確認してください。" }
+    }
+
     const { GoogleGenerativeAI } = await import("@google/generative-ai")
-    const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "")
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" })
 
     // 履歴を準備（最後のメッセージは除く）
     let history = messages.slice(0, -1).map(m => ({
