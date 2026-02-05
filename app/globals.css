@@ -277,6 +277,25 @@
   }
 }
 
+/* Editor specific styles for custom blocks */
+.rich-text-editor .timeline-item {
+  @apply relative pl-10 pb-8 last:pb-0;
+}
+
+.rich-text-editor .timeline-item::before {
+  content: '';
+  @apply absolute left-[-17px] top-1.5 w-2.5 h-2.5 rounded-full bg-border border-4 border-background ring-2 ring-border/20 z-10;
+}
+
+.rich-text-editor .timeline-item::after {
+  content: attr(data-time);
+  @apply block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2;
+}
+
+.rich-text-editor .timeline {
+  @apply my-8 relative border-l-2 border-border ml-4;
+}
+
 /* detailsタグのカスタムスタイル */
 details>summary {
   transition: all 0.3s ease;

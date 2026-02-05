@@ -55,11 +55,12 @@ export const Mathematics = Node.create<MathematicsOptions>({
 
   renderHTML({ node, HTMLAttributes }) {
     return [
-      'span',
+      node.attrs.inline ? 'span' : 'div',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+        'data-type': 'mathematics',
         'data-latex': node.attrs.latex,
         'data-inline': node.attrs.inline,
-        class: node.attrs.inline ? 'math-inline' : 'math-block block my-4 text-center',
+        class: node.attrs.inline ? 'math-inline' : 'math-block my-6 text-center',
       }),
       node.attrs.inline ? `$${node.attrs.latex}$` : `$$${node.attrs.latex}$$`,
     ];

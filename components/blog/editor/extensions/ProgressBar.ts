@@ -1,4 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import ProgressBarView from './ProgressBarView';
 
 export interface ProgressBarOptions {
   HTMLAttributes: Record<string, any>;
@@ -54,23 +56,19 @@ export const ProgressBar = Node.create<ProgressBarOptions>({
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    const value = node.attrs.value;
-    const colorClass = 
-      node.attrs.color === 'success' ? 'bg-green-500' :
-      node.attrs.color === 'warning' ? 'bg-amber-500' :
-      node.attrs.color === 'destructive' ? 'bg-red-500' : 'bg-primary';
-
     return [
       'div',
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { 'data-type': 'progress-bar', 'data-value': value, 'data-label': node.attrs.label, 'data-color': node.attrs.color }),
-      ['div', { class: 'flex justify-between items-center mb-1' },
-        ['span', { class: 'text-xs font-bold' }, node.attrs.label],
-        ['span', { class: 'text-xs font-mono' }, `${value}%`],
-      ],
-      ['div', { class: 'w-full h-2 bg-muted rounded-full overflow-hidden' },
-        ['div', { class: `h-full ${colorClass} transition-all duration-500`, style: `width: ${value}%` }],
-      ],
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+        'data-type': 'progress-bar',
+        'data-value': node.attrs.value,
+        'data-label': node.attrs.label,
+        'data-color': node.attrs.color
+      }),
     ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ProgressBarView);
   },
 
   addCommands() {
