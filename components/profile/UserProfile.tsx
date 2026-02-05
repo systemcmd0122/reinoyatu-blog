@@ -46,7 +46,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
   useEffect(() => {
     const fetchBlogPosts = async () => {
       const supabase = createClient()
-      const { data, error } = await supabase
+
+      let query = supabase
         .from('blogs')
         .select(`
           *,
@@ -61,6 +62,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
         `)
         .eq('user_id', profile.id)
         .order('created_at', { ascending: false })
+
+      // 他人のプロフィールの場合は公開記事のみ表示
+      if (!isOwnProfile) {
+        query = query.eq('is_published', true)
+      }
+
+      const { data, error } = await query
 
       if (error) {
         console.error('ブログ投稿の取得中にエラーが発生しました:', error)
@@ -78,12 +86,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
           .select('blog_id')
           .in('blog_id', blogIds)
 
-        const likesMap = (reactionsData || []).reduce((acc, r) => {
+        const likesMap = (reactionsData || []).reduce((acc: Record<string, number>, r) => {
           acc[r.blog_id] = (acc[r.blog_id] || 0) + 1
           return acc
-        }, {} as Record<string, number>)
+        }, {})
 
-        blogsWithLikes = data.map(blog => ({
+        blogsWithLikes = (data as BlogType[]).map(blog => ({
           ...blog,
           likes_count: likesMap[blog.id] || 0
         }))
@@ -269,7 +277,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
         <div className="lg:col-span-8">
           <Tabs 
             value={activeTab} 
-            onValueChange={(v) => setActiveTab(v as any)} 
+            onValueChange={(v) => setActiveTab(v as 'posts' | 'about')}
             className="w-full"
           >
             <div className="flex items-center justify-between mb-6 bg-muted/50 p-1.5 rounded-2xl border border-border/50">

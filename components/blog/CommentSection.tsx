@@ -5,7 +5,7 @@ import { Send, Loader2, MessageSquare, Smile } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useRouter } from "next/navigation"
-import { CommentType } from "@/types"
+import { CommentType, ReactionType } from "@/types"
 import { toast } from "sonner"
 import CommentItem from "./CommentItem"
 import { newComment, getBlogComments } from "@/actions/comment"
@@ -98,7 +98,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         },
         async (payload) => {
           if (payload.eventType === 'INSERT') {
-            const newComment = payload.new as any
+            const newComment = payload.new as CommentType
             
             // プロフィール情報を取得
             const { data: profile } = await supabase
@@ -107,7 +107,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               .eq('id', newComment.user_id)
               .single()
             
-            const commentWithProfile = {
+            const commentWithProfile: CommentType = {
               ...newComment,
               content: shortcodeToEmoji(newComment.content),
               user_name: profile?.name || '不明なユーザー',
@@ -140,7 +140,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         },
         async (payload) => {
           // リアクションが変わったコメントのIDを特定
-          const reaction = (payload.new || payload.old) as any
+          const reaction = (payload.new || payload.old) as { comment_id: string }
           const commentId = reaction.comment_id
           
           // コメントのリアクションを最新状態に更新
@@ -168,31 +168,22 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   useEffect(() => {
     const fetchCommentsAndReactions = async () => {
       try {
-        let baseComments = initialComments;
+        // すでにリアクションが含まれているかチェック
+        const hasReactions = initialComments.length > 0 && initialComments.every(c => Array.isArray(c.reactions));
         
-        // initialCommentsがない場合のみコメント本体を取得
-        if (initialComments.length === 0) {
-          const { comments: fetchedComments, error } = await getBlogComments(blogId)
-          if (error) {
-            setError(error)
-            return
-          }
-          baseComments = fetchedComments;
+        if (initialComments.length > 0 && hasReactions) {
+          setComments(initialComments);
+          return;
+        }
+
+        // initialCommentsがない、またはリアクションが含まれていない場合のみ取得
+        const { comments: fetchedComments, error } = await getBlogComments(blogId)
+        if (error) {
+          setError(error)
+          return
         }
         
-        // コメントごとにリアクション情報を取得（N+1だが、現状のRPC設計に合わせる）
-        // server-sideでreactionsが取得できていないため、client-sideで補完する
-        const commentsWithReactions = await Promise.all(
-          baseComments.map(async (comment) => {
-            const { reactions } = await getCommentReactions(comment.id)
-            return {
-              ...comment,
-              reactions: reactions || []
-            }
-          })
-        )
-        
-        setComments(commentsWithReactions)
+        setComments(fetchedComments)
       } catch (error) {
         console.error("Fetch error:", error)
         setError("コメントの取得中にエラーが発生しました")
@@ -306,7 +297,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     deleteCommentAndReplies(commentId)
   }
 
-  const handleReactionToggle = (commentId: string, reactions: any[]) => {
+  const handleReactionToggle = (commentId: string, reactions: ReactionType[]) => {
     setComments(prev => prev.map(c => 
       c.id === commentId ? { ...c, reactions } : c
     ))

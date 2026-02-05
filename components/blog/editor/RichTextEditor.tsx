@@ -118,7 +118,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
       }),
     ],
     onUpdate: ({ editor }) => {
-      const markdown = (editor.storage as any).markdown.getMarkdown()
+      const markdown = (editor.storage as unknown as { markdown: { getMarkdown: () => string } }).markdown.getMarkdown()
       const json = JSON.stringify(editor.getJSON())
       onChange(markdown, json)
     },
@@ -153,7 +153,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
   }, [editor, isReady, initialJson, content])
 
   useEffect(() => {
-    if (editor && isReady && content !== (editor.storage as any).markdown.getMarkdown()) {
+    if (editor && isReady && content !== (editor.storage as unknown as { markdown: { getMarkdown: () => string } }).markdown.getMarkdown()) {
       if (!editor.isFocused) {
         editor.commands.setContent(content, false as any)
       }

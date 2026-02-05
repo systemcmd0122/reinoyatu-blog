@@ -1,4 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import MathView from './MathView';
 
 export interface MathematicsOptions {
   HTMLAttributes: Record<string, any>;
@@ -61,6 +63,10 @@ export const Mathematics = Node.create<MathematicsOptions>({
       }),
       node.attrs.inline ? `$${node.attrs.latex}$` : `$$${node.attrs.latex}$$`,
     ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(MathView);
   },
 
   addCommands() {

@@ -137,24 +137,27 @@ export const deleteComment = async ({ commentId, userId }: {
   }
 }
 
-// ブログのコメント取得
+// ブログのコメント取得 (V2: プロフィールとリアクションを同梱)
 export const getBlogComments = async (blogId: string) => {
   try {
     const supabase = createClient()
 
     const { data, error } = await supabase
-      .rpc('get_blog_comments_with_replies', {
+      .rpc('get_blog_comments_v2', {
         blog_uuid: blogId
       })
 
     if (error) {
+      console.error("RPC Error (get_blog_comments_v2):", error)
+      // フォールバックとして古いRPCを試すか、空配列を返す
       return { error: error.message, comments: [] }
     }
 
     // 取得したコメントのShortcodeを絵文字に変換
-    const commentsWithEmoji = data?.map((comment: { content: string }) => ({
+    const commentsWithEmoji = data?.map((comment: any) => ({
       ...comment,
-      content: shortcodeToEmoji(comment.content)
+      content: shortcodeToEmoji(comment.content),
+      // リアクション内の絵文字はそのまま（または必要に応じて処理）
     })) || []
 
     return { error: null, comments: commentsWithEmoji }

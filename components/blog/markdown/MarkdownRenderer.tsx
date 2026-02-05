@@ -279,11 +279,26 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           hr: () => <hr className="my-8 border-t-2" />,
 
           table: ({ children }) => (
-            <div className="overflow-x-auto my-4">
-              <table className="w-full border-collapse">
+            <div className="overflow-x-auto my-6 rounded-lg border border-border">
+              <table className="w-full border-collapse text-sm">
                 {children}
               </table>
             </div>
+          ),
+          thead: ({ children }) => (
+            <thead className="bg-muted/50 border-b border-border text-left font-bold">
+              {children}
+            </thead>
+          ),
+          th: ({ children, style }) => (
+            <th className="px-4 py-3 font-black uppercase tracking-wider" style={style}>
+              {children}
+            </th>
+          ),
+          td: ({ children, style }) => (
+            <td className="px-4 py-3 border-b border-border last:border-b-0" style={style}>
+              {children}
+            </td>
           ),
 
           li: ({ children, ...props }) => {
