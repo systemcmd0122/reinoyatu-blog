@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { LayoutGrid, List, Rows, Settings2, Newspaper, Type } from "lucide-react"
+import { LayoutGrid, List, Rows, Newspaper, Type } from "lucide-react"
 import { ViewMode } from "@/hooks/use-view-mode"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -20,68 +20,41 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
   currentMode,
   onModeChange,
 }) => {
+  const modes = [
+    { value: "card", icon: LayoutGrid, label: "Gallery" },
+    { value: "list", icon: List, label: "Feed" },
+    { value: "compact", icon: Rows, label: "Compact" },
+    { value: "magazine", icon: Newspaper, label: "Magazine" },
+    { value: "text", icon: Type, label: "Text Only" },
+  ]
+
   return (
-    <div className="flex items-center gap-3">
-      <div className="hidden sm:flex items-center gap-1.5 mr-1 text-muted-foreground">
-        <Settings2 className="h-4 w-4" />
-        <span className="text-xs font-medium">表示設定</span>
-      </div>
-      
-      <TooltipProvider delayDuration={300}>
-        <Tabs
-          value={currentMode}
-          onValueChange={(value) => onModeChange(value as ViewMode)}
-          className="w-auto"
-        >
-          <TabsList className="grid grid-cols-5 w-[200px] sm:w-[250px] h-9 p-1 bg-muted/50">
-            <Tooltip>
+    <TooltipProvider delayDuration={300}>
+      <Tabs
+        value={currentMode}
+        onValueChange={(value) => onModeChange(value as ViewMode)}
+        className="w-auto"
+      >
+        <TabsList className="flex items-center h-10 p-1 bg-muted/50 rounded-xl border border-border/10">
+          {modes.map((mode) => (
+            <Tooltip key={mode.value}>
               <TooltipTrigger asChild>
-                <TabsTrigger value="card" className="h-7 px-0 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-                  <LayoutGrid className="h-4 w-4" />
+                <TabsTrigger
+                  value={mode.value}
+                  className="h-8 w-8 sm:w-10 p-0 rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+                >
+                  <mode.icon className="h-4 w-4" />
+                  <span className="sr-only">{mode.label}</span>
                 </TabsTrigger>
               </TooltipTrigger>
-              <TooltipContent side="bottom">カード表示</TooltipContent>
+              <TooltipContent side="bottom" className="font-bold text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-lg border-border/50">
+                {mode.label}
+              </TooltipContent>
             </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger value="list" className="h-7 px-0 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-                  <List className="h-4 w-4" />
-                </TabsTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">リスト表示</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger value="compact" className="h-7 px-0 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-                  <Rows className="h-4 w-4" />
-                </TabsTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">コンパクト表示</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger value="magazine" className="h-7 px-0 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-                  <Newspaper className="h-4 w-4" />
-                </TabsTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">マガジン表示</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger value="text" className="h-7 px-0 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-                  <Type className="h-4 w-4" />
-                </TabsTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">テキスト表示</TooltipContent>
-            </Tooltip>
-          </TabsList>
-        </Tabs>
-      </TooltipProvider>
-    </div>
+          ))}
+        </TabsList>
+      </Tabs>
+    </TooltipProvider>
   )
 }
 

@@ -85,6 +85,31 @@ export const getStandardizedDate = (dateString: string): string => {
 }
 
 /**
+ * ブログ記事用の標準的な日付表示を生成する
+ * @param createdAt 作成日
+ * @param updatedAt 更新日
+ * @param isPublished 公開済みかどうか
+ * @returns 表示用文字列
+ */
+export const formatBlogDate = (createdAt: string, updatedAt: string, isPublished: boolean): string => {
+  if (!isPublished) {
+    return `下書き (${formatRelativeTime(createdAt)})`
+  }
+
+  const created = parseISO(createdAt).getTime()
+  const updated = parseISO(updatedAt).getTime()
+
+  // 更新日が作成日より24時間以上後の場合は「更新」を表示
+  const isSignificantUpdate = (updated - created) > 24 * 60 * 60 * 1000
+
+  if (isSignificantUpdate) {
+    return `${formatRelativeTime(updatedAt)}に更新`
+  }
+
+  return `${formatRelativeTime(createdAt)}に公開`
+}
+
+/**
  * 日付が現在から指定された日数以内かどうかをチェック
  * @param dateString ISO形式の日付文字列
  * @param days 日数

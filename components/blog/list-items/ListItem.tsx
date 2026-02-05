@@ -6,8 +6,9 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Heart } from "lucide-react"
-import { formatRelativeTime } from "@/utils/date"
+import { getBlogDisplayData } from "@/utils/blog-helpers"
 import { BlogType } from "@/types"
+import { Badge } from "@/components/ui/badge"
 
 interface ListItemProps {
   blog: BlogType
@@ -16,11 +17,14 @@ interface ListItemProps {
 
 const ListItem: React.FC<ListItemProps> = ({ blog }) => {
   const router = useRouter()
+  const data = getBlogDisplayData(blog)
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    router.push(`/profile/${blog.profiles.id}`)
+    if (data.author.id) {
+      router.push(`/profile/${data.author.id}`)
+    }
   }
 
   const handleTagClick = (e: React.MouseEvent, tagName: string) => {
@@ -29,20 +33,18 @@ const ListItem: React.FC<ListItemProps> = ({ blog }) => {
     router.push(`/tags/${encodeURIComponent(tagName)}`)
   }
 
-  const relativeTime = formatRelativeTime(blog.updated_at)
-
   return (
-    <div className="group block bg-card hover:bg-muted/30 transition-colors duration-200">
-      <div className="p-4 sm:p-6 flex gap-4 items-start">
+    <div className="group block bg-card hover:bg-muted/30 transition-all duration-200 border-b border-border/50 last:border-0">
+      <div className="p-5 sm:p-7 flex gap-5 items-start">
         {/* Author Avatar */}
         <div 
-          className="flex-shrink-0 cursor-pointer" 
+          className="flex-shrink-0 cursor-pointer pt-1"
           onClick={handleAuthorClick}
         >
-          <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden border border-border">
+          <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden border-2 border-border group-hover:border-primary transition-all shadow-sm">
             <Image
-              src={blog.profiles?.avatar_url || "/default.png"}
-              alt={blog.profiles?.name || "Unknown User"}
+              src={data.author.avatarUrl}
+              alt={data.author.name}
               fill
               className="object-cover"
             />
@@ -50,60 +52,65 @@ const ListItem: React.FC<ListItemProps> = ({ blog }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0 space-y-1 sm:space-y-2">
+        <div className="flex-1 min-w-0 space-y-2">
           {/* Author info and date */}
-          <div className="flex items-center text-xs sm:text-sm text-muted-foreground gap-2 overflow-hidden">
+          <div className="flex items-center text-xs sm:text-sm text-muted-foreground gap-2 overflow-hidden flex-wrap">
             <span 
-              className="font-medium text-foreground/80 hover:text-primary transition-colors cursor-pointer truncate max-w-[120px]"
+              className="font-black text-foreground hover:text-primary transition-colors cursor-pointer truncate max-w-[150px]"
               onClick={handleAuthorClick}
             >
-              @{blog.profiles?.name || "unknown"}
+              @{data.author.name}
             </span>
-            <span>が{relativeTime}に更新</span>
+            <span className="text-[10px] text-muted-foreground/40">•</span>
+            <span className="font-medium text-muted-foreground/80">
+              {data.dateDisplay}
+            </span>
+            {!data.isPublished && (
+              <Badge variant="outline" className="text-[10px] h-4 font-black border-primary text-primary px-1.5 py-0">
+                DRAFT
+              </Badge>
+            )}
           </div>
 
           {/* Title */}
-          <Link href={`/blog/${blog.id}`} className="block">
-            <h2 className={cn(
-              "text-lg sm:text-xl font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight",
-              "line-clamp-2"
-            )}>
-              {blog.title}
+          <Link href={`/blog/${data.id}`} className="block">
+            <h2 className="text-xl sm:text-2xl font-black text-foreground group-hover:text-primary transition-colors leading-tight tracking-tight line-clamp-2">
+              {data.title}
             </h2>
           </Link>
 
           {/* Tags */}
-          {blog.tags && blog.tags.length > 0 && (
-            <div className="flex flex-wrap gap-x-2 gap-y-1 pt-1">
-              {blog.tags.map((tag) => (
+          {data.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {data.tags.map((tag) => (
                 <span
-                  key={tag.name}
-                  onClick={(e) => handleTagClick(e, tag.name)}
-                  className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-muted/50 px-2 py-0.5 rounded"
+                  key={tag}
+                  onClick={(e) => handleTagClick(e, tag)}
+                  className="text-[11px] sm:text-xs font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all cursor-pointer bg-muted/50 px-2 py-0.5 rounded"
                 >
-                  #{tag.name}
+                  #{tag}
                 </span>
               ))}
             </div>
           )}
 
           {/* Footer - Likes */}
-          <div className="flex items-center gap-4 pt-2">
-            <div className="flex items-center gap-1.5 text-muted-foreground text-xs sm:text-sm">
-              <Heart className="h-4 w-4 fill-none" />
-              <span>{blog.likes_count || 0}</span>
+          <div className="flex items-center gap-5 pt-3">
+            <div className="flex items-center gap-1.5 text-muted-foreground group/like">
+              <Heart className="h-4 w-4 transition-colors group-hover/like:text-rose-500 group-hover/like:fill-rose-500" />
+              <span className="text-sm font-bold">{data.likesCount}</span>
             </div>
           </div>
         </div>
 
-        {/* Optional Thumbnail */}
-        {blog.image_url && (
-          <div className="hidden sm:block flex-shrink-0 relative h-20 w-32 rounded-lg overflow-hidden border border-border shadow-sm">
+        {/* Thumbnail */}
+        {data.imageUrl && (
+          <div className="hidden md:block flex-shrink-0 relative h-24 w-40 rounded-xl overflow-hidden border border-border/50 shadow-sm group-hover:shadow-md transition-all">
             <Image
-              src={blog.image_url}
-              alt={blog.title}
+              src={data.imageUrl}
+              alt={data.title}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
             />
           </div>
         )}

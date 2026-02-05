@@ -54,6 +54,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
             id,
             name,
             avatar_url
+          ),
+          tags (
+            name
           )
         `)
         .eq('user_id', profile.id)
@@ -64,7 +67,29 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
         return
       }
 
-      setBlogPosts(data || [])
+      // 各記事のいいね数を一括で取得してカウント（RPCを避けて標準クエリを使用）
+      const blogIds = (data || []).map(b => b.id)
+
+      let blogsWithLikes = data || []
+
+      if (blogIds.length > 0) {
+        const { data: reactionsData } = await supabase
+          .from('blog_reactions')
+          .select('blog_id')
+          .in('blog_id', blogIds)
+
+        const likesMap = (reactionsData || []).reduce((acc, r) => {
+          acc[r.blog_id] = (acc[r.blog_id] || 0) + 1
+          return acc
+        }, {} as Record<string, number>)
+
+        blogsWithLikes = data.map(blog => ({
+          ...blog,
+          likes_count: likesMap[blog.id] || 0
+        }))
+      }
+
+      setBlogPosts(blogsWithLikes)
       setIsLoading(false)
     }
 
