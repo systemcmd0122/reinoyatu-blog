@@ -2,11 +2,22 @@ import React, { useState, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import remarkBreaks from "remark-breaks"
+import remarkMath from "remark-math"
+import rehypeKatex from "rehype-katex"
+import rehypeRaw from "rehype-raw"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneLight, oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { Clipboard, Check, ExternalLink, XCircle } from "lucide-react"
 import Image from "next/image"
 import { useTheme } from "next-themes"
+
+import YouTubeEmbed from "./YouTubeEmbed"
+import Callout from "./Callout"
+import Accordion from "./Accordion"
+import { Timeline, TimelineItem } from "./Timeline"
+import ProgressBar from "./ProgressBar"
+
+import "katex/dist/katex.min.css"
 
 interface MarkdownRendererProps {
   content: string
@@ -30,48 +41,6 @@ interface YouTubeMatch {
   index: number
   videoId: string
   showDetails: boolean
-}
-
-// YouTubeコンポーネント
-const YouTubeEmbed: React.FC<{
-  videoId: string
-  showDetails?: boolean
-}> = ({ videoId, showDetails = true }) => {
-  const [videoInfo, setVideoInfo] = useState<{
-    title: string
-    description: string
-  } | null>(null)
-
-  useEffect(() => {
-    if (showDetails) {
-      // 簡易的なタイトル表示（APIキーなしでも動作）
-      setVideoInfo({
-        title: "YouTube Video",
-        description: "動画の詳細情報"
-      })
-    }
-  }, [videoId, showDetails])
-
-  return (
-    <div className="my-6 bg-muted/30 rounded-lg overflow-hidden border border-border">
-      <div className="relative w-full pt-[56.25%]">
-        <iframe
-          className="absolute top-0 left-0 w-full h-full"
-          src={`https://www.youtube.com/embed/${videoId}`}
-          title={videoInfo?.title || "YouTube video"}
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
-      {showDetails && videoInfo && (
-        <div className="p-4">
-          <h3 className="text-lg font-semibold text-foreground">{videoInfo.title}</h3>
-          <p className="text-sm text-muted-foreground mt-2">{videoInfo.description}</p>
-        </div>
-      )}
-    </div>
-  )
 }
 
 // コードブロックコンポーネント
@@ -134,7 +103,7 @@ const CodeBlock: React.FC<{
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ 
   content,
   className = "",
-  enableRaw = false
+  enableRaw = true // デフォルトで有効にする（リッチエディタの出力をサポートするため）
 }) => {
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
 
@@ -192,8 +161,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   return (
     <div className={`markdown-content prose prose-zinc dark:prose-invert max-w-none ${className}`}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkBreaks]}
-        skipHtml={!enableRaw}
+        remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
+        rehypePlugins={[rehypeKatex, [rehypeRaw, { tagfilter: true }]]}
         components={{
           code({ className, children, ...props }: CodeProps) {
             const match = /language-(\w+)/.exec(className || '')
@@ -330,6 +299,51 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             
             return <li className="my-1" {...props}>{children}</li>
           },
+
+          // カスタム要素のハンドリング
+          div: ({ node, children, ...props }: any) => {
+            const dataType = props['data-type']
+            const type = props['data-type'] || props.type;
+
+            if (dataType === 'callout') {
+              return <Callout type={props['data-type-actual'] || 'info'}>{children}</Callout>
+            }
+
+            if (dataType === 'timeline') {
+              return <Timeline>{children}</Timeline>
+            }
+
+            if (dataType === 'timeline-item') {
+              return <TimelineItem time={props['data-time']}>{children}</TimelineItem>
+            }
+
+            if (dataType === 'progress-bar') {
+              return (
+                <ProgressBar
+                  value={parseInt(props['data-value'] || '0', 10)}
+                  label={props['data-label']}
+                  color={props['data-color']}
+                />
+              )
+            }
+
+            return <div {...props}>{children}</div>
+          },
+
+          details: ({ children, ...props }: any) => {
+            const summary = React.Children.toArray(children).find(
+              (child: any) => child.type === 'summary'
+            ) as any
+            const content = React.Children.toArray(children).filter(
+              (child: any) => child.type !== 'summary'
+            )
+
+            return (
+              <Accordion title={summary?.props?.children || '詳細を表示'}>
+                {content}
+              </Accordion>
+            )
+          }
         }}
       >
         {processedContent}
