@@ -6,8 +6,9 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Heart } from "lucide-react"
-import { formatRelativeTime } from "@/utils/date"
+import { getBlogDisplayData } from "@/utils/blog-helpers"
 import { BlogType } from "@/types"
+import { Badge } from "@/components/ui/badge"
 
 interface CardItemProps {
   blog: BlogType
@@ -16,82 +17,92 @@ interface CardItemProps {
 
 const CardItem: React.FC<CardItemProps> = ({ blog, priority }) => {
   const router = useRouter()
+  const data = getBlogDisplayData(blog)
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    router.push(`/profile/${blog.profiles.id}`)
+    if (data.author.id) {
+      router.push(`/profile/${data.author.id}`)
+    }
   }
 
-  const relativeTime = formatRelativeTime(blog.updated_at)
-
   return (
-    <div className="group flex flex-col bg-card border border-border rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 h-full">
+    <div className="group flex flex-col bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 h-full">
       {/* Thumbnail */}
-      <Link href={`/blog/${blog.id}`} className="relative aspect-video overflow-hidden bg-muted">
-        {blog.image_url ? (
+      <Link href={`/blog/${data.id}`} className="relative aspect-video overflow-hidden bg-muted">
+        {data.imageUrl ? (
           <Image
-            src={blog.image_url}
-            alt={blog.title}
+            src={data.imageUrl}
+            alt={data.title}
             fill
             priority={priority}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20 font-bold text-2xl select-none">
-            NO IMAGE
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 text-muted-foreground/20 font-black text-2xl select-none">
+            REINOYATU
+          </div>
+        )}
+        
+        {!data.isPublished && (
+          <div className="absolute top-2 left-2 z-10">
+            <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-foreground border-none font-bold">
+              DRAFT
+            </Badge>
           </div>
         )}
       </Link>
 
       {/* Content */}
-      <div className="flex-1 p-4 flex flex-col">
+      <div className="flex-1 p-5 flex flex-col">
         {/* Tags */}
-        <div className="flex flex-wrap gap-2 mb-2">
-          {blog.tags?.slice(0, 2).map((tag) => (
-            <span key={tag.name} className="text-[10px] font-bold text-primary uppercase tracking-wider">
-              #{tag.name}
+        <div className="flex flex-wrap gap-2 mb-3">
+          {data.tags.slice(0, 3).map((tag) => (
+            <span key={tag} className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded">
+              #{tag}
             </span>
           ))}
         </div>
 
         {/* Title */}
-        <Link href={`/blog/${blog.id}`} className="block mb-2 flex-1">
-          <h2 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight">
-            {blog.title}
+        <Link href={`/blog/${data.id}`} className="block mb-2 group-hover:text-primary transition-colors">
+          <h2 className="text-xl font-bold text-foreground leading-tight line-clamp-2">
+            {data.title}
           </h2>
         </Link>
 
         {/* Summary */}
-        {blog.summary && (
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
-            {blog.summary}
-          </p>
-        )}
+        <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed font-medium">
+          {data.summary || "概要はありません。"}
+        </p>
 
         {/* Footer */}
-        <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={handleAuthorClick}>
-            <div className="relative h-6 w-6 rounded-full overflow-hidden border border-border">
+        <div className="mt-auto pt-4 border-t border-border/50 flex items-center justify-between">
+          <div 
+            className="flex items-center gap-2 cursor-pointer group/author" 
+            onClick={handleAuthorClick}
+          >
+            <div className="relative h-7 w-7 rounded-full overflow-hidden border border-border group-hover/author:border-primary transition-colors">
               <Image
-                src={blog.profiles?.avatar_url || "/default.png"}
-                alt={blog.profiles?.name || "User"}
+                src={data.author.avatarUrl}
+                alt={data.author.name}
                 fill
                 className="object-cover"
               />
             </div>
-            <span className="text-xs font-medium text-muted-foreground truncate max-w-[80px]">
-              {blog.profiles?.name}
+            <span className="text-xs font-bold text-muted-foreground group-hover/author:text-primary transition-colors truncate max-w-[100px]">
+              {data.author.name}
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-             <div className="flex items-center gap-1 text-muted-foreground text-xs">
-              <Heart className="h-3.5 w-3.5" />
-              <span>{blog.likes_count || 0}</span>
+          <div className="flex items-center gap-4">
+             <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Heart className="h-4 w-4 transition-colors group-hover:text-rose-500 group-hover:fill-rose-500" />
+              <span className="text-xs font-bold">{data.likesCount}</span>
             </div>
-            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-              {relativeTime}
+            <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter whitespace-nowrap">
+              {data.dateDisplay}
             </span>
           </div>
         </div>

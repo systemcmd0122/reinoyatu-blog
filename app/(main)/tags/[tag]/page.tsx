@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server"
 import BlogListView from "@/components/blog/BlogListView"
 import { notFound } from "next/navigation"
+import { Metadata } from "next"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Tag, TrendingUp, ChevronLeft, Search, Filter } from "lucide-react"
@@ -14,6 +15,28 @@ interface TagPageProps {
   searchParams: Promise<{
     sort?: string
   }>
+}
+
+export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
+  const { tag } = await params
+  const tagName = decodeURIComponent(tag)
+  const title = `#${tagName}`
+  const description = `「#${tagName}」タグが付いた記事の一覧です。例のヤツ｜ブログで最新の情報をチェックしましょう。`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} | 例のヤツ｜ブログ`,
+      description,
+      type: "website",
+    },
+    twitter: {
+      title: `${title} | 例のヤツ｜ブログ`,
+      description,
+      card: "summary",
+    },
+  }
 }
 
 const TagPage = async ({ params, searchParams }: TagPageProps) => {
@@ -61,6 +84,27 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
     notFound()
   }
 
+  // 各記事のいいね数を一括取得（RPCを避けて標準クエリを使用）
+  const blogIds = (blogs || []).map(b => b.id)
+  let blogsWithLikes = blogs || []
+  
+  if (blogIds.length > 0) {
+    const { data: reactionsData } = await supabase
+      .from('blog_reactions')
+      .select('blog_id')
+      .in('blog_id', blogIds)
+
+    const likesMap = (reactionsData || []).reduce((acc, r) => {
+      acc[r.blog_id] = (acc[r.blog_id] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    blogsWithLikes = blogs.map(blog => ({
+      ...blog,
+      likes_count: likesMap[blog.id] || 0
+    }))
+  }
+
   // 人気タグ
   const popularTags = allTagsData ? [...allTagsData].sort((a, b) => b.count - a.count).slice(0, 20) : []
 
@@ -106,8 +150,8 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
             </div>
 
             {/* ブログ一覧 */}
-            {blogs.length > 0 ? (
-              <BlogListView blogs={blogs} />
+            {blogsWithLikes.length > 0 ? (
+              <BlogListView blogs={blogsWithLikes} />
             ) : (
               <div className="bg-card border border-border rounded-lg p-12 text-center text-muted-foreground shadow-sm">
                 このタグに関連する記事はまだありません。

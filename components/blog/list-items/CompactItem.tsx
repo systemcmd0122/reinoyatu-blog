@@ -2,49 +2,53 @@
 
 import React from "react"
 import Link from "next/link"
-import { formatRelativeTime } from "@/utils/date"
+import { getBlogDisplayData } from "@/utils/blog-helpers"
 import { BlogType } from "@/types"
+import { Badge } from "@/components/ui/badge"
 
 interface CompactItemProps {
   blog: BlogType
 }
 
 const CompactItem: React.FC<CompactItemProps> = ({ blog }) => {
-  const relativeTime = formatRelativeTime(blog.updated_at)
+  const data = getBlogDisplayData(blog)
 
   return (
-    <div className="group block bg-card hover:bg-muted/30 transition-colors duration-200">
+    <div className="group block bg-card hover:bg-muted/30 transition-colors duration-200 border-b border-border/50 last:border-0">
       <div className="px-4 py-3 sm:px-6 flex items-center gap-4">
-        {/* Date/Time - Fixed width */}
-        <div className="hidden sm:block w-24 flex-shrink-0 text-xs text-muted-foreground">
-          {relativeTime}
+        {/* Date/Status - Fixed width */}
+        <div className="hidden sm:flex w-28 flex-shrink-0 text-[11px] font-bold text-muted-foreground/60 uppercase items-center gap-2">
+          {data.dateDisplay.split(' (')[0].split('に')[0]} {/* Simple date display for compact */}
+          {!data.isPublished && (
+            <Badge variant="outline" className="text-[9px] h-3 px-1 border-primary/30 text-primary font-black">
+              D
+            </Badge>
+          )}
         </div>
 
-        {/* Title */}
+        {/* Title & Tags */}
         <div className="flex-1 min-w-0">
-          <Link href={`/blog/${blog.id}`} className="flex items-center gap-2">
-            <h2 className="text-sm sm:text-base font-medium text-foreground group-hover:text-primary transition-colors truncate">
-              {blog.title}
+          <Link href={`/blog/${data.id}`} className="flex items-center gap-3">
+            <h2 className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors truncate">
+              {data.title}
             </h2>
-            {blog.tags && blog.tags.length > 0 && (
-              <div className="hidden md:flex gap-1 overflow-hidden">
-                {blog.tags.slice(0, 1).map((tag) => (
-                  <span key={tag.name} className="text-[10px] text-muted-foreground/60">
-                    #{tag.name}
-                  </span>
-                ))}
-              </div>
-            )}
+            <div className="hidden md:flex gap-1.5 overflow-hidden">
+              {data.tags.slice(0, 2).map((tag) => (
+                <span key={tag} className="text-[10px] font-medium text-muted-foreground/40 whitespace-nowrap">
+                  #{tag}
+                </span>
+              ))}
+            </div>
           </Link>
         </div>
 
         {/* Author */}
-        <div className="flex-shrink-0 flex items-center gap-2">
-           <span className="text-xs text-muted-foreground hidden sm:inline-block">
-            by <span className="text-foreground/70">{blog.profiles?.name}</span>
+        <div className="flex-shrink-0 flex items-center gap-3">
+          <span className="text-xs font-bold text-muted-foreground hidden sm:inline-block">
+            by <span className="text-foreground/80 group-hover:text-primary transition-colors">{data.author.name}</span>
           </span>
-          <div className="sm:hidden text-[10px] text-muted-foreground">
-            {relativeTime}
+          <div className="sm:hidden text-[10px] font-bold text-muted-foreground/60">
+            {data.dateDisplay}
           </div>
         </div>
       </div>

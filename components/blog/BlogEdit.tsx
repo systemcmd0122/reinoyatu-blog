@@ -25,9 +25,11 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
     })
   }
 
-  const handleDelete = async () => {
+  const handleDelete = async (blogId?: string) => {
+    // 引数のblogIdがあればそれを使用し、なければpropsのblog.idを使用
+    const idToDelete = blogId || blog.id
     return await deleteBlog({
-      blogId: blog.id,
+      blogId: idToDelete,
       imageUrl: blog.image_url,
       userId: blog.user_id,
     })

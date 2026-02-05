@@ -61,15 +61,24 @@ const MainPage = async ({ searchParams }: { searchParams: Promise<{ [key: string
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }): Promise<Metadata> {
   const { q } = await searchParams
   const query = typeof q === "string" ? q : ""
-  const title = query ? `"${query}" の検索結果 | 例のヤツ｜ブログ` : "例のヤツ｜ブログ"
-  const description = "例のヤツを主催とした様々なことを投稿・共有するためのブログサイトです。"
+  
+  // クエリがない場合はタイトルを返さず、ルートレイアウトのデフォルトを使用させる
+  // 以前はここでフルタイトルを返していたため、レイアウトのテンプレートと重なって「例のヤツ｜ブログ | 例のヤツ｜ブログ」になっていた
+  if (!query) {
+    return {
+      title: undefined,
+    }
+  }
+
+  const title = `"${query}" の検索結果`
+  const description = `「${query}」の検索結果一覧です。例のヤツ｜ブログで興味のある記事を見つけましょう。`
   const image = `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/og?title=${encodeURIComponent(title)}`
 
   return {
     title,
     description,
     openGraph: {
-      title,
+      title: `${title} | 例のヤツ｜ブログ`,
       description,
       url: process.env.NEXT_PUBLIC_APP_URL || undefined,
       images: [{ url: image, alt: title }],
@@ -77,7 +86,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
       type: "website",
     },
     twitter: {
-      title,
+      title: `${title} | 例のヤツ｜ブログ`,
       description,
       card: "summary_large_image",
       images: [image],

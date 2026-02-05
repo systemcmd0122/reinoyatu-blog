@@ -76,11 +76,11 @@ const upsertTags = async (tagNames: string[]) => {
 }
 
 interface newBlogProps extends z.infer<typeof BlogSchema> {
-  is_published: any
   base64Image?: string
   userId: string
   tags?: string[]
   summary?: string
+  is_published?: boolean
 }
 
 // ブログ投稿（完全修正版）
@@ -168,13 +168,13 @@ export const newBlog = async (values: newBlogProps) => {
 }
 
 interface editBlogProps extends z.infer<typeof BlogSchema> {
-  is_published: any
   blogId: string
   imageUrl: string | null
   base64Image?: string
   userId: string
   tags?: string[]
   summary?: string
+  is_published?: boolean
 }
 
 // ブログ編集（完全修正版）
@@ -456,7 +456,7 @@ export const chatWithAI = async (messages: { role: 'user' | 'model', content: st
   try {
     const { GoogleGenerativeAI } = await import("@google/generative-ai")
     const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "")
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 
     // 履歴を準備（最後のメッセージは除く）
     let history = messages.slice(0, -1).map(m => ({
@@ -501,8 +501,17 @@ export const chatWithAI = async (messages: { role: 'user' | 'model', content: st
     const text = response.text()
 
     return { content: text, error: null }
-  } catch (error) {
+  } catch (error: any) {
     console.error("AIチャットエラー:", error)
+    
+    if (error.status === 429) {
+      return { content: null, error: "AIの利用制限（リクエスト過多）に達しました。少し時間をおいてから再度お試しください。" }
+    }
+    
+    if (error.status === 404) {
+      return { content: null, error: "指定されたAIモデルが見つかりませんでした。管理者にお問い合わせください。" }
+    }
+
     return { content: null, error: "AIとの通信中にエラーが発生しました。" }
   }
 }
