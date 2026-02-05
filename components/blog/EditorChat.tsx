@@ -20,11 +20,11 @@ interface EditorChatProps {
 }
 
 const EditorChat: React.FC<EditorChatProps> = ({ onApplySuggestion, currentContent }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', content: 'こんにちは！記事の執筆をお手伝いします。構成の相談や、具体的な文章の作成など、何でも聞いてください。' }
-  ])
+  // 初期メッセージを空にして、最初のメッセージはユーザーから始まるようにする
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -36,19 +36,25 @@ const EditorChat: React.FC<EditorChatProps> = ({ onApplySuggestion, currentConte
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
 
+    // ウェルカムメッセージを非表示
+    setShowWelcome(false)
+
     const userMessage: Message = { role: 'user', content: input }
     setMessages(prev => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
 
     try {
-      // 文脈として現在の本文を含める（必要に応じて調整）
+      // 文脈として現在の本文を含める
       const contextPrompt = `
 現在の記事本文:
 ---
-${currentContent}
+${currentContent || '(まだ記事本文がありません)'}
 ---
+
 ユーザーの要望: ${input}
+
+上記の記事本文の内容を踏まえて、ユーザーの要望に応えてください。記事の執筆を支援する立場として、具体的で実用的な提案をしてください。
 `
       const result = await chatWithAI([...messages, { role: 'user', content: contextPrompt }])
       
@@ -58,7 +64,7 @@ ${currentContent}
         setMessages(prev => [...prev, { role: 'model', content: result.content! }])
       }
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', content: "AIとの通信に失敗しました。" }])
+      setMessages(prev => [...prev, { role: 'model', content: "AIとの通信に失敗しました。もう一度お試しください。" }])
     } finally {
       setIsLoading(false)
     }
@@ -73,6 +79,46 @@ ${currentContent}
 
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="space-y-4">
+          {/* ウェルカムメッセージ */}
+          {showWelcome && messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-8">
+              <Bot className="h-12 w-12 text-primary opacity-50" />
+              <div className="space-y-2">
+                <h4 className="font-semibold text-lg">こんにちは！</h4>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  記事の執筆をお手伝いします。構成の相談や、具体的な文章の作成など、何でも聞いてください。
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-2 w-full max-w-xs mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs justify-start h-auto py-2 px-3"
+                  onClick={() => setInput("記事の導入部分を書いてください")}
+                >
+                  💡 記事の導入部分を書いてください
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs justify-start h-auto py-2 px-3"
+                  onClick={() => setInput("記事の構成案を提案してください")}
+                >
+                  📝 記事の構成案を提案してください
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs justify-start h-auto py-2 px-3"
+                  onClick={() => setInput("内容をより詳しく説明してください")}
+                >
+                  ✨ 内容をより詳しく説明してください
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* チャットメッセージ */}
           {messages.map((m, i) => (
             <div key={i} className={cn(
               "flex flex-col gap-2 max-w-[90%]",
@@ -96,7 +142,8 @@ ${currentContent}
                 {m.content}
               </div>
               
-              {m.role === 'model' && i > 0 && (
+              {/* AIの回答にのみアクションボタンを表示（ウェルカムメッセージを除く） */}
+              {m.role === 'model' && (
                 <div className="flex gap-2 mt-1">
                   <Button 
                     variant="outline" 
@@ -120,6 +167,8 @@ ${currentContent}
               )}
             </div>
           ))}
+
+          {/* ローディング中の表示 */}
           {isLoading && (
             <div className="flex flex-col gap-2 max-w-[90%] mr-auto items-start animate-pulse">
               <div className="flex items-center gap-2 mb-1">

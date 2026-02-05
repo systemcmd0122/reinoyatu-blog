@@ -451,18 +451,48 @@ export const getDrafts = async (userId: string) => {
   }
 }
 
-// AIとのチャット
+// AIとのチャット（完全修正版）
 export const chatWithAI = async (messages: { role: 'user' | 'model', content: string }[]) => {
   try {
     const { GoogleGenerativeAI } = await import("@google/generative-ai")
     const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "")
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
 
+    // 履歴を準備（最後のメッセージは除く）
+    let history = messages.slice(0, -1).map(m => ({
+      role: m.role,
+      parts: [{ text: m.content }]
+    }))
+
+    // 履歴が空の場合、または最初のメッセージがmodelロールの場合の処理
+    if (history.length === 0) {
+      // 履歴なしでチャットを開始
+      const chat = model.startChat({
+        history: []
+      })
+
+      const lastMessage = messages[messages.length - 1].content
+      const result = await chat.sendMessage(lastMessage)
+      const response = await result.response
+      const text = response.text()
+
+      return { content: text, error: null }
+    }
+
+    // 最初のメッセージがmodelロールの場合、スキップする
+    if (history[0].role === 'model') {
+      history = history.slice(1)
+    }
+
+    // 履歴がまだ空でない場合、最初がuserロールであることを確認
+    if (history.length > 0 && history[0].role !== 'user') {
+      console.error("履歴の最初のメッセージはuserロールである必要があります")
+      return { content: null, error: "チャット履歴の形式が正しくありません。" }
+    }
+
+    // チャットを開始
     const chat = model.startChat({
-      history: messages.slice(0, -1).map(m => ({
-        role: m.role,
-        parts: [{ text: m.content }]
-      })),
+      history: history
     })
 
     const lastMessage = messages[messages.length - 1].content
