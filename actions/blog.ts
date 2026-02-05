@@ -125,6 +125,7 @@ export const newBlog = async (values: newBlogProps) => {
       .insert({
         title: values.title,
         content: values.content,
+        content_json: values.content_json || null,
         summary: values.summary || null,
         image_url,
         user_id: values.userId,
@@ -227,6 +228,7 @@ export const editBlog = async (values: editBlogProps) => {
       .update({
         title: values.title,
         content: values.content,
+        content_json: values.content_json || null,
         summary: values.summary || null,
         image_url,
         is_published: values.is_published,
