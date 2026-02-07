@@ -2,7 +2,8 @@
 
 import { User } from "@supabase/supabase-js"
 import { createClient } from "@/utils/supabase/client"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
+import { toast } from "sonner"
 import {
   LogOut,
   Settings,
@@ -11,6 +12,7 @@ import {
   Shield,
   House,
   Bookmark,
+  Bell,
   User as UserIcon,
   FileText,
   Search,
@@ -21,6 +23,7 @@ import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { ThemeToggle } from "./ThemeToggle"
 import { CommandMenu } from "./CommandMenu"
+import { useRealtime } from "@/hooks/use-realtime"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,11 +58,13 @@ interface NavigationProps {
 
 const Navigation = ({ user: initialUser }: NavigationProps) => {
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = createClient()
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [user, setUser] = useState(initialUser)
   const [profile, setProfile] = useState<{ avatar_url: string | null; name: string | null } | null>(null)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -79,6 +84,19 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   useEffect(() => {
     setUser(initialUser)
   }, [initialUser])
+
+  // リアルタイム通知の購読
+  const lastNotifyEvent = useRealtime('notifications', {
+    event: 'INSERT',
+    filter: user ? `user_id=eq.${user.id}` : undefined
+  })
+
+  useEffect(() => {
+    if (lastNotifyEvent) {
+      setUnreadCount(prev => prev + 1)
+      toast.info("新しい通知があります")
+    }
+  }, [lastNotifyEvent])
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -149,6 +167,11 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
     { href: "/privacy", icon: Shield, label: "プライバシーポリシー" },
   ]
 
+  // エディターページではナビゲーションを非表示にする
+  const isEditorPage = pathname === "/blog/new" || /^\/blog\/[^/]+\/edit$/.test(pathname || "")
+
+  if (isEditorPage) return null
+
   return (
     <>
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-[var(--z-nav)] w-full">
@@ -184,6 +207,14 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
             <div className="hidden md:flex items-center gap-1">
               {user && (
                 <>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground relative" asChild>
+                    <Link href="/notifications" title="通知">
+                      <Bell className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                      )}
+                    </Link>
+                  </Button>
                   <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
                     <Link href="/bookmarks" title="ブックマーク">
                       <Bookmark className="h-5 w-5" />

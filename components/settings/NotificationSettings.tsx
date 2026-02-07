@@ -1,14 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Bell, Mail, MessageSquare, Heart, UserPlus } from "lucide-react"
 import SaveStatus from "./SaveStatus"
 import { toast } from "sonner"
+import { useRealtime } from "@/hooks/use-realtime"
+import { createClient } from "@/utils/supabase/client"
 
 const NotificationSettings = () => {
+  const [userId, setUserId] = useState<string | null>(null)
   const [saveStatus, setSaveStatus] = useState<"unsaved" | "saving" | "saved">("saved")
   const [settings, setSettings] = useState({
     email_new_post: true,
@@ -18,16 +21,71 @@ const NotificationSettings = () => {
     push_new_comment: true,
   })
 
-  const handleToggle = (key: keyof typeof settings) => {
+  const supabase = createClient()
+
+  useEffect(() => {
+    const fetchUserAndSettings = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserId(user.id)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('social_links')
+          .eq('id', user.id)
+          .single()
+
+        if (profile?.social_links?.notification_settings) {
+          setSettings(profile.social_links.notification_settings)
+        }
+      }
+    }
+    fetchUserAndSettings()
+  }, [])
+
+  // リアルタイム同期
+  const lastEvent = useRealtime<any>('profiles', {
+    event: 'UPDATE',
+    filter: userId ? `id=eq.${userId}` : undefined
+  })
+
+  useEffect(() => {
+    const updated = lastEvent?.new
+    if (updated?.social_links?.notification_settings) {
+      setSettings(updated.social_links.notification_settings)
+    }
+  }, [lastEvent])
+
+  const handleToggle = async (key: keyof typeof settings) => {
+    if (!userId) return
+
+    const newSettings = { ...settings, [key]: !settings[key] }
     setSaveStatus("unsaved")
-    setSettings(prev => ({ ...prev, [key]: !prev[key] }))
+    setSettings(newSettings)
     
-    // 疑似保存処理
     setSaveStatus("saving")
-    setTimeout(() => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('social_links')
+        .eq('id', userId)
+        .single()
+
+      const newSocialLinks = {
+        ...(profile?.social_links || {}),
+        notification_settings: newSettings
+      }
+
+      await supabase
+        .from('profiles')
+        .update({ social_links: newSocialLinks })
+        .eq('id', userId)
+
       setSaveStatus("saved")
       toast.success("通知設定を更新しました")
-    }, 800)
+    } catch (error) {
+      setSaveStatus("unsaved")
+      toast.error("保存に失敗しました")
+    }
   }
 
   return (
