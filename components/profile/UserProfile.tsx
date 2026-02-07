@@ -52,7 +52,6 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
   const [isLoading, setIsLoading] = useState(true)
   const [isCollectionsLoading, setIsCollectionsLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined)
-  const [followCounts, setFollowCounts] = useState({ following: 0, followers: 0 })
 
   // リアルタイム購読（プロフィール更新）
   const profileEvent = useRealtime<ProfileType>('profiles', {
@@ -65,24 +64,6 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
       setProfile(prev => ({ ...prev, ...(profileEvent.new as ProfileType) }))
     }
   }, [profileEvent])
-
-  // リアルタイム購読（フォロー数）
-  const followEvent = useRealtime('user_follows', { event: '*' })
-  
-  useEffect(() => {
-    if (!followEvent) return
-    const record = (followEvent.new || followEvent.old) as any
-    if (record.follower_id === profile.id || record.following_id === profile.id) {
-      const fetchFollowCounts = async () => {
-        const counts = await getFollowCounts(profile.id)
-        setFollowCounts({
-          following: Number(counts.following_count),
-          followers: Number(counts.follower_count),
-        })
-      }
-      fetchFollowCounts()
-    }
-  }, [followEvent, profile.id])
 
   // リアルタイム購読（記事・いいね数）
   const blogEvent = useRealtime('blogs', { event: '*', filter: `user_id=eq.${profile.id}` })
@@ -105,16 +86,17 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
     fetchUser()
   }, [])
 
-  // フォロー数を取得
+  // 初期フォロー数取得
   useEffect(() => {
-    const fetchFollowCounts = async () => {
+    const fetchInitialCounts = async () => {
       const counts = await getFollowCounts(profile.id)
-      setFollowCounts({
-        following: Number(counts.following_count),
-        followers: Number(counts.follower_count),
-      })
+      setProfile(prev => ({
+        ...prev,
+        following_count: counts.following_count,
+        follower_count: counts.follower_count
+      }))
     }
-    fetchFollowCounts()
+    fetchInitialCounts()
   }, [profile.id])
 
   // コレクションを取得
@@ -187,11 +169,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
     const totalLikes = blogPosts.reduce((acc, blog) => acc + (blog.likes_count || 0), 0)
     return [
       { label: "Posts", value: blogPosts.length, icon: FileText },
-      { label: "Following", value: followCounts.following, icon: Users },
-      { label: "Followers", value: followCounts.followers, icon: Users },
+      { label: "Following", value: profile.following_count || 0, icon: Users },
+      { label: "Followers", value: profile.follower_count || 0, icon: Users },
       { label: "Total Likes", value: totalLikes, icon: Heart },
     ]
-  }, [blogPosts, followCounts])
+  }, [blogPosts, profile.following_count, profile.follower_count])
 
   const formatIntroduce = useCallback((text: string | null) => {
     if (!text) return null
