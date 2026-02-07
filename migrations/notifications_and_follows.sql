@@ -29,6 +29,7 @@ CREATE POLICY "Users can update their own notifications" ON public.notifications
 
 -- Enable Realtime for notifications
 ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+ALTER TABLE public.notifications REPLICA IDENTITY FULL;
 
 -- 2. Follower counts in profiles
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS follower_count INTEGER DEFAULT 0;
