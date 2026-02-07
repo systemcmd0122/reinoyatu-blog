@@ -1,8 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { GenerationOptions } from "@/types";
 
 // サーバーサイド専用のAPI Key取得（NEXT_PUBLIC_を使わない）
-const getApiKey = () => {
+const getApiKey = (): string => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY environment variable is not set");
@@ -10,13 +10,13 @@ const getApiKey = () => {
   return apiKey;
 };
 
-export const getGeminiModel = () => {
-  const genAI = new GoogleGenerativeAI(getApiKey());
-  return genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+export const getGeminiClient = () => {
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
+  return ai;
 };
 
 // スタイルIDを具体的な指示にマッピング
-const styleInstructionMap: { [key: string]: string } = {
+const styleInstructionMap: Record<string, string> = {
   professional: "ビジネス文書として通用する、プロフェッショナルで洗練されたトーンで記述してください。専門用語を適切に用い、客観的で信頼性の高い文章を心がけてください。",
   casual: "親しみやすく、読者が気軽に読めるようなカジュアルなトーンで記述してください。会話に近い自然な表現を使ってください。",
   technical: "技術的な内容を正確かつ明確に記述してください。専門用語は一貫して使用し、必要であれば簡単な注釈を加えてください。コードブロックや専門用語のフォーマットは維持してください。",
@@ -104,24 +104,50 @@ javascript, typescript, jsx, tsx, html, css, python, java, csharp, cpp, c, php, 
 `;
 };
 
+// エラーハンドリング用のヘルパー関数
+const handleGeminiError = (error: any, defaultMessage: string): string => {
+  console.error("Gemini API Error:", error);
+  
+  if (error.status === 429) {
+    return "APIの利用制限に達しました。しばらく時間をおいてから再度お試しください。";
+  }
+  
+  if (error.status === 401 || error.status === 403) {
+    return "APIキーが無効です。環境変数を確認してください。";
+  }
+  
+  if (error.status === 404) {
+    return "指定されたAIモデルが見つかりませんでした。管理者にお問い合わせください。";
+  }
+  
+  if (error.message?.includes("API key")) {
+    return "APIキーの設定に問題があります。管理者に連絡してください。";
+  }
+  
+  return defaultMessage;
+};
+
 export const generateBlogContent = async (
   title: string,
   content: string,
   styles: string[],
   options: GenerationOptions
-) => {
-  const model = getGeminiModel();
+): Promise<{ content: string | null; error: string | null }> => {
+  try {
+    const ai = getGeminiClient();
 
-  const {
-    keepStructure = true,
-    preserveLinks = true,
-    enhanceReadability = true,
-    summaryLength,
-  } = options;
+    const {
+      keepStructure = true,
+      preserveLinks = true,
+      enhanceReadability = true,
+      summaryLength,
+    } = options;
 
-  const styleInstructions = styles.map(s => styleInstructionMap[s]).filter(Boolean);
+    const styleInstructions = styles
+      .map(s => styleInstructionMap[s])
+      .filter(Boolean);
 
-  const prompt = `
+    const prompt = `
 あなたは、与えられたMarkdownの仕様に従って記事を改善する優秀なブログ編集AIです。
 以下の最優先事項を必ず守ってください：
 
@@ -199,41 +225,33 @@ ${summaryLength ? `
 記事の改善を開始してください：
 `;
 
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-lite",
+      contents: prompt,
+    });
     
-    return { content: text.trim(), error: null };
+    if (!response.text) {
+      return { content: null, error: "AIからの応答が空でした。" };
+    }
+    
+    return { content: response.text.trim(), error: null };
   } catch (error: any) {
-    console.error("Error generating content:", error);
-    
-    // より詳細なエラーハンドリング
-    if (error.status === 429) {
-      return {
-        content: null,
-        error: "APIの利用制限に達しました。しばらく時間をおいてから再度お試しください。",
-      };
-    }
-    
-    if (error.status === 401 || error.status === 403) {
-      return {
-        content: null,
-        error: "APIキーが無効です。環境変数を確認してください。",
-      };
-    }
-    
-    return {
-      content: null,
-      error: "AI処理中にエラーが発生しました。時間をおいて再度お試しください。",
-    };
+    const errorMessage = handleGeminiError(
+      error,
+      "AI処理中にエラーが発生しました。時間をおいて再度お試しください。"
+    );
+    return { content: null, error: errorMessage };
   }
 };
 
-export const generateTags = async (title: string, content: string): Promise<{ tags: string[] | null; error: string | null }> => {
-  const model = getGeminiModel();
+export const generateTags = async (
+  title: string,
+  content: string
+): Promise<{ tags: string[] | null; error: string | null }> => {
+  try {
+    const ai = getGeminiClient();
 
-  const prompt = `
+    const prompt = `
 あなたはプロのSEO専門家です。
 以下のブログ記事のタイトルと内容を分析し、記事の主要なテーマを表す関連性の高いタグを3〜7個生成してください。
 
@@ -279,10 +297,16 @@ ${content}
 
 **出力:**`;
 
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text().trim();
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash-exp",
+      contents: prompt,
+    });
+
+    if (!response.text) {
+      return { tags: null, error: "AIからの応答が空でした。" };
+    }
+
+    const text = response.text.trim();
 
     const tags = text
       .split(',')
@@ -292,33 +316,21 @@ ${content}
 
     return { tags, error: null };
   } catch (error: any) {
-    console.error("Error generating tags:", error);
-    
-    if (error.status === 429) {
-      return { 
-        tags: null, 
-        error: "APIの利用制限に達しました。しばらく時間をおいてから再度お試しください。" 
-      };
-    }
-    
-    if (error.status === 401 || error.status === 403) {
-      return { 
-        tags: null, 
-        error: "APIキーが無効です。環境変数を確認してください。" 
-      };
-    }
-    
-    return { 
-      tags: null, 
-      error: "タグの自動生成中にエラーが発生しました。時間をおいて再度お試しください。" 
-    };
+    const errorMessage = handleGeminiError(
+      error,
+      "タグの自動生成中にエラーが発生しました。時間をおいて再度お試しください。"
+    );
+    return { tags: null, error: errorMessage };
   }
 };
 
-export const generateTitleSuggestions = async (content: string): Promise<{ titles: string[] | null; error: string | null }> => {
-  const model = getGeminiModel();
+export const generateTitleSuggestions = async (
+  content: string
+): Promise<{ titles: string[] | null; error: string | null }> => {
+  try {
+    const ai = getGeminiClient();
 
-  const prompt = `
+    const prompt = `
 あなたは、読者の目を引く魅力的な記事タイトルを考えるプロのコピーライターです。
 以下の記事の内容を分析し、内容を的確に表しつつ、クリックしたくなるようなタイトルを5つ提案してください。
 
@@ -339,10 +351,16 @@ ${content.substring(0, 3000)}
 ### タイトル案
 `;
 
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text().trim();
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash-exp",
+      contents: prompt,
+    });
+
+    if (!response.text) {
+      return { titles: null, error: "AIからの応答が空でした。" };
+    }
+
+    const text = response.text.trim();
 
     const titles = text
       .split('\n')
@@ -352,45 +370,34 @@ ${content.substring(0, 3000)}
 
     return { titles, error: null };
   } catch (error: any) {
-    console.error("Error generating titles:", error);
-    
-    if (error.status === 429) {
-      return { 
-        titles: null, 
-        error: "APIの利用制限に達しました。しばらく時間をおいてから再度お試しください。" 
-      };
-    }
-    
-    if (error.status === 401 || error.status === 403) {
-      return { 
-        titles: null, 
-        error: "APIキーが無効です。環境変数を確認してください。" 
-      };
-    }
-    
-    return { 
-      titles: null, 
-      error: "タイトルの提案中にエラーが発生しました。" 
-    };
+    const errorMessage = handleGeminiError(
+      error,
+      "タイトルの提案中にエラーが発生しました。"
+    );
+    return { titles: null, error: errorMessage };
   }
 };
 
-export const generateSummaryFromContent = async (title: string, content: string): Promise<{ summary: string | null; error: string | null }> => {
-  const model = getGeminiModel();
+export const generateSummaryFromContent = async (
+  title: string,
+  content: string
+): Promise<{ summary: string | null; error: string | null }> => {
+  try {
+    const ai = getGeminiClient();
 
-  const plainContent = content
-    .replace(/---/g, ' ')
-    .replace(/#{1,6}\s/g, ' ')
-    .replace(/\*\*/g, '')
-    .replace(/\*/g, '')
-    .replace(/~~/g, '')
-    .replace(/`{1,3}[^`]*`{1,3}/g, '')
-    .replace(/\|/g, ' ')
-    .replace(/\n/g, ' ')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
+    const plainContent = content
+      .replace(/---/g, ' ')
+      .replace(/#{1,6}\s/g, ' ')
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/~~/g, '')
+      .replace(/`{1,3}[^`]*`{1,3}/g, '')
+      .replace(/\|/g, ' ')
+      .replace(/\n/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
 
-  const prompt = `
+    const prompt = `
 あなたは、読者の興味を引くのが得意なプロの編集者です。
 以下のブログ記事のタイトルと内容を読み、記事の核心を突いた、簡潔で魅力的な要約を生成してください。
 
@@ -412,32 +419,23 @@ ${plainContent.substring(0, 3000)}
 ### 要約
 `;
 
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const summary = response.text().trim();
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash-exp",
+      contents: prompt,
+    });
+
+    if (!response.text) {
+      return { summary: null, error: "AIからの応答が空でした。" };
+    }
+
+    const summary = response.text.trim();
 
     return { summary, error: null };
   } catch (error: any) {
-    console.error("Error generating summary:", error);
-    
-    if (error.status === 429) {
-      return { 
-        summary: null, 
-        error: "APIの利用制限に達しました。しばらく時間をおいてから再度お試しください。" 
-      };
-    }
-    
-    if (error.status === 401 || error.status === 403) {
-      return { 
-        summary: null, 
-        error: "APIキーが無効です。環境変数を確認してください。" 
-      };
-    }
-    
-    return { 
-      summary: null, 
-      error: "AIによる要約の生成中にエラーが発生しました。" 
-    };
+    const errorMessage = handleGeminiError(
+      error,
+      "AIによる要約の生成中にエラーが発生しました。"
+    );
+    return { summary: null, error: errorMessage };
   }
 };

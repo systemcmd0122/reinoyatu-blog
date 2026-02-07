@@ -6,6 +6,7 @@ import { z } from "zod"
 import { v4 as uuidv4 } from "uuid"
 import { decode } from "base64-arraybuffer"
 import { generateSummaryFromContent } from "@/utils/gemini"
+import { GoogleGenAI } from "@google/genai"
 
 // タグをDBに保存し、IDを返すヘルパー関数（完全修正版）
 const upsertTags = async (tagNames: string[]) => {
@@ -453,7 +454,7 @@ export const getDrafts = async (userId: string) => {
   }
 }
 
-// AIとのチャット（完全修正版 - 環境変数の正しい使用）
+// AIとのチャット（@google/genai使用版）
 export const chatWithAI = async (messages: { role: 'user' | 'model', content: string }[]) => {
   try {
     // サーバーサイドでGEMINI_API_KEYを取得（NEXT_PUBLIC_を使わない）
@@ -464,68 +465,48 @@ export const chatWithAI = async (messages: { role: 'user' | 'model', content: st
       return { content: null, error: "APIキーが設定されていません。管理者に連絡してください。" }
     }
 
-    const { GoogleGenerativeAI } = await import("@google/generative-ai")
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    const ai = new GoogleGenAI({ apiKey });
 
     // 履歴を準備（最後のメッセージは除く）
-    let history = messages.slice(0, -1).map(m => ({
+    const history = messages.slice(0, -1).map(m => ({
       role: m.role,
       parts: [{ text: m.content }]
-    }))
+    }));
 
-    // 履歴が空の場合、または最初のメッセージがmodelロールの場合の処理
-    if (history.length === 0) {
-      // 履歴なしでチャットを開始
-      const chat = model.startChat({
-        history: []
-      })
-
-      const lastMessage = messages[messages.length - 1].content
-      const result = await chat.sendMessage(lastMessage)
-      const response = await result.response
-      const text = response.text()
-
-      return { content: text, error: null }
-    }
-
-    // 最初のメッセージがmodelロールの場合、スキップする
-    if (history[0].role === 'model') {
-      history = history.slice(1)
-    }
-
-    // 履歴がまだ空でない場合、最初がuserロールであることを確認
-    if (history.length > 0 && history[0].role !== 'user') {
-      console.error("履歴の最初のメッセージはuserロールである必要があります")
-      return { content: null, error: "チャット履歴の形式が正しくありません。" }
-    }
-
-    // チャットを開始
-    const chat = model.startChat({
+    // チャットセッションを作成
+    const chat = ai.chats.create({
+      model: "gemini-2.5-flash-lite",
       history: history
-    })
+    });
 
-    const lastMessage = messages[messages.length - 1].content
-    const result = await chat.sendMessage(lastMessage)
-    const response = await result.response
-    const text = response.text()
+    // 最後のメッセージを送信
+    const lastMessage = messages[messages.length - 1].content;
+    const response = await chat.sendMessage({ message: lastMessage });
 
-    return { content: text, error: null }
+    if (!response.text) {
+      return { content: null, error: "AIからの応答が空でした。" };
+    }
+
+    return { content: response.text, error: null };
   } catch (error: any) {
-    console.error("AIチャットエラー:", error)
+    console.error("AIチャットエラー:", error);
     
     if (error.status === 429) {
-      return { content: null, error: "AIの利用制限（リクエスト過多）に達しました。少し時間をおいてから再度お試しください。" }
+      return { content: null, error: "AIの利用制限（リクエスト過多）に達しました。少し時間をおいてから再度お試しください。" };
     }
     
     if (error.status === 404) {
-      return { content: null, error: "指定されたAIモデルが見つかりませんでした。管理者にお問い合わせください。" }
+      return { content: null, error: "指定されたAIモデルが見つかりませんでした。管理者にお問い合わせください。" };
     }
     
     if (error.status === 401 || error.status === 403) {
-      return { content: null, error: "APIキーが無効です。環境変数を確認してください。" }
+      return { content: null, error: "APIキーが無効です。環境変数を確認してください。" };
     }
 
-    return { content: null, error: "AIとの通信中にエラーが発生しました。" }
+    if (error.message?.includes("API key")) {
+      return { content: null, error: "APIキーの設定に問題があります。管理者に連絡してください。" };
+    }
+
+    return { content: null, error: "AIとの通信中にエラーが発生しました。" };
   }
 }
