@@ -1,12 +1,16 @@
 import { createClient } from "@/utils/supabase/server"
 import BlogDetail from "@/components/blog/BlogDetail"
 import { Metadata } from "next"
+import { getCollectionWithItems } from "@/actions/collection"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 interface BlogDetailPageProps {
   params: Promise<{
     blogId: string
+  }>
+  searchParams: Promise<{
+    collection?: string
   }>
 }
 
@@ -81,8 +85,10 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
   }
 }
 
-const BlogDetailPage = async ({ params }: BlogDetailPageProps) => {
+const BlogDetailPage = async ({ params, searchParams }: BlogDetailPageProps) => {
   const { blogId } = await params
+  const { collection: collectionId } = await searchParams
+
   if (!blogId || blogId === "undefined" || !uuidRegex.test(blogId)) {
     return <div className="text-center">ブログが存在しません</div>
   }
@@ -135,6 +141,12 @@ const BlogDetailPage = async ({ params }: BlogDetailPageProps) => {
   // ログインユーザーがブログ作成者かどうか
   const isMyBlog = user?.id === blogData.user_id
 
+  // コレクション情報の取得（もし指定されていれば）
+  let collectionData = null
+  if (collectionId) {
+    collectionData = await getCollectionWithItems(collectionId)
+  }
+
   // 非公開記事の権限チェック
   if (!blogData.is_published && !isMyBlog) {
     return (
@@ -154,6 +166,7 @@ const BlogDetailPage = async ({ params }: BlogDetailPageProps) => {
       isMyBlog={isMyBlog} 
       currentUserId={user?.id} 
       initialComments={commentsData || []}
+      collection={collectionData}
     />
   )
 }

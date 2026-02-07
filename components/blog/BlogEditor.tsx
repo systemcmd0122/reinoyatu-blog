@@ -40,7 +40,9 @@ import {
   PanelRight,
   Monitor,
   Smartphone,
-  Type
+  Type,
+  Layers,
+  Lock
 } from "lucide-react"
 import { BlogSchema } from "@/schemas"
 import { useRouter } from "next/navigation"
@@ -93,9 +95,12 @@ import {
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import TagInput from "@/components/ui/TagInput"
-import { BlogType } from "@/types"
+import { Checkbox } from "@/components/ui/checkbox"
+import CollectionDialog from "@/components/collection/CollectionDialog"
+import { BlogType, CollectionType } from "@/types"
 import MarkdownRenderer from "./markdown/MarkdownRenderer"
 import { format } from "date-fns"
+import { getCollections, addBlogToCollection, removeBlogFromCollection, getBlogCollections } from "@/actions/collection"
 import EditorChat from "./EditorChat"
 import SaveStatus from "@/components/settings/SaveStatus"
 import RichTextEditor, { RichTextEditorRef } from "./editor/RichTextEditor"
@@ -137,10 +142,25 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [sidebarTab, setSidebarTab] = useState("settings")
   const [isMounted, setIsMounted] = useState(false)
   const editorRef = useRef<RichTextEditorRef>(null)
+  const [userCollections, setUserCollections] = useState<CollectionType[]>([])
+  const [selectedCollections, setSelectedCollections] = useState<string[]>([])
 
   useEffect(() => {
     setIsMounted(true)
-  }, [])
+    const fetchCollections = async () => {
+      const collections = await getCollections(userId)
+      setUserCollections(collections)
+    }
+    fetchCollections()
+
+    if (initialData?.id) {
+      const fetchBlogCollections = async () => {
+        const collections = await getBlogCollections(initialData.id)
+        setSelectedCollections(collections.map(c => c.id))
+      }
+      fetchBlogCollections()
+    }
+  }, [userId, initialData?.id])
   
   // AI関連の状態
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false)
@@ -226,6 +246,20 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
         setStatus("error")
         toast.error(res.error)
         return
+      }
+
+      // コレクションへの追加・削除
+      if (res.id || currentBlogId) {
+        const blogId = res.id || currentBlogId!
+        const initialCollections = initialData?.id ? (await getBlogCollections(initialData.id)).map(c => c.id) : []
+        
+        const toAdd = selectedCollections.filter(id => !initialCollections.includes(id))
+        const toRemove = initialCollections.filter(id => !selectedCollections.includes(id))
+
+        await Promise.all([
+          ...toAdd.map(id => addBlogToCollection(id, blogId)),
+          ...toRemove.map(id => removeBlogFromCollection(id, blogId))
+        ])
       }
 
       toast.success(isPublished ? "記事を公開しました" : "下書きを保存しました")
@@ -782,6 +816,51 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                         onChange={(e) => form.setValue("summary", e.target.value)}
                           placeholder="記事の概要を簡潔に入力してください..."
                         className="min-h-[120px] text-sm bg-muted/20 border-border focus-visible:ring-primary leading-relaxed rounded-xl p-4"
+                      />
+                    </section>
+
+                    {/* コレクション設定 */}
+                    <section className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                          <Layers className="h-4 w-4" />
+                          シリーズに追加
+                        </h4>
+                      </div>
+                      <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                        {userCollections.length > 0 ? (
+                          userCollections.map(collection => (
+                            <div key={collection.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`col-${collection.id}`} 
+                                checked={selectedCollections.includes(collection.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedCollections([...selectedCollections, collection.id])
+                                  } else {
+                                    setSelectedCollections(selectedCollections.filter(id => id !== collection.id))
+                                  }
+                                  setIsDirty(true)
+                                }}
+                              />
+                              <label 
+                                htmlFor={`col-${collection.id}`}
+                                className="text-xs font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
+                              >
+                                {collection.title}
+                                {!collection.is_public && <Lock className="h-3 w-3 text-amber-500" />}
+                              </label>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground italic">コレクションがありません。</p>
+                        )}
+                      </div>
+                      <CollectionDialog 
+                        userId={userId} 
+                        onSuccess={(newCol: any) => {
+                          setUserCollections([newCol, ...userCollections])
+                        }}
                       />
                     </section>
 
