@@ -23,7 +23,7 @@ const FollowButton: React.FC<FollowButtonProps> = ({
   const [isPending, startTransition] = useTransition()
   const [isLoadingStatus, setIsLoadingStatus] = useState(false)
 
-  // リアルタイム購読
+  // リアルタイム購読 (自分と相手のペアに限定)
   const lastEvent = useRealtime('user_follows', {
     event: '*',
     filter: followerId ? `follower_id=eq.${followerId}` : undefined

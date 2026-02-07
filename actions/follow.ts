@@ -79,31 +79,22 @@ export async function getFollowStatus(followerId: string | undefined, followingI
 export async function getFollowCounts(userId: string) {
   const supabase = createClient()
 
-  const { data, error } = await supabase.rpc("get_user_follow_counts", {
-    user_uuid: userId,
-  })
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("follower_count, following_count")
+    .eq("id", userId)
+    .single()
 
   if (error) {
     console.error("Get follow counts error:", error)
-    // フォールバック: 個別に取得
-    const { count: followingCount } = await supabase
-      .from("user_follows")
-      .select("*", { count: "exact", head: true })
-      .eq("follower_id", userId)
-    
-    const { count: followerCount } = await supabase
-      .from("user_follows")
-      .select("*", { count: "exact", head: true })
-      .eq("following_id", userId)
-
     return { 
-      following_count: followingCount || 0, 
-      follower_count: followerCount || 0 
+      following_count: 0,
+      follower_count: 0
     }
   }
 
   return {
-    following_count: data[0]?.following_count || 0,
-    follower_count: data[0]?.follower_count || 0,
+    following_count: data.following_count || 0,
+    follower_count: data.follower_count || 0,
   }
 }

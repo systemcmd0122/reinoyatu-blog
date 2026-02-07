@@ -92,6 +92,21 @@ export interface FollowType {
   created_at: string
 }
 
+export interface NotificationType {
+  id: string
+  user_id: string
+  actor_id: string
+  type: 'follow' | 'like' | 'comment' | 'collection_add' | 'ai_edit' | 'mention' | 'system'
+  target_id: string | null
+  target_type: 'blog' | 'comment' | 'collection' | 'profile' | null
+  is_read: boolean
+  created_at: string
+  actor?: {
+    name: string
+    avatar_url: string | null
+  }
+}
+
 export interface CollectionType {
   id: string
   user_id: string

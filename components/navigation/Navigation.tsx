@@ -23,7 +23,7 @@ import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { ThemeToggle } from "./ThemeToggle"
 import { CommandMenu } from "./CommandMenu"
-import { useRealtime } from "@/hooks/use-realtime"
+import { useNotifications } from "@/hooks/use-notifications"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,7 +64,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [user, setUser] = useState(initialUser)
   const [profile, setProfile] = useState<{ avatar_url: string | null; name: string | null } | null>(null)
-  const [unreadCount, setUnreadCount] = useState(0)
+  const { unreadCount } = useNotifications(user?.id)
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -84,19 +84,6 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   useEffect(() => {
     setUser(initialUser)
   }, [initialUser])
-
-  // リアルタイム通知の購読
-  const lastNotifyEvent = useRealtime('notifications', {
-    event: 'INSERT',
-    filter: user ? `user_id=eq.${user.id}` : undefined
-  })
-
-  useEffect(() => {
-    if (lastNotifyEvent) {
-      setUnreadCount(prev => prev + 1)
-      toast.info("新しい通知があります")
-    }
-  }, [lastNotifyEvent])
 
   useEffect(() => {
     const fetchProfile = async () => {
