@@ -29,6 +29,8 @@ export interface ProfileType {
   created_at?: string
   updated_at?: string
   social_links?: SocialLinksType
+  following_count?: number
+  follower_count?: number
 }
 
 export interface BlogType {
@@ -82,6 +84,37 @@ export interface CommentType {
   created_at: string
   updated_at: string
   reactions: ReactionType[]
+}
+
+export interface FollowType {
+  follower_id: string
+  following_id: string
+  created_at: string
+}
+
+export interface CollectionType {
+  id: string
+  user_id: string
+  title: string
+  description: string | null
+  is_public: boolean
+  created_at: string
+  updated_at: string
+  item_count?: number
+}
+
+export interface CollectionItemType {
+  id: string
+  collection_id: string
+  blog_id: string
+  order_index: number
+  created_at: string
+  blogs: BlogType // Supabase join result
+}
+
+export interface CollectionWithItemsType extends CollectionType {
+  profiles: ProfileType
+  collection_items: CollectionItemType[]
 }
 
 export interface GenerationOptions {

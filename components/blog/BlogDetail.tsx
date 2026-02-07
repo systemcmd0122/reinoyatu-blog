@@ -38,6 +38,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import LikeButton from "@/components/blog/LikeButton"
 import BookmarkButton from "@/components/blog/BookmarkButton"
 import CommentSection from "@/components/blog/CommentSection"
+import SeriesNavigation from "./SeriesNavigation"
+import SeriesSidebar from "./SeriesSidebar"
+import { CollectionWithItemsType } from "@/types"
 import { formatJST } from "@/utils/date"
 import {
   AlertDialog,
@@ -93,13 +96,15 @@ interface BlogDetailProps {
   isMyBlog: boolean
   currentUserId?: string
   initialComments?: CommentType[]
+  collection?: CollectionWithItemsType
 }
 
 const BlogDetail: React.FC<BlogDetailProps> = ({ 
   blog, 
   isMyBlog, 
   currentUserId, 
-  initialComments 
+  initialComments,
+  collection
 }) => {
   const router = useRouter()
   const [error, setError] = useState("")
@@ -362,6 +367,23 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                   <MarkdownRenderer content={blog.content} />
                 </div>
 
+                {/* Series Navigation */}
+                {collection && (
+                  <SeriesNavigation
+                    collection={collection}
+                    currentIndex={collection.collection_items.findIndex(item => item.blog_id === blog.id)}
+                    totalCount={collection.collection_items.length}
+                    prevPost={(() => {
+                      const idx = collection.collection_items.findIndex(item => item.blog_id === blog.id)
+                      return idx > 0 ? collection.collection_items[idx-1].blogs : null
+                    })()}
+                    nextPost={(() => {
+                      const idx = collection.collection_items.findIndex(item => item.blog_id === blog.id)
+                      return idx < collection.collection_items.length - 1 ? collection.collection_items[idx+1].blogs : null
+                    })()}
+                  />
+                )}
+
                 {/* Article Footer */}
                 <div className="mt-12 pt-8 border-t border-border flex justify-between items-center">
                   <div className="flex items-center gap-4">
@@ -435,6 +457,11 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
           {/* Sidebar */}
           <aside className="w-full lg:w-[350px] flex-shrink-0 space-y-6">
+            {/* Series Sidebar */}
+            {collection && (
+              <SeriesSidebar collection={collection} currentBlogId={blog.id} />
+            )}
+
             {/* Table of Contents */}
             {headings.length > 0 && (
               <div className="hidden lg:block sticky top-20 bg-card rounded-2xl border border-border shadow-sm overflow-hidden max-h-[calc(100vh-120px)] flex flex-col">
