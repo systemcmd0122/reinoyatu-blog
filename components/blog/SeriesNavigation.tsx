@@ -1,9 +1,12 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ChevronLeft, ChevronRight, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useRealtime } from "@/hooks/use-realtime"
+import { getCollectionWithItems } from "@/actions/collection"
 
 interface SeriesNavigationProps {
   collection: {
@@ -17,12 +20,41 @@ interface SeriesNavigationProps {
 }
 
 export default function SeriesNavigation({ 
-  collection, 
-  prevPost, 
-  nextPost, 
-  currentIndex, 
-  totalCount 
+  collection: initialCollection,
+  prevPost: initialPrev,
+  nextPost: initialNext,
+  currentIndex: initialIdx,
+  totalCount: initialCount
 }: SeriesNavigationProps) {
+  const [data, setData] = useState({
+    prevPost: initialPrev,
+    nextPost: initialNext,
+    currentIndex: initialIdx,
+    totalCount: initialCount,
+    collection: initialCollection
+  })
+
+  // リアルタイム購読
+  const lastEvent = useRealtime('collection_items', {
+    event: '*',
+    filter: `collection_id=eq.${initialCollection.id}`
+  })
+
+  useEffect(() => {
+    if (!lastEvent) return
+
+    const refresh = async () => {
+      const fullCollection = await getCollectionWithItems(initialCollection.id)
+      if (fullCollection) {
+        setData(prev => ({
+          ...prev,
+          totalCount: fullCollection.collection_items.length
+        }))
+      }
+    }
+    refresh()
+  }, [lastEvent, initialCollection.id])
+
   return (
     <Card className="mt-8 overflow-hidden border-border/50 rounded-[2rem] shadow-sm">
       <div className="bg-muted/30 px-6 py-4 border-b border-border flex items-center justify-between">
@@ -31,14 +63,14 @@ export default function SeriesNavigation({
             <Play className="h-3.5 w-3.5 text-primary" />
           </div>
           <Link 
-            href={`/collections/${collection.id}`}
+            href={`/collections/${data.collection.id}`}
             className="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
           >
-            {collection.title} ({currentIndex + 1} / {totalCount})
+            {data.collection.title} ({data.currentIndex + 1} / {data.totalCount})
           </Link>
         </div>
         <Link 
-          href={`/collections/${collection.id}`}
+          href={`/collections/${data.collection.id}`}
           className="text-[10px] font-bold text-primary hover:underline"
         >
           全件表示
@@ -46,9 +78,9 @@ export default function SeriesNavigation({
       </div>
       
       <div className="grid grid-cols-2 divide-x divide-border">
-        {prevPost ? (
+        {data.prevPost ? (
           <Link 
-            href={`/blog/${prevPost.id}?collection=${collection.id}`}
+            href={`/blog/${data.prevPost.id}?collection=${data.collection.id}`}
             className="p-6 hover:bg-muted/20 transition-all group text-left"
           >
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1 mb-2 group-hover:text-primary">
@@ -56,7 +88,7 @@ export default function SeriesNavigation({
               前の記事
             </span>
             <p className="font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors">
-              {prevPost.title}
+              {data.prevPost.title}
             </p>
           </Link>
         ) : (
@@ -69,9 +101,9 @@ export default function SeriesNavigation({
           </div>
         )}
 
-        {nextPost ? (
+        {data.nextPost ? (
           <Link 
-            href={`/blog/${nextPost.id}?collection=${collection.id}`}
+            href={`/blog/${data.nextPost.id}?collection=${data.collection.id}`}
             className="p-6 hover:bg-muted/20 transition-all group text-right"
           >
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center justify-end gap-1 mb-2 group-hover:text-primary">
@@ -79,7 +111,7 @@ export default function SeriesNavigation({
               <ChevronRight className="h-3 w-3" />
             </span>
             <p className="font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors">
-              {nextPost.title}
+              {data.nextPost.title}
             </p>
           </Link>
         ) : (

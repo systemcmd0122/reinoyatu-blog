@@ -104,6 +104,7 @@ import { getCollections, addBlogToCollection, removeBlogFromCollection, getBlogC
 import EditorChat from "./EditorChat"
 import SaveStatus from "@/components/settings/SaveStatus"
 import RichTextEditor, { RichTextEditorRef } from "./editor/RichTextEditor"
+import { usePresence } from "@/hooks/use-realtime"
 
 
 const AICustomizeDialog = dynamic(
@@ -144,6 +145,17 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const editorRef = useRef<RichTextEditorRef>(null)
   const [userCollections, setUserCollections] = useState<CollectionType[]>([])
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
+
+  // プレゼンスによる他ユーザーの編集状況の追跡
+  const presenceState = usePresence(`blog-editor-${currentBlogId || 'new'}`, {
+    userId,
+    blogId: currentBlogId,
+    lastActive: new Date().toISOString()
+  })
+
+  const otherEditors = Object.values(presenceState)
+    .flat()
+    .filter((p: any) => p.userId !== userId)
 
   useEffect(() => {
     setIsMounted(true)
@@ -430,7 +442,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
 
   return (
     <TooltipProvider>
-      <div className="h-[calc(100vh-3.5rem)] bg-background flex flex-col overflow-hidden">
+      <div className="h-screen bg-background flex flex-col overflow-hidden">
         {/* スリムで洗練されたヘッダー */}
         <header className="h-16 border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-4 z-[var(--z-nav)] shrink-0">
           <div className="flex items-center space-x-4">
@@ -457,6 +469,22 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   {watchedTitle || "無題の記事"}
                 </span>
                 <SaveStatus status={getSaveStatus() as any} />
+
+                {/* 他の編集者を表示 */}
+                {otherEditors.length > 0 && (
+                  <div className="flex -space-x-2 ml-2">
+                    {otherEditors.map((p: any, idx) => (
+                      <Tooltip key={idx}>
+                        <TooltipTrigger asChild>
+                          <div className="w-6 h-6 rounded-full border-2 border-background bg-primary/10 flex items-center justify-center text-[8px] font-bold overflow-hidden ring-2 ring-primary/20">
+                             {idx + 1}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>他のユーザーが編集中です</TooltipContent>
+                      </Tooltip>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
