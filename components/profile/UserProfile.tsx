@@ -8,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { 
   Globe, 
   Mail, 
+  Users,
+  Layers,
   Calendar, 
   Github, 
   Twitter, 
@@ -22,8 +24,12 @@ import {
   MapPin
 } from "lucide-react"
 import { formatJST } from "@/utils/date"
-import { ProfileType, BlogType } from "@/types"
+import { ProfileType, BlogType, CollectionType } from "@/types"
 import { createClient } from "@/utils/supabase/client"
+import { getFollowCounts } from "@/actions/follow"
+import FollowButton from "./FollowButton"
+import { getCollections } from "@/actions/collection"
+import CollectionList from "@/components/collection/CollectionList"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
@@ -38,9 +44,47 @@ interface UserProfileProps {
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false }) => {
-  const [activeTab, setActiveTab] = useState<'posts' | 'about'>('posts')
+  const [activeTab, setActiveTab] = useState<'posts' | 'series' | 'about'>('posts')
   const [blogPosts, setBlogPosts] = useState<BlogType[]>([])
+  const [collections, setCollections] = useState<CollectionType[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isCollectionsLoading, setIsCollectionsLoading] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined)
+  const [followCounts, setFollowCounts] = useState({ following: 0, followers: 0 })
+
+  // ログインユーザー情報の取得
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      setCurrentUserId(user?.id)
+    }
+    fetchUser()
+  }, [])
+
+  // フォロー数を取得
+  useEffect(() => {
+    const fetchFollowCounts = async () => {
+      const counts = await getFollowCounts(profile.id)
+      setFollowCounts({
+        following: Number(counts.following_count),
+        followers: Number(counts.follower_count),
+      })
+    }
+    fetchFollowCounts()
+  }, [profile.id])
+
+  // コレクションを取得
+  useEffect(() => {
+    const fetchCollections = async () => {
+      const data = await getCollections(profile.id)
+      // 非所有者の場合は公開コレクションのみ表示
+      const filtered = isOwnProfile ? data : data.filter(c => c.is_public)
+      setCollections(filtered)
+      setIsCollectionsLoading(false)
+    }
+    fetchCollections()
+  }, [profile.id, isOwnProfile])
 
   // ブログ投稿を取得
   useEffect(() => {
@@ -100,9 +144,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
     const totalLikes = blogPosts.reduce((acc, blog) => acc + (blog.likes_count || 0), 0)
     return [
       { label: "Posts", value: blogPosts.length, icon: FileText },
+      { label: "Following", value: followCounts.following, icon: Users },
+      { label: "Followers", value: followCounts.followers, icon: Users },
       { label: "Total Likes", value: totalLikes, icon: Heart },
     ]
-  }, [blogPosts])
+  }, [blogPosts, followCounts])
 
   const formatIntroduce = useCallback((text: string | null) => {
     if (!text) return null
@@ -190,9 +236,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
                   </Link>
                 </Button>
               ) : (
-                <Button size="lg" className="rounded-2xl font-bold h-12 px-8">
-                  Follow
-                </Button>
+                <FollowButton
+                  followerId={currentUserId}
+                  followingId={profile.id}
+                />
               )}
             </div>
           </div>
@@ -205,7 +252,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
           {/* Stats Card */}
           <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
             <CardContent className="p-0">
-              <div className="grid grid-cols-2 divide-x divide-border">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 divide-x divide-y md:divide-y-0 lg:divide-y divide-border">
                 {stats.map((stat, i) => (
                   <div key={i} className="p-6 text-center hover:bg-muted/30 transition-colors">
                     <div className="inline-flex p-2 rounded-xl bg-primary/5 text-primary mb-2">
@@ -273,12 +320,18 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
             className="w-full"
           >
             <div className="flex items-center justify-between mb-6 bg-muted/50 p-1.5 rounded-2xl border border-border/50">
-              <TabsList className="bg-transparent h-auto p-0 gap-1">
+              <TabsList className="bg-transparent h-auto p-0 gap-1 overflow-x-auto no-scrollbar">
                 <TabsTrigger 
                   value="posts" 
                   className="rounded-xl px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
                 >
                   Articles
+                </TabsTrigger>
+                <TabsTrigger
+                  value="series"
+                  className="rounded-xl px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
+                  Series
                 </TabsTrigger>
                 <TabsTrigger 
                   value="about"
@@ -321,6 +374,21 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile, isOwnProfile = false
                         </Button>
                       )}
                     </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="series" className="mt-0 focus-visible:ring-0">
+                  {isCollectionsLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {[1, 2].map((i) => (
+                        <Skeleton key={i} className="h-64 w-full rounded-[2rem]" />
+                      ))}
+                    </div>
+                  ) : (
+                    <CollectionList
+                      collections={collections}
+                      isOwnProfile={isOwnProfile}
+                    />
                   )}
                 </TabsContent>
                 
