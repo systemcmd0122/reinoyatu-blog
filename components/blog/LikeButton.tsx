@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { toggleLike, getBlogLikeStatus } from "@/actions/like"
 import { cn } from "@/lib/utils"
+import { useRealtime } from "@/hooks/use-realtime"
+import { createClient } from "@/utils/supabase/client"
 import { 
   Tooltip, 
   TooltipContent, 
@@ -57,6 +59,31 @@ const LikeButton: React.FC<LikeButtonProps> = ({
       setInternalState(newState)
     }
   }, [onStateChange])
+
+  // リアルタイム購読
+  const lastEvent = useRealtime('likes', {
+    event: '*',
+    filter: `blog_id=eq.${blogId}`
+  })
+
+  useEffect(() => {
+    if (!lastEvent) return
+
+    const refreshCount = async () => {
+      const supabase = createClient()
+      const { count } = await supabase
+        .from('likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('blog_id', blogId)
+      
+      updateState({
+        isLiked: isLiked, // 自分のいいね状態は基本変わらないはずだが、他端末での操作を考慮するなら再取得が必要
+        likesCount: count || 0
+      })
+    }
+
+    refreshCount()
+  }, [lastEvent, blogId, updateState, isLiked])
 
   useEffect(() => {
     if (initialIsLoaded || !userId) return

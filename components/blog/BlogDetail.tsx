@@ -56,6 +56,7 @@ import {
 import { getBlogLikeStatus } from "@/actions/like"
 import { getBlogBookmarkStatus } from "@/actions/bookmark"
 import { AnimatePresence } from "framer-motion"
+import { useRealtime } from "@/hooks/use-realtime"
 
 const MarkdownRenderer = dynamic(
   () => import("@/components/blog/markdown/MarkdownRenderer"),
@@ -106,6 +107,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   initialComments,
   collection
 }) => {
+  const [blogData, setBlogData] = useState(blog)
   const router = useRouter()
   const [error, setError] = useState("")
   const [, startTransition] = useTransition()
@@ -114,8 +116,29 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([])
   const [activeId, setActiveId] = useState<string>("")
 
+  // リアルタイム購読
+  const lastEvent = useRealtime<BlogType>('blogs', {
+    event: '*',
+    filter: `id=eq.${blog.id}`
+  })
+
+  useEffect(() => {
+    if (!lastEvent) return
+    if (lastEvent.eventType === 'UPDATE') {
+      const updated = lastEvent.new as any
+      setBlogData(prev => ({ 
+        ...prev, 
+        ...updated,
+        profiles: prev.profiles // 詳細プロフィールを維持
+      }))
+    } else if (lastEvent.eventType === 'DELETE') {
+      toast.error("この記事は削除されました")
+      router.push("/")
+    }
+  }, [lastEvent, router])
+
   // 読了時間の計算 (1分間に400文字程度に変更、より現実に即した値)
-  const readingTime = Math.ceil((blog.content?.length || 0) / 400) || 1
+  const readingTime = Math.ceil((blogData.content?.length || 0) / 400) || 1
 
   useEffect(() => {
     const handleScroll = () => {
@@ -320,12 +343,12 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
                 {/* Title and Tags */}
                 <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-6 text-foreground leading-tight">
-                  {blog.title}
+                  {blogData.title}
                 </h1>
 
-                {blog.tags && blog.tags.length > 0 && (
+                {blogData.tags && blogData.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-8">
-                    {blog.tags.map(tag => (
+                    {blogData.tags.map(tag => (
                       <Link href={`/tags/${tag.name}`} key={tag.name}>
                         <Badge variant="secondary" className="px-3 py-1 rounded-md bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-none shadow-none cursor-pointer font-medium">
                           #{tag.name}
@@ -336,7 +359,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 )}
 
                 {/* Summary */}
-                {blog.summary && (
+                {blogData.summary && (
                   <div className="mb-10 p-6 rounded-xl bg-primary/5 border border-primary/10 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                     <div className="flex items-center gap-2 mb-3 text-primary">
@@ -344,16 +367,16 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                       <span className="font-bold">AIによる要約</span>
                     </div>
                     <p className="text-foreground/80 leading-relaxed text-sm">
-                      {blog.summary}
+                      {blogData.summary}
                     </p>
                   </div>
                 )}
 
                 {/* Cover Image */}
-                {blog.image_url && (
+                {blogData.image_url && (
                   <div className="mb-10 relative aspect-video rounded-xl overflow-hidden border border-border">
                     <Image
-                      src={blog.image_url}
+                      src={blogData.image_url}
                       alt="Cover"
                       fill
                       className="object-cover"
@@ -364,7 +387,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
                 {/* Content */}
                 <div className="prose prose-zinc dark:prose-invert max-w-none text-foreground break-words prose-headings:font-black prose-a:text-primary">
-                  <MarkdownRenderer content={blog.content} />
+                  <MarkdownRenderer content={blogData.content} />
                 </div>
 
                 {/* Series Navigation */}

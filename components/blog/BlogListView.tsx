@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useEffect } from "react"
 import { useViewMode, ViewMode } from "@/hooks/use-view-mode"
 import ViewSwitcher from "./ViewSwitcher"
 import CardItem from "./list-items/CardItem"
@@ -9,6 +9,8 @@ import CompactItem from "./list-items/CompactItem"
 import MagazineItem from "./list-items/MagazineItem"
 import TextItem from "./list-items/TextItem"
 import { BlogType } from "@/types"
+import { useRealtime } from "@/hooks/use-realtime"
+import { createClient } from "@/utils/supabase/client"
 import {
   Select,
   SelectContent,
@@ -25,12 +27,63 @@ interface BlogListViewProps {
 
 type SortOption = "newest" | "oldest" | "most_liked"
 
-const BlogListView: React.FC<BlogListViewProps> = ({ blogs }) => {
+const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
   const { viewMode, changeViewMode, isMounted } = useViewMode()
+  const [blogs, setBlogs] = useState<BlogType[]>(initialBlogs)
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<SortOption>("newest")
 
   // Filter and Sort blogs
+  // リアルタイム購読
+  const lastEvent = useRealtime<BlogType>('blogs', {
+    event: '*',
+    filter: 'is_published=eq.true'
+  })
+
+  useEffect(() => {
+    if (!lastEvent) return
+
+    const supabase = createClient()
+
+    const handleEvent = async () => {
+      if (lastEvent.eventType === 'INSERT') {
+        const newBlog = lastEvent.new as BlogType
+        
+        // 外部キーのデータを補完
+        const { data: fullBlog } = await supabase
+          .from('blogs')
+          .select(`
+            *,
+            profiles (id, name, avatar_url),
+            tags (name)
+          `)
+          .eq('id', newBlog.id)
+          .single()
+        
+        if (fullBlog) {
+          setBlogs(prev => {
+            if (prev.some(b => b.id === fullBlog.id)) return prev
+            return [fullBlog, ...prev]
+          })
+        }
+      } else if (lastEvent.eventType === 'UPDATE') {
+        const updatedBlog = lastEvent.new as BlogType
+        setBlogs(prev => prev.map(b => 
+          b.id === updatedBlog.id ? { ...b, ...updatedBlog } : b
+        ))
+      } else if (lastEvent.eventType === 'DELETE') {
+        setBlogs(prev => prev.filter(b => b.id !== lastEvent.old.id))
+      }
+    }
+
+    handleEvent()
+  }, [lastEvent])
+
+  // 初期データが変更されたら同期
+  useEffect(() => {
+    setBlogs(initialBlogs)
+  }, [initialBlogs])
+
   const processedBlogs = useMemo(() => {
     let result = [...blogs]
 

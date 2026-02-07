@@ -18,6 +18,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useTheme } from "next-themes"
 import { createClient } from "@/utils/supabase/client"
 import { shortcodeToEmoji } from "@/utils/emoji"
+import { useRealtime } from "@/hooks/use-realtime"
 import {
   Popover,
   PopoverContent,
@@ -84,85 +85,68 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     )
   }
 
-  // リアルタイム購読
+  // リアルタイム購読（コメント本体）
+  const lastCommentEvent = useRealtime<CommentType>('comments', {
+    event: '*',
+    filter: `blog_id=eq.${blogId}`
+  })
+
   useEffect(() => {
-    const channel = supabase
-      .channel(`blog-comments-${blogId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'comments',
-          filter: `blog_id=eq.${blogId}`
-        },
-        async (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const newComment = payload.new as CommentType
-            
-            // プロフィール情報を取得
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('name, avatar_url')
-              .eq('id', newComment.user_id)
-              .single()
-            
-            const commentWithProfile: CommentType = {
-              ...newComment,
-              content: shortcodeToEmoji(newComment.content),
-              user_name: profile?.name || '不明なユーザー',
-              user_avatar_url: profile?.avatar_url || null,
-              reactions: []
-            }
-            
-            setComments(prev => {
-              if (prev.some(c => c.id === commentWithProfile.id)) return prev
-              return [...prev, commentWithProfile]
-            })
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedComment = payload.new as any
-            setComments(prev => prev.map(c => 
-              c.id === updatedComment.id 
-                ? { ...c, content: shortcodeToEmoji(updatedComment.content), updated_at: updatedComment.updated_at }
-                : c
-            ))
-          } else if (payload.eventType === 'DELETE') {
-            setComments(prev => prev.filter(c => c.id !== payload.old.id))
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'comment_reactions'
-        },
-        async (payload) => {
-          // リアクションが変わったコメントのIDを特定
-          const reaction = (payload.new || payload.old) as { comment_id: string }
-          const commentId = reaction.comment_id
-          
-          // コメントのリアクションを最新状態に更新
-          const { reactions } = await getCommentReactions(commentId)
-          
-          setComments(prev => {
-            // 対象のコメントが現在のリストに存在するか確認
-            const exists = prev.some(c => c.id === commentId)
-            if (!exists) return prev
+    if (!lastCommentEvent) return
 
-            return prev.map(c => 
-              c.id === commentId ? { ...c, reactions: reactions || [] } : c
-            )
-          })
+    const handleEvent = async () => {
+      if (lastCommentEvent.eventType === 'INSERT') {
+        const newComment = lastCommentEvent.new as CommentType
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name, avatar_url')
+          .eq('id', newComment.user_id)
+          .single()
+        
+        const commentWithProfile: CommentType = {
+          ...newComment,
+          content: shortcodeToEmoji(newComment.content),
+          user_name: profile?.name || '不明なユーザー',
+          user_avatar_url: profile?.avatar_url || null,
+          reactions: []
         }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
+        
+        setComments(prev => {
+          if (prev.some(c => c.id === commentWithProfile.id)) return prev
+          return [...prev, commentWithProfile]
+        })
+      } else if (lastCommentEvent.eventType === 'UPDATE') {
+        const updatedComment = lastCommentEvent.new as any
+        setComments(prev => prev.map(c => 
+          c.id === updatedComment.id 
+            ? { ...c, content: shortcodeToEmoji(updatedComment.content), updated_at: updatedComment.updated_at }
+            : c
+        ))
+      } else if (lastCommentEvent.eventType === 'DELETE') {
+        setComments(prev => prev.filter(c => c.id !== lastCommentEvent.old.id))
+      }
     }
-  }, [blogId, supabase]) // dependencyからcommentsを除去して安定化
+    handleEvent()
+  }, [lastCommentEvent, blogId, supabase])
+
+  // リアルタイム購読（リアクション）
+  const lastReactionEvent = useRealtime('comment_reactions', { event: '*' })
+
+  useEffect(() => {
+    if (!lastReactionEvent) return
+    
+    const reaction = (lastReactionEvent.new || lastReactionEvent.old) as { comment_id: string }
+    const commentId = reaction.comment_id
+    
+    const refreshReactions = async () => {
+      const { reactions } = await getCommentReactions(commentId)
+      setComments(prev => {
+        if (!prev.some(c => c.id === commentId)) return prev
+        return prev.map(c => c.id === commentId ? { ...c, reactions: reactions || [] } : c)
+      })
+    }
+    refreshReactions()
+  }, [lastReactionEvent])
 
   // コメントとリアクションの初期取得・同期
   useEffect(() => {

@@ -1,10 +1,13 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Play, List, ChevronRight, CheckCircle2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { CollectionWithItemsType } from "@/types"
+import { CollectionWithItemsType, CollectionItemType } from "@/types"
+import { useRealtime } from "@/hooks/use-realtime"
+import { createClient } from "@/utils/supabase/client"
 
 interface SeriesSidebarProps {
   collection: CollectionWithItemsType
@@ -12,7 +15,43 @@ interface SeriesSidebarProps {
 }
 
 export default function SeriesSidebar({ collection, currentBlogId }: SeriesSidebarProps) {
-  const items = collection.collection_items || []
+  const [items, setItems] = useState<CollectionItemType[]>(collection.collection_items || [])
+
+  // リアルタイム購読
+  const lastEvent = useRealtime<CollectionItemType>('collection_items', {
+    event: '*',
+    filter: `collection_id=eq.${collection.id}`
+  })
+
+  useEffect(() => {
+    if (!lastEvent) return
+
+    const supabase = createClient()
+
+    const handleEvent = async () => {
+      if (lastEvent.eventType === 'INSERT') {
+        const newItem = lastEvent.new as CollectionItemType
+        const { data: fullItem } = await supabase
+          .from('collection_items')
+          .select('*, blogs(*)')
+          .eq('id', newItem.id)
+          .single()
+        
+        if (fullItem) {
+          setItems(prev => [...prev, fullItem].sort((a, b) => a.order_index - b.order_index))
+        }
+      } else if (lastEvent.eventType === 'UPDATE') {
+        const updatedItem = lastEvent.new as CollectionItemType
+        setItems(prev => prev.map(item => 
+          item.id === updatedItem.id ? { ...item, ...updatedItem } : item
+        ).sort((a, b) => a.order_index - b.order_index))
+      } else if (lastEvent.eventType === 'DELETE') {
+        setItems(prev => prev.filter(item => item.id !== lastEvent.old.id))
+      }
+    }
+
+    handleEvent()
+  }, [lastEvent])
 
   return (
     <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col max-h-[500px]">

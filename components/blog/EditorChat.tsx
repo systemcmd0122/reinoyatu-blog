@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { chatWithAI } from "@/actions/blog"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import { useBroadcast } from "@/hooks/use-realtime"
 import MarkdownRenderer from "./markdown/MarkdownRenderer"
 
 interface Message {
@@ -24,6 +25,19 @@ const EditorChat: React.FC<EditorChatProps> = ({ onApplySuggestion, currentConte
   // 初期メッセージを空にして、最初のメッセージはユーザーから始まるようにする
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
+
+  // ブロードキャストによる他タブとの同期
+  const { send } = useBroadcast(`editor-chat-sync`, (payload: Message[]) => {
+    setMessages(payload)
+  })
+
+  // メッセージが更新されたら他タブに通知
+  useEffect(() => {
+    if (messages.length > 0) {
+      send(messages)
+    }
+  }, [messages, send])
+
   const [isLoading, setIsLoading] = useState(false)
   const [showWelcome, setShowWelcome] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)

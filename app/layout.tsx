@@ -7,6 +7,7 @@ import Navigation from "@/components/navigation/Navigation"
 import Link from "next/link"
 import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/providers/ThemeProvider"
+import { RealtimeProvider } from "@/components/providers/RealtimeProvider"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
 import { PWAInstallBanner } from "@/components/pwa/PWAInstallBanner"
@@ -130,9 +131,10 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
           enableSystem
           disableTransitionOnChange
         >
-          <Toaster richColors position="top-right" theme="system" closeButton />
+            <RealtimeProvider>
+              <Toaster richColors position="top-right" theme="system" closeButton />
 
-          <div className="flex min-h-screen flex-col">
+              <div className="flex min-h-screen flex-col">
             <Navigation user={user} />
 
             <main className="flex-1">{children}</main>
@@ -237,10 +239,11 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
                 </div>
               </div>
             </footer>
-          </div>
+              </div>
 
-          {/* PWAインストールバナー */}
-          <PWAInstallBanner />
+              {/* PWAインストールバナー */}
+              <PWAInstallBanner />
+            </RealtimeProvider>
         </ThemeProvider>
       </body>
     </html>

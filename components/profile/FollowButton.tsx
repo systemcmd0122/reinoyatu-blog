@@ -6,6 +6,7 @@ import { followUser, unfollowUser, getFollowStatus } from "@/actions/follow"
 import { toast } from "sonner"
 import { Loader2, UserPlus, UserMinus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useRealtime } from "@/hooks/use-realtime"
 
 interface FollowButtonProps {
   followerId: string | undefined
@@ -21,6 +22,20 @@ const FollowButton: React.FC<FollowButtonProps> = ({
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
   const [isPending, startTransition] = useTransition()
   const [isLoadingStatus, setIsLoadingStatus] = useState(false)
+
+  // リアルタイム購読
+  const lastEvent = useRealtime('user_follows', {
+    event: '*',
+    filter: followerId ? `follower_id=eq.${followerId}` : undefined
+  })
+
+  useEffect(() => {
+    if (!lastEvent || !followerId) return
+    const record = (lastEvent.new || lastEvent.old) as any
+    if (record.following_id === followingId) {
+      setIsFollowing(lastEvent.eventType === 'INSERT')
+    }
+  }, [lastEvent, followerId, followingId])
 
   // 初期状態をサーバーから取得（SSRで渡されない場合用）
   useEffect(() => {

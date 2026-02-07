@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { toggleBookmark, getBlogBookmarkStatus } from "@/actions/bookmark"
 import { cn } from "@/lib/utils"
+import { useRealtime } from "@/hooks/use-realtime"
 import { 
   Tooltip, 
   TooltipContent, 
@@ -51,6 +52,22 @@ const BookmarkButton: React.FC<BookmarkButtonProps> = ({
       setInternalState(newState)
     }
   }, [onStateChange])
+
+  // リアルタイム購読
+  const lastEvent = useRealtime('bookmarks', {
+    event: '*',
+    filter: `blog_id=eq.${blogId}`
+  })
+
+  useEffect(() => {
+    if (!lastEvent || !userId) return
+    
+    // 自分のブックマーク状態が他端末で変更された場合
+    const affectedUser = (lastEvent.new || lastEvent.old) as any
+    if (affectedUser.user_id === userId) {
+      updateState({ isBookmarked: lastEvent.eventType === 'INSERT' })
+    }
+  }, [lastEvent, userId, updateState])
 
   useEffect(() => {
     if (initialIsLoaded || !userId) return
