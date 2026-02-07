@@ -78,6 +78,33 @@ export async function markNotificationAsRead(notificationId: string) {
 }
 
 /**
+ * AIによる編集を通知する
+ */
+export async function notifyAIEdit(userId: string, blogId: string) {
+  const supabase = createClient()
+  
+  // AI自身がactorとして振る舞うか、システムがactorになる
+  // ここではシステム的な意味でactor_idをuserIdにするか、固定のAI-IDがあればそれを使う
+  // 現状は簡単のため、 actor_id = userId (自分への通知) とする
+  const { error } = await supabase
+    .from("notifications")
+    .insert({
+      user_id: userId,
+      actor_id: userId,
+      type: 'ai_edit',
+      target_id: blogId,
+      target_type: 'blog'
+    })
+
+  if (error) {
+    console.error("Notify AI edit error:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+/**
  * すべての通知を既読にする
  */
 export async function markAllNotificationsAsRead() {

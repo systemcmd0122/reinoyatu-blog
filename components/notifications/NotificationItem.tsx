@@ -4,7 +4,7 @@ import { NotificationType } from "@/types"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatDistanceToNow } from "date-fns"
 import { ja } from "date-fns/locale"
-import { Heart, MessageSquare, UserPlus, Layers, AtSign, Bell } from "lucide-react"
+import { Heart, MessageSquare, UserPlus, Layers, AtSign, Bell, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
@@ -21,6 +21,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
       case 'follow': return <UserPlus className="h-4 w-4 text-green-500" />
       case 'collection_add': return <Layers className="h-4 w-4 text-purple-500" />
       case 'mention': return <AtSign className="h-4 w-4 text-amber-500" />
+      case 'ai_edit': return <Sparkles className="h-4 w-4 text-primary" />
       default: return <Bell className="h-4 w-4 text-muted-foreground" />
     }
   }
@@ -33,6 +34,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
       case 'follow': return `${actorName}さんにフォローされました`
       case 'collection_add': return `${actorName}さんがあなたの記事をコレクションに追加しました`
       case 'mention': return `${actorName}さんがあなたをメンションしました`
+      case 'ai_edit': return `AI執筆アシスタントが記事の更新を提案・適用しました`
       default: return "新しい通知があります"
     }
   }
@@ -47,6 +49,8 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
         return `/profile/${notification.actor_id}`
       case 'collection_add':
         return `/collections/${notification.target_id}`
+      case 'ai_edit':
+        return `/blog/${notification.target_id}/edit`
       default:
         return "#"
     }

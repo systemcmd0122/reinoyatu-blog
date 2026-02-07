@@ -60,7 +60,7 @@ export function useRealtime<T extends { id: string; updated_at?: string }>(
 /**
  * Supabase Presenceを使用してオンラインユーザー状態を追跡するフック
  */
-export function usePresence<T = any>(
+export function usePresence<T extends { [key: string]: any } = any>(
   channelName: string,
   userStatus: T
 ) {
@@ -76,10 +76,10 @@ export function usePresence<T = any>(
       .on('presence', { event: 'sync' }, () => {
         setPresenceState(channel.presenceState())
       })
-      .on('presence', { event: 'join' }, ({ key, leftPresences, joinedPresences }) => {
-        // console.log('join', key, joinedPresences)
+      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+        // console.log('join', key, newPresences)
       })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences, joinedPresences }) => {
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         // console.log('leave', key, leftPresences)
       })
       .subscribe(async (status) => {

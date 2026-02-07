@@ -398,7 +398,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     }
   };
 
-  const applyAiSuggestion = () => {
+  const applyAiSuggestion = async () => {
     if (!aiSuggestion) return;
     
     if (aiSuggestion.type === "summary") {
@@ -410,16 +410,30 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       form.setValue("tags", newTags, { shouldValidate: true });
       toast.success("タグを適用しました");
     }
+
+    // AI編集通知の送信
+    if (currentBlogId) {
+      const { notifyAIEdit } = await import("@/actions/notification")
+      await notifyAIEdit(userId, currentBlogId)
+    }
+
     setAiSuggestion(null);
   };
 
-  const handleApplyChatSuggestion = (content: string, mode: 'append' | 'replace') => {
+  const handleApplyChatSuggestion = async (content: string, mode: 'append' | 'replace') => {
     if (mode === 'append') {
       const current = form.getValues("content")
       form.setValue("content", current + "\n\n" + content, { shouldValidate: true })
     } else {
       form.setValue("content", content, { shouldValidate: true })
     }
+    
+    // AI編集通知の送信
+    if (currentBlogId) {
+      const { notifyAIEdit } = await import("@/actions/notification")
+      await notifyAIEdit(userId, currentBlogId)
+    }
+
     toast.success("AIの提案を本文に反映しました")
   }
 
