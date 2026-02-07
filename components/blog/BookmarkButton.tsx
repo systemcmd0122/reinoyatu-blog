@@ -140,7 +140,7 @@ const BookmarkButton: React.FC<BookmarkButtonProps> = ({
       variant={showLabel ? (isBookmarked ? "secondary" : "outline") : "ghost"}
       size="sm"
       className={cn(
-        showLabel ? "rounded-full px-4 py-2" : "p-2",
+        showLabel ? "rounded-full px-4 py-2" : "p-3 md:p-2",
         "h-auto transition-all duration-200",
         isBookmarked && showLabel && "bg-yellow-100 text-yellow-600 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400",
         !showLabel && isBookmarked && "text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20",

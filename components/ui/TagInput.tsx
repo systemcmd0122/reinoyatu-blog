@@ -136,7 +136,7 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>(
       </div>
       
       {showSuggestions && (
-        <div className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground border border-border rounded-md shadow-lg overflow-hidden animate-in fade-in-50 zoom-in-95">
+        <div className="absolute z-[var(--z-popover)] w-full mt-1 bg-popover text-popover-foreground border border-border rounded-md shadow-lg overflow-hidden animate-in fade-in-50 zoom-in-95">
           <ScrollArea className="max-h-[200px]">
             <div className="p-1">
               {filteredSuggestions.map((suggestion) => (

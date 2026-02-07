@@ -420,11 +420,19 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     return "saved"
   }
 
+  useEffect(() => {
+    // エディタ表示中はボディのスクロールを抑制し、二重スクロールを防ぐ
+    document.body.classList.add("overflow-hidden")
+    return () => {
+      document.body.classList.remove("overflow-hidden")
+    }
+  }, [])
+
   return (
     <TooltipProvider>
-      <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <div className="h-[calc(100vh-3.5rem)] bg-background flex flex-col overflow-hidden">
         {/* スリムで洗練されたヘッダー */}
-        <header className="h-16 border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-4 z-50 shrink-0">
+        <header className="h-16 border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-4 z-[var(--z-nav)] shrink-0">
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-9 w-9" aria-label="戻る">
               <ChevronLeft className="h-5 w-5" />
@@ -445,7 +453,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold truncate max-w-[200px] md:max-w-[400px]">
+                <span className="text-sm font-bold truncate max-w-[100px] sm:max-w-[200px] md:max-w-[400px]">
                   {watchedTitle || "無題の記事"}
                 </span>
                 <SaveStatus status={getSaveStatus() as any} />
@@ -569,7 +577,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className={cn("h-9 w-9 lg:flex", isSidebarOpen && "bg-muted")}
+                className={cn("h-9 w-9", isSidebarOpen && "bg-muted")}
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 aria-label="サイドバーを切り替える"
               >
@@ -665,7 +673,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                 animate={{ width: 440, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="hidden lg:flex flex-col border-l border-border bg-background z-40 overflow-hidden"
+                className="hidden lg:flex flex-col border-l border-border bg-background z-[var(--z-sticky)] overflow-hidden"
               >
                 <Tabs value={sidebarTab} onValueChange={setSidebarTab} className="flex flex-col h-full">
                   <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-muted/20 shrink-0">
@@ -1040,7 +1048,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
         
         {/* 全面ローディング (削除中など) */}
         {status === "deleting" && (
-          <div className="fixed inset-0 z-[100] bg-background/90 backdrop-blur-md flex items-center justify-center">
+          <div className="fixed inset-0 z-[var(--z-overlay)] bg-background/90 backdrop-blur-md flex items-center justify-center">
             <div className="flex flex-col items-center space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-destructive" />
               <p className="text-lg font-black tracking-tighter uppercase">Deleting article...</p>

@@ -405,7 +405,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 w-7"
+                        className="h-9 w-9 md:h-7 md:w-7"
                         disabled={isAnyActionLoading}
                       >
                         <Smile className="h-4 w-4" />
@@ -434,7 +434,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
               <Button 
                 size="icon" 
                 variant="ghost" 
-                className="h-7 w-7" 
+                className="h-9 w-9 md:h-7 md:w-7" 
                 onClick={() => setIsReplying(!isReplying)}
                 aria-label="返信"
                 disabled={isAnyActionLoading}
@@ -448,7 +448,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 <Button 
                   size="icon" 
                   variant="ghost" 
-                  className="h-7 w-7" 
+                  className="h-9 w-9 md:h-7 md:w-7" 
                   onClick={() => setIsEditing(true)}
                   aria-label="編集"
                   disabled={isAnyActionLoading}

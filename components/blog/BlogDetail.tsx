@@ -261,7 +261,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background pb-20">
       {/* Scroll Progress Bar */}
-      <div className="fixed top-0 left-0 w-full h-1 z-[60] bg-transparent">
+      <div className="fixed top-0 left-0 w-full h-1 z-[var(--z-progress)] bg-transparent">
         <div 
           className="h-full bg-primary transition-all duration-100 ease-out"
           style={{ width: `${scrollProgress}%` }}
@@ -464,7 +464,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
             {/* Table of Contents */}
             {headings.length > 0 && (
-              <div className="hidden lg:block sticky top-20 bg-card rounded-2xl border border-border shadow-sm overflow-hidden max-h-[calc(100vh-120px)] flex flex-col">
+              <div className="hidden lg:block sticky top-20 z-[var(--z-sticky)] bg-card rounded-2xl border border-border shadow-sm overflow-hidden max-h-[calc(100vh-120px)] flex flex-col">
                 <div className="p-4 border-b border-border bg-muted/30 flex items-center gap-2">
                   <List className="h-4 w-4 text-primary" />
                   <h2 className="font-bold text-sm uppercase tracking-wider">目次</h2>

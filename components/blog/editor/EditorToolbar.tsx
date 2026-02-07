@@ -105,14 +105,14 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 border-b border-border bg-muted/20 sticky top-0 z-10 backdrop-blur">
-      <div className="flex items-center gap-0.5">
+    <div className="flex items-center md:flex-wrap gap-1 p-2 border-b border-border bg-background/95 sticky top-0 z-[var(--z-editor-toolbar)] backdrop-blur overflow-x-auto no-scrollbar md:overflow-x-visible">
+      <div className="flex items-center gap-0.5 shrink-0 shrink-0">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
-          className="h-8 w-8 p-0"
+          className="h-10 w-10 md:h-10 md:h-8 md:w-10 md:w-8 p-0"
           aria-label="元に戻す"
         >
           <Undo className="h-4 w-4" />
@@ -122,18 +122,18 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           size="sm"
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
-          className="h-8 w-8 p-0"
+          className="h-10 w-10 md:h-10 md:h-8 md:w-10 md:w-8 p-0"
           aria-label="やり直し"
         >
           <Redo className="h-4 w-4" />
         </Button>
       </div>
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Separator orientation="vertical" className="mx-1 h-6 shrink-0" />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 gap-1 px-2" aria-label="テキスト形式">
+          <Button variant="ghost" size="sm" className="h-10 md:h-10 md:h-8 gap-1 px-2" aria-label="テキスト形式">
             <Type className="h-4 w-4" />
             <ChevronDown className="h-3 w-3" />
           </Button>
@@ -154,14 +154,14 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Separator orientation="vertical" className="mx-1 h-6 shrink-0" />
 
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-0.5 shrink-0">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={cn('h-8 w-8 p-0', editor.isActive('bold') && 'bg-accent text-accent-foreground')}
+          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive('bold') && 'bg-accent text-accent-foreground')}
           aria-label="太字"
         >
           <Bold className="h-4 w-4" />
@@ -170,7 +170,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={cn('h-8 w-8 p-0', editor.isActive('italic') && 'bg-accent text-accent-foreground')}
+          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive('italic') && 'bg-accent text-accent-foreground')}
           aria-label="斜体"
         >
           <Italic className="h-4 w-4" />
@@ -179,7 +179,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={cn('h-8 w-8 p-0', editor.isActive('underline') && 'bg-accent text-accent-foreground')}
+          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive('underline') && 'bg-accent text-accent-foreground')}
           aria-label="下線"
         >
           <Underline className="h-4 w-4" />
@@ -188,7 +188,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={cn('h-8 w-8 p-0', editor.isActive('strike') && 'bg-accent text-accent-foreground')}
+          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive('strike') && 'bg-accent text-accent-foreground')}
           aria-label="取り消し線"
         >
           <Strikethrough className="h-4 w-4" />
@@ -197,19 +197,19 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleCode().run()}
-          className={cn('h-8 w-8 p-0', editor.isActive('code') && 'bg-accent text-accent-foreground')}
+          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive('code') && 'bg-accent text-accent-foreground')}
           aria-label="インラインコード"
         >
           <Code className="h-4 w-4" />
         </Button>
       </div>
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Separator orientation="vertical" className="mx-1 h-6 shrink-0" />
 
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-0.5 shrink-0">
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="文字色">
+            <Button variant="ghost" size="sm" className="h-10 w-10 md:h-10 md:h-8 md:w-10 md:w-8 p-0" aria-label="文字色">
               <Baseline className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
@@ -218,7 +218,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
               {colors.map((c) => (
                 <button
                   key={c.value}
-                  className="w-full h-8 rounded border border-border"
+                  className="w-full h-10 md:h-8 rounded border border-border"
                   style={{ backgroundColor: c.value === 'inherit' ? 'transparent' : c.value }}
                   onClick={() => editor.chain().focus().setColor(c.value).run()}
                   title={c.name}
@@ -230,7 +230,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="背景色">
+            <Button variant="ghost" size="sm" className="h-10 w-10 md:h-10 md:h-8 md:w-10 md:w-8 p-0" aria-label="背景色">
               <Highlighter className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
@@ -239,7 +239,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
               {colors.map((c) => (
                 <button
                   key={c.value}
-                  className="w-full h-8 rounded border border-border"
+                  className="w-full h-10 md:h-8 rounded border border-border"
                   style={{ backgroundColor: c.value === 'inherit' ? 'transparent' : c.value }}
                   onClick={() => editor.chain().focus().setHighlight({ color: c.value }).run()}
                   title={c.name}
@@ -250,14 +250,14 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
         </Popover>
       </div>
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Separator orientation="vertical" className="mx-1 h-6 shrink-0" />
 
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-0.5 shrink-0">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={cn('h-8 w-8 p-0', editor.isActive('bulletList') && 'bg-accent text-accent-foreground')}
+          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive('bulletList') && 'bg-accent text-accent-foreground')}
           aria-label="箇条書きリスト"
         >
           <List className="h-4 w-4" />
@@ -266,7 +266,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={cn('h-8 w-8 p-0', editor.isActive('orderedList') && 'bg-accent text-accent-foreground')}
+          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive('orderedList') && 'bg-accent text-accent-foreground')}
           aria-label="番号付きリスト"
         >
           <ListOrdered className="h-4 w-4" />
@@ -275,19 +275,19 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleTaskList().run()}
-          className={cn('h-8 w-8 p-0', editor.isActive('taskList') && 'bg-accent text-accent-foreground')}
+          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive('taskList') && 'bg-accent text-accent-foreground')}
           aria-label="タスクリスト"
         >
           <CheckSquare className="h-4 w-4" />
         </Button>
       </div>
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Separator orientation="vertical" className="mx-1 h-6 shrink-0" />
 
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-0.5 shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="画像挿入">
+            <Button variant="ghost" size="sm" className="h-10 w-10 md:h-10 md:h-8 md:w-10 md:w-8 p-0" aria-label="画像挿入">
               <ImageIcon className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -311,7 +311,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           variant="ghost" 
           size="sm" 
           onClick={addLink} 
-          className={cn('h-8 w-8 p-0', editor.isActive('link') && 'bg-accent')}
+          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive('link') && 'bg-accent')}
           aria-label="リンク挿入"
         >
           <LinkIcon className="h-4 w-4" />
@@ -320,19 +320,19 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           variant="ghost" 
           size="sm" 
           onClick={addYoutube} 
-          className="h-8 w-8 p-0"
+          className="h-10 w-10 md:h-10 md:h-8 md:w-10 md:w-8 p-0"
           aria-label="YouTube埋め込み"
         >
           <Youtube className="h-4 w-4" />
         </Button>
       </div>
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Separator orientation="vertical" className="mx-1 h-6 shrink-0" />
 
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-0.5 shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled={!editor.isActive('table')} aria-label="テーブル操作">
+            <Button variant="ghost" size="sm" className="h-10 w-10 md:h-10 md:h-8 md:w-10 md:w-8 p-0" disabled={!editor.isActive('table')} aria-label="テーブル操作">
               <TableIcon className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -353,7 +353,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          className={cn('h-8 w-8 p-0', editor.isActive({ textAlign: 'left' }) && 'bg-accent')}
+          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive({ textAlign: 'left' }) && 'bg-accent')}
           aria-label="左揃え"
         >
           <AlignLeft className="h-4 w-4" />
@@ -362,7 +362,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          className={cn('h-8 w-8 p-0', editor.isActive({ textAlign: 'center' }) && 'bg-accent')}
+          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive({ textAlign: 'center' }) && 'bg-accent')}
           aria-label="中央揃え"
         >
           <AlignCenter className="h-4 w-4" />
@@ -371,18 +371,18 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          className={cn('h-8 w-8 p-0', editor.isActive({ textAlign: 'right' }) && 'bg-accent')}
+          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive({ textAlign: 'right' }) && 'bg-accent')}
           aria-label="右揃え"
         >
           <AlignRight className="h-4 w-4" />
         </Button>
       </div>
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Separator orientation="vertical" className="mx-1 h-6 shrink-0" />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 gap-1 px-2">
+          <Button variant="ghost" size="sm" className="h-10 md:h-10 md:h-8 gap-1 px-2">
             詳細
             <ChevronDown className="h-3 w-3" />
           </Button>

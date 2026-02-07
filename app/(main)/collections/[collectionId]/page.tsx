@@ -63,7 +63,7 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Left Sidebar - Collection Info */}
         <div className="lg:col-span-4">
-          <div className="sticky top-24 space-y-8">
+          <div className="sticky top-24 z-[var(--z-sticky)] space-y-8">
             <Link 
               href={`/profile/${collection.profiles.id}`} 
               className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-colors mb-4"

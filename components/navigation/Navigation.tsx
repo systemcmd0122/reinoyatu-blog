@@ -151,7 +151,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
 
   return (
     <>
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full">
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-[var(--z-nav)] w-full">
         <div className="max-w-screen-xl mx-auto flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-4 flex-1">
             <Link

@@ -153,7 +153,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Sidebar for Desktop */}
         <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0">
-          <div className="sticky top-24">
+          <div className="sticky top-24 z-[var(--z-sticky)]">
             <div className="flex items-center space-x-2 mb-8 px-4">
               <UserCircle className="w-6 h-6 text-primary" />
               <span className="font-black text-lg tracking-tighter italic uppercase">Settings</span>

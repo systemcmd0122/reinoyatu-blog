@@ -165,9 +165,9 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
   }
 
   return (
-    <div className="rich-text-editor flex flex-col border border-border rounded-2xl bg-background overflow-hidden shadow-sm">
+    <div className="rich-text-editor flex flex-col border border-border rounded-2xl bg-background shadow-sm">
       <EditorToolbar editor={editor} />
-      <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+      <div className="flex-1 relative">
         <EditorBubbleMenu editor={editor} />
         <EditorFloatingMenu editor={editor} />
         <EditorContent editor={editor} />

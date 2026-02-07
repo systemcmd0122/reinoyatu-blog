@@ -29,7 +29,7 @@ const EditorFloatingMenu: React.FC<EditorFloatingMenuProps> = ({ editor }) => {
   return (
     <FloatingMenu
       editor={editor}
-      className="flex items-center gap-1"
+      className="flex items-center gap-1 z-[var(--z-editor-toolbar)]"
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

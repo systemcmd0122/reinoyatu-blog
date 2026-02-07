@@ -39,7 +39,7 @@ export function PWAInstallBanner() {
 
   return (
     <div className="
-      fixed bottom-4 left-4 right-4 z-50
+      fixed bottom-4 left-4 right-4 z-[var(--z-toast)]
       p-4 rounded-xl
       bg-background text-foreground
       border border-border

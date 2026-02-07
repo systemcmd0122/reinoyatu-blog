@@ -40,7 +40,7 @@ const EditorBubbleMenu: React.FC<EditorBubbleMenuProps> = ({ editor }) => {
   return (
     <BubbleMenu
       editor={editor}
-      className="flex items-center gap-0.5 p-1 rounded-lg border border-border bg-background shadow-xl animate-in fade-in zoom-in-95 duration-200"
+      className="flex items-center gap-0.5 p-1 rounded-lg border border-border bg-background shadow-xl animate-in fade-in zoom-in-95 duration-200 z-[var(--z-editor-toolbar)]"
     >
       {isYoutube ? (
         <div className="flex items-center gap-0.5">

@@ -67,7 +67,7 @@ const CodeBlock: React.FC<{
   }
 
   return (
-    <div className="relative group my-4 rounded-lg border border-border overflow-hidden">
+    <div className="relative group my-4 rounded-lg border border-border overflow-hidden bg-muted/20">
       <div className="flex items-center justify-between px-4 py-2 bg-muted border-b border-border">
         {language && (
           <span className="text-xs font-medium text-muted-foreground uppercase">
@@ -82,20 +82,23 @@ const CodeBlock: React.FC<{
           <span>{isCopied ? "コピー済み" : "コピー"}</span>
         </button>
       </div>
-      <SyntaxHighlighter
-        style={mounted && resolvedTheme === 'dark' ? oneDark : oneLight}
-        language={language || 'text'}
-        PreTag="div"
-        showLineNumbers
-        customStyle={{
-          margin: 0,
-          padding: '1rem',
-          fontSize: '14px',
-          lineHeight: '1.6',
-        }}
-      >
-        {code}
-      </SyntaxHighlighter>
+      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted-foreground">
+        <SyntaxHighlighter
+          style={mounted && resolvedTheme === 'dark' ? oneDark : oneLight}
+          language={language || 'text'}
+          PreTag="div"
+          showLineNumbers
+          customStyle={{
+            margin: 0,
+            padding: '1rem',
+            fontSize: '14px',
+            lineHeight: '1.6',
+            background: 'transparent',
+          }}
+        >
+          {code}
+        </SyntaxHighlighter>
+      </div>
     </div>
   )
 }

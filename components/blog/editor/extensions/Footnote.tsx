@@ -12,7 +12,7 @@ const FootnoteView = ({ node }: any) => {
       <span className="cursor-help text-primary font-bold px-0.5 align-top text-xs bg-primary/10 rounded">
         {node.attrs.label}
       </span>
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-popover text-popover-foreground text-xs rounded border border-border shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-popover text-popover-foreground text-xs rounded border border-border shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[var(--z-tooltip)]">
         {node.attrs.content || '注釈内容なし'}
       </div>
     </NodeViewWrapper>
