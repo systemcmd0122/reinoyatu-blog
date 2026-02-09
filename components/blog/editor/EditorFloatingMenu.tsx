@@ -36,9 +36,8 @@ const EditorFloatingMenu: React.FC<EditorFloatingMenuProps> = ({ editor }) => {
   return (
     <FloatingMenu
       editor={editor}
-      tippyOptions={{ 
-        duration: 150,
-        offset: [-44, 0],
+      options={{
+        offset: { mainAxis: -44 },
       }}
       className="flex items-center gap-1 z-[var(--z-editor-toolbar)]"
     >
