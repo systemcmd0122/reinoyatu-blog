@@ -83,4 +83,15 @@ export const ProgressBar = Node.create<ProgressBarOptions>({
         },
     };
   },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: any) {
+          state.write(`<div data-type="progress-bar" data-value="${node.attrs.value}" data-label="${node.attrs.label}" data-color="${node.attrs.color}"></div>`);
+          state.closeBlock(node);
+        },
+      },
+    };
+  },
 });
