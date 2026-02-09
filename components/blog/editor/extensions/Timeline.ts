@@ -54,6 +54,19 @@ export const Timeline = Node.create<TimelineOptions>({
         },
     };
   },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: any) {
+          state.write('<div data-type="timeline">\n\n');
+          state.renderContent(node);
+          state.write('\n\n</div>');
+          state.closeBlock(node);
+        },
+      },
+    };
+  },
 });
 
 export const TimelineItem = Node.create({
@@ -88,5 +101,18 @@ export const TimelineItem = Node.create({
       }),
       0,
     ];
+  },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: any) {
+          state.write(`<div data-type="timeline-item" data-time="${node.attrs.time}">\n\n`);
+          state.renderContent(node);
+          state.write('\n\n</div>');
+          state.closeBlock(node);
+        },
+      },
+    };
   },
 });

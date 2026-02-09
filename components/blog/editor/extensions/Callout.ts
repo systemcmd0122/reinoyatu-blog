@@ -75,4 +75,20 @@ export const Callout = Node.create<CalloutOptions>({
         },
     };
   },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: any) {
+          state.write(`<div data-type="callout" data-type-actual="${node.attrs.type}">\n\n`);
+          state.renderContent(node);
+          state.write('\n\n</div>');
+          state.closeBlock(node);
+        },
+        parse: {
+          // tiptap-markdown handles HTML-like blocks if they are valid HTML
+        },
+      },
+    };
+  },
 });
