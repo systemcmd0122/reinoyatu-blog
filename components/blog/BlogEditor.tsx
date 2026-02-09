@@ -484,6 +484,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
 
   return (
     <TooltipProvider>
+      <Form {...form}>
       <div className="h-screen bg-background flex flex-col overflow-hidden">
         {/* スリムで洗練されたヘッダー */}
         <header className="h-16 border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-4 z-[var(--z-nav)] shrink-0">
@@ -660,7 +661,6 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
         {/* メインコンテンツエリア */}
         <div className="flex-1 flex overflow-hidden bg-muted/5">
           <main className="flex-1 overflow-y-auto relative custom-scrollbar">
-            <Form {...form}>
               <div className={cn(
                 "mx-auto transition-all duration-300 ease-in-out pt-0 pb-12 px-6",
                 viewMode === "split" ? "max-w-none" : "max-w-screen-xl"
@@ -732,7 +732,6 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   )}
                 </div>
               </div>
-            </Form>
           </main>
 
           {/* 右サイドバー (Desktop) */}
@@ -895,6 +894,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
           </div>
         )}
       </div>
+      </Form>
     </TooltipProvider>
   )
 }
