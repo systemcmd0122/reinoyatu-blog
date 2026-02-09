@@ -66,15 +66,75 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
   }, [profileEvent])
 
   // リアルタイム購読（記事・いいね数）
-  const blogEvent = useRealtime('blogs', { event: '*', filter: `user_id=eq.${profile.id}` })
-  const likeEvent = useRealtime('likes', { event: '*' })
+  const blogEvent = useRealtime<BlogType>('blogs', { event: '*', filter: `user_id=eq.${profile.id}` })
+  const lastLikeEvent = useRealtime('likes', { event: '*' })
+
+  // 記事の取得関数をメモ化
+  const fetchBlogPosts = useCallback(async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('blogs')
+      .select(`
+        *,
+        profiles (
+          id,
+          name,
+          avatar_url
+        ),
+        tags (
+          name
+        ),
+        likes:likes(count)
+      `)
+      .eq('user_id', profile.id)
+      .eq('is_published', true) // 公開記事のみ（自分が見る場合は下書きもあっても良いが、統一性を考慮）
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('ブログ投稿の取得中にエラーが発生しました:', error)
+      return
+    }
+
+    const blogsWithLikes = (data || []).map((blog) => ({
+      ...blog,
+      likes_count: (blog as any).likes?.[0]?.count || 0
+    }))
+
+    setBlogPosts(blogsWithLikes)
+    setIsLoading(false)
+  }, [profile.id])
+
+  const lastProcessedBlogEventId = useRef<string | null>(null)
+  const lastProcessedLikeEventId = useRef<string | null>(null)
 
   useEffect(() => {
-    if (blogEvent || likeEvent) {
-      // 記事数やいいね数が変わった可能性があるため再取得
-      // ここでは簡略化のため state 経由で再計算を促す
-    }
-  }, [blogEvent, likeEvent])
+    if (!blogEvent) return
+    const eventId = (blogEvent as any).commit_timestamp || JSON.stringify(blogEvent.new || blogEvent.old)
+    if (lastProcessedBlogEventId.current === eventId) return
+    lastProcessedBlogEventId.current = eventId
+
+    fetchBlogPosts()
+  }, [blogEvent, fetchBlogPosts])
+
+  useEffect(() => {
+    if (!lastLikeEvent) return
+    const eventId = (lastLikeEvent as any).commit_timestamp || JSON.stringify(lastLikeEvent.new || lastLikeEvent.old)
+    if (lastProcessedLikeEventId.current === eventId) return
+    lastProcessedLikeEventId.current = eventId
+
+    const like = (lastLikeEvent.new || lastLikeEvent.old) as { blog_id: string }
+
+    // このユーザーのブログに対するいいねかどうかをチェックして更新
+    // state を直接参照せず functional update 内で判定するか、ref を使う
+    // ここでは fetchBlogPosts 自体が最新の profile.id に依存しているのでそのまま呼んでも良いが
+    // どのブログへのいいねかを判定するために現在の blogPosts が必要
+    setBlogPosts(currentBlogs => {
+      if (currentBlogs.some(b => b.id === like.blog_id)) {
+        fetchBlogPosts()
+      }
+      return currentBlogs
+    })
+  }, [lastLikeEvent, fetchBlogPosts])
 
   // ログインユーザー情報の取得
   useEffect(() => {
@@ -111,53 +171,20 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
     fetchCollections()
   }, [profile.id, isOwnProfile])
 
-  // ブログ投稿を取得
+  // 初期ロード時のブログ投稿取得
   useEffect(() => {
-    const fetchBlogPosts = async () => {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('blogs')
-        .select(`
-          *,
-          profiles (
-            id,
-            name,
-            avatar_url
-          ),
-          tags (
-            name
-          ),
-          likes:likes(count)
-        `)
-        .eq('user_id', profile.id)
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        console.error('ブログ投稿の取得中にエラーが発生しました:', error)
-        return
-      }
-
-      const blogsWithLikes = (data || []).map((blog: any) => ({
-        ...blog,
-        likes_count: blog.likes?.[0]?.count || 0
-      }))
-
-      setBlogPosts(blogsWithLikes)
-      setIsLoading(false)
-    }
-
     fetchBlogPosts()
-  }, [profile.id])
+  }, [fetchBlogPosts])
 
   const stats = useMemo(() => {
     const totalLikes = blogPosts.reduce((acc, blog) => acc + (blog.likes_count || 0), 0)
     return [
-      { label: "Posts", value: blogPosts.length, icon: FileText },
-      { label: "Following", value: profile.following_count || 0, icon: Users },
-      { label: "Followers", value: profile.follower_count || 0, icon: Users },
-      { label: "Total Likes", value: totalLikes, icon: Heart },
+      { label: "Posts", value: blogPosts.length, icon: FileText, href: null },
+      { label: "Following", value: profile.following_count || 0, icon: Users, href: `/profile/${profile.id}/following` },
+      { label: "Followers", value: profile.follower_count || 0, icon: Users, href: `/profile/${profile.id}/followers` },
+      { label: "Total Likes", value: totalLikes, icon: Heart, href: null },
     ]
-  }, [blogPosts, profile.following_count, profile.follower_count])
+  }, [blogPosts, profile.following_count, profile.follower_count, profile.id])
 
   const formatIntroduce = useCallback((text: string | null) => {
     if (!text) return null
@@ -262,15 +289,35 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
           <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
             <CardContent className="p-0">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 divide-x divide-y md:divide-y-0 lg:divide-y divide-border">
-                {stats.map((stat, i) => (
-                  <div key={i} className="p-6 text-center hover:bg-muted/30 transition-colors">
-                    <div className="inline-flex p-2 rounded-xl bg-primary/5 text-primary mb-2">
-                      <stat.icon className="h-5 w-5" />
+                {stats.map((stat, i) => {
+                  const content = (
+                    <>
+                      <div className="inline-flex p-2 rounded-xl bg-primary/5 text-primary mb-2">
+                        <stat.icon className="h-5 w-5" />
+                      </div>
+                      <div className="text-2xl font-black text-foreground">{stat.value}</div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{stat.label}</div>
+                    </>
+                  )
+
+                  if (stat.href) {
+                    return (
+                      <Link
+                        key={i}
+                        href={stat.href}
+                        className="p-6 text-center hover:bg-muted/30 transition-colors block"
+                      >
+                        {content}
+                      </Link>
+                    )
+                  }
+
+                  return (
+                    <div key={i} className="p-6 text-center hover:bg-muted/30 transition-colors">
+                      {content}
                     </div>
-                    <div className="text-2xl font-black text-foreground">{stat.value}</div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{stat.label}</div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </CardContent>
           </Card>
