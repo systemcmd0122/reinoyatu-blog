@@ -104,6 +104,7 @@ import { getCollections, addBlogToCollection, removeBlogFromCollection, getBlogC
 import EditorChat from "./EditorChat"
 import SaveStatus from "@/components/settings/SaveStatus"
 import RichTextEditor, { RichTextEditorRef } from "./editor/RichTextEditor"
+import EditorSettings from "./editor/EditorSettings"
 import { usePresence } from "@/hooks/use-realtime"
 
 
@@ -225,7 +226,22 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const watchedTags = form.watch("tags")
   const watchedIsPublished = form.watch("is_published")
 
-  const handleAction = async (isPublished: boolean) => {
+  // 自動保存
+  useEffect(() => {
+    if (!isDirty || status === "saving-draft" || status === "publishing" || viewMode === "preview") {
+      return
+    }
+
+    const timer = setTimeout(() => {
+      if (watchedTitle && watchedContent) {
+        handleAction(false, true)
+      }
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [isDirty, watchedTitle, watchedContent, status, viewMode])
+
+  const handleAction = async (isPublished: boolean, silent: boolean = false) => {
     if (status === "saving-draft" || status === "publishing") return
     
     setError("")
@@ -274,7 +290,9 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
         ])
       }
 
-      toast.success(isPublished ? "記事を公開しました" : "下書きを保存しました")
+      if (!silent) {
+        toast.success(isPublished ? "記事を公開しました" : "下書きを保存しました")
+      }
       setIsDirty(false)
       setLastSaved(new Date())
       setStatus("saved")
@@ -437,6 +455,16 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     toast.success("AIの提案を本文に反映しました")
   }
 
+  const handleBack = () => {
+    if (isDirty) {
+      if (confirm("未保存の変更があります。離脱しますか？")) {
+        router.back()
+      }
+    } else {
+      router.back()
+    }
+  }
+
   const getSaveStatus = () => {
     if (status === "publishing") return "saving"
     if (status === "saving-draft") return "saving"
@@ -460,7 +488,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
         {/* スリムで洗練されたヘッダー */}
         <header className="h-16 border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-4 z-[var(--z-nav)] shrink-0">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-9 w-9" aria-label="戻る">
+            <Button variant="ghost" size="icon" onClick={handleBack} className="h-9 w-9" aria-label="戻る">
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <Separator orientation="vertical" className="h-6" />
@@ -634,7 +662,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
           <main className="flex-1 overflow-y-auto relative custom-scrollbar">
             <Form {...form}>
               <div className={cn(
-                "mx-auto transition-all duration-300 ease-in-out py-12 px-6",
+                "mx-auto transition-all duration-300 ease-in-out pt-0 pb-12 px-6",
                 viewMode === "split" ? "max-w-none" : "max-w-screen-xl"
               )}>
                 <div className={cn(
@@ -732,243 +760,30 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   </div>
 
                   <TabsContent value="settings" className="m-0 flex-1 overflow-y-auto custom-scrollbar p-6 space-y-10 animate-in fade-in slide-in-from-right-4 duration-300">
-                      {/* タイトル提案 */}
-                      <section className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                            <Type className="h-4 w-4" />
-                            タイトル提案
-                          </h4>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={handleGenerateTitles}
-                            disabled={isTitleGenerating || !watchedContent}
-                            className="h-7 text-[10px] font-bold hover:bg-primary/10 hover:text-primary"
-                          >
-                            {isTitleGenerating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
-                            AI提案
-                          </Button>
-                        </div>
-
-                        {aiSuggestion?.type === "titles" && (
-                          <motion.div 
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3"
-                          >
-                            <p className="text-xs text-primary font-bold flex items-center gap-1">
-                              <Sparkles className="h-3 w-3" />
-                              タイトル案:
-                            </p>
-                            <div className="space-y-2">
-                              {(aiSuggestion.content as string[]).map((title, i) => (
-                                <div key={i} className="flex items-center justify-between group/title">
-                                  <p className="text-xs font-medium leading-tight pr-2">{title}</p>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost" 
-                                    className="h-6 px-2 text-[9px] font-bold shrink-0 opacity-0 group-hover/title:opacity-100 transition-opacity"
-                                    onClick={() => {
-                                      form.setValue("title", title, { shouldValidate: true })
-                                      toast.success("タイトルを適用しました")
-                                      setAiSuggestion(null)
-                                    }}
-                                  >
-                                    適用
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                            <Button size="sm" variant="ghost" className="h-6 w-full text-[9px] font-bold mt-2" onClick={() => setAiSuggestion(null)}>
-                              閉じる
-                            </Button>
-                          </motion.div>
-                        )}
-                        <p className="text-[10px] text-muted-foreground italic px-1">本文の内容に基づいて魅力的なタイトルを提案します。</p>
-                      </section>
-
-                    {/* カバー画像設定 */}
-                    <section className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                          <ImagePlus className="h-4 w-4" />
-                          カバー画像
-                        </h4>
-                      </div>
-                      <div className="group relative aspect-video rounded-xl overflow-hidden border-2 border-dashed border-muted hover:border-primary/50 transition-all cursor-pointer bg-muted/20">
-                        {imagePreview ? (
-                          <>
-                            <Image src={imagePreview} alt="Cover" fill className="object-cover" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                              <Button size="sm" variant="secondary" onClick={() => document.getElementById('sidebar-image-upload')?.click()}>
-                                変更
-                              </Button>
-                              <Button size="sm" variant="destructive" onClick={() => { setImageFile(null); setImagePreview(null); }}>
-                                削除
-                              </Button>
-                            </div>
-                          </>
-                        ) : (
-                          <label htmlFor="sidebar-image-upload" className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 cursor-pointer">
-                            <Upload className="h-8 w-8 text-muted-foreground mb-2 group-hover:text-primary transition-colors" />
-                            <p className="text-xs font-bold text-muted-foreground group-hover:text-primary">画像をアップロード</p>
-                            <p className="text-[10px] text-muted-foreground/60 mt-1">2MB以内の JPG, PNG, WebP</p>
-                          </label>
-                        )}
-                        <input id="sidebar-image-upload" type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                      </div>
-                    </section>
-
-                    {/* 要約設定 */}
-                    <section className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                          <FileText className="h-4 w-4" />
-                          要約 (Summary)
-                        </h4>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={handleGenerateSummary}
-                          disabled={isGeneratingSummary || !watchedContent}
-                          className="h-7 text-[10px] font-bold hover:bg-primary/10 hover:text-primary"
-                        >
-                          {isGeneratingSummary ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
-                          AI生成
-                        </Button>
-                      </div>
-
-                        {aiSuggestion?.type === "summary" && (
-                          <motion.div 
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3"
-                          >
-                            <p className="text-xs text-primary font-bold flex items-center gap-1">
-                              <Sparkles className="h-3 w-3" />
-                              AIによる要約案:
-                            </p>
-                            <p className="text-xs leading-relaxed">{aiSuggestion.content as string}</p>
-                            <div className="flex gap-2">
-                              <Button size="sm" className="h-7 text-[10px] font-bold" onClick={applyAiSuggestion}>
-                                適用する
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold" onClick={() => setAiSuggestion(null)}>
-                                破棄
-                              </Button>
-                            </div>
-                          </motion.div>
-                        )}
-
-                      <Textarea 
-                        value={watchedSummary}
-                        onChange={(e) => form.setValue("summary", e.target.value)}
-                          placeholder="記事の概要を簡潔に入力してください..."
-                        className="min-h-[120px] text-sm bg-muted/20 border-border focus-visible:ring-primary leading-relaxed rounded-xl p-4"
-                      />
-                    </section>
-
-                    {/* コレクション設定 */}
-                    <section className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                          <Layers className="h-4 w-4" />
-                          シリーズに追加
-                        </h4>
-                      </div>
-                      <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                        {userCollections.length > 0 ? (
-                          userCollections.map(collection => (
-                            <div key={collection.id} className="flex items-center space-x-2">
-                              <Checkbox 
-                                id={`col-${collection.id}`} 
-                                checked={selectedCollections.includes(collection.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedCollections([...selectedCollections, collection.id])
-                                  } else {
-                                    setSelectedCollections(selectedCollections.filter(id => id !== collection.id))
-                                  }
-                                  setIsDirty(true)
-                                }}
-                              />
-                              <label 
-                                htmlFor={`col-${collection.id}`}
-                                className="text-xs font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
-                              >
-                                {collection.title}
-                                {!collection.is_public && <Lock className="h-3 w-3 text-amber-500" />}
-                              </label>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-[10px] text-muted-foreground italic">コレクションがありません。</p>
-                        )}
-                      </div>
-                      <CollectionDialog 
-                        userId={userId} 
-                        onSuccess={(newCol: any) => {
-                          setUserCollections([newCol, ...userCollections])
-                        }}
-                      />
-                    </section>
-
-                    {/* タグ設定 */}
-                    <section className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                          <Tag className="h-4 w-4" />
-                          タグ
-                        </h4>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={handleGenerateTags}
-                          disabled={isTagGenerating || !watchedContent}
-                          className="h-7 text-[10px] font-bold hover:bg-primary/10 hover:text-primary"
-                        >
-                          {isTagGenerating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
-                          AI提案
-                        </Button>
-                      </div>
-
-                        {aiSuggestion?.type === "tags" && (
-                          <motion.div 
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3"
-                          >
-                            <p className="text-xs text-primary font-bold flex items-center gap-1">
-                              <Sparkles className="h-3 w-3" />
-                              おすすめのタグ:
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {(aiSuggestion.content as string[]).map((tag, i) => (
-                                <span key={i} className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full border border-primary/20">
-                                  #{tag}
-                                </span>
-                              ))}
-                            </div>
-                            <div className="flex gap-2">
-                              <Button size="sm" className="h-7 text-[10px] font-bold" onClick={applyAiSuggestion}>
-                                全て追加
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold" onClick={() => setAiSuggestion(null)}>
-                                破棄
-                              </Button>
-                            </div>
-                          </motion.div>
-                        )}
-
-                      <TagInput 
-                        value={watchedTags || []}
-                        onChange={(tags) => form.setValue("tags", tags)}
-                        placeholder="タグを追加..."
-                        className="bg-muted/20 border-border rounded-xl"
-                      />
-                      <p className="text-[10px] text-muted-foreground italic px-1">最大10個まで。Enterで確定。</p>
-                    </section>
+                    <EditorSettings
+                      userId={userId}
+                      watchedContent={watchedContent}
+                      watchedSummary={watchedSummary}
+                      watchedTags={watchedTags}
+                      aiSuggestion={aiSuggestion}
+                      setAiSuggestion={setAiSuggestion}
+                      isTitleGenerating={isTitleGenerating}
+                      handleGenerateTitles={handleGenerateTitles}
+                      isGeneratingSummary={isGeneratingSummary}
+                      handleGenerateSummary={handleGenerateSummary}
+                      isTagGenerating={isTagGenerating}
+                      handleGenerateTags={handleGenerateTags}
+                      applyAiSuggestion={applyAiSuggestion}
+                      imagePreview={imagePreview}
+                      handleImageUpload={handleImageUpload}
+                      setImageFile={setImageFile}
+                      setImagePreview={setImagePreview}
+                      userCollections={userCollections}
+                      setUserCollections={setUserCollections}
+                      selectedCollections={selectedCollections}
+                      setSelectedCollections={setSelectedCollections}
+                      setIsDirty={setIsDirty}
+                    />
                   </TabsContent>
 
                   <TabsContent value="ai" className="m-0 flex-1 h-full animate-in fade-in slide-in-from-right-4 duration-300">
@@ -1006,48 +821,30 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                 </div>
                 <div className="flex-1 overflow-y-auto">
                   <TabsContent value="settings" className="m-0 p-6 space-y-8">
-                     {/* Mobile Settings (Duplicate logic for now or refactor to sub-component) */}
-                     <section className="space-y-4">
-                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                          <ImagePlus className="h-4 w-4" />
-                          カバー画像
-                        </h4>
-                        <div className="relative aspect-video rounded-xl overflow-hidden border-2 border-dashed border-muted bg-muted/20">
-                          {imagePreview ? (
-                            <Image src={imagePreview} alt="Cover" fill className="object-cover" />
-                          ) : (
-                            <label htmlFor="mobile-image-upload" className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-                              <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                              <p className="text-xs font-bold text-muted-foreground">画像をアップロード</p>
-                            </label>
-                          )}
-                          <input id="mobile-image-upload" type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                        </div>
-                      </section>
-
-                      <section className="space-y-4">
-                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                          <FileText className="h-4 w-4" />
-                          要約
-                        </h4>
-                        <Textarea 
-                          value={watchedSummary}
-                          onChange={(e) => form.setValue("summary", e.target.value)}
-                          className="min-h-[120px] bg-muted/20 border-border rounded-xl"
-                        />
-                      </section>
-
-                      <section className="space-y-4">
-                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                          <Tag className="h-4 w-4" />
-                          タグ
-                        </h4>
-                        <TagInput 
-                          value={watchedTags || []}
-                          onChange={(tags) => form.setValue("tags", tags)}
-                          className="bg-muted/20 border-border rounded-xl"
-                        />
-                      </section>
+                    <EditorSettings
+                      userId={userId}
+                      watchedContent={watchedContent}
+                      watchedSummary={watchedSummary}
+                      watchedTags={watchedTags}
+                      aiSuggestion={aiSuggestion}
+                      setAiSuggestion={setAiSuggestion}
+                      isTitleGenerating={isTitleGenerating}
+                      handleGenerateTitles={handleGenerateTitles}
+                      isGeneratingSummary={isGeneratingSummary}
+                      handleGenerateSummary={handleGenerateSummary}
+                      isTagGenerating={isTagGenerating}
+                      handleGenerateTags={handleGenerateTags}
+                      applyAiSuggestion={applyAiSuggestion}
+                      imagePreview={imagePreview}
+                      handleImageUpload={handleImageUpload}
+                      setImageFile={setImageFile}
+                      setImagePreview={setImagePreview}
+                      userCollections={userCollections}
+                      setUserCollections={setUserCollections}
+                      selectedCollections={selectedCollections}
+                      setSelectedCollections={setSelectedCollections}
+                      setIsDirty={setIsDirty}
+                    />
                   </TabsContent>
                   <TabsContent value="ai" className="m-0 h-full">
                     <EditorChat 

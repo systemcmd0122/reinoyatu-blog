@@ -70,4 +70,17 @@ export const Accordion = Node.create<AccordionOptions>({
         },
     };
   },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: any) {
+          state.write(`<details>\n<summary>${node.attrs.title}</summary>\n\n`);
+          state.renderContent(node);
+          state.write('\n\n</details>');
+          state.closeBlock(node);
+        },
+      },
+    };
+  },
 });
