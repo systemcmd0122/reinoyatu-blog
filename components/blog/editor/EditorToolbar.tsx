@@ -48,6 +48,8 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import MediaInsertDialog from './MediaInsertDialog';
+import LinkEditor from './LinkEditor';
 
 interface EditorToolbarProps {
   editor: Editor;
@@ -55,22 +57,20 @@ interface EditorToolbarProps {
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mediaDialog, setMediaDialog] = useState<{ type: 'image' | 'youtube' | 'table', isOpen: boolean }>({
+    type: 'image',
+    isOpen: false,
+  });
+
+  useEffect(() => {
+    const handleOpenMedia = (e: any) => {
+      setMediaDialog({ type: e.detail.type, isOpen: true });
+    };
+    window.addEventListener('open-media-dialog', handleOpenMedia);
+    return () => window.removeEventListener('open-media-dialog', handleOpenMedia);
+  }, []);
 
   if (!editor) return null;
-
-  const addLink = () => {
-    const url = window.prompt('URLを入力してください:');
-    if (url) {
-      editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-    }
-  };
-
-  const addImage = () => {
-    const url = window.prompt('画像URLを入力してください:');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
-  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -84,16 +84,6 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
     }
   };
 
-  const addYoutube = () => {
-    const url = window.prompt('YouTube URLを入力してください:');
-    if (url) {
-      const showDetails = window.confirm('動画詳細を表示しますか？');
-      editor.commands.setYoutubeVideo({ src: url });
-      // Note: CustomYoutube might need a way to set showDetails immediately
-      // For now we set it via attributes if possible
-      editor.chain().focus().updateAttributes('youtube', { showDetails }).run();
-    }
-  };
 
   const colors = [
     { name: 'Default', value: 'inherit' },
@@ -105,8 +95,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   ];
 
   return (
-    <div className="flex items-center md:flex-wrap gap-1 p-2 border-b border-border bg-background/95 sticky top-0 z-[var(--z-editor-toolbar)] backdrop-blur overflow-x-auto no-scrollbar md:overflow-x-visible">
-      <div className="flex items-center gap-0.5 shrink-0 shrink-0">
+    <div className="flex items-center md:flex-wrap gap-1 py-2 border-b border-border/50 bg-background/50 sticky top-0 z-[var(--z-editor-toolbar)] backdrop-blur-sm overflow-x-auto no-scrollbar md:overflow-x-visible transition-all">
+      <div className="flex items-center gap-0.5 shrink-0">
         <Button
           variant="ghost"
           size="sm"
@@ -292,7 +282,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={addImage}>
+            <DropdownMenuItem onClick={() => setMediaDialog({ type: 'image', isOpen: true })}>
               URLから挿入
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
@@ -307,19 +297,20 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           accept="image/*"
           onChange={handleFileUpload}
         />
+        <LinkEditor editor={editor}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive('link') && 'bg-accent')}
+            aria-label="リンク挿入"
+          >
+            <LinkIcon className="h-4 w-4" />
+          </Button>
+        </LinkEditor>
         <Button 
           variant="ghost" 
           size="sm" 
-          onClick={addLink} 
-          className={cn('h-10 md:h-8 w-10 md:w-8 p-0', editor.isActive('link') && 'bg-accent')}
-          aria-label="リンク挿入"
-        >
-          <LinkIcon className="h-4 w-4" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={addYoutube} 
+          onClick={() => setMediaDialog({ type: 'youtube', isOpen: true })}
           className="h-10 w-10 md:h-10 md:h-8 md:w-10 md:w-8 p-0"
           aria-label="YouTube埋め込み"
         >
@@ -425,6 +416,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <MediaInsertDialog
+        editor={editor}
+        type={mediaDialog.type}
+        isOpen={mediaDialog.isOpen}
+        onClose={() => setMediaDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

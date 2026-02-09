@@ -92,20 +92,24 @@
 /* Typography and Markdown refinements */
 .prose {
   max-width: none;
-  line-height: 1.8;
+  line-height: 1.75;
 }
 
-.prose h1, .prose h2, .prose h3 {
-  @apply font-black tracking-tight text-foreground;
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  @apply font-black tracking-tight text-foreground mt-12 mb-6;
   scroll-margin-top: 5rem;
 }
 
 .prose h1 {
-  @apply border-b-2 border-border pb-2 mb-8;
+  @apply text-4xl border-b-2 border-border pb-3 mb-10;
 }
 
 .prose h2 {
-  @apply border-b border-border pb-2 mt-12 mb-6;
+  @apply text-3xl border-b border-border pb-2 mb-8;
+}
+
+.prose h3 {
+  @apply text-2xl mb-6;
 }
 
 .prose p {
@@ -221,6 +225,15 @@
   animation: fadeIn 0.3s ease-in-out;
 }
 
+/* Block entrance animation */
+.rich-text-editor .ProseMirror > * {
+  animation: fadeIn 0.4s ease-out backwards;
+}
+
+.rich-text-editor .ProseMirror > *:nth-child(1) { animation-delay: 0.05s; }
+.rich-text-editor .ProseMirror > *:nth-child(2) { animation-delay: 0.1s; }
+.rich-text-editor .ProseMirror > *:nth-child(3) { animation-delay: 0.15s; }
+
 .fade-in-50 {
   animation: fadeIn 0.2s ease-in-out;
 }
@@ -304,6 +317,33 @@
   }
 }
 
+/* Editor specific styles */
+.rich-text-editor .ProseMirror {
+  @apply outline-none min-h-[600px];
+}
+
+/* Focus Mode: Dim non-active blocks */
+.rich-text-editor .ProseMirror.focus-mode-active > * {
+  @apply transition-opacity duration-500 opacity-30;
+}
+
+.rich-text-editor .ProseMirror.focus-mode-active > *.ProseMirror-focused,
+.rich-text-editor .ProseMirror.focus-mode-active > *.ProseMirror-selectednode {
+  @apply opacity-100;
+}
+
+/* Hide menus during typing for true focus */
+/* (We can't easily detect "typing" without state, but we can dim them) */
+
+.rich-text-editor .ProseMirror > * + * {
+  @apply mt-[1.5em] mb-0;
+}
+
+/* Selection color for the whole block when dragging (if implemented later) */
+.ProseMirror-selectednode {
+  @apply ring-2 ring-primary/20 bg-primary/5 rounded-lg;
+}
+
 /* Editor specific styles for custom blocks */
 .rich-text-editor .timeline-item {
   @apply relative pl-10 pb-8 last:pb-0;
@@ -321,6 +361,12 @@
 
 .rich-text-editor .timeline {
   @apply my-8 relative border-l-2 border-border ml-4;
+}
+
+/* Placeholder style */
+.tiptap .is-empty::before {
+  @apply text-muted-foreground/40 float-left h-0 pointer-events-none;
+  content: attr(data-placeholder);
 }
 
 /* detailsタグのカスタムスタイル */
