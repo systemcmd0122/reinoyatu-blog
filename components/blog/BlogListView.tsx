@@ -86,31 +86,37 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
 
   // リアルタイム購読 (いいね数)
   const lastLikeEvent = useRealtime('likes', { event: '*' })
+  const lastProcessedLikeEventId = React.useRef<string | null>(null)
 
   useEffect(() => {
     if (!lastLikeEvent) return
+    
+    // 重複処理を回避 (イベントIDがあればそれを使用、なければペイロードから生成)
+    const eventId = (lastLikeEvent as any).commit_timestamp || JSON.stringify(lastLikeEvent.new || lastLikeEvent.old)
+    if (lastProcessedLikeEventId.current === eventId) return
+    lastProcessedLikeEventId.current = eventId
 
     const like = (lastLikeEvent.new || lastLikeEvent.old) as { blog_id: string }
     const blogId = like.blog_id
 
     // リストに含まれるブログのいいね数が変わった場合のみ更新
-    setBlogs(prev => {
-      if (!prev.some(b => b.id === blogId)) return prev
-      
-      const refreshBlogLike = async () => {
-        const supabase = createClient()
-        const { count } = await supabase
-          .from('likes')
-          .select('*', { count: 'exact', head: true })
-          .eq('blog_id', blogId)
+    setBlogs(currentBlogs => {
+      if (currentBlogs.some(b => b.id === blogId)) {
+        const refreshBlogLike = async () => {
+          const supabase = createClient()
+          const { count } = await supabase
+            .from('likes')
+            .select('*', { count: 'exact', head: true })
+            .eq('blog_id', blogId)
+          
+          setBlogs(latestBlogs => latestBlogs.map(b => 
+            b.id === blogId ? { ...b, likes_count: count || 0 } : b
+          ))
+        }
         
-        setBlogs(current => current.map(b => 
-          b.id === blogId ? { ...b, likes_count: count || 0 } : b
-        ))
+        refreshBlogLike()
       }
-      
-      refreshBlogLike()
-      return prev
+      return currentBlogs
     })
   }, [lastLikeEvent])
 

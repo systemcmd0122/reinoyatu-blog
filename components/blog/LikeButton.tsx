@@ -65,25 +65,48 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     event: '*',
     filter: `blog_id=eq.${blogId}`
   })
+  const lastProcessedEventId = React.useRef<string | null>(null)
 
   useEffect(() => {
     if (!lastEvent) return
 
-    const refreshCount = async () => {
+    // 重複処理を回避
+    const eventId = (lastEvent as any).commit_timestamp || JSON.stringify(lastEvent.new || lastEvent.old)
+    if (lastProcessedEventId.current === eventId) return
+    lastProcessedEventId.current = eventId
+
+    const refreshData = async () => {
       const supabase = createClient()
+      
+      // いいね数を再取得
       const { count } = await supabase
         .from('likes')
         .select('*', { count: 'exact', head: true })
         .eq('blog_id', blogId)
       
-      updateState({
-        isLiked: isLiked, // 自分のいいね状態は基本変わらないはずだが、他端末での操作を考慮するなら再取得が必要
-        likesCount: count || 0
-      })
+      // 自分のいいね状態も再取得（他端末・他タブでの操作を反映）
+      if (userId) {
+        const { data } = await supabase
+          .from('likes')
+          .select('id')
+          .eq('blog_id', blogId)
+          .eq('user_id', userId)
+          .maybeSingle()
+        
+        updateState({
+          isLiked: !!data,
+          likesCount: count || 0
+        })
+      } else {
+        updateState({
+          isLiked: false,
+          likesCount: count || 0
+        })
+      }
     }
 
-    refreshCount()
-  }, [lastEvent, blogId, updateState, isLiked])
+    refreshData()
+  }, [lastEvent, blogId, userId, updateState])
 
   useEffect(() => {
     if (initialIsLoaded || !userId) return

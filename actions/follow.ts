@@ -74,27 +74,103 @@ export async function getFollowStatus(followerId: string | undefined, followingI
 }
 
 /**
- * フォロー数とフォロワー数を取得する
+ * フォロー数とフォロワー数を取得する（100%正確な集計）
  */
 export async function getFollowCounts(userId: string) {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("follower_count, following_count")
-    .eq("id", userId)
-    .single()
+  // 実際のフォロワー数をカウント
+  const { count: followerCount, error: followerError } = await supabase
+    .from("user_follows")
+    .select("*", { count: 'exact', head: true })
+    .eq("following_id", userId)
 
-  if (error) {
-    console.error("Get follow counts error:", error)
-    return { 
-      following_count: 0, 
-      follower_count: 0 
+  // 実際のフォロー中数をカウント
+  const { count: followingCount, error: followingError } = await supabase
+    .from("user_follows")
+    .select("*", { count: 'exact', head: true })
+    .eq("follower_id", userId)
+
+  if (followerError || followingError) {
+    console.error("Get follow counts error:", followerError || followingError)
+    
+    // フォールバック: profilesテーブルのキャッシュ値を使用
+    const { data, error: profileError } = await supabase
+      .from("profiles")
+      .select("follower_count, following_count")
+      .eq("id", userId)
+      .single()
+
+    if (profileError) {
+      return { following_count: 0, follower_count: 0 }
+    }
+
+    return {
+      following_count: data.following_count || 0,
+      follower_count: data.follower_count || 0,
     }
   }
 
   return {
-    following_count: data.following_count || 0,
-    follower_count: data.follower_count || 0,
+    following_count: followingCount || 0,
+    follower_count: followerCount || 0,
   }
+}
+
+/**
+ * フォロワー一覧を取得する
+ */
+export async function getFollowers(userId: string) {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from("user_follows")
+    .select(`
+      follower:profiles!follower_id (
+        id,
+        name,
+        avatar_url,
+        introduce
+      )
+    `)
+    .eq("following_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(50)
+
+  if (error) {
+    console.error("Get followers error:", error)
+    return { users: [], error: error.message }
+  }
+
+  const users = data.map((d) => d.follower)
+  return { users, error: null }
+}
+
+/**
+ * フォロー中の一覧を取得する
+ */
+export async function getFollowing(userId: string) {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from("user_follows")
+    .select(`
+      following:profiles!following_id (
+        id,
+        name,
+        avatar_url,
+        introduce
+      )
+    `)
+    .eq("follower_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(50)
+
+  if (error) {
+    console.error("Get following error:", error)
+    return { users: [], error: error.message }
+  }
+
+  const users = data.map((d) => d.following)
+  return { users, error: null }
 }
