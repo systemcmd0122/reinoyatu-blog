@@ -1,4 +1,5 @@
 import { Extension } from '@tiptap/core';
+import { Plugin } from '@tiptap/pm/state';
 
 export const FocusMode = Extension.create({
   name: 'focusMode',
@@ -12,7 +13,7 @@ export const FocusMode = Extension.create({
 
   addProseMirrorPlugins() {
     return [
-      {
+      new Plugin({
         props: {
           handleDOMEvents: {
             focus: (view) => {
@@ -25,7 +26,7 @@ export const FocusMode = Extension.create({
             },
           },
         },
-      },
+      }),
     ];
   },
 });
