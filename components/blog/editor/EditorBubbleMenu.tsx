@@ -55,9 +55,7 @@ const EditorBubbleMenu: React.FC<EditorBubbleMenuProps> = ({ editor }) => {
   return (
     <BubbleMenu
       editor={editor}
-      tippyOptions={{ 
-        duration: 200,
-        animation: 'shift-away',
+      options={{
       }}
       className={cn(
         "flex items-center gap-0.5 p-1 rounded-xl border border-border bg-background/95 backdrop-blur shadow-2xl animate-in fade-in zoom-in-95 duration-200 z-[var(--z-editor-toolbar)]",
