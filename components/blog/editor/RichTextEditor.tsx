@@ -18,10 +18,15 @@ import { Highlight } from '@tiptap/extension-highlight'
 import { Typography } from '@tiptap/extension-typography'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { TextAlign } from '@tiptap/extension-text-align'
+import { Placeholder } from '@tiptap/extension-placeholder'
+import { CharacterCount } from '@tiptap/extension-character-count'
 import { Markdown } from 'tiptap-markdown'
 import { common, createLowlight } from 'lowlight'
 
 import { Mathematics } from './extensions/Mathematics'
+import { FocusMode } from './extensions/FocusMode'
+import { SlashCommand } from './extensions/SlashCommand'
+import suggestion from './suggestion'
 import { Footnote } from './extensions/Footnote'
 import { Callout } from './extensions/Callout'
 import { Accordion } from './extensions/Accordion'
@@ -98,6 +103,19 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      Placeholder.configure({
+        placeholder: ({ node }) => {
+          if (node.type.name === 'heading') {
+            return `見出し ${node.attrs.level}`
+          }
+          return placeholder || "文章を入力するか、'/' を入力してコマンドを選択..."
+        },
+      }),
+      CharacterCount,
+      SlashCommand.configure({
+        suggestion,
+      }),
+      FocusMode,
       Mathematics,
       Footnote,
       Callout,
@@ -126,7 +144,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
     onBlur,
     editorProps: {
       attributes: {
-        class: 'prose prose-xl dark:prose-invert max-w-none focus:outline-none min-h-[500px] p-8 md:p-12',
+        class: 'prose prose-xl dark:prose-invert max-w-none focus:outline-none min-h-[600px] py-12 px-8 md:px-12 md:py-16',
       },
     },
     immediatelyRender: false,
@@ -165,7 +183,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
   }
 
   return (
-    <div className="rich-text-editor flex flex-col border border-border rounded-2xl bg-background shadow-sm">
+    <div className="rich-text-editor flex flex-col bg-background">
       <EditorToolbar editor={editor} />
       <div className="flex-1 relative">
         <EditorBubbleMenu editor={editor} />
