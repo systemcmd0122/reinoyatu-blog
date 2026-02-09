@@ -186,7 +186,7 @@ ${styleInstructions.map(instr => `- ${instr}`).join("\n")}
 **基本的な改善ポイント:**
 1. **テキストの強調**: 重要なポイントは**太字**で強調
 2. **コードの明示**: 技術的な内容はコードブロックで囲む（言語指定必須）
-3. **リスト化**: 複数の項目は箇条書きまたは番号付きリストで整理
+3. **リスト化**: 複数の項目は箇条書きをリストで整理
 4. **引用の活用**: 他の情報源からの引用は > を使用
 5. **テーブルの利用**: 比較や一覧表示にはテーブルを活用
 
@@ -226,7 +226,7 @@ ${summaryLength ? `
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: "gemini-1.5-flash-latest",
       contents: prompt,
     });
     
@@ -298,7 +298,7 @@ ${content}
 **出力:**`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-1.5-flash-latest",
       contents: prompt,
     });
 
@@ -352,7 +352,7 @@ ${content.substring(0, 3000)}
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-1.5-flash-latest",
       contents: prompt,
     });
 
@@ -420,7 +420,7 @@ ${plainContent.substring(0, 3000)}
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-1.5-flash-latest",
       contents: prompt,
     });
 

@@ -242,7 +242,10 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           reactions: reactions || []
         }
         
-        setComments([...comments, commentWithReactions])
+        setComments(prev => {
+          if (prev.some(c => c.id === commentWithReactions.id)) return prev
+          return [...prev, commentWithReactions]
+        })
         setContent("")
         toast.success("コメントを投稿しました")
         router.refresh()
