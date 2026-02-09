@@ -34,20 +34,20 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
   const [sortBy, setSortBy] = useState<SortOption>("newest")
 
   // Filter and Sort blogs
-  // リアルタイム購読
-  const lastEvent = useRealtime<BlogType>('blogs', {
+  // リアルタイム購読 (ブログ本体)
+  const lastBlogEvent = useRealtime<BlogType>('blogs', {
     event: '*',
     filter: 'is_published=eq.true'
   })
 
   useEffect(() => {
-    if (!lastEvent) return
+    if (!lastBlogEvent) return
 
     const supabase = createClient()
 
     const handleEvent = async () => {
-      if (lastEvent.eventType === 'INSERT') {
-        const newBlog = lastEvent.new as BlogType
+      if (lastBlogEvent.eventType === 'INSERT') {
+        const newBlog = lastBlogEvent.new as BlogType
         
         // 外部キーのデータを補完
         const { data: fullBlog } = await supabase
@@ -55,29 +55,64 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
           .select(`
             *,
             profiles (id, name, avatar_url),
-            tags (name)
+            tags (name),
+            likes:likes(count)
           `)
           .eq('id', newBlog.id)
           .single()
         
         if (fullBlog) {
+          const blogWithLikes = {
+            ...fullBlog,
+            likes_count: (fullBlog as any).likes?.[0]?.count || 0
+          }
           setBlogs(prev => {
-            if (prev.some(b => b.id === fullBlog.id)) return prev
-            return [fullBlog, ...prev]
+            if (prev.some(b => b.id === blogWithLikes.id)) return prev
+            return [blogWithLikes, ...prev]
           })
         }
-      } else if (lastEvent.eventType === 'UPDATE') {
-        const updatedBlog = lastEvent.new as BlogType
+      } else if (lastBlogEvent.eventType === 'UPDATE') {
+        const updatedBlog = lastBlogEvent.new as BlogType
         setBlogs(prev => prev.map(b => 
           b.id === updatedBlog.id ? { ...b, ...updatedBlog } : b
         ))
-      } else if (lastEvent.eventType === 'DELETE') {
-        setBlogs(prev => prev.filter(b => b.id !== lastEvent.old.id))
+      } else if (lastBlogEvent.eventType === 'DELETE') {
+        setBlogs(prev => prev.filter(b => b.id !== lastBlogEvent.old.id))
       }
     }
 
     handleEvent()
-  }, [lastEvent])
+  }, [lastBlogEvent])
+
+  // リアルタイム購読 (いいね数)
+  const lastLikeEvent = useRealtime('likes', { event: '*' })
+
+  useEffect(() => {
+    if (!lastLikeEvent) return
+
+    const like = (lastLikeEvent.new || lastLikeEvent.old) as { blog_id: string }
+    const blogId = like.blog_id
+
+    // リストに含まれるブログのいいね数が変わった場合のみ更新
+    setBlogs(prev => {
+      if (!prev.some(b => b.id === blogId)) return prev
+      
+      const refreshBlogLike = async () => {
+        const supabase = createClient()
+        const { count } = await supabase
+          .from('likes')
+          .select('*', { count: 'exact', head: true })
+          .eq('blog_id', blogId)
+        
+        setBlogs(current => current.map(b => 
+          b.id === blogId ? { ...b, likes_count: count || 0 } : b
+        ))
+      }
+      
+      refreshBlogLike()
+      return prev
+    })
+  }, [lastLikeEvent])
 
   // 初期データが変更されたら同期
   useEffect(() => {

@@ -115,7 +115,8 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
       ),
       tags (
         name
-      )
+      ),
+      likes:likes(count)
     `,
       { count: "exact" }
     )
@@ -136,19 +137,10 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
     console.error("Error fetching tags:", tagsError)
   }
 
-  const blogsWithLikes = await Promise.all(
-    (blogsData || []).map(async (blog) => {
-      const { data: likesCount } = await supabase.rpc(
-        'get_blog_likes_count',
-        { blog_id: blog.id }
-      )
-      
-      return {
-        ...blog,
-        likes_count: likesCount || 0
-      }
-    })
-  )
+  const blogsWithLikes = (blogsData || []).map((blog: any) => ({
+    ...blog,
+    likes_count: blog.likes?.[0]?.count || 0
+  }))
 
   const totalCount = count || 0
   const totalPages = Math.ceil(totalCount / DEFAULT_PAGE_SIZE)
