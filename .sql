@@ -1,5 +1,5 @@
 -- profilesテーブル作成
-create table profiles (
+create table if not exists profiles (
   id uuid primary key references auth.users on delete cascade,
   name text,
   introduce text,
@@ -8,8 +8,16 @@ create table profiles (
 
 -- profilesテーブルRLS設定
 alter table profiles enable row level security;
-create policy "プロフィールは誰でも参照可能" on profiles for select using (true);
-create policy "プロフィールを更新" on profiles for update using (true);
+do $$
+begin
+  if not exists (select 1 from pg_policies where policyname = 'プロフィールは誰でも参照可能' and tablename = 'profiles') then
+    create policy "プロフィールは誰でも参照可能" on profiles for select using (true);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = 'プロフィールを更新' and tablename = 'profiles') then
+    create policy "プロフィールを更新" on profiles for update using (true);
+  end if;
+end
+$$;
 
 -- サインアップ時にプロフィールテーブル作成する関数
 create function public.handle_new_user()
@@ -34,7 +42,7 @@ create policy "自身のプロフィール画像を更新" on storage.objects fo
 create policy "自身のプロフィール画像を削除" on storage.objects for delete using ( bucket_id = 'profile' AND auth.uid() = owner );
 
 -- blogsテーブル作成
-create table blogs (
+create table if not exists blogs (
   id uuid not null default uuid_generate_v4() primary key,
   user_id uuid not null references profiles(id),
   title text not null,
@@ -63,10 +71,22 @@ execute function update_updated_at_column();
 
 -- blogsテーブルRLS設定
 alter table blogs enable row level security;
-create policy "ブログは誰でも参照可能" on blogs for select using ( is_published = true or auth.uid() = user_id );
-create policy "自身のブログを追加" on blogs for insert with check (auth.uid() = user_id);
-create policy "自身のブログを更新" on blogs for update using (auth.uid() = user_id);
-create policy "自身のブログを削除" on blogs for delete using (auth.uid() = user_id);
+do $$
+begin
+  if not exists (select 1 from pg_policies where policyname = 'ブログは誰でも参照可能' and tablename = 'blogs') then
+    create policy "ブログは誰でも参照可能" on blogs for select using ( is_published = true or auth.uid() = user_id );
+  end if;
+  if not exists (select 1 from pg_policies where policyname = '自身のブログを追加' and tablename = 'blogs') then
+    create policy "自身のブログを追加" on blogs for insert with check (auth.uid() = user_id);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = '自身のブログを更新' and tablename = 'blogs') then
+    create policy "自身のブログを更新" on blogs for update using (auth.uid() = user_id);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = '自身のブログを削除' and tablename = 'blogs') then
+    create policy "自身のブログを削除" on blogs for delete using (auth.uid() = user_id);
+  end if;
+end
+$$;
 
 -- ブログのstorage作成
 -- publicでstorageを作成する場合
@@ -77,7 +97,7 @@ create policy "自身の画像を更新" on storage.objects for update with chec
 create policy "自身の画像を削除" on storage.objects for delete using ( bucket_id = 'blogs' AND auth.uid() = owner );
 
 -- likesテーブル作成
-create table likes (
+create table if not exists likes (
   id uuid not null default uuid_generate_v4() primary key,
   blog_id uuid not null references blogs(id) on delete cascade,
   user_id uuid not null references profiles(id) on delete cascade,
@@ -90,9 +110,19 @@ create table likes (
 alter table likes enable row level security;
 
 -- likesテーブルのポリシー設定
-create policy "いいねは誰でも参照可能" on likes for select using ( true );
-create policy "自身のいいねを追加" on likes for insert with check (auth.uid() = user_id);
-create policy "自身のいいねを削除" on likes for delete using (auth.uid() = user_id);
+do $$
+begin
+  if not exists (select 1 from pg_policies where policyname = 'いいねは誰でも参照可能' and tablename = 'likes') then
+    create policy "いいねは誰でも参照可能" on likes for select using ( true );
+  end if;
+  if not exists (select 1 from pg_policies where policyname = '自身のいいねを追加' and tablename = 'likes') then
+    create policy "自身のいいねを追加" on likes for insert with check (auth.uid() = user_id);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = '自身のいいねを削除' and tablename = 'likes') then
+    create policy "自身のいいねを削除" on likes for delete using (auth.uid() = user_id);
+  end if;
+end
+$$;
 
 -- 便利のため、likesの数を返す関数を作成
 create or replace function get_blog_likes_count(blog_id uuid)
@@ -101,7 +131,7 @@ returns integer as $$
 $$ language sql;
 
 -- bookmarksテーブル作成
-create table bookmarks (
+create table if not exists bookmarks (
   id uuid not null default uuid_generate_v4() primary key,
   blog_id uuid not null references blogs(id) on delete cascade,
   user_id uuid not null references profiles(id) on delete cascade,
@@ -114,9 +144,19 @@ create table bookmarks (
 alter table bookmarks enable row level security;
 
 -- bookmarksテーブルのポリシー設定
-create policy "ブックマークは誰でも参照可能" on bookmarks for select using ( true );
-create policy "自身のブックマークを追加" on bookmarks for insert with check (auth.uid() = user_id);
-create policy "自身のブックマークを削除" on bookmarks for delete using (auth.uid() = user_id);
+do $$
+begin
+  if not exists (select 1 from pg_policies where policyname = 'ブックマークは誰でも参照可能' and tablename = 'bookmarks') then
+    create policy "ブックマークは誰でも参照可能" on bookmarks for select using ( true );
+  end if;
+  if not exists (select 1 from pg_policies where policyname = '自身のブックマークを追加' and tablename = 'bookmarks') then
+    create policy "自身のブックマークを追加" on bookmarks for insert with check (auth.uid() = user_id);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = '自身のブックマークを削除' and tablename = 'bookmarks') then
+    create policy "自身のブックマークを削除" on bookmarks for delete using (auth.uid() = user_id);
+  end if;
+end
+$$;
 
 -- 便利のため、ブログのブックマーク数を返す関数を作成
 create or replace function get_blog_bookmarks_count(blog_id uuid)
@@ -134,7 +174,7 @@ returns setof blogs as $$
 $$ language sql;
 
 -- commentsテーブル作成
-create table comments (
+create table if not exists comments (
   id uuid not null default uuid_generate_v4() primary key,
   blog_id uuid not null references blogs(id) on delete cascade,
   user_id uuid not null references profiles(id) on delete cascade,
@@ -152,10 +192,22 @@ execute function update_updated_at_column();
 
 -- commentsテーブルRLS設定
 alter table comments enable row level security;
-create policy "コメントは誰でも参照可能" on comments for select using (true);
-create policy "自身のコメントを追加" on comments for insert with check (auth.uid() = user_id);
-create policy "自身のコメントを更新" on comments for update using (auth.uid() = user_id);
-create policy "自身のコメントを削除" on comments for delete using (auth.uid() = user_id);
+do $$
+begin
+  if not exists (select 1 from pg_policies where policyname = 'コメントは誰でも参照可能' and tablename = 'comments') then
+    create policy "コメントは誰でも参照可能" on comments for select using (true);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = '自身のコメントを追加' and tablename = 'comments') then
+    create policy "自身のコメントを追加" on comments for insert with check (auth.uid() = user_id);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = '自身のコメントを更新' and tablename = 'comments') then
+    create policy "自身のコメントを更新" on comments for update using (auth.uid() = user_id);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = '自身のコメントを削除' and tablename = 'comments') then
+    create policy "自身のコメントを削除" on comments for delete using (auth.uid() = user_id);
+  end if;
+end
+$$;
 
 -- 便利のため、ブログのコメント数を返す関数を作成
 create or replace function get_blog_comments_count(blog_id uuid)
@@ -190,7 +242,7 @@ returns table (
 $$ language sql;
 
 -- imagesテーブル作成
-create table images (
+create table if not exists images (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references profiles(id) on delete cascade not null,
   storage_path text not null unique,
@@ -200,10 +252,10 @@ create table images (
 );
 
 -- hashにインデックスを作成
-create index idx_images_hash on images(hash);
+create index if not exists idx_images_hash on images(hash);
 
 -- article_imagesテーブル作成（中間テーブル）
-create table article_images (
+create table if not exists article_images (
   article_id uuid references blogs(id) on delete cascade not null,
   image_id uuid references images(id) on delete cascade not null,
   primary key (article_id, image_id)
@@ -211,13 +263,29 @@ create table article_images (
 
 -- RLS設定
 alter table images enable row level security;
-create policy "画像は誰でも参照可能" on images for select using (true);
-create policy "自身の画像を管理" on images for all using (auth.uid() = user_id);
+do $$
+begin
+  if not exists (select 1 from pg_policies where policyname = '画像は誰でも参照可能' and tablename = 'images') then
+    create policy "画像は誰でも参照可能" on images for select using (true);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = '自身の画像を管理' and tablename = 'images') then
+    create policy "自身の画像を管理" on images for all using (auth.uid() = user_id);
+  end if;
+end
+$$;
 
 alter table article_images enable row level security;
-create policy "記事画像は誰でも参照可能" on article_images for select using (true);
-create policy "自身の記事画像を管理" on article_images for all using (
-  exists (
-    select 1 from blogs where id = article_id and user_id = auth.uid()
-  )
-);
+do $$
+begin
+  if not exists (select 1 from pg_policies where policyname = '記事画像は誰でも参照可能' and tablename = 'article_images') then
+    create policy "記事画像は誰でも参照可能" on article_images for select using (true);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = '自身の記事画像を管理' and tablename = 'article_images') then
+    create policy "自身の記事画像を管理" on article_images for all using (
+      exists (
+        select 1 from blogs where id = article_id and user_id = auth.uid()
+      )
+    );
+  end if;
+end
+$$;
