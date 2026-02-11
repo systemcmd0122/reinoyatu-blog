@@ -16,12 +16,25 @@ const Loading = () => {
         />
       </div>
       
-      <div className="flex items-center gap-2">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <p className="text-lg font-medium text-foreground">読み込み中...</p>
+      <div className="flex flex-col items-center gap-4">
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="text-xl font-black tracking-tight text-foreground uppercase">Fetching Content...</p>
+        </div>
+        <p className="text-sm font-bold text-muted-foreground/60 uppercase tracking-widest">
+          最新のデータを取得しています
+        </p>
       </div>
       
-      <p className="mt-4 text-sm text-muted-foreground">しばらくお待ちください</p>
+      <div className="mt-12 flex gap-1.5">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="w-1.5 h-1.5 rounded-full bg-primary/20 animate-bounce"
+            style={{ animationDelay: `${i * 0.1}s` }}
+          />
+        ))}
+      </div>
     </div>
   )
 }

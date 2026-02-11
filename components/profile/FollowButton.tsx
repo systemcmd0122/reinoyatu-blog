@@ -80,7 +80,8 @@ const FollowButton: React.FC<FollowButtonProps> = ({
     <Button
       variant={isFollowing ? "outline" : "default"}
       size="lg"
-      disabled={isPending || isLoadingStatus}
+      loading={isPending || isLoadingStatus}
+      loadingText={isFollowing ? "解除中..." : "フォロー中..."}
       onClick={handleFollow}
       className={cn(
         "rounded-2xl font-bold h-12 px-8 transition-all duration-300 min-w-[120px]",
@@ -89,18 +90,18 @@ const FollowButton: React.FC<FollowButtonProps> = ({
           : "shadow-lg shadow-primary/20"
       )}
     >
-      {isPending || isLoadingStatus ? (
-        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-      ) : isFollowing ? (
-        <span className="flex items-center gap-2">
-          <UserMinus className="h-4 w-4" />
-          フォロー中
-        </span>
-      ) : (
-        <span className="flex items-center gap-2">
-          <UserPlus className="h-4 w-4" />
-          フォロー
-        </span>
+      {!(isPending || isLoadingStatus) && (
+        isFollowing ? (
+          <span className="flex items-center gap-2">
+            <UserMinus className="h-4 w-4" />
+            フォロー中
+          </span>
+        ) : (
+          <span className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4" />
+            フォロー
+          </span>
+        )
       )}
     </Button>
   )

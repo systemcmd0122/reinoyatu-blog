@@ -94,10 +94,12 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({
             variant="ghost" 
             size="sm" 
             onClick={handleGenerateTitles}
-            disabled={isTitleGenerating || !watchedContent}
+            disabled={!watchedContent}
+            loading={isTitleGenerating}
+            loadingText="提案中..."
             className="h-7 text-[10px] font-bold hover:bg-primary/10 hover:text-primary"
           >
-            {isTitleGenerating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
+            {!isTitleGenerating && <Wand2 className="h-3 w-3 mr-1" />}
             AI提案
           </Button>
         </div>
@@ -209,10 +211,12 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({
             variant="ghost" 
             size="sm" 
             onClick={handleGenerateSummary}
-            disabled={isGeneratingSummary || !watchedContent}
+            disabled={!watchedContent}
+            loading={isGeneratingSummary}
+            loadingText="生成中..."
             className="h-7 text-[10px] font-bold hover:bg-primary/10 hover:text-primary"
           >
-            {isGeneratingSummary ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
+            {!isGeneratingSummary && <Wand2 className="h-3 w-3 mr-1" />}
             AI生成
           </Button>
         </div>
@@ -303,10 +307,12 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({
             variant="ghost" 
             size="sm" 
             onClick={handleGenerateTags}
-            disabled={isTagGenerating || !watchedContent}
+            disabled={!watchedContent}
+            loading={isTagGenerating}
+            loadingText="提案中..."
             className="h-7 text-[10px] font-bold hover:bg-primary/10 hover:text-primary"
           >
-            {isTagGenerating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
+            {!isTagGenerating && <Wand2 className="h-3 w-3 mr-1" />}
             AI提案
           </Button>
         </div>

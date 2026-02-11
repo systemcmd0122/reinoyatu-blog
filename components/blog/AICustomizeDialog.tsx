@@ -369,20 +369,13 @@ const AICustomizeDialog: React.FC<AICustomizeDialogProps> = ({
               {/* 生成ボタン */}
               <Button
                 onClick={handleGenerate}
-                disabled={isGenerating || selectedStyles.size === 0}
+                disabled={selectedStyles.size === 0}
+                loading={isGenerating}
+                loadingText="生成中..."
                 className="w-full"
               >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    生成中...
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="mr-2 h-4 w-4" />
-                    AIで改善する
-                  </>
-                )}
+                {!isGenerating && <Wand2 className="mr-2 h-4 w-4" />}
+                AIで改善する
               </Button>
 
               {isGenerating && (

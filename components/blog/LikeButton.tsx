@@ -216,20 +216,14 @@ const LikeButton: React.FC<LikeButtonProps> = ({
         "h-auto transition-all duration-200",
         isLiked && showLabel && "bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400",
         !showLabel && isLiked && "text-red-500 bg-red-50 dark:bg-red-900/20",
-        isPending && "opacity-70 cursor-not-allowed",
         "flex items-center"
       )}
       onClick={handleToggleLike}
-      disabled={isPending || !userId}
+      disabled={!userId}
+      loading={isPending}
+      loadingText={showLabel ? "反映中..." : ""}
     >
-      {isPending ? (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          {showLabel && <span className="ml-2">処理中...</span>}
-        </>
-      ) : (
-        buttonContent
-      )}
+      {!isPending && buttonContent}
     </Button>
   )
 
