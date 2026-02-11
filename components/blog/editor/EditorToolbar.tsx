@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Editor } from '@tiptap/react';
+import { createClient } from '@/utils/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 import {
   Bold,
   Italic,
@@ -53,10 +57,12 @@ import LinkEditor from './LinkEditor';
 
 interface EditorToolbarProps {
   editor: Editor;
+  userId?: string;
 }
 
-const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
+const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [mediaDialog, setMediaDialog] = useState<{ type: 'image' | 'youtube' | 'table', isOpen: boolean }>({
     type: 'image',
     isOpen: false,
@@ -72,15 +78,50 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
 
   if (!editor) return null;
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        editor.chain().focus().setImage({ src: result }).run();
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (!userId) {
+      toast.error('画像のアップロードにはログインが必要です');
+      return;
+    }
+
+    // 制限チェック
+    const maxFileSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxFileSize) {
+      toast.error('画像サイズは2MB以下にしてください');
+      return;
+    }
+
+    setIsUploading(true);
+    const supabase = createClient();
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('blogs')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('blogs')
+        .getPublicUrl(filePath);
+
+      editor.chain().focus().setImage({ src: publicUrl }).run();
+      toast.success('画像をアップロードしました');
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error('画像のアップロードに失敗しました: ' + (error.message || 'Unknown error'));
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -277,8 +318,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
       <div className="flex items-center gap-0.5 shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-10 w-10 md:h-10 md:h-8 md:w-10 md:w-8 p-0" aria-label="画像挿入">
-              <ImageIcon className="h-4 w-4" />
+            <Button variant="ghost" size="sm" className="h-10 w-10 md:h-10 md:h-8 md:w-10 md:w-8 p-0" aria-label="画像挿入" disabled={isUploading}>
+              {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>

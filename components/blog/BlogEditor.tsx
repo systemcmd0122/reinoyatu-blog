@@ -120,7 +120,7 @@ interface BlogEditorProps {
   initialData?: BlogType
   mode: "new" | "edit"
   userId: string
-  onSubmit: (values: z.infer<typeof BlogSchema> & { base64Image?: string }) => Promise<{ error?: string; success?: boolean; id?: string }>
+  onSubmit: (values: z.infer<typeof BlogSchema> & { base64Image?: string, imageUrl?: string | null }) => Promise<{ error?: string; success?: boolean; id?: string }>
   onDelete?: (id?: string) => Promise<{ error?: string; success?: boolean }>
 }
 
@@ -291,7 +291,11 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       form.setValue("is_published", isPublished)
       const values = form.getValues()
 
-      const res = await onSubmit({ ...values, base64Image })
+      // imagePreviewがbase64でなく（＝既存のURL）、かつnullでない場合はそれを現在のURLとして渡す
+      // imagePreviewがnullの場合は画像が削除されたことを意味する
+      const currentImageUrl = (imagePreview && !imagePreview.startsWith('data:')) ? imagePreview : null;
+
+      const res = await onSubmit({ ...values, base64Image, imageUrl: currentImageUrl })
 
       if (res?.error) {
         setError(`送信に失敗しました: ${res.error}`)
@@ -726,6 +730,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                             <FormControl className="flex-1">
                               <RichTextEditor
                                 ref={editorRef}
+                                userId={userId}
                                 content={field.value}
                                 initialJson={form.getValues("content_json")}
                                 onChange={(markdown, json) => {

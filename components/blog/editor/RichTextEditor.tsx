@@ -47,6 +47,7 @@ interface RichTextEditorProps {
   onBlur?: () => void
   placeholder?: string
   initialJson?: string
+  userId?: string
 }
 
 export interface RichTextEditorRef {
@@ -60,6 +61,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
   onBlur,
   placeholder,
   initialJson,
+  userId,
 }, ref) => {
   const [isReady, setIsReady] = useState(false)
 
@@ -184,7 +186,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
 
   return (
     <div className="rich-text-editor flex flex-col bg-background">
-      <EditorToolbar editor={editor} />
+      <EditorToolbar editor={editor} userId={userId} />
       <div className="flex-1 relative">
         <EditorBubbleMenu editor={editor} />
         <EditorFloatingMenu editor={editor} />
