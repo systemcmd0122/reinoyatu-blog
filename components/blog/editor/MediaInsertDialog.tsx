@@ -9,19 +9,25 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Image as ImageIcon, Youtube, Link as LinkIcon, Check } from 'lucide-react';
+import { Image as ImageIcon, Youtube, Link as LinkIcon, Check, Upload, Library, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { uploadImage } from '@/actions/image';
+import ImageLibraryDialog from './ImageLibraryDialog';
+import { toast } from 'sonner';
 
 interface MediaInsertDialogProps {
   editor: Editor;
+  userId?: string;
   type: 'image' | 'youtube' | 'table';
   isOpen: boolean;
   onClose: () => void;
 }
 
-const MediaInsertDialog: React.FC<MediaInsertDialogProps> = ({ editor, type, isOpen, onClose }) => {
+const MediaInsertDialog: React.FC<MediaInsertDialogProps> = ({ editor, userId, type, isOpen, onClose }) => {
   const [url, setUrl] = useState('');
   const [youtubeDetails, setYoutubeDetails] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
   const handleInsert = () => {
     if (!url && type !== 'table') return;
@@ -49,6 +55,32 @@ const MediaInsertDialog: React.FC<MediaInsertDialogProps> = ({ editor, type, isO
     return null;
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !userId) return;
+
+    setIsUploading(true);
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const result = await uploadImage(base64, userId);
+      if (result.error) throw new Error(result.error);
+
+      editor.chain().focus().setImage({ src: result.data.public_url }).run();
+      toast.success('画像をアップロードしました');
+      onClose();
+    } catch (error: any) {
+      toast.error('アップロードに失敗しました: ' + error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md rounded-2xl">
@@ -60,17 +92,67 @@ const MediaInsertDialog: React.FC<MediaInsertDialogProps> = ({ editor, type, isO
         </DialogHeader>
         
         <div className="py-4 space-y-4">
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">URL</label>
-            <Input
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder={type === 'youtube' ? 'https://www.youtube.com/watch?v=...' : 'https://example.com/image.jpg'}
-              className="h-10"
-              autoFocus
-              onKeyDown={(e) => e.key === 'Enter' && handleInsert()}
-            />
-          </div>
+          {type === 'image' ? (
+            <Tabs defaultValue="url" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="url">URL</TabsTrigger>
+                <TabsTrigger value="upload">アップロード</TabsTrigger>
+                <TabsTrigger value="library">ライブラリ</TabsTrigger>
+              </TabsList>
+              <TabsContent value="url" className="pt-4 space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">URL</label>
+                  <Input
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    className="h-10"
+                    autoFocus
+                    onKeyDown={(e) => e.key === 'Enter' && handleInsert()}
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="upload" className="pt-4 flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl">
+                <input
+                  type="file"
+                  id="image-upload-input"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                />
+                <Button
+                  variant="outline"
+                  disabled={isUploading}
+                  onClick={() => document.getElementById('image-upload-input')?.click()}
+                >
+                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                  画像を選択してアップロード
+                </Button>
+                <p className="text-[10px] text-muted-foreground mt-2">2MB以内の JPG, PNG, WebP</p>
+              </TabsContent>
+              <TabsContent value="library" className="pt-4 flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsLibraryOpen(true)}
+                >
+                  <Library className="h-4 w-4 mr-2" />
+                  ライブラリから選択
+                </Button>
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">URL</label>
+              <Input
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder={type === 'youtube' ? 'https://www.youtube.com/watch?v=...' : 'https://example.com/image.jpg'}
+                className="h-10"
+                autoFocus
+                onKeyDown={(e) => e.key === 'Enter' && handleInsert()}
+              />
+            </div>
+          )}
 
           {type === 'youtube' && (
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
@@ -89,11 +171,23 @@ const MediaInsertDialog: React.FC<MediaInsertDialogProps> = ({ editor, type, isO
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="ghost" onClick={onClose}>キャンセル</Button>
-          <Button onClick={handleInsert} disabled={!url} className="font-bold">
+          <Button onClick={handleInsert} disabled={!url && type !== 'table'} className="font-bold">
             挿入する
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {userId && (
+        <ImageLibraryDialog
+          userId={userId}
+          isOpen={isLibraryOpen}
+          onClose={() => setIsLibraryOpen(false)}
+          onSelect={(url) => {
+            editor.chain().focus().setImage({ src: url }).run();
+            onClose();
+          }}
+        />
+      )}
     </Dialog>
   );
 };
