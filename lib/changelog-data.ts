@@ -25,6 +25,11 @@ export const changelogData: ChangelogEntry[] = [
         content: "スケルトンローディングの導入",
         description: "記事一覧やプロフィール画面のデータ取得中に、実際のコンテンツに近い形のスケルトンを表示。体感速度を大幅に向上させました。",
       },
+      {
+        category: "Improvement",
+        content: "不要なマークダウンガイドを廃止",
+        description: "直感的なWYSIWYGエディタとAIアシストの導入に伴い、役割を終えた手動のマークダウンガイドを削除しました。よりシンプルで迷わないUXを提供します。",
+      },
     ],
   },
   {
