@@ -11,6 +11,7 @@ import {
   Upload, 
   FileText, 
   Layers, 
+  Library, 
   Lock, 
   Tag 
 } from "lucide-react"
@@ -23,6 +24,7 @@ import TagInput from "@/components/ui/TagInput"
 import CollectionDialog from "@/components/collection/CollectionDialog"
 import { CollectionType } from "@/types"
 import { toast } from "sonner"
+import ImageLibraryDialog from "./ImageLibraryDialog"
 
 interface EditorSettingsProps {
   userId: string
@@ -77,6 +79,7 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({
   setIsDirty,
 }) => {
   const { setValue, getValues } = useFormContext()
+  const [isLibraryOpen, setIsLibraryOpen] = React.useState(false)
 
   return (
     <div className="space-y-10">
@@ -150,7 +153,12 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({
               <Image src={imagePreview} alt="Cover" fill className="object-cover" />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <Button size="sm" variant="secondary" onClick={() => document.getElementById('sidebar-image-upload')?.click()}>
-                  変更
+                  <Upload className="h-3 w-3 mr-1" />
+                  アップロード
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setIsLibraryOpen(true)}>
+                  <Library className="h-3 w-3 mr-1" />
+                  ライブラリ
                 </Button>
                 <Button size="sm" variant="destructive" onClick={() => { setImageFile(null); setImagePreview(null); }}>
                   削除
@@ -158,14 +166,36 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({
               </div>
             </>
           ) : (
-            <label htmlFor="sidebar-image-upload" className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 cursor-pointer">
-              <Upload className="h-8 w-8 text-muted-foreground mb-2 group-hover:text-primary transition-colors" />
-              <p className="text-xs font-bold text-muted-foreground group-hover:text-primary">画像をアップロード</p>
-              <p className="text-[10px] text-muted-foreground/60 mt-1">2MB以内の JPG, PNG, WebP</p>
-            </label>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 space-y-2">
+              <label htmlFor="sidebar-image-upload" className="flex flex-col items-center cursor-pointer group/label">
+                <Upload className="h-8 w-8 text-muted-foreground mb-2 group-hover/label:text-primary transition-colors" />
+                <p className="text-xs font-bold text-muted-foreground group-hover/label:text-primary transition-colors">画像をアップロード</p>
+              </label>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 text-[10px] font-bold text-muted-foreground hover:text-primary"
+                onClick={() => setIsLibraryOpen(true)}
+              >
+                <Library className="h-3.5 w-3.5 mr-1" />
+                ライブラリから選択
+              </Button>
+              <p className="text-[10px] text-muted-foreground/60">2MB以内の JPG, PNG, WebP</p>
+            </div>
           )}
           <input id="sidebar-image-upload" type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
         </div>
+
+        <ImageLibraryDialog
+          userId={userId}
+          isOpen={isLibraryOpen}
+          onClose={() => setIsLibraryOpen(false)}
+          onSelect={(url: string | null) => {
+            setImagePreview(url);
+            setImageFile(null); // ファイルアップロードをリセット
+            setIsDirty(true);
+          }}
+        />
       </section>
 
       {/* 要約設定 */}

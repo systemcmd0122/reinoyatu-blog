@@ -6,6 +6,7 @@ import { z } from "zod"
 import { v4 as uuidv4 } from "uuid"
 import { decode } from "base64-arraybuffer"
 import { generateSummaryFromContent } from "@/utils/gemini"
+import { uploadImage, syncArticleImages, cleanupUnusedImages } from "./image"
 import { GoogleGenAI } from "@google/genai"
 
 // タグをDBに保存し、IDを返すヘルパー関数（完全修正版）
@@ -91,33 +92,13 @@ export const newBlog = async (values: newBlogProps) => {
 
     let image_url = null
 
-    // 画像アップロード処理
+    // 画像アップロード処理（重複防止対応版）
     if (values.base64Image) {
-      const matches = values.base64Image.match(/^data:(.+);base64,(.+)$/)
-      if (!matches || matches.length !== 3) {
-        return { error: "無効な画像データです" }
+      const result = await uploadImage(values.base64Image, values.userId)
+      if (result.error) {
+        return { error: result.error }
       }
-      const contentType = matches[1]
-      const base64Data = matches[2]
-      const fileExt = contentType.split("/")[1]
-      const fileName = `${uuidv4()}.${fileExt}`
-
-      const { error: storageError } = await supabase.storage
-        .from("blogs")
-        .upload(`${values.userId}/${fileName}`, decode(base64Data), {
-          contentType,
-        })
-
-      if (storageError) {
-        console.error("画像アップロードエラー:", storageError)
-        return { error: storageError.message }
-      }
-
-      const { data: urlData } = supabase.storage
-        .from("blogs")
-        .getPublicUrl(`${values.userId}/${fileName}`)
-
-      image_url = urlData.publicUrl
+      image_url = result.data.public_url
     }
 
     // ブログを新規作成
@@ -139,6 +120,9 @@ export const newBlog = async (values: newBlogProps) => {
       console.error("ブログ作成エラー:", insertError)
       return { error: insertError.message }
     }
+
+    // 画像の関連付けを同期
+    await syncArticleImages(newBlog.id, values.content_json || "", image_url)
 
     // タグの処理
     if (values.tags && values.tags.length > 0) {
@@ -186,41 +170,13 @@ export const editBlog = async (values: editBlogProps) => {
 
     let image_url = values.imageUrl
 
-    // 画像更新処理
+    // 画像更新処理（重複防止対応版）
     if (values.base64Image) {
-      const matches = values.base64Image.match(/^data:(.+);base64,(.+)$/)
-      if (!matches || matches.length !== 3) {
-        return { error: "無効な画像データです" }
+      const result = await uploadImage(values.base64Image, values.userId)
+      if (result.error) {
+        return { error: result.error }
       }
-      const contentType = matches[1]
-      const base64Data = matches[2]
-      const fileExt = contentType.split("/")[1]
-      const fileName = `${uuidv4()}.${fileExt}`
-
-      const { error: storageError } = await supabase.storage
-        .from("blogs")
-        .upload(`${values.userId}/${fileName}`, decode(base64Data), {
-          contentType,
-        })
-
-      if (storageError) {
-        console.error("画像アップロードエラー:", storageError)
-        return { error: storageError.message }
-      }
-
-      // 古い画像を削除
-      if (image_url) {
-        const oldFileName = image_url.split("/").slice(-1)[0]
-        await supabase.storage
-          .from("blogs")
-          .remove([`${values.userId}/${oldFileName}`])
-      }
-
-      const { data: urlData } = supabase.storage
-        .from("blogs")
-        .getPublicUrl(`${values.userId}/${fileName}`)
-
-      image_url = urlData.publicUrl
+      image_url = result.data.public_url
     }
 
     // ブログ更新
@@ -240,6 +196,9 @@ export const editBlog = async (values: editBlogProps) => {
       console.error("ブログ更新エラー:", updateError)
       return { error: updateError.message }
     }
+
+    // 画像の関連付けを同期
+    await syncArticleImages(values.blogId, values.content_json || "", image_url)
 
     // 既存のタグ関連をすべて削除
     const { error: deleteTagsError } = await supabase
@@ -295,6 +254,14 @@ export const deleteBlog = async ({
   try {
     const supabase = createClient()
 
+    // 関連している画像IDを先に取得しておく
+    const { data: articleImages } = await supabase
+      .from("article_images")
+      .select("image_id")
+      .eq("article_id", blogId)
+    
+    const imageIds = articleImages?.map(ai => ai.image_id) || []
+
     // ブログ削除（CASCADE制約により関連データも削除される）
     const { error } = await supabase
       .from("blogs")
@@ -306,12 +273,9 @@ export const deleteBlog = async ({
       return { error: error.message }
     }
 
-    // 画像削除
-    if (imageUrl) {
-      const fileName = imageUrl.split("/").slice(-1)[0]
-      await supabase.storage
-        .from("blogs")
-        .remove([`${userId}/${fileName}`])
+    // 不要になった画像をクリーンアップ
+    if (imageIds.length > 0) {
+      await cleanupUnusedImages(imageIds)
     }
 
     return { success: true }

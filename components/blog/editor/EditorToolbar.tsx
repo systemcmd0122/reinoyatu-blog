@@ -4,6 +4,8 @@ import { createClient } from '@/utils/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { uploadImage } from '@/actions/image';
+import ImageLibraryDialog from './ImageLibraryDialog';
 import {
   Bold,
   Italic,
@@ -67,6 +69,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
     type: 'image',
     isOpen: false,
   });
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
   useEffect(() => {
     const handleOpenMedia = (e: any) => {
@@ -95,26 +98,23 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
     }
 
     setIsUploading(true);
-    const supabase = createClient();
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = `${userId}/${fileName}`;
+      // FileReaderでbase64に変換
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-      const { error: uploadError } = await supabase.storage
-        .from('blogs')
-        .upload(filePath, file);
+      const result = await uploadImage(base64, userId);
 
-      if (uploadError) {
-        throw uploadError;
+      if (result.error) {
+        throw new Error(result.error);
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('blogs')
-        .getPublicUrl(filePath);
-
-      editor.chain().focus().setImage({ src: publicUrl }).run();
+      editor.chain().focus().setImage({ src: result.data.public_url }).run();
       toast.success('画像をアップロードしました');
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -329,6 +329,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
             <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
               アップロード
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setIsLibraryOpen(true)}>
+              ライブラリから選択
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <input
@@ -460,10 +463,20 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
 
       <MediaInsertDialog 
         editor={editor}
+        userId={userId}
         type={mediaDialog.type}
         isOpen={mediaDialog.isOpen}
         onClose={() => setMediaDialog((prev: any) => ({ ...prev, isOpen: false }))}
       />
+
+      {userId && (
+        <ImageLibraryDialog
+          userId={userId}
+          isOpen={isLibraryOpen}
+          onClose={() => setIsLibraryOpen(false)}
+          onSelect={(url) => editor.chain().focus().setImage({ src: url }).run()}
+        />
+      )}
     </div>
   );
 };
