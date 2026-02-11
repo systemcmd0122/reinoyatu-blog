@@ -162,7 +162,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   }
 
   return (
-    <div className={`markdown-content prose prose-zinc dark:prose-invert max-w-none ${className}`}>
+    <div className={`markdown-content prose prose-xl prose-zinc dark:prose-invert max-w-none prose-headings:font-black prose-a:text-primary ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
         rehypePlugins={[rehypeKatex, [rehypeRaw, { tagfilter: true }]]}
@@ -205,8 +205,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 src={src}
                 alt={alt || ""}
                 title={title || ""}
-                width={800}
-                height={600}
+                width={1200}
+                height={800}
+                style={{ width: '100%', height: 'auto' }}
                 onError={() => handleImageError(src)}
                 className="rounded-lg"
               />
@@ -216,7 +217,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           h1: ({ children }) => {
             const id = typeof children === 'string' ? children.replace(/\s+/g, '-').toLowerCase() : ''
             return (
-              <h1 id={id} className="text-3xl font-bold my-6 pb-2 border-b-2 scroll-mt-20">
+              <h1 id={id} className="text-4xl font-black mb-10 pb-3 border-b-2 scroll-mt-20">
                 {children}
               </h1>
             )
@@ -225,7 +226,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           h2: ({ children }) => {
             const id = typeof children === 'string' ? children.replace(/\s+/g, '-').toLowerCase() : ''
             return (
-              <h2 id={id} className="text-2xl font-semibold my-5 pb-2 border-b scroll-mt-20">
+              <h2 id={id} className="text-3xl font-black mb-8 pb-2 border-b scroll-mt-20">
                 {children}
               </h2>
             )
@@ -234,11 +235,29 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           h3: ({ children }) => {
             const id = typeof children === 'string' ? children.replace(/\s+/g, '-').toLowerCase() : ''
             return (
-              <h3 id={id} className="text-xl font-semibold my-4 scroll-mt-20">
+              <h3 id={id} className="text-2xl font-black mb-6 scroll-mt-20">
                 {children}
               </h3>
             )
           },
+
+          h4: ({ children }) => (
+            <h4 className="text-xl font-black mb-4 scroll-mt-20">
+              {children}
+            </h4>
+          ),
+
+          h5: ({ children }) => (
+            <h5 className="text-lg font-black mb-3 scroll-mt-20">
+              {children}
+            </h5>
+          ),
+
+          h6: ({ children }) => (
+            <h6 className="text-base font-black mb-2 scroll-mt-20">
+              {children}
+            </h6>
+          ),
 
           p: ({ children }) => {
             const processChildren = (nodes: React.ReactNode): React.ReactNode => {
