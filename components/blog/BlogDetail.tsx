@@ -386,7 +386,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 )}
 
                 {/* Content */}
-                <div className="prose prose-zinc dark:prose-invert max-w-none text-foreground break-words prose-headings:font-black prose-a:text-primary">
+                <div className="text-foreground break-words">
                   <MarkdownRenderer content={blogData.content} />
                 </div>
 

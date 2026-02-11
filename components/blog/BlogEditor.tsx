@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { 
   Loader2, 
   ImagePlus, 
@@ -42,7 +43,8 @@ import {
   Smartphone,
   Type,
   Layers,
-  Lock
+  Lock,
+  Clock
 } from "lucide-react"
 import { BlogSchema } from "@/schemas"
 import { useRouter } from "next/navigation"
@@ -100,6 +102,7 @@ import CollectionDialog from "@/components/collection/CollectionDialog"
 import { BlogType, CollectionType } from "@/types"
 import MarkdownRenderer from "./markdown/MarkdownRenderer"
 import { format } from "date-fns"
+import { formatJST } from "@/utils/date"
 import { getCollections, addBlogToCollection, removeBlogFromCollection, getBlogCollections } from "@/actions/collection"
 import EditorChat from "./EditorChat"
 import SaveStatus from "@/components/settings/SaveStatus"
@@ -146,6 +149,27 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const editorRef = useRef<RichTextEditorRef>(null)
   const [userCollections, setUserCollections] = useState<CollectionType[]>([])
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
+  const [userProfile, setUserProfile] = useState<{ name: string; avatar_url: string | null } | null>(null)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { createClient } = await import("@/utils/supabase/client")
+        const supabase = createClient()
+        const { data } = await supabase
+          .from("profiles")
+          .select("name, avatar_url")
+          .eq("id", userId)
+          .single()
+        if (data) {
+          setUserProfile(data)
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile:", err)
+      }
+    }
+    fetchProfile()
+  }, [userId])
 
   // プレゼンスによる他ユーザーの編集状況の追跡
   const presenceState = usePresence(`blog-editor-${currentBlogId || 'new'}`, {
@@ -721,12 +745,71 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   {/* プレビューエリア */}
                   {(viewMode === "preview" || viewMode === "split") && (
                     <div className={cn(
-                      "bg-background rounded-2xl border border-border shadow-sm overflow-y-auto custom-scrollbar p-8 md:p-12 prose prose-xl dark:prose-invert max-w-none",
+                      "bg-background rounded-2xl border border-border shadow-sm overflow-y-auto custom-scrollbar p-6 sm:p-10",
                       viewMode === "split" ? "h-full" : "min-h-[70vh]"
                     )}>
-                      <h1 className="text-4xl md:text-5xl font-black mb-8 leading-tight">
+                      {/* Header Info (Synced with BlogDetail) */}
+                      <div className="flex items-center gap-3 mb-8">
+                        <Avatar className="h-10 w-10 border border-border">
+                          <AvatarImage src={userProfile?.avatar_url || "/default.png"} />
+                          <AvatarFallback>{userProfile?.name?.[0] || userId.slice(0, 1)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold">
+                            @{userProfile?.name || "Author"}
+                          </span>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>{formatJST(new Date().toISOString())}に投稿</span>
+                            <span className="mx-1">•</span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {Math.ceil((watchedContent?.length || 0) / 400) || 1}分で読めます
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-6 text-foreground leading-tight">
                         {watchedTitle || "無題の記事"}
                       </h1>
+
+                      {watchedTags && watchedTags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-8">
+                          {watchedTags.map(tag => (
+                            <Badge key={tag} variant="secondary" className="px-3 py-1 rounded-md bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-none shadow-none font-medium">
+                              #{tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Summary (Synced with BlogDetail) */}
+                      {watchedSummary && (
+                        <div className="mb-10 p-6 rounded-xl bg-primary/5 border border-primary/10 relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                          <div className="flex items-center gap-2 mb-3 text-primary">
+                            <Wand2 className="h-5 w-5" />
+                            <span className="font-bold">AIによる要約</span>
+                          </div>
+                          <p className="text-foreground/80 leading-relaxed text-sm">
+                            {watchedSummary}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Cover Image (Synced with BlogDetail) */}
+                      {imagePreview && (
+                        <div className="mb-10 relative aspect-video rounded-xl overflow-hidden border border-border">
+                          <Image
+                            src={imagePreview}
+                            alt="Cover"
+                            fill
+                            className="object-cover"
+                            priority
+                          />
+                        </div>
+                      )}
+
                       <MarkdownRenderer content={watchedContent || "*プレビューする内容がありません*"} />
                     </div>
                   )}
