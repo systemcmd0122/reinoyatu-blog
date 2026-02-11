@@ -163,12 +163,6 @@ export function CommandMenu({ user }: CommandMenuProps) {
                     <span>プロフィール設定</span>
                   </CommandItem>
                 )}
-                {(!query || "マークダウンガイド".includes(query)) && (
-                  <CommandItem onSelect={() => runCommand(() => router.push("/guide/markdown"))}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    <span>マークダウンガイド</span>
-                  </CommandItem>
-                )}
                 {(!query || "アップデートログ".includes(query)) && (
                   <CommandItem onSelect={() => runCommand(() => router.push("/changelog"))}>
                     <Rocket className="mr-2 h-4 w-4" />

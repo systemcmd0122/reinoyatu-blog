@@ -52,7 +52,6 @@ import { toast } from "sonner"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import MarkdownHelp from "@/components/blog/markdown/MarkdownHelp"
 import { generateBlogContent, generateSummaryFromContent } from "@/utils/gemini"
 import dynamic from "next/dynamic"
 import { Separator } from "@/components/ui/separator"
@@ -109,6 +108,7 @@ import SaveStatus from "@/components/settings/SaveStatus"
 import RichTextEditor, { RichTextEditorRef } from "./editor/RichTextEditor"
 import EditorSettings from "./editor/EditorSettings"
 import { usePresence } from "@/hooks/use-realtime"
+import { LoadingState } from "@/components/ui/loading-state"
 
 
 const AICustomizeDialog = dynamic(
@@ -124,7 +124,7 @@ interface BlogEditorProps {
   onDelete?: (id?: string) => Promise<{ error?: string; success?: boolean }>
 }
 
-type EditorStatus = "idle" | "saving-draft" | "publishing" | "deleting" | "saved" | "unsaved" | "error"
+type EditorStatus = "idle" | "saving-draft" | "publishing" | "deleting" | "uploading-image" | "saved" | "unsaved" | "error"
 
 const BlogEditor: React.FC<BlogEditorProps> = ({ 
   initialData, 
@@ -348,25 +348,39 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     }
   }
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       const maxFileSize = 2 * 1024 * 1024
       if (file.size > maxFileSize) {
         setError("画像サイズは2MB以下にしてください")
+        toast.error("画像サイズが大きすぎます（最大2MB）")
         return
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']
       if (!allowedTypes.includes(file.type)) {
         setError("JPG, PNG, WebP形式のみ対応しています")
+        toast.error("対応していないファイル形式です")
         return
       }
-      setImageFile(file)
-      const reader = new FileReader()
-      reader.onloadend = () => setImagePreview(reader.result as string)
-      reader.readAsDataURL(file)
-      setError("")
-      setIsDirty(true)
+
+      setStatus("uploading-image")
+      
+      try {
+        setImageFile(file)
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setImagePreview(reader.result as string)
+          setStatus("idle")
+          toast.success("画像を読み込みました")
+        }
+        reader.readAsDataURL(file)
+        setError("")
+        setIsDirty(true)
+      } catch (err) {
+        setStatus("error")
+        toast.error("画像の読み込みに失敗しました")
+      }
     }
   }
 
@@ -599,9 +613,11 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                 size="sm" 
                 className="font-bold hidden sm:flex border-2"
                 onClick={() => handleAction(false)}
-                disabled={status === "saving-draft" || status === "publishing" || !watchedTitle || !watchedContent}
+                disabled={!watchedTitle || !watchedContent}
+                loading={status === "saving-draft"}
+                loadingText="保存中..."
               >
-                {status === "saving-draft" ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                {!status.includes("saving") && <Save className="h-4 w-4 mr-2" />}
                 下書き
               </Button>
 
@@ -609,10 +625,12 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                 <AlertDialogTrigger asChild>
                   <Button 
                     size="sm" 
-                    disabled={status === "saving-draft" || status === "publishing" || !watchedTitle || !watchedContent}
+                    disabled={!watchedTitle || !watchedContent}
                     className="bg-primary text-primary-foreground hover:bg-primary/90 font-black shadow-lg shadow-primary/20"
+                    loading={status === "publishing"}
+                    loadingText={watchedIsPublished ? "更新中..." : "公開中..."}
                   >
-                    {status === "publishing" ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                    {!status.includes("publish") && <Upload className="h-4 w-4 mr-2" />}
                     {watchedIsPublished ? "更新" : "公開"}
                   </Button>
                 </AlertDialogTrigger>
@@ -974,12 +992,17 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
         
         {/* 全面ローディング (削除中など) */}
         {status === "deleting" && (
-          <div className="fixed inset-0 z-[var(--z-overlay)] bg-background/90 backdrop-blur-md flex items-center justify-center">
-            <div className="flex flex-col items-center space-y-4">
-              <Loader2 className="h-12 w-12 animate-spin text-destructive" />
-              <p className="text-lg font-black tracking-tighter uppercase">Deleting article...</p>
-            </div>
-          </div>
+          <LoadingState 
+            message="Deleting article..." 
+            description="サーバーから記事を完全に削除しています"
+          />
+        )}
+
+        {status === "uploading-image" && (
+          <LoadingState 
+            message="Processing Image..." 
+            description="画像を最適化してプレビューを生成しています"
+          />
         )}
       </div>
       </Form>

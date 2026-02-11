@@ -2,6 +2,37 @@ import { ChangelogEntry } from "@/types/changelog"
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: "1.5.0",
+    date: "2026-02-11",
+    items: [
+      {
+        category: "Improvement",
+        content: "UI/UX フィードバック・ローディングの大幅刷新",
+        description: "「今何が起きているか」を直感的に理解できるよう、すべての非同期処理に詳細な状態表示（保存中、公開中、反映中など）と、洗練されたスケルトン画面を導入しました。",
+      },
+      {
+        category: "Improvement",
+        content: "ボタンコンポーネントの強化",
+        description: "非同期処理中にボタン内でスピナーと意味のある文言を表示し、二重送信やユーザーの不安を完全に解消する設計に刷新しました。",
+      },
+      {
+        category: "Improvement",
+        content: "ダークモードに対応した「ブログに特化した」ローディング画面",
+        description: "画像を使用せず、CSS/SVGのみで構築された軽量かつ洗練されたローディング画面に移行。タイポグラフィに基づいたアニメーションで待機時間を心地よい体験に変えます。",
+      },
+      {
+        category: "Performance",
+        content: "スケルトンローディングの導入",
+        description: "記事一覧やプロフィール画面のデータ取得中に、実際のコンテンツに近い形のスケルトンを表示。体感速度を大幅に向上させました。",
+      },
+      {
+        category: "Improvement",
+        content: "不要なマークダウンガイドを廃止",
+        description: "直感的なWYSIWYGエディタとAIアシストの導入に伴い、役割を終えた手動のマークダウンガイドを削除しました。よりシンプルで迷わないUXを提供します。",
+      },
+    ],
+  },
+  {
     version: "1.4.0",
     date: "2025-09-18",
     items: [
