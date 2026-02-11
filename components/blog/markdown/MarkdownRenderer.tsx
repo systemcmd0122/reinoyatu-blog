@@ -200,16 +200,33 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
               )
             }
 
+            // 外部ドメインの画像はnext/imageの制限を避けるため、標準のimgタグを使用するか
+            // もしくはunoptimizedを付与する。ここでは確実に表示するため標準のimgタグを使用。
+            const isInternal = src.startsWith('/') || src.includes('supabase.co');
+
+            if (isInternal) {
+              return (
+                <Image
+                  src={src}
+                  alt={alt || ""}
+                  title={title || ""}
+                  width={1200}
+                  height={800}
+                  style={{ width: '100%', height: 'auto' }}
+                  onError={() => handleImageError(src)}
+                  className="rounded-lg object-contain"
+                />
+              )
+            }
+
             return (
-              <Image
+              <img
                 src={src}
                 alt={alt || ""}
                 title={title || ""}
-                width={1200}
-                height={800}
-                style={{ width: '100%', height: 'auto' }}
                 onError={() => handleImageError(src)}
-                className="rounded-lg"
+                className="rounded-lg w-full h-auto object-contain my-4"
+                loading="lazy"
               />
             )
           },

@@ -14,7 +14,7 @@ interface BlogNewProps {
 const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   useAuth()
   
-  const handleSubmit = async (values: z.infer<typeof BlogSchema> & { base64Image?: string }) => {
+  const handleSubmit = async (values: z.infer<typeof BlogSchema> & { base64Image?: string, imageUrl?: string | null }) => {
     return await newBlog({
       ...values,
       userId,

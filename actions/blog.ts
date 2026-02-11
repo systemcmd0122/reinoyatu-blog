@@ -89,7 +89,7 @@ export const newBlog = async (values: newBlogProps) => {
   try {
     const supabase = createClient()
 
-    let image_url = ""
+    let image_url = null
 
     // 画像アップロード処理
     if (values.base64Image) {
@@ -128,7 +128,7 @@ export const newBlog = async (values: newBlogProps) => {
         content: values.content,
         content_json: values.content_json || null,
         summary: values.summary || null,
-        image_url,
+        image_url: image_url || null,
         user_id: values.userId,
         is_published: values.is_published,
       })

@@ -15,11 +15,11 @@ interface BlogEditProps {
 const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
   useAuth()
   
-  const handleSubmit = async (values: z.infer<typeof BlogSchema> & { base64Image?: string }) => {
+  const handleSubmit = async (values: z.infer<typeof BlogSchema> & { base64Image?: string, imageUrl?: string | null }) => {
     return await editBlog({
       ...values,
       blogId: blog.id,
-      imageUrl: blog.image_url,
+      imageUrl: values.imageUrl !== undefined ? values.imageUrl : blog.image_url,
       userId: blog.user_id,
       // tags and summary are included in values from BlogSchema
     })
