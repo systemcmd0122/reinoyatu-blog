@@ -408,9 +408,19 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
               >
                 <TabsContent value="posts" className="mt-0 focus-visible:ring-0">
                   {isLoading ? (
-                    <div className="space-y-4">
+                    <div className="bg-card border border-border/50 rounded-[2rem] overflow-hidden divide-y divide-border/50 shadow-sm">
                       {[1, 2, 3].map((i) => (
-                        <Skeleton key={i} className="h-40 w-full rounded-2xl" />
+                        <div key={i} className="p-8 flex gap-6">
+                          <div className="flex-1 space-y-4">
+                            <Skeleton className="h-8 w-3/4" />
+                            <Skeleton className="h-4 w-full" />
+                            <div className="flex gap-3">
+                              <Skeleton className="h-4 w-24" />
+                              <Skeleton className="h-4 w-24" />
+                            </div>
+                          </div>
+                          <Skeleton className="h-28 w-48 rounded-2xl hidden sm:block" />
+                        </div>
                       ))}
                     </div>
                   ) : blogPosts.length > 0 ? (
@@ -435,9 +445,15 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
 
                 <TabsContent value="series" className="mt-0 focus-visible:ring-0">
                   {isCollectionsLoading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {[1, 2].map((i) => (
-                        <Skeleton key={i} className="h-64 w-full rounded-[2rem]" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="space-y-4 bg-card border border-border/50 p-6 rounded-[2rem]">
+                          <Skeleton className="aspect-video w-full rounded-2xl" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-6 w-2/3" />
+                            <Skeleton className="h-4 w-full" />
+                          </div>
+                        </div>
                       ))}
                     </div>
                   ) : (

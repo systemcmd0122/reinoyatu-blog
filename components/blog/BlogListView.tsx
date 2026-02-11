@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select"
 import { Filter, SortDesc } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface BlogListViewProps {
   blogs: BlogType[]
@@ -254,10 +255,36 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
               transition={{ duration: 0.4, ease: "circOut" }}
             >
               {!isMounted ? (
-                <div className="bg-card border border-border/50 rounded-2xl overflow-hidden divide-y divide-border/50 shadow-sm animate-pulse">
-                  {[1, 2, 3].map((i) => (
-                     <div key={i} className="h-40 w-full" />
-                  ))}
+                <div className="space-y-6">
+                  {viewMode === 'card' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="space-y-4">
+                          <Skeleton className="aspect-video w-full rounded-xl" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-6 w-3/4" />
+                            <Skeleton className="h-4 w-full" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-card border border-border/50 rounded-2xl overflow-hidden divide-y divide-border/50 shadow-sm">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="p-6 flex gap-4">
+                          <div className="flex-1 space-y-4">
+                            <Skeleton className="h-6 w-3/4" />
+                            <Skeleton className="h-4 w-full" />
+                            <div className="flex gap-2">
+                              <Skeleton className="h-4 w-20" />
+                              <Skeleton className="h-4 w-20" />
+                            </div>
+                          </div>
+                          <Skeleton className="h-24 w-40 rounded-lg hidden sm:block" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 renderItems(viewMode)
