@@ -220,7 +220,8 @@ export const unlinkProvider = async (provider: string) => {
     }
 
     // ユーザーの全ての ID を取得
-    const { data: { identities }, error: identitiesError } = await supabase.auth.getUserIdentities()
+    const { data, error: identitiesError } = await supabase.auth.getUserIdentities()
+    const identities = data?.identities
 
     console.log("[DEBUG] identities:", identities)
     console.log("[DEBUG] identitiesError:", identitiesError)
