@@ -3,22 +3,13 @@
 import React, { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { 
-  Clock,
-  Facebook,
   FilePenLine,
   List,
-  Github,
-  Instagram,
-  Linkedin,
-  Loader2,
   Trash2, 
-  Twitter,
-  X, 
-  ZoomIn,
-  Calendar,
-  Globe,
   ArrowRight,
-  Wand2,
+  Twitter,
+  Github,
+  Globe,
   Heart,
   Bookmark
 } from "lucide-react"
@@ -27,21 +18,26 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import Image from "next/image"
 import Link from "next/link"
-import { BlogType, CommentType } from "@/types"
-import dynamic from "next/dynamic"
-import { Skeleton } from "@/components/ui/skeleton"
+import { CommentType, CollectionWithItemsType } from "@/types"
+import { NormalizedArticle } from "@/types/blog-detail"
 import LikeButton from "@/components/blog/LikeButton"
 import BookmarkButton from "@/components/blog/BookmarkButton"
 import CommentSection from "@/components/blog/CommentSection"
 import SeriesNavigation from "./SeriesNavigation"
 import SeriesSidebar from "./SeriesSidebar"
-import { CollectionWithItemsType } from "@/types"
-import { formatJST } from "@/utils/date"
+import { getBlogLikeStatus } from "@/actions/like"
+import { getBlogBookmarkStatus } from "@/actions/bookmark"
+import { useRealtime } from "@/hooks/use-realtime"
+
+// Structured Sub-components
+import ArticleHeader from "./detail/ArticleHeader"
+import TagSection from "./detail/TagSection"
+import SummarySection from "./detail/SummarySection"
+import CoverImage from "./detail/CoverImage"
+import ArticleContent from "./detail/ArticleContent"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,47 +49,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { getBlogLikeStatus } from "@/actions/like"
-import { getBlogBookmarkStatus } from "@/actions/bookmark"
-import { AnimatePresence } from "framer-motion"
-import { useRealtime } from "@/hooks/use-realtime"
-
-const MarkdownRenderer = dynamic(
-  () => import("@/components/blog/markdown/MarkdownRenderer"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="prose prose-zinc dark:prose-invert max-w-none text-foreground break-words space-y-6">
-        <Skeleton className="h-8 w-3/4" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-5/6" />
-        <Skeleton className="h-40 w-full" />
-      </div>
-    ),
-  }
-)
 
 interface BlogDetailProps {
-  blog: BlogType & {
-    profiles: {
-      id: string
-      name: string
-      avatar_url: string | null
-      introduce: string | null
-      email?: string
-      website?: string
-      created_at?: string
-      social_links?: {
-        twitter?: string
-        github?: string
-        linkedin?: string
-        instagram?: string
-        facebook?: string
-      }
-    }
-    likes_count: number
-  }
+  blog: NormalizedArticle
   isMyBlog: boolean
   currentUserId?: string
   initialComments?: CommentType[]
@@ -107,7 +65,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   initialComments,
   collection
 }) => {
-  const [blogData, setBlogData] = useState(blog)
+  const [blogData, setBlogData] = useState<NormalizedArticle>(blog)
   const router = useRouter()
   const [error, setError] = useState("")
   const [, startTransition] = useTransition()
@@ -117,7 +75,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   const [activeId, setActiveId] = useState<string>("")
 
   // リアルタイム購読
-  const lastEvent = useRealtime<BlogType>('blogs', {
+  const lastEvent = useRealtime<any>('blogs', {
     event: '*',
     filter: `id=eq.${blog.id}`
   })
@@ -128,17 +86,18 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
       const updated = lastEvent.new as any
       setBlogData(prev => ({ 
         ...prev, 
-        ...updated,
-        profiles: prev.profiles // 詳細プロフィールを維持
+        title: updated.title || prev.title,
+        content: updated.content || prev.content,
+        cover_image_url: updated.image_url !== undefined ? updated.image_url : prev.cover_image_url,
+        ai_summary: updated.summary !== undefined ? updated.summary : prev.ai_summary,
+        updated_at: updated.updated_at || prev.updated_at,
+        reading_time: Math.ceil((updated.content?.length || 0) / 400) || 1,
       }))
     } else if (lastEvent.eventType === 'DELETE') {
       toast.error("この記事は削除されました")
       router.push("/")
     }
   }, [lastEvent, router])
-
-  // 読了時間の計算 (1分間に400文字程度に変更、より現実に即した値)
-  const readingTime = Math.ceil((blogData.content?.length || 0) / 400) || 1
 
   useEffect(() => {
     const handleScroll = () => {
@@ -153,7 +112,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
   // 見出しの抽出
   useEffect(() => {
-    const rawHeadings = blog.content.match(/^#{1,3}\s+.+$/gm) || []
+    const rawHeadings = blogData.content.match(/^#{1,3}\s+.+$/gm) || []
     const parsedHeadings = rawHeadings.map(heading => {
       const level = heading.match(/^#+/)?.[0].length || 0
       const text = heading.replace(/^#+\s+/, "")
@@ -161,7 +120,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
       return { id, text, level }
     })
     setHeadings(parsedHeadings)
-  }, [blog.content])
+  }, [blogData.content])
 
   // 目次のハイライト
   useEffect(() => {
@@ -189,7 +148,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
     likesCount: number
   }>({
     isLiked: false,
-    likesCount: blog.likes_count || 0,
+    likesCount: blogData.likes_count || 0,
   })
   
   const [sharedBookmarkState, setSharedBookmarkState] = useState<{
@@ -198,20 +157,9 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
     isBookmarked: false,
   })
 
-  const [dataLoadingState, setDataLoadingState] = useState({
-    likeLoading: !!currentUserId,
-    bookmarkLoading: !!currentUserId,
-  })
-
   useEffect(() => {
     const fetchInitialData = async () => {
-      if (!currentUserId) {
-        setDataLoadingState({
-          likeLoading: false,
-          bookmarkLoading: false,
-        })
-        return
-      }
+      if (!currentUserId) return
 
       try {
         const { isLiked } = await getBlogLikeStatus({ 
@@ -220,15 +168,10 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
         })
         setSharedLikeState({
           isLiked,
-          likesCount: blog.likes_count || 0,
+          likesCount: blogData.likes_count || 0,
         })
       } catch (error) {
         console.error("いいね状態の取得に失敗しました", error)
-      } finally {
-        setDataLoadingState(prev => ({
-          ...prev,
-          likeLoading: false,
-        }))
       }
 
       try {
@@ -241,16 +184,11 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
         })
       } catch (error) {
         console.error("ブックマーク状態の取得に失敗しました", error)
-      } finally {
-        setDataLoadingState(prev => ({
-          ...prev,
-          bookmarkLoading: false,
-        }))
       }
     }
 
     fetchInitialData()
-  }, [blog.id, currentUserId, blog.likes_count])
+  }, [blog.id, currentUserId, blogData.likes_count])
 
   const handleDelete = () => {
     setIsDeletePending(true)
@@ -260,8 +198,8 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
       try {
         const res = await deleteBlog({
           blogId: blog.id,
-          imageUrl: blog.image_url,
-          userId: blog.user_id,
+          imageUrl: blogData.cover_image_url,
+          userId: blogData.user_id,
         })
 
         if (res?.error) {
@@ -297,98 +235,26 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
           <main className="flex-1 min-w-0">
             <article className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
               <div className="p-6 sm:p-10">
-                {/* Header Info */}
-                <div className="flex items-center gap-3 mb-8">
-                  <Link href={`/profile/${blog.profiles.id}`}>
-                    <Avatar className="h-10 w-10 border border-border">
-                      <AvatarImage src={blog.profiles?.avatar_url || "/default.png"} />
-                      <AvatarFallback>{blog.profiles?.name?.[0]}</AvatarFallback>
-                    </Avatar>
-                  </Link>
-                  <div className="flex flex-col">
-                    <Link href={`/profile/${blog.profiles.id}`} className="text-sm font-bold hover:underline">
-                      @{blog.profiles.name}
-                    </Link>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{formatJST(blog.created_at)}に投稿</span>
-                      {blog.created_at !== blog.updated_at && <span>(更新: {formatJST(blog.updated_at)})</span>}
-                      <span className="mx-1">•</span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {readingTime}分で読めます
-                      </span>
-                    </div>
-                  </div>
+                {/* 1. ArticleHeader (Author, Dates, Reading Time, Title) */}
+                <ArticleHeader 
+                  author={blogData.author}
+                  createdAt={blogData.created_at}
+                  updatedAt={blogData.updated_at}
+                  readingTime={blogData.reading_time}
+                  title={blogData.title}
+                />
 
-                  <div className="ml-auto flex items-center gap-2">
-                    <BookmarkButton 
-                      blogId={blog.id}
-                      userId={currentUserId}
-                      showLabel={false}
-                      sharedState={sharedBookmarkState}
-                      onStateChange={setSharedBookmarkState}
-                      initialIsLoaded={true}
-                    />
-                    <LikeButton 
-                      blogId={blog.id}
-                      userId={currentUserId}
-                      initialLikesCount={blog.likes_count || 0}
-                      showLabel={false}
-                      sharedState={sharedLikeState}
-                      onStateChange={setSharedLikeState}
-                      initialIsLoaded={true}
-                    />
-                  </div>
-                </div>
+                {/* 2. TagSection */}
+                <TagSection tags={blogData.tags} />
 
-                {/* Title and Tags */}
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-6 text-foreground leading-tight">
-                  {blogData.title}
-                </h1>
+                {/* 3. SummarySection */}
+                <SummarySection summary={blogData.ai_summary} />
 
-                {blogData.tags && blogData.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {blogData.tags.map(tag => (
-                      <Link href={`/tags/${tag.name}`} key={tag.name}>
-                        <Badge variant="secondary" className="px-3 py-1 rounded-md bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-none shadow-none cursor-pointer font-medium">
-                          #{tag.name}
-                        </Badge>
-                      </Link>
-                    ))}
-                  </div>
-                )}
+                {/* 4. CoverImage */}
+                <CoverImage url={blogData.cover_image_url} title={blogData.title} />
 
-                {/* Summary */}
-                {blogData.summary && (
-                  <div className="mb-10 p-6 rounded-xl bg-primary/5 border border-primary/10 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-                    <div className="flex items-center gap-2 mb-3 text-primary">
-                      <Wand2 className="h-5 w-5" />
-                      <span className="font-bold">AIによる要約</span>
-                    </div>
-                    <p className="text-foreground/80 leading-relaxed text-sm">
-                      {blogData.summary}
-                    </p>
-                  </div>
-                )}
-
-                {/* Cover Image */}
-                {blogData.image_url && (
-                  <div className="mb-10 relative aspect-video rounded-xl overflow-hidden border border-border">
-                    <Image
-                      src={blogData.image_url}
-                      alt="Cover"
-                      fill
-                      className="object-cover"
-                      priority
-                    />
-                  </div>
-                )}
-
-                {/* Content */}
-                <div className="text-foreground break-words">
-                  <MarkdownRenderer content={blogData.content} />
-                </div>
+                {/* 5. ArticleContent */}
+                <ArticleContent content={blogData.content} />
 
                 {/* Series Navigation */}
                 {collection && (
@@ -398,22 +264,22 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                     totalCount={collection.collection_items.length}
                     prevPost={(() => {
                       const idx = collection.collection_items.findIndex(item => item.blog_id === blog.id)
-                      return idx > 0 ? collection.collection_items[idx-1].blogs : null
+                      return idx > 0 ? (collection.collection_items[idx-1].blogs as any) : null
                     })()}
                     nextPost={(() => {
                       const idx = collection.collection_items.findIndex(item => item.blog_id === blog.id)
-                      return idx < collection.collection_items.length - 1 ? collection.collection_items[idx+1].blogs : null
+                      return idx < collection.collection_items.length - 1 ? (collection.collection_items[idx+1].blogs as any) : null
                     })()}
                   />
                 )}
 
-                {/* Article Footer */}
+                {/* Article Footer Actions */}
                 <div className="mt-12 pt-8 border-t border-border flex justify-between items-center">
                   <div className="flex items-center gap-4">
                     <LikeButton 
                       blogId={blog.id}
                       userId={currentUserId}
-                      initialLikesCount={blog.likes_count || 0}
+                      initialLikesCount={blogData.likes_count}
                       showLabel={true}
                       sharedState={sharedLikeState}
                       onStateChange={setSharedLikeState}
@@ -456,6 +322,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                             <AlertDialogAction 
                               onClick={handleDelete}
                               className={buttonVariants({ variant: "destructive" })}
+                              disabled={isDeletePending}
                             >
                               削除する
                             </AlertDialogAction>
@@ -526,49 +393,45 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
               <div className="px-6 pb-6">
                 <div className="relative -mt-10 mb-4">
                   <Avatar className="h-20 w-20 border-4 border-card shadow-md">
-                    <AvatarImage src={blog.profiles?.avatar_url || "/default.png"} className="object-cover" />
-                    <AvatarFallback>{blog.profiles?.name?.[0]}</AvatarFallback>
+                    <AvatarImage src={blogData.author.avatar_url || "/default.png"} className="object-cover" />
+                    <AvatarFallback>{blogData.author.name?.[0]}</AvatarFallback>
                   </Avatar>
                 </div>
                 <h3 className="text-xl font-bold mb-1">
-                  <Link href={`/profile/${blog.profiles.id}`} className="hover:underline">
-                    {blog.profiles.name}
+                  <Link href={`/profile/${blogData.author.id}`} className="hover:underline">
+                    {blogData.author.name}
                   </Link>
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  @{blog.profiles.name}
+                  @{blogData.author.name}
                 </p>
-                {blog.profiles.introduce && (
+                {blogData.author.introduce && (
                   <p className="text-sm text-foreground/80 line-clamp-3 mb-6">
-                    {blog.profiles.introduce}
+                    {blogData.author.introduce}
                   </p>
                 )}
                 
                 <Button variant="outline" className="w-full rounded-md font-bold" asChild>
-                  <Link href={`/profile/${blog.profiles.id}`}>
+                  <Link href={`/profile/${blogData.author.id}`}>
                     プロフィールを見る
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
 
                 {/* Social Links */}
-                    {(blog.profiles.website || (blog.profiles.social_links && Object.keys(blog.profiles.social_links).length > 0)) && (
+                {(blogData.author.social_links && Object.keys(blogData.author.social_links).length > 0) && (
                   <div className="mt-6 flex flex-wrap gap-3 pt-6 border-t border-border">
-                        {blog.profiles.social_links?.twitter && (
-                      <a href={blog.profiles.social_links.twitter} target="_blank" rel="noopener" className="text-muted-foreground hover:text-primary transition-colors">
+                    {blogData.author.social_links?.twitter && (
+                      <a href={blogData.author.social_links.twitter} target="_blank" rel="noopener" className="text-muted-foreground hover:text-primary transition-colors">
                         <Twitter className="h-5 w-5" />
                       </a>
                     )}
-                        {blog.profiles.social_links?.github && (
-                      <a href={blog.profiles.social_links.github} target="_blank" rel="noopener" className="text-muted-foreground hover:text-foreground transition-colors">
+                    {blogData.author.social_links?.github && (
+                      <a href={blogData.author.social_links.github} target="_blank" rel="noopener" className="text-muted-foreground hover:text-foreground transition-colors">
                         <Github className="h-5 w-5" />
                       </a>
                     )}
-                        {blog.profiles.website && (
-                          <a href={blog.profiles.website} target="_blank" rel="noopener" className="text-muted-foreground hover:text-primary transition-colors">
-                        <Globe className="h-5 w-5" />
-                      </a>
-                    )}
+                    {/* Add more social links as needed */}
                   </div>
                 )}
               </div>

@@ -4,6 +4,9 @@ import { Metadata } from "next"
 import { getCollectionWithItems } from "@/actions/collection"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { NormalizedArticle } from "@/types/blog-detail"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 interface BlogDetailPageProps {
   params: Promise<{
@@ -90,69 +93,9 @@ const BlogDetailPage = async ({ params, searchParams }: BlogDetailPageProps) => 
   const { collection: collectionId } = await searchParams
 
   if (!blogId || blogId === "undefined" || !uuidRegex.test(blogId)) {
-    return <div className="text-center">ブログが存在しません</div>
-  }
-  const supabase = createClient()
-
-  const { data: userData } = await supabase.auth.getUser()
-  const user = userData?.user
-
-  // ブログ詳細取得
-  const { data: blogData } = await supabase
-    .from("blogs")
-    .select(`
-      *,
-      profiles (
-        id,
-        name,
-        avatar_url,
-        introduce,
-        social_links
-      ),
-      tags (
-        name
-      )
-    `)
-    .eq("id", blogId)
-    .single()
-
-  if (!blogData) {
-    return <div className="text-center">ブログが存在しません</div>
-  }
-
-  // いいね数を取得
-  const { data: likesCountData } = await supabase.rpc(
-    'get_blog_likes_count',
-    { blog_id: blogId }
-  )
-
-  // コメントを取得 (V2: リアクション同梱)
-  const { data: commentsData } = await supabase.rpc(
-    'get_blog_comments_v2',
-    { blog_uuid: blogId }
-  )
-
-  // いいね数をブログデータに追加
-  const blogWithLikes = {
-    ...blogData,
-    likes_count: likesCountData || 0
-  }
-
-  // ログインユーザーがブログ作成者かどうか
-  const isMyBlog = user?.id === blogData.user_id
-
-  // コレクション情報の取得（もし指定されていれば）
-  let collectionData = null
-  if (collectionId) {
-    collectionData = await getCollectionWithItems(collectionId)
-  }
-
-  // 非公開記事の権限チェック
-  if (!blogData.is_published && !isMyBlog) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center container mx-auto px-4 py-12 text-center">
-        <h2 className="text-2xl font-bold mb-4">この記事は非公開です</h2>
-        <p className="text-muted-foreground mb-8">お探しの記事は現在下書き保存されているか、公開されていません。</p>
+        <h2 className="text-2xl font-bold mb-4">不正なリクエストです</h2>
         <Link href="/">
           <Button variant="outline">トップページに戻る</Button>
         </Link>
@@ -160,15 +103,131 @@ const BlogDetailPage = async ({ params, searchParams }: BlogDetailPageProps) => 
     )
   }
 
-  return (
-    <BlogDetail 
-      blog={blogWithLikes} 
-      isMyBlog={isMyBlog} 
-      currentUserId={user?.id} 
-      initialComments={commentsData || []}
-      collection={collectionData}
-    />
-  )
+  const supabase = createClient()
+
+  try {
+    const { data: userData } = await supabase.auth.getUser()
+    const user = userData?.user
+
+    // ブログ詳細取得
+    const { data: blogData, error: blogError } = await supabase
+      .from("blogs")
+      .select(`
+        *,
+        profiles (
+          id,
+          name,
+          avatar_url,
+          introduce,
+          social_links
+        ),
+        tags (
+          name
+        )
+      `)
+      .eq("id", blogId)
+      .single()
+
+    if (blogError || !blogData) {
+      return (
+        <div className="min-h-[60vh] flex flex-col items-center justify-center container mx-auto px-4 py-12 text-center">
+          <Alert variant="destructive" className="max-w-md text-left">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>記事が見つかりません</AlertTitle>
+            <AlertDescription>
+              指定された記事は削除されたか、URLが間違っている可能性があります。
+            </AlertDescription>
+          </Alert>
+          <Link href="/" className="mt-8">
+            <Button variant="outline">トップページに戻る</Button>
+          </Link>
+        </div>
+      )
+    }
+
+    // いいね数を取得
+    const { data: likesCountData } = await supabase.rpc(
+      'get_blog_likes_count',
+      { blog_id: blogId }
+    )
+
+    // コメントを取得 (V2: リアクション同梱)
+    const { data: commentsData } = await supabase.rpc(
+      'get_blog_comments_v2',
+      { blog_uuid: blogId }
+    )
+
+    // ログインユーザーがブログ作成者かどうか
+    const isMyBlog = user?.id === blogData.user_id
+
+    // データの正規化
+    const normalizedBlog: NormalizedArticle = {
+      id: blogData.id,
+      title: blogData.title,
+      content: blogData.content,
+      tags: blogData.tags?.map((t: any) => t.name) || [],
+      cover_image_url: blogData.image_url,
+      ai_summary: blogData.summary,
+      author: {
+        id: blogData.profiles?.id,
+        name: blogData.profiles?.name,
+        avatar_url: blogData.profiles?.avatar_url,
+        introduce: blogData.profiles?.introduce,
+        social_links: blogData.profiles?.social_links,
+      },
+      created_at: blogData.created_at,
+      updated_at: blogData.updated_at,
+      reading_time: Math.ceil((blogData.content?.length || 0) / 400) || 1,
+      likes_count: likesCountData || 0,
+      is_published: blogData.is_published,
+      user_id: blogData.user_id,
+    }
+
+    // コレクション情報の取得（もし指定されていれば）
+    let collectionData = null
+    if (collectionId) {
+      collectionData = await getCollectionWithItems(collectionId)
+    }
+
+    // 非公開記事の権限チェック
+    if (!blogData.is_published && !isMyBlog) {
+      return (
+        <div className="min-h-[60vh] flex flex-col items-center justify-center container mx-auto px-4 py-12 text-center">
+          <h2 className="text-2xl font-bold mb-4">この記事は非公開です</h2>
+          <p className="text-muted-foreground mb-8">お探しの記事は現在下書き保存されているか、公開されていません。</p>
+          <Link href="/">
+            <Button variant="outline">トップページに戻る</Button>
+          </Link>
+        </div>
+      )
+    }
+
+    return (
+      <BlogDetail 
+        blog={normalizedBlog} 
+        isMyBlog={isMyBlog} 
+        currentUserId={user?.id} 
+        initialComments={commentsData || []}
+        collection={collectionData}
+      />
+    )
+  } catch (error) {
+    console.error("記事取得エラー:", error)
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center container mx-auto px-4 py-12 text-center">
+        <Alert variant="destructive" className="max-w-md text-left">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>エラーが発生しました</AlertTitle>
+          <AlertDescription>
+            データの読み込み中に予期しないエラーが発生しました。時間をおいて再度お試しください。
+          </AlertDescription>
+        </Alert>
+        <Link href="/" className="mt-8">
+          <Button variant="outline">トップページに戻る</Button>
+        </Link>
+      </div>
+    )
+  }
 }
 
 export default BlogDetailPage
