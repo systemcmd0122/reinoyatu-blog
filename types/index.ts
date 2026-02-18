@@ -25,7 +25,7 @@ export interface ProfileType {
   introduce: string | null
   avatar_url: string | null
   email?: string | null
-  website?: string | null
+  homepage_url?: string | null
   created_at?: string
   updated_at?: string
   social_links?: SocialLinksType
@@ -51,6 +51,15 @@ export interface BlogType {
     avatar_url: string | null
   }
   tags?: { name: string }[]
+  article_authors?: {
+    user_id: string
+    role: string
+    profiles: {
+        id: string
+        name: string
+        avatar_url: string | null
+    }
+  }[]
 }
 
 export interface LikeType {

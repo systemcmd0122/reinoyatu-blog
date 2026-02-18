@@ -9,6 +9,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneLight, oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { Clipboard, Check, ExternalLink, XCircle } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { useTheme } from "next-themes"
 
 import YouTubeEmbed from "./YouTubeEmbed"
@@ -382,6 +383,22 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             }
 
             return <div {...props}>{children}</div>
+          },
+
+          span: ({ node, children, ...props }: any) => {
+            if (props['data-type'] === 'mention') {
+              const id = props['data-id']
+              const label = props['data-label'] || children
+              return (
+                <Link 
+                  href={`/profile/${id}`}
+                  className="text-primary font-bold hover:underline bg-primary/10 px-1 rounded mx-0.5"
+                >
+                  {label.toString().startsWith('@') ? label : `@${label}`}
+                </Link>
+              )
+            }
+            return <span {...props}>{children}</span>
           },
 
           details: ({ children, ...props }: any) => {

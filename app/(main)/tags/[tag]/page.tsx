@@ -51,7 +51,7 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
     .from("blogs")
     .select(`
       *,
-      profiles (
+      profiles!user_id (
         id,
         name,
         avatar_url
@@ -158,11 +158,11 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
                 <div className="p-2">
                   <div className="flex flex-wrap gap-1 p-2">
                     {popularTags.map((t: { name: string; count: number }) => (
-                      <Link 
-                        key={t.name} 
+                      <Link
+                        key={t.name}
                         href={`/tags/${encodeURIComponent(t.name)}`}
                       >
-                        <Badge 
+                        <Badge
                           variant={t.name === tagName ? "default" : "secondary"}
                           className={cn(
                             "rounded-full px-3 py-1 cursor-pointer transition-all",
@@ -177,7 +177,7 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
                 </div>
               </div>
             )}
-            
+
             <div className="bg-card border border-border rounded-lg p-4 shadow-sm">
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">About Tag</h3>
               <p className="text-sm text-foreground/70 leading-relaxed">

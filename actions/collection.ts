@@ -198,7 +198,7 @@ export async function getCollectionWithItems(collectionId: string) {
     .from("collections")
     .select(`
       *,
-      profiles (id, name, avatar_url),
+      profiles!user_id (id, name, avatar_url),
       collection_items (
         id,
         order_index,
@@ -212,7 +212,7 @@ export async function getCollectionWithItems(collectionId: string) {
           updated_at,
           user_id,
           is_published,
-          profiles (id, name, avatar_url)
+          profiles!user_id (id, name, avatar_url)
         )
       )
     `)

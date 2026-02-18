@@ -16,7 +16,7 @@ const LandingPage = async () => {
     .select(
       `
       *,
-      profiles (
+      profiles!user_id (
         id,
         name,
         avatar_url
@@ -31,7 +31,7 @@ const LandingPage = async () => {
   return (
     <div className="w-full bg-background overflow-hidden">
       <LandingHero />
-      
+
       <LandingFeatures />
 
       {/* Recent Posts Section */}

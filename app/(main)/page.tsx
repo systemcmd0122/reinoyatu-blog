@@ -61,7 +61,7 @@ const MainPage = async ({ searchParams }: { searchParams: Promise<{ [key: string
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }): Promise<Metadata> {
   const { q } = await searchParams
   const query = typeof q === "string" ? q : ""
-  
+
   // クエリがない場合はタイトルを返さず、ルートレイアウトのデフォルトを使用させる
   // 以前はここでフルタイトルを返していたため、レイアウトのテンプレートと重なって「例のヤツ｜ブログ | 例のヤツ｜ブログ」になっていた
   if (!query) {
@@ -99,16 +99,16 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
   const resolvedSearchParams = await searchParams
   const page = typeof resolvedSearchParams.page === "string" ? Number(resolvedSearchParams.page) : 1
   const queryParam = typeof resolvedSearchParams.q === "string" ? resolvedSearchParams.q : ""
-  
+
   const start = (page - 1) * DEFAULT_PAGE_SIZE
   const end = start + DEFAULT_PAGE_SIZE - 1
-  
+
   let supabaseQuery = supabase
     .from("blogs")
     .select(
       `
       *,
-      profiles (
+      profiles!user_id (
         id,
         name,
         avatar_url
@@ -155,8 +155,8 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
           {queryParam ? `"${queryParam}" に一致する記事は見つかりませんでした` : "まだブログ投稿がありません"}
         </h2>
         <p className="text-muted-foreground mb-8 max-w-md">
-          {queryParam 
-            ? "キーワードを変えて検索するか、トップページに戻ってみてください。" 
+          {queryParam
+            ? "キーワードを変えて検索するか、トップページに戻ってみてください。"
             : "最初のブログ記事を投稿して、あなたのストーリーを共有しましょう！"}
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
@@ -231,8 +231,8 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                         {item === "..." ? (
                           <PaginationEllipsis />
                         ) : (
-                          <PaginationLink 
-                            href={{ query: { ...resolvedSearchParams, page: item } }} 
+                          <PaginationLink
+                            href={{ query: { ...resolvedSearchParams, page: item } }}
                             isActive={page === item}
                           >
                             {item}
@@ -275,8 +275,8 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                 <div className="p-2">
                   <div className="flex flex-col">
                     {popularTags.map((tag: { name: string; count: number }) => (
-                      <Link 
-                        key={tag.name} 
+                      <Link
+                        key={tag.name}
                         href={`/tags/${encodeURIComponent(tag.name)}`}
                         className="flex items-center justify-between p-3 rounded-md hover:bg-muted transition-colors group"
                       >
@@ -289,7 +289,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                       </Link>
                     ))}
                   </div>
-                  
+
                   {allTags.length > popularTags.length && (
                     <details className="group border-t border-border mt-2">
                       <summary className="flex justify-center p-3 text-xs text-muted-foreground hover:text-primary cursor-pointer list-none">
@@ -298,8 +298,8 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                       </summary>
                       <div className="p-2 grid grid-cols-2 gap-1 animate-in fade-in slide-in-from-top-1">
                         {allTags.slice(15, 40).map((tag: { name: string; count: number }) => (
-                          <Link 
-                            key={tag.name} 
+                          <Link
+                            key={tag.name}
                             href={`/tags/${encodeURIComponent(tag.name)}`}
                             className="text-[11px] p-2 hover:bg-muted rounded truncate text-foreground/70"
                           >

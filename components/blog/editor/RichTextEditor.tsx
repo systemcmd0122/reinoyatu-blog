@@ -20,6 +20,7 @@ import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { Placeholder } from '@tiptap/extension-placeholder'
 import { CharacterCount } from '@tiptap/extension-character-count'
+import { Mention } from '@tiptap/extension-mention'
 import { Markdown } from 'tiptap-markdown'
 import { common, createLowlight } from 'lowlight'
 
@@ -27,6 +28,7 @@ import { Mathematics } from './extensions/Mathematics'
 import { FocusMode } from './extensions/FocusMode'
 import { SlashCommand } from './extensions/SlashCommand'
 import suggestion from './suggestion'
+import mentionSuggestion from './mentionSuggestion'
 import { Footnote } from './extensions/Footnote'
 import { Callout } from './extensions/Callout'
 import { Accordion } from './extensions/Accordion'
@@ -35,8 +37,6 @@ import { ProgressBar } from './extensions/ProgressBar'
 import { CustomYoutube } from './extensions/CustomYoutube'
 
 import EditorToolbar from './EditorToolbar'
-import EditorBubbleMenu from './EditorBubbleMenu'
-import EditorFloatingMenu from './EditorFloatingMenu'
 
 const lowlight = createLowlight(common)
 
@@ -117,6 +117,12 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
       SlashCommand.configure({
         suggestion,
       }),
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention',
+        },
+        suggestion: mentionSuggestion,
+      }),
       FocusMode,
       Mathematics,
       Footnote,
@@ -146,7 +152,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
     onBlur,
     editorProps: {
       attributes: {
-        class: 'prose prose-xl dark:prose-invert max-w-none focus:outline-none min-h-[600px] py-4 px-4 md:px-12 md:py-16',
+        class: 'prose max-w-none focus:outline-none min-h-[600px] py-4 px-4 md:px-12 md:py-16 !text-foreground/90 prose-p:!text-foreground/85 prose-h1:!text-foreground prose-h2:!text-foreground prose-h3:!text-foreground prose-h4:!text-foreground prose-h5:!text-foreground prose-h6:!text-foreground prose-strong:!text-foreground prose-strong:!font-semibold prose-em:!text-foreground prose-li:!text-foreground/85 prose-td:!text-foreground/85 prose-th:!text-foreground/85 prose-a:!text-blue-500',
       },
     },
     immediatelyRender: false,
@@ -189,9 +195,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
       <div className="hidden md:block">
         <EditorToolbar editor={editor} userId={userId} />
       </div>
-      <div className="flex-1 relative overflow-y-auto custom-scrollbar">
-        <EditorBubbleMenu editor={editor} />
-        <EditorFloatingMenu editor={editor} />
+      <div className="flex-1 relative overflow-y-auto custom-scrollbar bg-background">
         <EditorContent editor={editor} />
       </div>
       <div className="block md:hidden border-t border-border bg-background pb-[env(safe-area-inset-bottom)]">

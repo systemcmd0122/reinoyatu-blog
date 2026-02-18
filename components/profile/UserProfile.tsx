@@ -5,16 +5,16 @@ import Image from "next/image"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { 
-  Globe, 
-  Mail, 
+import {
+  Globe,
+  Mail,
   Users,
   Layers,
-  Calendar, 
-  Github, 
-  Twitter, 
-  Linkedin, 
-  Instagram, 
+  Calendar,
+  Github,
+  Twitter,
+  Linkedin,
+  Instagram,
   Facebook,
   Edit3,
   Share2,
@@ -76,7 +76,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
       .from('blogs')
       .select(`
         *,
-        profiles (
+        profiles!user_id (
           id,
           name,
           avatar_url
@@ -123,7 +123,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
     lastProcessedLikeEventId.current = eventId
 
     const like = (lastLikeEvent.new || lastLikeEvent.old) as { blog_id: string }
-    
+
     // このユーザーのブログに対するいいねかどうかをチェックして更新
     // state を直接参照せず functional update 内で判定するか、ref を使う
     // ここでは fetchBlogPosts 自体が最新の profile.id に依存しているのでそのまま呼んでも良いが
@@ -219,7 +219,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
         <div className="px-6 md:px-12 -mt-20 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="relative h-40 w-40 rounded-[2.5rem] overflow-hidden border-8 border-background bg-background shadow-2xl"
@@ -237,7 +237,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                   </div>
                 )}
               </motion.div>
-              
+
               <div className="text-center md:text-left space-y-2 pb-2">
                 <div className="flex items-center justify-center md:justify-start gap-3">
                   <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight">
@@ -252,10 +252,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                     <Calendar className="h-4 w-4" />
                     <span>Joined {profile.created_at ? new Date(profile.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' }) : '---'}</span>
                   </div>
-                  {profile.website && (
-                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-primary transition-colors">
+                  {profile.homepage_url && (
+                    <a href={profile.homepage_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-primary transition-colors">
                       <Globe className="h-4 w-4" />
-                      <span className="truncate max-w-[150px]">{profile.website.replace(/^https?:\/\//, '')}</span>
+                      <span className="truncate max-w-[150px]">{profile.homepage_url.replace(/^https?:\/\//, '')}</span>
                       <ExternalLink className="h-3 w-3" />
                     </a>
                   )}
@@ -272,7 +272,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                   </Link>
                 </Button>
               ) : (
-                <FollowButton 
+                <FollowButton
                   followerId={currentUserId}
                   followingId={profile.id}
                 />
@@ -302,9 +302,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
 
                   if (stat.href) {
                     return (
-                      <Link 
-                        key={i} 
-                        href={stat.href} 
+                      <Link
+                        key={i}
+                        href={stat.href}
                         className="p-6 text-center hover:bg-muted/30 transition-colors block"
                       >
                         {content}
@@ -341,7 +341,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
               {/* Socials */}
               {profile.social_links && Object.entries(profile.social_links).some(([_, v]) => v) && (
                 <div className="pt-6 border-t border-border/50">
-                   <h3 className="text-sm font-black uppercase tracking-widest text-foreground/50 mb-4">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-foreground/50 mb-4">
                     Connections
                   </h3>
                   <div className="flex flex-wrap gap-3">
@@ -350,7 +350,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                       const config = socialLinkIcons[platform as keyof typeof socialLinkIcons]
                       if (!config) return null
                       return (
-                        <a 
+                        <a
                           key={platform}
                           href={url}
                           target="_blank"
@@ -370,26 +370,26 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
 
         {/* Main Content */}
         <div className="lg:col-span-8">
-          <Tabs 
-            value={activeTab} 
-            onValueChange={(v) => setActiveTab(v as any)} 
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as any)}
             className="w-full"
           >
             <div className="flex items-center justify-between mb-6 bg-muted/50 p-1.5 rounded-2xl border border-border/50">
               <TabsList className="bg-transparent h-auto p-0 gap-1 overflow-x-auto no-scrollbar">
-                <TabsTrigger 
-                  value="posts" 
+                <TabsTrigger
+                  value="posts"
                   className="rounded-xl px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
                 >
                   Articles
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="series" 
+                <TabsTrigger
+                  value="series"
                   className="rounded-xl px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
                 >
                   Series
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="about"
                   className="rounded-xl px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
                 >
@@ -457,17 +457,17 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                       ))}
                     </div>
                   ) : (
-                    <CollectionList 
-                      collections={collections} 
-                      isOwnProfile={isOwnProfile} 
+                    <CollectionList
+                      collections={collections}
+                      isOwnProfile={isOwnProfile}
                     />
                   )}
                 </TabsContent>
-                
+
                 <TabsContent value="about" className="mt-0 focus-visible:ring-0">
-                   <Card className="rounded-[2rem] border-border/50 shadow-sm p-12 text-center text-muted-foreground">
-                      <p className="italic">Activity history coming soon...</p>
-                   </Card>
+                  <Card className="rounded-[2rem] border-border/50 shadow-sm p-12 text-center text-muted-foreground">
+                    <p className="italic">Activity history coming soon...</p>
+                  </Card>
                 </TabsContent>
               </motion.div>
             </AnimatePresence>

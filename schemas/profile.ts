@@ -16,8 +16,12 @@ export const ProfileSchema = z.object({
     .max(1000, { message: "自己紹介は1000文字以内で入力してください" })
     .optional()
     .or(z.literal("")),
-  website: z.string()
+  homepage_url: z.string()
     .url({ message: "有効なURLを入力してください" })
+    .refine((url) => {
+      if (!url) return true;
+      return !url.toLowerCase().startsWith('javascript:');
+    }, { message: "無効なURLスキームです" })
     .optional()
     .or(z.literal("")),
   email: z.string()

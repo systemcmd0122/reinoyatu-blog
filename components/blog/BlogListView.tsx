@@ -49,19 +49,19 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
     const handleEvent = async () => {
       if (lastBlogEvent.eventType === 'INSERT') {
         const newBlog = lastBlogEvent.new as BlogType
-        
+
         // 外部キーのデータを補完
         const { data: fullBlog } = await supabase
           .from('blogs')
           .select(`
             *,
-            profiles (id, name, avatar_url),
+            profiles!user_id (id, name, avatar_url),
             tags (name),
             likes:likes(count)
           `)
           .eq('id', newBlog.id)
           .single()
-        
+
         if (fullBlog) {
           const blogWithLikes = {
             ...fullBlog,
@@ -74,7 +74,7 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
         }
       } else if (lastBlogEvent.eventType === 'UPDATE') {
         const updatedBlog = lastBlogEvent.new as BlogType
-        setBlogs(prev => prev.map(b => 
+        setBlogs(prev => prev.map(b =>
           b.id === updatedBlog.id ? { ...b, ...updatedBlog } : b
         ))
       } else if (lastBlogEvent.eventType === 'DELETE') {
@@ -91,7 +91,7 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
 
   useEffect(() => {
     if (!lastLikeEvent) return
-    
+
     // 重複処理を回避 (イベントIDがあればそれを使用、なければペイロードから生成)
     const eventId = (lastLikeEvent as any).commit_timestamp || JSON.stringify(lastLikeEvent.new || lastLikeEvent.old)
     if (lastProcessedLikeEventId.current === eventId) return
@@ -109,12 +109,12 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
             .from('likes')
             .select('*', { count: 'exact', head: true })
             .eq('blog_id', blogId)
-          
-          setBlogs(latestBlogs => latestBlogs.map(b => 
+
+          setBlogs(latestBlogs => latestBlogs.map(b =>
             b.id === blogId ? { ...b, likes_count: count || 0 } : b
           ))
         }
-        
+
         refreshBlogLike()
       }
       return currentBlogs

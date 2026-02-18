@@ -35,7 +35,7 @@ export const updateProfile = async (values: updateProfileProps) => {
 
       const contentType = matches[1]
       const base64Data = matches[2]
-      
+
       // 画像形式の確認
       if (!['image/jpeg', 'image/png', 'image/gif'].includes(contentType)) {
         return { success: false, error: "jpeg, png, gif形式のみ対応しています" }
@@ -81,7 +81,7 @@ export const updateProfile = async (values: updateProfileProps) => {
     }
 
     // ソーシャルリンクの処理（空文字列を除去）
-    const processedSocialLinks = values.social_links ? 
+    const processedSocialLinks = values.social_links ?
       Object.entries(values.social_links).reduce((acc, [key, value]) => {
         if (value && value.trim() !== "") {
           acc[key] = value.trim()
@@ -97,7 +97,7 @@ export const updateProfile = async (values: updateProfileProps) => {
         introduce: values.introduce?.trim() || null,
         avatar_url,
         email: values.email?.trim() || null,
-        website: values.website?.trim() || null,
+        homepage_url: values.homepage_url?.trim() || null,
         social_links: processedSocialLinks,
         updated_at: new Date().toISOString()
       })
@@ -114,6 +114,30 @@ export const updateProfile = async (values: updateProfileProps) => {
   } catch (err) {
     console.error("Unexpected error:", err)
     return { success: false, error: "エラーが発生しました" }
+  }
+}
+
+// ユーザー検索（メンション・共同投稿者用）
+export const searchUsers = async (query: string) => {
+  if (!query || query.length < 2) return []
+
+  try {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, name, avatar_url")
+      .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
+      .limit(10)
+
+    if (error) {
+      console.error("User search error:", error)
+      return []
+    }
+
+    return data || []
+  } catch (err) {
+    console.error("User search error:", err)
+    return []
   }
 }
 
@@ -176,6 +200,75 @@ export const updateEmail = async (values: z.infer<typeof EmailSchema>) => {
     if (signOutError) {
       console.error("Sign out error:", signOutError)
       return { success: false, error: signOutError.message }
+    }
+
+    return { success: true, error: null }
+  } catch (err) {
+    console.error("Unexpected error:", err)
+    return { success: false, error: "エラーが発生しました" }
+  }
+}
+
+// 外部アカウント連携解除
+export const unlinkProvider = async (provider: string) => {
+  try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: "ユーザーが見つかりません" }
+    }
+
+    // ユーザーの全ての ID を取得
+    const { data: { identities }, error: identitiesError } = await supabase.auth.getUserIdentities()
+
+    console.log("[DEBUG] identities:", identities)
+    console.log("[DEBUG] identitiesError:", identitiesError)
+
+    if (identitiesError || !identities) {
+      console.error("Get identities error:", identitiesError)
+      return { success: false, error: "連携情報の取得に失敗しました" }
+    }
+
+    // 指定されたプロバイダーの ID を検索
+    const providerIdentity = identities.find(identity => identity.provider === provider)
+
+    console.log("[DEBUG] providerIdentity:", providerIdentity)
+
+    if (!providerIdentity) {
+      return { success: false, error: `${provider}との連携が見つかりません` }
+    }
+
+    // 複数のプロバイダーがある場合のみ連携解除を許可
+    const activeIdentities = identities.filter(id => id.identity_id)
+    console.log("[DEBUG] activeIdentities count:", activeIdentities.length)
+
+    if (activeIdentities.length <= 1) {
+      return { success: false, error: "唯一の認証方法は削除できません。別の認証方法を事前に設定してください" }
+    }
+
+    // サーバーサイドで unlinkIdentity を呼び出し
+    console.log("[DEBUG] Calling unlinkIdentity for provider:", provider)
+    const { error: unlinkError } = await supabase.auth.unlinkIdentity(providerIdentity)
+
+    console.log("[DEBUG] unlinkError:", unlinkError)
+
+    if (unlinkError) {
+      console.error("Unlink error details:", {
+        message: unlinkError.message,
+        code: (unlinkError as any).code,
+        status: (unlinkError as any).status,
+      })
+
+      // Manual linking disabled エラーの場合は、ユーザーフレンドリーなメッセージを返す
+      if ((unlinkError as any).code === 'manual_linking_disabled') {
+        return {
+          success: false,
+          error: "申し訳ありません。現在、外部アカウントの連携解除機能は利用できません。管理者にお問い合わせください。"
+        }
+      }
+
+      return { success: false, error: unlinkError.message }
     }
 
     return { success: true, error: null }
