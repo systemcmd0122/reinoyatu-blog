@@ -30,6 +30,7 @@ import CollectionDialog from "@/components/collection/CollectionDialog"
 import { CollectionType } from "@/types"
 import { toast } from "sonner"
 import ImageLibraryDialog from "./ImageLibraryDialog"
+import CoAuthorSelector from "./CoAuthorSelector"
 
 interface EditorSettingsProps {
   userId: string
@@ -57,6 +58,7 @@ interface EditorSettingsProps {
   selectedCollections: string[]
   setSelectedCollections: (collections: string[]) => void
   setIsDirty: (isDirty: boolean) => void
+  initialCoAuthors?: { id: string, name: string, avatar_url: string | null }[]
 }
 
 const EditorSettings: React.FC<EditorSettingsProps> = ({
@@ -354,6 +356,11 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({
             setUserCollections([newCol, ...userCollections])
           }}
         />
+      </section>
+
+      {/* 共同投稿者設定 */}
+      <section className="space-y-4">
+        <CoAuthorSelector currentUserId={userId} initialUsers={initialCoAuthors} />
       </section>
 
       {/* タグ設定 */}

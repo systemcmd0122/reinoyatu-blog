@@ -238,6 +238,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 {/* 1. ArticleHeader (Author, Dates, Reading Time, Title) */}
                 <ArticleHeader 
                   author={blogData.author}
+                  authors={blogData.authors}
                   createdAt={blogData.created_at}
                   updatedAt={blogData.updated_at}
                   readingTime={blogData.reading_time}
@@ -419,8 +420,13 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 </Button>
 
                 {/* Social Links */}
-                {(blogData.author.social_links && Object.keys(blogData.author.social_links).length > 0) && (
+                {((blogData.author.social_links && Object.keys(blogData.author.social_links).length > 0) || blogData.author.homepage_url) && (
                   <div className="mt-6 flex flex-wrap gap-3 pt-6 border-t border-border">
+                    {blogData.author.homepage_url && (
+                      <a href={blogData.author.homepage_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                        <Globe className="h-5 w-5" />
+                      </a>
+                    )}
                     {blogData.author.social_links?.twitter && (
                       <a href={blogData.author.social_links.twitter} target="_blank" rel="noopener" className="text-muted-foreground hover:text-primary transition-colors">
                         <Twitter className="h-5 w-5" />

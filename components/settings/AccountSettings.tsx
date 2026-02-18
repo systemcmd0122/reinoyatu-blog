@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, AlertTriangle, Mail, Trash2 } from "lucide-react"
+import { Loader2, AlertTriangle, Mail, Trash2, Chrome } from "lucide-react"
 import { EmailSchema } from "@/schemas"
 import { updateEmail, deleteAccount } from "@/actions/user"
 import { useRouter } from "next/navigation"
@@ -29,14 +29,18 @@ import {
 
 interface AccountSettingsProps {
   email: string
+  identities: any[]
 }
 
-const AccountSettings = ({ email }: AccountSettingsProps) => {
+const AccountSettings = ({ email, identities }: AccountSettingsProps) => {
   const router = useRouter()
   const [error, setError] = useState("")
   const [isPending, startTransition] = useTransition()
   const [isDeleting, setIsDeleting] = useState(false)
   const [saveStatus, setSaveStatus] = useState<"unsaved" | "saving" | "saved">("saved")
+  const [isUnlinking, setIsUnlinking] = useState(false)
+
+  const isGoogleConnected = identities.some(identity => identity.provider === 'google')
 
   const form = useForm<z.infer<typeof EmailSchema>>({
     resolver: zodResolver(EmailSchema),
@@ -74,6 +78,29 @@ const AccountSettings = ({ email }: AccountSettingsProps) => {
     })
   }
 
+  const handleUnlinkGoogle = async () => {
+    setIsUnlinking(true)
+    try {
+      const { createClient } = await import("@/utils/supabase/client")
+      const supabase = createClient()
+
+      const googleIdentity = identities.find(identity => identity.provider === 'google')
+      if (googleIdentity) {
+        const { error } = await supabase.auth.unlinkIdentity(googleIdentity)
+        if (error) {
+          toast.error("連携解除に失敗しました: " + error.message)
+        } else {
+          toast.success("Googleとの連携を解除しました")
+          router.refresh()
+        }
+      }
+    } catch (e) {
+      toast.error("エラーが発生しました")
+    } finally {
+      setIsUnlinking(false)
+    }
+  }
+
   const handleDeleteAccount = async () => {
     setIsDeleting(true)
     try {
@@ -103,6 +130,57 @@ const AccountSettings = ({ email }: AccountSettingsProps) => {
         </div>
         <SaveStatus status={isFormDirty ? "unsaved" : saveStatus} />
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <Chrome className="h-5 w-5 text-primary" />
+            <CardTitle>SNS連携</CardTitle>
+          </div>
+          <CardDescription>
+            外部アカウントとの連携を管理します。
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 border rounded-xl">
+            <div className="flex items-center space-x-3">
+              <div className="bg-muted p-2 rounded-full">
+                <Chrome className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold">Google</p>
+                <p className="text-xs text-muted-foreground">
+                  {isGoogleConnected ? "連携済み" : "未連携"}
+                </p>
+              </div>
+            </div>
+            {isGoogleConnected ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive border-destructive/20 hover:bg-destructive/10"
+                onClick={handleUnlinkGoogle}
+                disabled={isUnlinking}
+              >
+                {isUnlinking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                連携を解除
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                   const { signInWithGoogle } = await import("@/actions/auth")
+                   const res = await signInWithGoogle("/settings/account")
+                   if (res.redirectUrl) window.location.href = res.redirectUrl
+                }}
+              >
+                連携する
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

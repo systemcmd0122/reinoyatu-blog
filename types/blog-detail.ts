@@ -10,8 +10,15 @@ export interface NormalizedArticle {
     name: string
     avatar_url: string | null
     introduce?: string | null
+    homepage_url?: string | null
     social_links?: any
   }
+  authors: {
+    id: string
+    name: string
+    avatar_url: string | null
+    role: 'owner' | 'editor'
+  }[]
   created_at: string
   updated_at: string
   reading_time: number

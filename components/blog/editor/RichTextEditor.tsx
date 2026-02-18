@@ -20,6 +20,7 @@ import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { Placeholder } from '@tiptap/extension-placeholder'
 import { CharacterCount } from '@tiptap/extension-character-count'
+import { Mention } from '@tiptap/extension-mention'
 import { Markdown } from 'tiptap-markdown'
 import { common, createLowlight } from 'lowlight'
 
@@ -27,6 +28,7 @@ import { Mathematics } from './extensions/Mathematics'
 import { FocusMode } from './extensions/FocusMode'
 import { SlashCommand } from './extensions/SlashCommand'
 import suggestion from './suggestion'
+import mentionSuggestion from './mentionSuggestion'
 import { Footnote } from './extensions/Footnote'
 import { Callout } from './extensions/Callout'
 import { Accordion } from './extensions/Accordion'
@@ -116,6 +118,12 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
       CharacterCount,
       SlashCommand.configure({
         suggestion,
+      }),
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention',
+        },
+        suggestion: mentionSuggestion,
       }),
       FocusMode,
       Mathematics,

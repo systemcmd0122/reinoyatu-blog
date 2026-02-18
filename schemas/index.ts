@@ -55,6 +55,7 @@ export const BlogSchema = z.object({
   summary: z.string().max(200, { message: "要約は200文字以内で入力してください" }).optional(),
   tags: z.array(z.string()).optional(),
   is_published: z.boolean().optional(),
+  coauthors: z.array(z.string()).optional(),
 })
 
 
@@ -118,10 +119,10 @@ export const ProfileSchema = z.object({
     .refine((val) => !val || val.trim() === "" || z.string().email().safeParse(val).success, {
       message: "有効なメールアドレスを入力してください"
     }),
-  website: z.string()
+  homepage_url: z.string()
     .optional()
     .refine((val) => validateUrl(val || ""), {
-      message: "有効なWebサイトのURLを入力してください（例: https://example.com）"
+      message: "有効なホームページのURLを入力してください（例: https://example.com）"
     }),
   social_links: SocialLinksSchema.optional()
 })

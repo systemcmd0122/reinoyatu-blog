@@ -137,6 +137,24 @@ export const newBlog = async (values: newBlogProps) => {
       return { error: insertError.message }
     }
 
+    // 共同投稿者の保存
+    const authors = [
+      { article_id: newBlog.id, user_id: values.userId, role: 'owner' as const },
+      ...(values.coauthors || []).filter(id => id !== values.userId).map(id => ({
+        article_id: newBlog.id,
+        user_id: id,
+        role: 'editor' as const
+      }))
+    ]
+
+    const { error: authorsError } = await supabase
+      .from("article_authors")
+      .insert(authors)
+
+    if (authorsError) {
+      console.error("共同投稿者保存エラー:", authorsError)
+    }
+
     // 画像の関連付けを同期
     await syncArticleImages(newBlog.id, values.content_json || "", image_url)
 
@@ -215,6 +233,37 @@ export const editBlog = async (values: editBlogProps) => {
     if (updateError) {
       console.error("ブログ更新エラー:", updateError)
       return { error: updateError.message }
+    }
+
+    // 共同投稿者の更新（作成者のみ可能）
+    // RLSでも守られているが、不要なクエリを避けるためにチェック
+    const { data: currentBlog } = await supabase
+      .from("blogs")
+      .select("user_id")
+      .eq("id", values.blogId)
+      .single()
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (currentBlog?.user_id === user?.id) {
+      // 一旦全削除して再登録
+      await supabase
+        .from("article_authors")
+        .delete()
+        .eq("article_id", values.blogId)
+
+      const authors = [
+        { article_id: values.blogId, user_id: values.userId, role: 'owner' as const },
+        ...(values.coauthors || []).filter(id => id !== values.userId).map(id => ({
+          article_id: values.blogId,
+          user_id: id,
+          role: 'editor' as const
+        }))
+      ]
+
+      await supabase
+        .from("article_authors")
+        .insert(authors)
     }
 
     // 画像の関連付けを同期
