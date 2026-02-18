@@ -108,6 +108,11 @@ javascript, typescript, jsx, tsx, html, css, python, java, csharp, cpp, c, php, 
 const handleGeminiError = (error: any, defaultMessage: string): string => {
   console.error("Gemini API Error:", error);
   
+  // 通信エラーのチェック
+  if (error.name === 'TypeError' && error.message.includes('fetch')) {
+    return "通信エラーが発生しました。インターネット接続を確認してください。";
+  }
+
   if (error.status === 429) {
     return "APIの利用制限に達しました。しばらく時間をおいてから再度お試しください。";
   }
@@ -116,6 +121,10 @@ const handleGeminiError = (error: any, defaultMessage: string): string => {
     return "APIキーが無効です。環境変数を確認してください。";
   }
   
+  if (error.status === 500 || error.status === 503) {
+    return "サーバーエラーが発生しました。Google AIサービスが一時的に停止している可能性があります。";
+  }
+
   if (error.status === 404) {
     return "指定されたAIモデルが見つかりませんでした。管理者にお問い合わせください。";
   }
@@ -124,6 +133,10 @@ const handleGeminiError = (error: any, defaultMessage: string): string => {
     return "APIキーの設定に問題があります。管理者に連絡してください。";
   }
   
+  if (error.message?.includes("safety") || error.message?.includes("blocked")) {
+    return "安全性のポリシーにより、このコンテンツの処理はブロックされました。内容を修正してください。";
+  }
+
   return defaultMessage;
 };
 
