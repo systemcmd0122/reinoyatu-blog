@@ -13,10 +13,15 @@ import {
   Layers, 
   Library, 
   Lock, 
-  Tag 
+  Tag,
+  Link as LinkIcon,
+  Globe,
+  X
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { motion } from "framer-motion"
 import Image from "next/image"
@@ -149,44 +154,99 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({
             カバー画像
           </h4>
         </div>
-        <div className="group relative aspect-video rounded-xl overflow-hidden border-2 border-dashed border-muted hover:border-primary/50 transition-all cursor-pointer bg-muted/20">
-          {imagePreview ? (
-            <>
-              <Image src={imagePreview} alt="Cover" fill className="object-cover" />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                <Button size="sm" variant="secondary" onClick={() => document.getElementById('sidebar-image-upload')?.click()}>
-                  <Upload className="h-3 w-3 mr-1" />
-                  アップロード
-                </Button>
-                <Button size="sm" variant="secondary" onClick={() => setIsLibraryOpen(true)}>
-                  <Library className="h-3 w-3 mr-1" />
-                  ライブラリ
-                </Button>
-                <Button size="sm" variant="destructive" onClick={() => { setImageFile(null); setImagePreview(null); }}>
-                  削除
+
+        <Tabs defaultValue="upload" className="w-full">
+          <TabsList className="grid grid-cols-2 w-full mb-4">
+            <TabsTrigger value="upload" className="text-[10px] font-bold">
+              <Upload className="h-3 w-3 mr-1" /> アップロード
+            </TabsTrigger>
+            <TabsTrigger value="url" className="text-[10px] font-bold">
+              <Globe className="h-3 w-3 mr-1" /> URL指定
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="upload" className="space-y-4">
+            <div className="group relative aspect-video rounded-xl overflow-hidden border-2 border-dashed border-muted hover:border-primary/50 transition-all cursor-pointer bg-muted/20">
+              {imagePreview ? (
+                <>
+                  <Image src={imagePreview} alt="Cover" fill className="object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button size="sm" variant="secondary" onClick={() => document.getElementById('sidebar-image-upload')?.click()}>
+                      <Upload className="h-3 w-3 mr-1" />
+                      変更
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => setIsLibraryOpen(true)}>
+                      <Library className="h-3 w-3 mr-1" />
+                      ライブラリ
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => { setImageFile(null); setImagePreview(null); setIsDirty(true); }}>
+                      削除
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 space-y-2">
+                  <label htmlFor="sidebar-image-upload" className="flex flex-col items-center cursor-pointer group/label">
+                    <Upload className="h-8 w-8 text-muted-foreground mb-2 group-hover/label:text-primary transition-colors" />
+                    <p className="text-xs font-bold text-muted-foreground group-hover/label:text-primary transition-colors">画像をアップロード</p>
+                  </label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-[10px] font-bold text-muted-foreground hover:text-primary"
+                    onClick={() => setIsLibraryOpen(true)}
+                  >
+                    <Library className="h-3.5 w-3.5 mr-1" />
+                    ライブラリから選択
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground/60">2MB以内の JPG, PNG, WebP</p>
+                </div>
+              )}
+              <input id="sidebar-image-upload" type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="url" className="space-y-4">
+            <div className="space-y-2">
+              <div className="relative">
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="画像のURLを入力..."
+                  className="pl-9 text-xs h-10 rounded-lg bg-muted/20 border-border"
+                  onBlur={(e) => {
+                    const url = e.target.value;
+                    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                      setImagePreview(url);
+                      setImageFile(null);
+                      setIsDirty(true);
+                      toast.success("URLから画像を読み込みました");
+                    } else if (url) {
+                      toast.error("有効なURL（http:// または https://）を入力してください");
+                    }
+                  }}
+                  defaultValue={imagePreview && imagePreview.startsWith('http') ? imagePreview : ''}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground px-1 italic">
+                外部の画像URLを直接指定できます。
+              </p>
+            </div>
+
+            {imagePreview && imagePreview.startsWith('http') && (
+              <div className="relative aspect-video rounded-xl overflow-hidden border border-border">
+                <Image src={imagePreview} alt="URL Preview" fill className="object-cover" />
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  className="absolute top-2 right-2 h-6 w-6 rounded-full"
+                  onClick={() => { setImagePreview(null); setIsDirty(true); }}
+                >
+                  <X className="h-3 w-3" />
                 </Button>
               </div>
-            </>
-          ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 space-y-2">
-              <label htmlFor="sidebar-image-upload" className="flex flex-col items-center cursor-pointer group/label">
-                <Upload className="h-8 w-8 text-muted-foreground mb-2 group-hover/label:text-primary transition-colors" />
-                <p className="text-xs font-bold text-muted-foreground group-hover/label:text-primary transition-colors">画像をアップロード</p>
-              </label>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-7 text-[10px] font-bold text-muted-foreground hover:text-primary"
-                onClick={() => setIsLibraryOpen(true)}
-              >
-                <Library className="h-3.5 w-3.5 mr-1" />
-                ライブラリから選択
-              </Button>
-              <p className="text-[10px] text-muted-foreground/60">2MB以内の JPG, PNG, WebP</p>
-            </div>
-          )}
-          <input id="sidebar-image-upload" type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-        </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
         <ImageLibraryDialog
           userId={userId}

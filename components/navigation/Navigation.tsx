@@ -17,6 +17,8 @@ import {
   FileText,
   Search,
   Loader2,
+  Download,
+  Share,
 } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
@@ -24,6 +26,7 @@ import { Input } from "@/components/ui/input"
 import { ThemeToggle } from "./ThemeToggle"
 import { CommandMenu } from "./CommandMenu"
 import { useNotifications } from "@/hooks/use-notifications"
+import { usePWAInstall } from "@/hooks/usePWAInstall"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,6 +68,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   const [user, setUser] = useState(initialUser)
   const [profile, setProfile] = useState<{ avatar_url: string | null; name: string | null } | null>(null)
   const { unreadCount } = useNotifications(user?.id)
+  const { isInstallable, isInstalled, isIOS, promptInstall } = usePWAInstall()
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -149,6 +153,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
     { href: "/changelog", icon: FileText, label: "アップデート" },
     { href: "/guide/markdown", icon: FileText, label: "マークダウンガイド" },
     { href: "/blog/new", icon: PenSquare, label: "投稿する" },
+    { href: "/settings/drafts", icon: FileText, label: "下書き一覧" },
     { href: "/bookmarks", icon: Bookmark, label: "ブックマーク" },
     { href: "/settings/profile", icon: Settings, label: "設定" },
     { href: "/privacy", icon: Shield, label: "プライバシーポリシー" },
@@ -253,6 +258,12 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                           <UserIcon className="mr-2 h-4 w-4" />
                           <span>プロフィール</span>
                         </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/settings/drafts" className="cursor-pointer">
+                            <FileText className="mr-2 h-4 w-4" />
+                            <span>下書き一覧</span>
+                          </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link href="/settings/profile" className="cursor-pointer">
@@ -260,6 +271,19 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                           <span>設定</span>
                         </Link>
                       </DropdownMenuItem>
+                        {(isInstallable || isIOS) && !isInstalled && (
+                          <DropdownMenuItem
+                            onClick={() => promptInstall()}
+                            className="cursor-pointer"
+                          >
+                            {isIOS ? (
+                              <Share className="mr-2 h-4 w-4" />
+                            ) : (
+                              <Download className="mr-2 h-4 w-4" />
+                            )}
+                            <span>アプリをインストール</span>
+                          </DropdownMenuItem>
+                        )}
                       <DropdownMenuItem asChild className="md:hidden">
                         <Link href="/bookmarks" className="cursor-pointer">
                           <Bookmark className="mr-2 h-4 w-4" />
@@ -344,6 +368,23 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                             </Link>
                           </SheetClose>
                         ))}
+                        {(isInstallable || isIOS) && !isInstalled && (
+                          <SheetClose asChild>
+                            <button
+                              onClick={() => promptInstall()}
+                              className="flex items-center w-full space-x-4 px-4 py-3 rounded-xl text-base font-medium text-foreground/80 hover:bg-muted hover:text-foreground transition-all active:scale-95"
+                            >
+                              <div className="p-2 bg-muted-foreground/10 rounded-lg">
+                                {isIOS ? (
+                                  <Share className="h-5 w-5 text-muted-foreground" />
+                                ) : (
+                                  <Download className="h-5 w-5 text-muted-foreground" />
+                                )}
+                              </div>
+                              <span>アプリをインストール</span>
+                            </button>
+                          </SheetClose>
+                        )}
                       </nav>
                       <div className="p-4 border-t border-border mt-auto bg-muted/5">
                         <SheetClose asChild>

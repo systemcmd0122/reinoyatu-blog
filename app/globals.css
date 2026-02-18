@@ -16,8 +16,8 @@
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
     --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
+    --muted-foreground: 0 0% 35%;
+    --accent: 0 0% 94%;
     --accent-foreground: 0 0% 9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -58,8 +58,8 @@
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 75%;
+    --accent: 240 4% 18%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
@@ -365,7 +365,7 @@
 
 /* Placeholder style */
 .tiptap .is-empty::before {
-  @apply text-muted-foreground/40 float-left h-0 pointer-events-none;
+  @apply text-muted-foreground/60 float-left h-0 pointer-events-none;
   content: attr(data-placeholder);
 }
 
@@ -442,13 +442,27 @@ details>summary::-webkit-details-marker {
 
 /* カスタムセレクション色 */
 ::selection {
-  background-color: hsl(var(--primary) / 0.2);
-  color: hsl(var(--foreground));
+  background-color: hsl(var(--primary) / 0.15);
+  color: inherit;
+  text-shadow: none;
+}
+
+.dark ::selection {
+  background-color: hsl(var(--primary) / 0.3);
 }
 
 ::-moz-selection {
-  background-color: hsl(var(--primary) / 0.2);
-  color: hsl(var(--foreground));
+  background-color: hsl(var(--primary) / 0.15);
+  color: inherit;
+}
+
+.dark ::-moz-selection {
+  background-color: hsl(var(--primary) / 0.3);
+}
+
+/* カーソルの色の最適化 */
+.ProseMirror {
+  caret-color: hsl(var(--primary));
 }
 
 /* トランジション最適化 */
