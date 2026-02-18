@@ -223,6 +223,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       summary: initialData?.summary || "",
       tags: initialData?.tags?.map(t => t.name) || [],
       is_published: initialData?.is_published || false,
+      coauthors: initialData?.article_authors?.filter(aa => aa.role === 'editor').map(aa => aa.user_id) || [],
     },
   })
 
@@ -908,6 +909,11 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                       selectedCollections={selectedCollections}
                       setSelectedCollections={setSelectedCollections}
                       setIsDirty={setIsDirty}
+                      initialCoAuthors={initialData?.article_authors?.filter(aa => aa.role === 'editor').map(aa => ({
+                        id: aa.profiles.id,
+                        name: aa.profiles.name,
+                        avatar_url: aa.profiles.avatar_url
+                      }))}
                     />
                   </TabsContent>
 
@@ -969,6 +975,11 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                       selectedCollections={selectedCollections}
                       setSelectedCollections={setSelectedCollections}
                       setIsDirty={setIsDirty}
+                      initialCoAuthors={initialData?.article_authors?.filter(aa => aa.role === 'editor').map(aa => ({
+                        id: aa.profiles.id,
+                        name: aa.profiles.name,
+                        avatar_url: aa.profiles.avatar_url
+                      }))}
                     />
                   </TabsContent>
                   <TabsContent value="ai" className="m-0 h-full">

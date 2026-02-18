@@ -10,6 +10,12 @@ interface ArticleHeaderProps {
     name: string
     avatar_url: string | null
   }
+  authors?: {
+    id: string
+    name: string
+    avatar_url: string | null
+    role: 'owner' | 'editor'
+  }[]
   createdAt: string
   updatedAt: string
   readingTime: number
@@ -18,25 +24,41 @@ interface ArticleHeaderProps {
 
 const ArticleHeader: React.FC<ArticleHeaderProps> = ({
   author,
+  authors,
   createdAt,
   updatedAt,
   readingTime,
   title,
 }) => {
+  const displayAuthors = authors && authors.length > 0 ? authors : [
+    { ...author, role: 'owner' as const }
+  ]
+
   return (
     <header className="mb-8">
       {/* Author Info */}
-      <div className="flex items-center gap-3 mb-6">
-        <Link href={`/profile/${author.id}`}>
-          <Avatar className="h-10 w-10 border border-border shadow-sm">
-            <AvatarImage src={author.avatar_url || "/default.png"} className="object-cover" />
-            <AvatarFallback>{author.name?.[0]}</AvatarFallback>
-          </Avatar>
-        </Link>
+      <div className="flex flex-wrap items-center gap-4 mb-6">
+        <div className="flex -space-x-3">
+          {displayAuthors.map((auth) => (
+            <Link key={auth.id} href={`/profile/${auth.id}`}>
+              <Avatar className="h-10 w-10 border-2 border-background shadow-sm hover:z-10 transition-transform hover:scale-110">
+                <AvatarImage src={auth.avatar_url || "/default.png"} className="object-cover" />
+                <AvatarFallback>{auth.name?.[0]}</AvatarFallback>
+              </Avatar>
+            </Link>
+          ))}
+        </div>
         <div className="flex flex-col">
-          <Link href={`/profile/${author.id}`} className="text-sm font-bold hover:underline">
-            @{author.name}
-          </Link>
+          <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5">
+            {displayAuthors.map((auth, i) => (
+              <React.Fragment key={auth.id}>
+                <Link href={`/profile/${auth.id}`} className="text-sm font-bold hover:underline">
+                  @{auth.name}
+                </Link>
+                {i < displayAuthors.length - 1 && <span className="text-sm text-muted-foreground mr-1">,</span>}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       </div>
 

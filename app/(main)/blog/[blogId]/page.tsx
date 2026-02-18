@@ -119,10 +119,20 @@ const BlogDetailPage = async ({ params, searchParams }: BlogDetailPageProps) => 
           name,
           avatar_url,
           introduce,
+          homepage_url,
           social_links
         ),
         tags (
           name
+        ),
+        article_authors (
+          user_id,
+          role,
+          profiles (
+            id,
+            name,
+            avatar_url
+          )
         )
       `)
       .eq("id", blogId)
@@ -173,8 +183,20 @@ const BlogDetailPage = async ({ params, searchParams }: BlogDetailPageProps) => 
         name: blogData.profiles?.name,
         avatar_url: blogData.profiles?.avatar_url,
         introduce: blogData.profiles?.introduce,
+        homepage_url: blogData.profiles?.homepage_url,
         social_links: blogData.profiles?.social_links,
       },
+      authors: blogData.article_authors?.map((aa: any) => ({
+        id: aa.profiles?.id,
+        name: aa.profiles?.name,
+        avatar_url: aa.profiles?.avatar_url,
+        role: aa.role,
+      })) || [{
+        id: blogData.profiles?.id,
+        name: blogData.profiles?.name,
+        avatar_url: blogData.profiles?.avatar_url,
+        role: 'owner',
+      }],
       created_at: blogData.created_at,
       updated_at: blogData.updated_at,
       reading_time: Math.ceil((blogData.content?.length || 0) / 400) || 1,

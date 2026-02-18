@@ -11,7 +11,9 @@ const AccountPage = async () => {
     redirect("/login?next=/settings/account")
   }
 
-  return <AccountSettings email={user.email} />
+  const identities = user.identities || []
+
+  return <AccountSettings email={user.email} identities={identities} />
 }
 
 export default AccountPage

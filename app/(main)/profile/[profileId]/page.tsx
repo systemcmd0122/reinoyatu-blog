@@ -37,7 +37,7 @@ const ProfilePage = async ({
       introduce,
       avatar_url,
       email,
-      website,
+      homepage_url,
       social_links,
       created_at,
       updated_at

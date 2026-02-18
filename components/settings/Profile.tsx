@@ -87,7 +87,7 @@ const Profile = ({ profile }: ProfileProps) => {
     defaultValues: {
       name: profile.name || "",
       introduce: profile.introduce || "",
-      website: profile.website || "",
+      homepage_url: profile.homepage_url || "",
       email: profile.email || "",
       social_links: {
         twitter: profile.social_links?.twitter || "",
@@ -135,14 +135,14 @@ const Profile = ({ profile }: ProfileProps) => {
         return acc
       }, {} as Record<string, string>)
 
-      // WebサイトURLも正規化
-      let website = ""
-      if (values.website && values.website.trim() !== "") {
-        const normalizedWebsite = normalizeUrl(values.website.trim())
-        if (isValidUrl(normalizedWebsite)) {
-          website = normalizedWebsite
+      // ホームページURLも正規化
+      let homepage_url = ""
+      if (values.homepage_url && values.homepage_url.trim() !== "") {
+        const normalizedHomepage = normalizeUrl(values.homepage_url.trim())
+        if (isValidUrl(normalizedHomepage)) {
+          homepage_url = normalizedHomepage
         } else {
-          throw new Error(`WebサイトのURLが無効です: ${values.website}`)
+          throw new Error(`ホームページのURLが無効です: ${values.homepage_url}`)
         }
       }
 
@@ -157,7 +157,7 @@ const Profile = ({ profile }: ProfileProps) => {
         try {
           const res = await updateProfile({
             ...values,
-            website,
+            homepage_url,
             social_links,
             profile,
             base64Image,
@@ -376,10 +376,10 @@ const Profile = ({ profile }: ProfileProps) => {
 
                   <FormField
                     control={form.control}
-                    name="website"
+                    name="homepage_url"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Webサイト</FormLabel>
+                        <FormLabel>ホームページ</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />

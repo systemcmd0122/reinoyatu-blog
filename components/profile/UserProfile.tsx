@@ -252,10 +252,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                     <Calendar className="h-4 w-4" />
                     <span>Joined {profile.created_at ? new Date(profile.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' }) : '---'}</span>
                   </div>
-                  {profile.website && (
-                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-primary transition-colors">
+                  {profile.homepage_url && (
+                    <a href={profile.homepage_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-primary transition-colors">
                       <Globe className="h-4 w-4" />
-                      <span className="truncate max-w-[150px]">{profile.website.replace(/^https?:\/\//, '')}</span>
+                      <span className="truncate max-w-[150px]">{profile.homepage_url.replace(/^https?:\/\//, '')}</span>
                       <ExternalLink className="h-3 w-3" />
                     </a>
                   )}

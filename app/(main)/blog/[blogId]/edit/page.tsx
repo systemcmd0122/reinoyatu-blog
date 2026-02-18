@@ -22,7 +22,7 @@ const BlogEditPage = async ({ params }: BlogEditPageProps) => {
   // ブログ詳細取得
   const { data: blogData } = await supabase
     .from("blogs")
-    .select("*, tags(name)")
+    .select("*, tags(name), article_authors(user_id, role)")
     .eq("id", blogId)
     .single()
 
@@ -30,8 +30,11 @@ const BlogEditPage = async ({ params }: BlogEditPageProps) => {
     return <div className="text-center">ブログが存在しません</div>
   }
 
-  // ブログ作成者とログインユーザーが一致しない場合
-  if (blogData.user_id !== user.id) {
+  // 権限チェック（作成者または共同編集者）
+  const isAuthor = blogData.user_id === user.id ||
+                   blogData.article_authors?.some((aa: any) => aa.user_id === user.id)
+
+  if (!isAuthor) {
     redirect(`/blog/${blogData.id}`)
   }
 

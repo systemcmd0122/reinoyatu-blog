@@ -97,7 +97,7 @@ export const updateProfile = async (values: updateProfileProps) => {
         introduce: values.introduce?.trim() || null,
         avatar_url,
         email: values.email?.trim() || null,
-        website: values.website?.trim() || null,
+        homepage_url: values.homepage_url?.trim() || null,
         social_links: processedSocialLinks,
         updated_at: new Date().toISOString()
       })
@@ -114,6 +114,30 @@ export const updateProfile = async (values: updateProfileProps) => {
   } catch (err) {
     console.error("Unexpected error:", err)
     return { success: false, error: "エラーが発生しました" }
+  }
+}
+
+// ユーザー検索（メンション・共同投稿者用）
+export const searchUsers = async (query: string) => {
+  if (!query || query.length < 2) return []
+
+  try {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, name, avatar_url")
+      .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
+      .limit(10)
+
+    if (error) {
+      console.error("User search error:", error)
+      return []
+    }
+
+    return data || []
+  } catch (err) {
+    console.error("User search error:", err)
+    return []
   }
 }
 
