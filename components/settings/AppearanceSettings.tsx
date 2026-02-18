@@ -2,16 +2,19 @@
 
 import { useTheme } from "next-themes"
 import { useViewMode, ViewMode } from "@/hooks/use-view-mode"
+import { usePWAInstall } from "@/hooks/usePWAInstall"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Monitor, Moon, Sun, Layout, List, Maximize, Columns, AlignLeft } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Monitor, Moon, Sun, Layout, List, Maximize, Columns, AlignLeft, Download, Share, Smartphone, CheckCircle2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import SaveStatus from "./SaveStatus"
 
 const AppearanceSettings = () => {
   const { theme, setTheme } = useTheme()
   const { viewMode, changeViewMode, isMounted } = useViewMode()
+  const { isInstallable, isInstalled, isIOS, promptInstall } = usePWAInstall()
   const [mounted, setMounted] = useState(false)
   const [saveStatus, setSaveStatus] = useState<"unsaved" | "saving" | "saved">("saved")
 
@@ -124,6 +127,67 @@ const AppearanceSettings = () => {
               </div>
             ))}
           </RadioGroup>
+        </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden border-2 border-primary/10">
+        <CardHeader className="bg-primary/5">
+          <CardTitle className="flex items-center gap-2">
+            <Smartphone className="h-5 w-5" />
+            PWA設定
+          </CardTitle>
+          <CardDescription>
+            アプリとしてインストールして、オフライン閲覧やプッシュ通知（今後対応予定）を利用しましょう。
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6">
+          {isInstalled ? (
+            <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
+              <div className="p-4 bg-green-500/10 text-green-500 rounded-full">
+                <CheckCircle2 className="h-10 w-10" />
+              </div>
+              <div>
+                <h4 className="font-black text-lg">インストール済みです</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  ホーム画面やランチャーから直接起動して、最高の体験をお楽しみいただけます。
+                </p>
+              </div>
+            </div>
+          ) : isInstallable || isIOS ? (
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="p-6 bg-primary/10 text-primary rounded-2xl shrink-0">
+                {isIOS ? (
+                  <Share className="h-12 w-12" />
+                ) : (
+                  <Download className="h-12 w-12" />
+                )}
+              </div>
+              <div className="flex-1 space-y-4 text-center md:text-left">
+                <div>
+                  <h4 className="font-black text-xl">アプリをインストールする</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {isIOS 
+                      ? "iOSでは共有ボタンから「ホーム画面に追加」を選択してください。"
+                      : "デスクトップやAndroidでは、ボタンをクリックするだけで簡単にインストールできます。"}
+                  </p>
+                </div>
+                {!isIOS && (
+                  <Button 
+                    onClick={() => promptInstall()}
+                    className="w-full md:w-auto font-black px-8 h-12 shadow-lg shadow-primary/20"
+                  >
+                    今すぐインストール
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="py-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                お使いのブラウザは現在PWAのインストールに対応していないか、既にインストールされています。
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

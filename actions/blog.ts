@@ -79,10 +79,22 @@ const upsertTags = async (tagNames: string[]) => {
 
 interface newBlogProps extends z.infer<typeof BlogSchema> {
   base64Image?: string
+  imageUrl?: string | null
   userId: string
   tags?: string[]
   summary?: string
   is_published?: boolean
+}
+
+// URLのバリデーション用ヘルパー
+const isValidImageUrl = (url: string | null) => {
+  if (!url) return true; // nullは許容（画像なし）
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch (e) {
+    return false;
+  }
 }
 
 // ブログ投稿（完全修正版）
@@ -90,7 +102,11 @@ export const newBlog = async (values: newBlogProps) => {
   try {
     const supabase = createClient()
 
-    let image_url = null
+    if (values.imageUrl && !isValidImageUrl(values.imageUrl)) {
+      return { error: "無効な画像URLです" }
+    }
+
+    let image_url = values.imageUrl || null
 
     // 画像アップロード処理（重複防止対応版）
     if (values.base64Image) {
@@ -167,6 +183,10 @@ interface editBlogProps extends z.infer<typeof BlogSchema> {
 export const editBlog = async (values: editBlogProps) => {
   try {
     const supabase = createClient()
+
+    if (values.imageUrl && !isValidImageUrl(values.imageUrl)) {
+      return { error: "無効な画像URLです" }
+    }
 
     let image_url = values.imageUrl
 

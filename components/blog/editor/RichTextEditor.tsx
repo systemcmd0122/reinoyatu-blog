@@ -146,7 +146,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
     onBlur,
     editorProps: {
       attributes: {
-        class: 'prose prose-xl dark:prose-invert max-w-none focus:outline-none min-h-[600px] py-12 px-8 md:px-12 md:py-16',
+        class: 'prose prose-xl dark:prose-invert max-w-none focus:outline-none min-h-[600px] py-4 px-4 md:px-12 md:py-16',
       },
     },
     immediatelyRender: false,
@@ -185,12 +185,17 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
   }
 
   return (
-    <div className="rich-text-editor flex flex-col bg-background">
-      <EditorToolbar editor={editor} userId={userId} />
-      <div className="flex-1 relative">
+    <div className="rich-text-editor flex flex-col bg-background h-full overflow-hidden">
+      <div className="hidden md:block">
+        <EditorToolbar editor={editor} userId={userId} />
+      </div>
+      <div className="flex-1 relative overflow-y-auto custom-scrollbar">
         <EditorBubbleMenu editor={editor} />
         <EditorFloatingMenu editor={editor} />
         <EditorContent editor={editor} />
+      </div>
+      <div className="block md:hidden border-t border-border bg-background pb-[env(safe-area-inset-bottom)]">
+        <EditorToolbar editor={editor} userId={userId} />
       </div>
     </div>
   )

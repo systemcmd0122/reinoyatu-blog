@@ -109,6 +109,7 @@ import RichTextEditor, { RichTextEditorRef } from "./editor/RichTextEditor"
 import EditorSettings from "./editor/EditorSettings"
 import { usePresence } from "@/hooks/use-realtime"
 import { LoadingState } from "@/components/ui/loading-state"
+import { useMediaQuery } from "@/hooks/use-media-query"
 
 
 const AICustomizeDialog = dynamic(
@@ -146,6 +147,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [sidebarTab, setSidebarTab] = useState("settings")
   const [isMounted, setIsMounted] = useState(false)
+  const [isEditorFocused, setIsEditorFocused] = useState(false)
+  const isMobile = useMediaQuery("(max-width: 767px)")
   const editorRef = useRef<RichTextEditorRef>(null)
   const [userCollections, setUserCollections] = useState<CollectionType[]>([])
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
@@ -396,6 +399,10 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       toast.error("タイトルと本文を入力してください");
       return;
     }
+    if (content.length < 50) {
+      toast.error("本文が短すぎます（最低50文字必要です）");
+      return;
+    }
     setIsTagGenerating(true);
     setAiSuggestion(null);
     try {
@@ -419,6 +426,10 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       toast.error("タイトルと本文を入力してください");
       return;
     }
+    if (content.length < 100) {
+      toast.error("本文が短すぎます（要約の生成には最低100文字必要です）");
+      return;
+    }
     setIsGeneratingSummary(true);
     setAiSuggestion(null);
     try {
@@ -439,6 +450,10 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     const content = form.getValues("content");
     if (!content) {
       toast.error("タイトルを提案するには本文を入力してください");
+      return;
+    }
+    if (content.length < 50) {
+      toast.error("本文が短すぎます（最低50文字必要です）");
       return;
     }
     setIsTitleGenerating(true);
@@ -529,14 +544,17 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       <Form {...form}>
       <div className="h-screen bg-background flex flex-col overflow-hidden">
         {/* スリムで洗練されたヘッダー */}
-        <header className="h-16 border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-4 z-[var(--z-nav)] shrink-0">
-          <div className="flex items-center space-x-4">
+        <header className={cn(
+          "border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-2 md:px-4 z-[var(--z-nav)] shrink-0 transition-all duration-300",
+          (isEditorFocused && isMobile) ? "h-0 opacity-0 -translate-y-full overflow-hidden" : "h-14 md:h-16 opacity-100 translate-y-0"
+        )}>
+          <div className="flex items-center space-x-2 md:space-x-4">
             <Button variant="ghost" size="icon" onClick={handleBack} className="h-9 w-9" aria-label="戻る">
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <Separator orientation="vertical" className="h-6" />
             <div className="flex flex-col">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="hidden sm:flex items-center gap-2 mb-1">
                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none">
                   {internalMode === "new" ? "New Story" : "Edit Story"}
                 </span>
@@ -550,8 +568,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold truncate max-w-[100px] sm:max-w-[200px] md:max-w-[400px]">
-                  {watchedTitle || "無題の記事"}
+                <span className="text-sm font-bold truncate max-w-[80px] sm:max-w-[200px] md:max-w-[400px]">
+                  {watchedTitle || "無題"}
                 </span>
                 <SaveStatus status={getSaveStatus() as any} />
                 
@@ -708,7 +726,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
         <div className="flex-1 flex overflow-hidden bg-muted/5">
           <main className="flex-1 overflow-y-auto relative custom-scrollbar">
               <div className={cn(
-                "mx-auto transition-all duration-300 ease-in-out pt-0 pb-12 px-6",
+                "mx-auto transition-all duration-300 ease-in-out pt-0 pb-12 px-4 md:px-6",
                 viewMode === "split" ? "max-w-none" : "max-w-screen-xl"
               )}>
                 <div className={cn(
@@ -730,7 +748,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                             <FormControl>
                               <Input 
                                 placeholder="タイトルを入力..."
-                                className="h-20 text-4xl md:text-5xl font-black border-none bg-transparent focus-visible:ring-0 px-0 shadow-none placeholder:text-muted-foreground/30"
+                                className="h-14 md:h-20 text-3xl md:text-5xl font-black border-none bg-transparent focus-visible:ring-0 px-0 shadow-none placeholder:text-muted-foreground/30"
                                 {...field}
                               />
                             </FormControl>
@@ -751,6 +769,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                                 userId={userId}
                                 content={field.value}
                                 initialJson={form.getValues("content_json")}
+                                onFocus={() => setIsEditorFocused(true)}
+                                onBlur={() => setIsEditorFocused(false)}
                                 onChange={(markdown, json) => {
                                   field.onChange(markdown);
                                   if (json) form.setValue("content_json", json);
