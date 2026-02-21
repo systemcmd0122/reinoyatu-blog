@@ -9,13 +9,15 @@ import { Heart } from "lucide-react"
 import { getBlogDisplayData } from "@/utils/blog-helpers"
 import { BlogType } from "@/types"
 import { Badge } from "@/components/ui/badge"
+import BlogActionMenu from "../BlogActionMenu"
 
 interface ListItemProps {
   blog: BlogType
   priority?: boolean
+  currentUserId?: string | null
 }
 
-const ListItem: React.FC<ListItemProps> = ({ blog }) => {
+const ListItem: React.FC<ListItemProps> = ({ blog, currentUserId }) => {
   const router = useRouter()
   const data = getBlogDisplayData(blog)
 
@@ -54,7 +56,8 @@ const ListItem: React.FC<ListItemProps> = ({ blog }) => {
         {/* Content */}
         <div className="flex-1 min-w-0 space-y-2">
           {/* Author info and date */}
-          <div className="flex items-center text-xs sm:text-sm text-muted-foreground gap-2 overflow-hidden flex-wrap">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-xs sm:text-sm text-muted-foreground gap-2 overflow-hidden flex-wrap">
             <span 
               className="font-black text-foreground hover:text-primary transition-colors cursor-pointer truncate max-w-[150px]"
               onClick={handleAuthorClick}
@@ -65,11 +68,13 @@ const ListItem: React.FC<ListItemProps> = ({ blog }) => {
             <span className="font-medium text-muted-foreground/80">
               {data.dateDisplay}
             </span>
-            {!data.isPublished && (
-              <Badge variant="outline" className="text-[10px] h-4 font-black border-primary text-primary px-1.5 py-0">
-                DRAFT
-              </Badge>
-            )}
+              {!data.isPublished && (
+                <Badge variant="outline" className="text-[10px] h-4 font-black border-primary text-primary px-1.5 py-0">
+                  DRAFT
+                </Badge>
+              )}
+            </div>
+            <BlogActionMenu blog={blog} isOwner={currentUserId === blog.user_id} />
           </div>
 
           {/* Title */}

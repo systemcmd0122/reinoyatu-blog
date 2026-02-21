@@ -33,6 +33,16 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
   const [blogs, setBlogs] = useState<BlogType[]>(initialBlogs)
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<SortOption>("newest")
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      setCurrentUserId(user?.id || null)
+    }
+    fetchUser()
+  }, [])
 
   // Filter and Sort blogs
   // リアルタイム購読 (ブログ本体)
@@ -158,7 +168,12 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 py-2">
             {processedBlogs.map((blog, index) => (
-              <CardItem key={blog.id} blog={blog} priority={index < 6} />
+              <CardItem 
+                key={blog.id} 
+                blog={blog} 
+                priority={index < 6} 
+                currentUserId={currentUserId}
+              />
             ))}
           </div>
         )
@@ -166,7 +181,12 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
         return (
           <div className="grid grid-cols-1 gap-16 py-4">
             {processedBlogs.map((blog, index) => (
-              <MagazineItem key={blog.id} blog={blog} priority={index < 3} />
+              <MagazineItem 
+                key={blog.id} 
+                blog={blog} 
+                priority={index < 3} 
+                currentUserId={currentUserId}
+              />
             ))}
           </div>
         )
@@ -174,7 +194,11 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
         return (
           <div className="bg-card border border-border/50 rounded-2xl overflow-hidden divide-y divide-border/50 shadow-sm">
             {processedBlogs.map((blog) => (
-              <CompactItem key={blog.id} blog={blog} />
+              <CompactItem 
+                key={blog.id} 
+                blog={blog} 
+                currentUserId={currentUserId}
+              />
             ))}
           </div>
         )
@@ -182,7 +206,11 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
         return (
           <div className="bg-card border border-border/50 rounded-2xl overflow-hidden divide-y divide-border/50 shadow-sm">
             {processedBlogs.map((blog) => (
-              <TextItem key={blog.id} blog={blog} />
+              <TextItem 
+                key={blog.id} 
+                blog={blog} 
+                currentUserId={currentUserId}
+              />
             ))}
           </div>
         )
@@ -191,7 +219,12 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
         return (
           <div className="bg-card border border-border/50 rounded-2xl overflow-hidden divide-y divide-border/50 shadow-sm">
             {processedBlogs.map((blog, index) => (
-              <ListItem key={blog.id} blog={blog} priority={index < 6} />
+              <ListItem 
+                key={blog.id} 
+                blog={blog} 
+                priority={index < 6} 
+                currentUserId={currentUserId}
+              />
             ))}
           </div>
         )

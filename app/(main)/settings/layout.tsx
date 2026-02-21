@@ -42,6 +42,12 @@ const navigation = [
         href: "/settings/account",
         description: "メールアドレスとアカウント管理"
       },
+      {
+        name: "データ管理",
+        icon: ShieldCheck,
+        href: "/settings/data",
+        description: "作成したデータの確認と削除"
+      },
     ]
   },
   {

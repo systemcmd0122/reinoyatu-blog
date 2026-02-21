@@ -428,18 +428,33 @@ export const getAllTags = async () => {
 }
 
 // 記事を検索
-export const searchBlogs = async (query: string) => {
-  if (!query) return { blogs: [], error: null }
-  
+export const searchBlogs = async (query: string, userId?: string) => {
   try {
     const supabase = createClient()
-    const { data, error } = await supabase
+    const { data: { user } } = await supabase.auth.getUser()
+
+    let q = supabase
       .from("blogs")
-      .select("id, title")
-      .eq("is_published", true)
-      .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
+      .select("id, title, user_id, is_published")
+
+    if (userId) {
+      // 指定されたuserIdの記事を検索する場合、本人の場合のみ下書きも含める
+      q = q.eq("user_id", userId)
+      if (user?.id !== userId) {
+        q = q.eq("is_published", true)
+      }
+    } else {
+      // 一般検索は公開記事のみ
+      q = q.eq("is_published", true)
+    }
+
+    if (query) {
+      q = q.or(`title.ilike.%${query}%,content.ilike.%${query}%`)
+    }
+
+    const { data, error } = await q
       .order("created_at", { ascending: false })
-      .limit(8)
+      .limit(userId ? 50 : 8)
 
     if (error) {
       console.error("検索エラー:", error)

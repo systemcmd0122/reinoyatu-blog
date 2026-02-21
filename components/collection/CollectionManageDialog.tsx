@@ -10,8 +10,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { ListOrdered } from "lucide-react"
+import { ListOrdered, Plus } from "lucide-react"
 import CollectionSortableList from "./CollectionSortableList"
+import CollectionAddBlogDialog from "./CollectionAddBlogDialog"
 import { CollectionWithItemsType } from "@/types"
 
 interface CollectionManageDialogProps {
@@ -31,10 +32,15 @@ export default function CollectionManageDialog({ collection }: CollectionManageD
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col rounded-[2rem]">
         <DialogHeader className="shrink-0">
-          <DialogTitle className="text-2xl font-black tracking-tight">シリーズ管理</DialogTitle>
-          <DialogDescription>
-            ドラッグ＆ドロップで記事の順序を入れ替えたり、シリーズから削除したりできます。
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-2xl font-black tracking-tight">シリーズ管理</DialogTitle>
+              <DialogDescription>
+                記事の順序変更や削除が行えます。
+              </DialogDescription>
+            </div>
+            <CollectionAddBlogDialog collectionId={collection.id} userId={collection.user_id} />
+          </div>
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar py-4">
