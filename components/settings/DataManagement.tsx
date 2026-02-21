@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { 
-  FileText, 
-  Layers, 
-  Image as ImageIcon, 
-  Trash2, 
+import {
+  FileText,
+  Layers,
+  Image as ImageIcon,
+  Trash2,
   AlertTriangle,
   Loader2,
   ExternalLink,
@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -27,9 +27,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
-import { 
-  deleteImage, 
-  deleteAllUserData 
+import {
+  deleteImage,
+  deleteAllUserData
 } from "@/actions/data"
 import { deleteBlog } from "@/actions/blog"
 import { deleteCollection } from "@/actions/collection"
@@ -52,12 +52,12 @@ interface DataManagementProps {
   initialImages: any[]
 }
 
-export default function DataManagement({ 
-  userId, 
-  stats: initialStats, 
-  initialBlogs, 
-  initialCollections, 
-  initialImages 
+export default function DataManagement({
+  userId,
+  stats: initialStats,
+  initialBlogs,
+  initialCollections,
+  initialImages
 }: DataManagementProps) {
   const [stats, setStats] = useState(initialStats)
   const [blogs, setBlogs] = useState(initialBlogs)
@@ -98,7 +98,7 @@ export default function DataManagement({
 
   const handleDeleteImage = async (imageId: string) => {
     try {
-      const res = await deleteImage(imageId, userId)
+      const res = await deleteImage(imageId)
       if (res.success) {
         setImages(images.filter(i => i.id !== imageId))
         setStats(prev => ({ ...prev, imagesCount: prev.imagesCount - 1 }))
@@ -276,13 +276,13 @@ export default function DataManagement({
         <TabsContent value="images" className="space-y-4">
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="ファイル名で検索... (Coming soon)" 
+            <Input
+              placeholder="ファイル名で検索... (Coming soon)"
               className="pl-10 h-10 rounded-xl"
               disabled
             />
           </div>
-          
+
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {images.length > 0 ? (
               images.map(img => (
@@ -290,9 +290,9 @@ export default function DataManagement({
                   <Image src={img.public_url} alt="Library" fill className="object-cover transition-transform group-hover:scale-110" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                     <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full" asChild>
-                       <a href={img.public_url} target="_blank" rel="noopener noreferrer">
-                         <ExternalLink className="h-4 w-4" />
-                       </a>
+                      <a href={img.public_url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -358,8 +358,8 @@ export default function DataManagement({
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>キャンセル</AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={handleDeleteAll} 
+                  <AlertDialogAction
+                    onClick={handleDeleteAll}
                     disabled={isDeletingAll}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-bold"
                   >
