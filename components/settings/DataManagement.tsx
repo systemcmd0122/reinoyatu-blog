@@ -98,7 +98,7 @@ export default function DataManagement({
 
   const handleDeleteImage = async (imageId: string) => {
     try {
-      const res = await deleteImage(imageId, userId)
+      const res = await deleteImage(imageId)
       if (res.success) {
         setImages(images.filter(i => i.id !== imageId))
         setStats(prev => ({ ...prev, imagesCount: prev.imagesCount - 1 }))
@@ -114,7 +114,7 @@ export default function DataManagement({
   const handleDeleteAll = async () => {
     setIsDeletingAll(true)
     try {
-      const res = await deleteAllUserData(userId)
+      const res = await deleteAllUserData()
       if (res.success) {
         toast.success("すべてのデータを削除しました")
         window.location.reload()
