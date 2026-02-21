@@ -8,12 +8,14 @@ import { Heart, User, ArrowRight } from "lucide-react"
 import { getBlogDisplayData } from "@/utils/blog-helpers"
 import { BlogType } from "@/types"
 import { Badge } from "@/components/ui/badge"
+import BlogActionMenu from "../BlogActionMenu"
 
 interface TextItemProps {
   blog: BlogType
+  currentUserId?: string | null
 }
 
-const TextItem: React.FC<TextItemProps> = ({ blog }) => {
+const TextItem: React.FC<TextItemProps> = ({ blog, currentUserId }) => {
   const router = useRouter()
   const data = getBlogDisplayData(blog)
 
@@ -71,12 +73,13 @@ const TextItem: React.FC<TextItemProps> = ({ blog }) => {
             )}
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
              <div className="flex items-center gap-1.5 text-muted-foreground">
               <Heart className="h-4 w-4 fill-none" />
               <span className="text-sm font-black">{data.likesCount}</span>
             </div>
-            <Link href={`/blog/${data.id}`} className="opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+            <BlogActionMenu blog={blog} isOwner={currentUserId === blog.user_id} />
+            <Link href={`/blog/${data.id}`} className="hidden sm:block opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
               <ArrowRight className="h-5 w-5 text-primary" />
             </Link>
           </div>

@@ -1,0 +1,20 @@
+
+> nextjs-supabase-blog@0.1.0 dev
+> next dev --webpack
+
+▲ Next.js 16.1.6 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+ ○ (pwa) PWA support is disabled.
+✓ Ready in 2.6s
+○ Compiling proxy ...
+○ Compiling / ...
+ GET / 200 in 28.7s (compile: 27.2s, proxy.ts: 632ms, render: 788ms)
+ GET / 200 in 1266ms (compile: 58ms, proxy.ts: 410ms, render: 797ms)

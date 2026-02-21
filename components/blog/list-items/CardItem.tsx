@@ -9,13 +9,15 @@ import { Heart } from "lucide-react"
 import { getBlogDisplayData } from "@/utils/blog-helpers"
 import { BlogType } from "@/types"
 import { Badge } from "@/components/ui/badge"
+import BlogActionMenu from "../BlogActionMenu"
 
 interface CardItemProps {
   blog: BlogType
   priority?: boolean
+  currentUserId?: string | null
 }
 
-const CardItem: React.FC<CardItemProps> = ({ blog, priority }) => {
+const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) => {
   const router = useRouter()
   const data = getBlogDisplayData(blog)
 
@@ -56,13 +58,16 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority }) => {
 
       {/* Content */}
       <div className="flex-1 p-5 flex flex-col">
-        {/* Tags */}
-        <div className="flex flex-wrap gap-2 mb-3">
-          {data.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded">
-              #{tag}
-            </span>
-          ))}
+        {/* Tags and Action Menu */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex flex-wrap gap-2">
+            {data.tags.slice(0, 3).map((tag) => (
+              <span key={tag} className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded">
+                #{tag}
+              </span>
+            ))}
+          </div>
+          <BlogActionMenu blog={blog} isOwner={currentUserId === blog.user_id} />
         </div>
 
         {/* Title */}

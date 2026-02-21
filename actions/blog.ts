@@ -428,15 +428,22 @@ export const getAllTags = async () => {
 }
 
 // 記事を検索
-export const searchBlogs = async (query: string) => {
+export const searchBlogs = async (query: string, userId?: string) => {
   if (!query) return { blogs: [], error: null }
   
   try {
     const supabase = createClient()
-    const { data, error } = await supabase
+    let q = supabase
       .from("blogs")
-      .select("id, title")
-      .eq("is_published", true)
+      .select("id, title, user_id, is_published")
+
+    if (userId) {
+      q = q.eq("user_id", userId)
+    } else {
+      q = q.eq("is_published", true)
+    }
+
+    const { data, error } = await q
       .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
       .order("created_at", { ascending: false })
       .limit(8)
