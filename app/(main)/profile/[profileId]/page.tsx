@@ -60,8 +60,8 @@ const ProfilePage = async ({
 
   return (
     <main className="min-h-screen">
-      <UserProfile 
-        profile={profile} 
+      <UserProfile
+        profile={profile}
         isOwnProfile={isOwnProfile}
       />
     </main>
@@ -76,7 +76,7 @@ export async function generateMetadata({ params }: { params: Promise<{ profileId
   const id = profileId
   if (!id || id === "undefined") {
     return {
-      title: "無効なプロフィールID | 例のヤツ",
+      title: "無効なプロフィールID",
       description: "プロフィールIDが指定されていないか、無効です。",
     }
   }
@@ -84,7 +84,7 @@ export async function generateMetadata({ params }: { params: Promise<{ profileId
   // UUIDの形式チェック（安全版）
   if (!isValidUUID(id)) {
     return {
-      title: "無効なプロフィールID | 例のヤツ",
+      title: "無効なプロフィールID",
       description: "指定されたプロフィールIDの形式が正しくありません。",
     }
   }
@@ -98,12 +98,12 @@ export async function generateMetadata({ params }: { params: Promise<{ profileId
 
   if (!profile) {
     return {
-      title: "ユーザーが見つかりません | 例のヤツ",
+      title: "ユーザーが見つかりません",
       description: "指定されたユーザーのプロフィールは見つかりませんでした。",
     }
   }
 
-  const title = `${profile.name || "ユーザー"} | 例のヤツ`
+  const title = profile.name || "ユーザー"
   const description = (profile.introduce || "").replace(/\n+/g, " ").slice(0, 160) || "例のヤツのプロフィールページです。"
   const image = profile.avatar_url || `${process.env.NEXT_PUBLIC_APP_URL || ""}/default.png`
   const url = `${process.env.NEXT_PUBLIC_APP_URL || ""}/profile/${profile.id}`

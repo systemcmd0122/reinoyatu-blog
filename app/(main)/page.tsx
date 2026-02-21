@@ -78,15 +78,14 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     title,
     description,
     openGraph: {
-      title: `${title} | 例のヤツ｜ブログ`,
+      title,
       description,
       url: process.env.NEXT_PUBLIC_APP_URL || undefined,
       images: [{ url: image, alt: title }],
-      siteName: "例のヤツ｜ブログ",
       type: "website",
     },
     twitter: {
-      title: `${title} | 例のヤツ｜ブログ`,
+      title,
       description,
       card: "summary_large_image",
       images: [image],

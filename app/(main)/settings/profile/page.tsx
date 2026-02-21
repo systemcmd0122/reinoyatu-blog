@@ -2,6 +2,12 @@ import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 import { ProfileType } from "@/types"
 import Profile from "@/components/settings/Profile"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "プロフィール設定",
+  description: "表示名、自己紹介、アイコンなどのプロフィール情報を変更できます。",
+}
 
 const ProfilePage = async () => {
   const supabase = createClient()

@@ -1,6 +1,111 @@
 import { ChangelogEntry } from "@/types/changelog"
 
 export const changelogData: ChangelogEntry[] = [
+  
+  {
+    version: "2.1.0",
+    date: "2026-02-21",
+    items: [
+      {
+        category: "Improvement",
+        content: "サイト全体のSEO・メタデータの大規模監査と改善",
+        description: "認証、設定、プロフィールなど、サイト内の全20ページ以上に渡って適切なメタデータ（タイトル・説明文）を設定しました。SNSシェア時の表示や検索エンジンへの最適化を大幅に強化しています。",
+      },
+      {
+        category: "Fix",
+        content: "内部リンクの整合性チェックと設定画面の不具合修正",
+        description: "存在しない古いガイドへのリンクを削除し、メール設定画面などで別の設定項目が表示されてしまう不具合を修正しました。すべての設定が正しく機能するように最適化されています。",
+      },
+      {
+        category: "Security",
+        content: "外部リンクのセキュリティを強化",
+        description: "すべての外部リンクに `rel=\"noopener noreferrer\"` を付与し、セキュリティリスクの低減とブラウザのパフォーマンス向上を実現しました。",
+      },
+      {
+        category: "Performance",
+        content: "PWAキャッシュ戦略の最適化",
+        description: "CSSやJavaScriptのキャッシュ方式を `NetworkFirst` に変更。デザインを更新した際に、古いキャッシュのせいで表示が崩れたり更新が反映されなかったりする問題を解消しました。",
+      },
+      {
+        category: "Improvement",
+        content: "不要な重複コードの整理",
+        description: "重複していた古いコンポーネントを削除し、プロジェクトの保守性とビルド速度を向上させました。",
+      },
+    ],
+  },
+  {
+    version: "2.0.0",
+    date: "2026-02-20",
+    items: [
+      {
+        category: "New",
+        content: "次世代コラボレーション執筆基盤の導入",
+        description: "複数のユーザーで一つの記事を創り上げる「共同編集者（Co-authors）」機能を実装。リアルタイムプレゼンスにより、誰が今執筆中かを一目で把握できます。",
+      },
+      {
+        category: "New",
+        content: "AIエディターアシスタント「Editor Chat」",
+        description: "執筆画面にAIチャットを統合。壁打ち相手として構成を練ったり、不足している情報を補完したり、文脈に応じた最適なアドバイスをリアルタイムで受けられます。",
+      },
+      {
+        category: "Improvement",
+        content: "インテリジェント・メディア管理システム",
+        description: "SHA-256ハッシュによる画像重複排除、画像ライブラリ、未使用画像の自動クリーンアップを搭載。ストレージの効率化とシームレスな画像再利用を実現しました。",
+      },
+      {
+        category: "New",
+        content: "シリーズ・コレクション機能",
+        description: "関連する記事を「コレクション」としてまとめ、自由な順序で構成できるようになりました。YouTubeスタイルのシリーズナビゲーションにより、読者の回遊性を高めます。",
+      },
+      {
+        category: "Improvement",
+        content: "AIによる自動メタデータ生成",
+        description: "記事のタイトル提案、要約生成、ハッシュタグ抽出をAIがワンクリックで実行。執筆以外の事務的な手間を最小限に抑えます。",
+      },
+    ],
+  },
+  {
+    version: "1.8.0",
+    date: "2026-02-15",
+    items: [
+      {
+        category: "New",
+        content: "フルスタック・リアルタイム通知システム",
+        description: "フォロー、いいね、コメント、メンション、コレクション追加など、あらゆるインタラクションを即座に通知。あなたの記事への反応を逃しません。",
+      },
+      {
+        category: "Improvement",
+        content: "エディターの書き味と没入感の向上",
+        description: "NotionスタイルのSlash Command（/メニュー）、集中力を高めるFocus Mode、フローティング＋メニューを導入。タイピングを止めずに思考を形にできます。",
+      },
+      {
+        category: "New",
+        content: "ソーシャル・リレーション機能の拡充",
+        description: "ユーザーメンション機能（@ユーザー名）とフォロー・フォロワーリストを実装。ユーザー間の繋がりと対話をより促進します。",
+      },
+    ],
+  },
+  {
+    version: "1.7.0",
+    date: "2026-02-13",
+    items: [
+      {
+        category: "New",
+        content: "PWA (Progressive Web App) 完全対応",
+        description: "モバイル端末でのネイティブアプリのようなインストールガイドと、オフライン時の快適な閲覧体験を提供。いつでもどこでもブログを楽しめます。",
+      },
+      {
+        category: "Improvement",
+        content: "徹底したアクセシビリティとUXの最適化",
+        description: "44pxの最小タッチターゲット、WCAG AA準拠のコントラスト調整、ブラウザ標準プロンプトの廃止。すべてのユーザーにとって使いやすく、親切な設計を追求しました。",
+      },
+      {
+        category: "Performance",
+        content: "データ取得の高速化と最適化",
+        description: "Supabase Joinの最適化によりN+1問題を解消。フィードの読み込み速度を劇的に改善し、サクサクとしたブラウジング体験を実現しました。",
+      },
+    ],
+  },
   {
     version: "1.5.0",
     date: "2026-02-11",

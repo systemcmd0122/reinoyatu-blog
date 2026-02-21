@@ -1,7 +1,13 @@
-import NotificationSettings from "@/components/settings/NotificationSettings"
+import Password from "@/components/settings/Password"
+import { Metadata } from "next"
 
-const NotificationsPage = () => {
-  return <NotificationSettings />
+export const metadata: Metadata = {
+  title: "パスワード変更",
+  description: "セキュリティ向上のため、パスワードを定期的に変更することをおすすめします。",
 }
 
-export default NotificationsPage
+const PasswordPage = () => {
+  return <Password />
+}
+
+export default PasswordPage

@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
   const { blogId } = await params
   if (!blogId || blogId === "undefined" || !uuidRegex.test(blogId)) {
     return {
-      title: "記事が見つかりません｜例のヤツ",
+      title: "記事が見つかりません",
       description: "指定された記事は見つかりませんでした。",
     }
   }
@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
 
   if (!blogData) {
     return {
-      title: "記事が見つかりません｜例のヤツ",
+      title: "記事が見つかりません",
       description: "指定された記事は見つかりませんでした。",
     }
   }

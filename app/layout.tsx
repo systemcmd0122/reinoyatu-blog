@@ -18,7 +18,8 @@ const mPlus1 = M_PLUS_1({
 })
 
 const siteConfig = {
-  title: "例のヤツ｜ブログ",
+  title: "例のヤツ",
+  siteName: "例のヤツ｜ブログ",
   description:
     "「例のヤツ」がお届けする、最先端の技術と日々の探求が集まる共創型ブログプラットフォームへようこそ。ここでは、プログラミングの深い知見から、ガジェットレビュー、趣味の記録、そして日常に潜むライフハックまで、多岐にわたるテーマの記事が日々投稿されています。単に情報を得るだけでなく、ブックマーク機能でお気に入りの記事を保存したり、コメントやリアクションを通じて著者や他の読者と活発に交流したりすることも可能です。あなたの知識や経験を共有し、コミュニティと共に新たな発見と創造の旅に出かけましょう。",
   keywords: [
@@ -40,8 +41,8 @@ const siteConfig = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    template: `%s | ${siteConfig.title}`,
-    default: siteConfig.title,
+    template: `%s | ${siteConfig.siteName}`,
+    default: siteConfig.siteName,
   },
   description: siteConfig.description,
   keywords: siteConfig.keywords,
@@ -53,15 +54,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ja_JP",
     url: siteConfig.url,
-    title: siteConfig.title,
+    title: siteConfig.siteName,
     description: siteConfig.description,
-    siteName: siteConfig.title,
+    siteName: siteConfig.siteName,
     images: [
       {
         url: siteConfig.ogImage,
         width: 1200,
         height: 630,
-        alt: siteConfig.title,
+        alt: siteConfig.siteName,
       },
     ],
   },
@@ -131,111 +132,110 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
           enableSystem
           disableTransitionOnChange
         >
-            <RealtimeProvider>
-              <Toaster richColors position="top-right" theme="system" closeButton />
+          <RealtimeProvider>
+            <Toaster richColors position="top-right" theme="system" closeButton />
 
-              <div className="flex min-h-screen flex-col">
-            <Navigation user={user} />
+            <div className="flex min-h-screen flex-col">
+              <Navigation user={user} />
 
-            <main className="flex-1">{children}</main>
+              <main className="flex-1">{children}</main>
 
-            <SpeedInsights />
-            <Analytics />
+              <SpeedInsights />
+              <Analytics />
 
-            <footer className="border-t py-12 bg-muted/30">
-              <div className="container mx-auto px-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                  <div className="space-y-4">
-                    <h3 className="font-bold text-lg">例のヤツ｜ブログ</h3>
-                    <p className="text-sm text-muted-foreground">
-                      あなたのアイデア、ストーリー、専門知識を共有し、世界と繋がるプラットフォーム。
-                    </p>
+              <footer className="border-t py-12 bg-muted/30">
+                <div className="container mx-auto px-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                    <div className="space-y-4">
+                      <h3 className="font-bold text-lg">{siteConfig.siteName}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        あなたのアイデア、ストーリー、専門知識を共有し、世界と繋がるプラットフォーム。
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="font-semibold">リンク</h4>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li>
+                          <Link
+                            href="/"
+                            className="hover:text-primary transition-colors"
+                          >
+                            ホーム
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            href="/changelog"
+                            className="hover:text-primary transition-colors"
+                          >
+                            アップデート
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            href="/privacy"
+                            className="hover:text-primary transition-colors"
+                          >
+                            プライバシーポリシー
+                          </Link>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="font-semibold">アカウント</h4>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li>
+                          <Link
+                            href="/login"
+                            className="hover:text-primary transition-colors"
+                          >
+                            ログイン
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            href="/signup"
+                            className="hover:text-primary transition-colors"
+                          >
+                            新規登録
+                          </Link>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <h4 className="font-semibold">リンク</h4>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li>
-                        <Link
-                          href="/"
-                          className="hover:text-primary transition-colors"
-                        >
-                          ホーム
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/changelog"
-                          className="hover:text-primary transition-colors"
-                        >
-                          アップデート
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/privacy"
-                          className="hover:text-primary transition-colors"
-                        >
-                          プライバシーポリシー
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="font-semibold">アカウント</h4>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li>
-                        <Link
-                          href="/login"
-                          className="hover:text-primary transition-colors"
-                        >
-                          ログイン
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/signup"
-                          className="hover:text-primary transition-colors"
-                        >
-                          新規登録
-                        </Link>
-                      </li>
-                    </ul>
+                  <div className="border-t pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+                    <div>
+                      © {new Date().getFullYear()} {siteConfig.siteName}. All Rights
+                      Reserved.
+                    </div>
+                    <div className="flex items-center space-x-6">
+                      <a
+                        href="https://x.com/min_brother2158"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-primary transition-colors"
+                      >
+                        X (Twitter)
+                      </a>
+                      <a
+                        href="https://github.com/Reinoaytu"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-primary transition-colors"
+                      >
+                        GitHub
+                      </a>
+                    </div>
                   </div>
                 </div>
-
-                <div className="border-t pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-                  <div>
-                    © {new Date().getFullYear()} 例のヤツ｜ブログ. All Rights
-                    Reserved.
-                  </div>
-                  <div className="flex items-center space-x-6">
-                    <a
-                      href="https://x.com/min_brother2158"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-primary transition-colors"
-                    >
-                      X (Twitter)
-                    </a>
-                    <a
-                      href="https://github.com/Reinoaytu"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-primary transition-colors"
-                    >
-                      GitHub
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </footer>
-              </div>
-
-              {/* PWAインストールバナー */}
-              <PWAInstallBanner />
-            </RealtimeProvider>
+              </footer>
+            </div>
+            {/* PWAインストールバナー */}
+            <PWAInstallBanner />
+          </RealtimeProvider>
         </ThemeProvider>
       </body>
     </html>

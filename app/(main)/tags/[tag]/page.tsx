@@ -27,12 +27,12 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     title,
     description,
     openGraph: {
-      title: `${title} | 例のヤツ｜ブログ`,
+      title,
       description,
       type: "website",
     },
     twitter: {
-      title: `${title} | 例のヤツ｜ブログ`,
+      title,
       description,
       card: "summary",
     },

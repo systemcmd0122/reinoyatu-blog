@@ -1,3 +1,10 @@
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "リセットメールを送信しました",
+  description: "パスワード再設定のためのメールを送信しました。メールボックスを確認してください。",
+}
+
 const RestPasswordSuccessPage = () => {
   return (
     <div className="w-[500px] bg-card text-card-foreground p-5 rounded-xl border">

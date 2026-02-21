@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "メールアドレスの確認",
+  description: "メールアドレスの変更を確認しました。",
+}
 
 interface EmailVerifyPageProps {
   searchParams: Promise<{
