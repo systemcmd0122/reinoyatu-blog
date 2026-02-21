@@ -428,12 +428,12 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                       </a>
                     )}
                     {blogData.author.social_links?.twitter && (
-                      <a href={blogData.author.social_links.twitter} target="_blank" rel="noopener" className="text-muted-foreground hover:text-primary transition-colors">
+                      <a href={blogData.author.social_links.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                         <Twitter className="h-5 w-5" />
                       </a>
                     )}
                     {blogData.author.social_links?.github && (
-                      <a href={blogData.author.social_links.github} target="_blank" rel="noopener" className="text-muted-foreground hover:text-foreground transition-colors">
+                      <a href={blogData.author.social_links.github} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
                         <Github className="h-5 w-5" />
                       </a>
                     )}

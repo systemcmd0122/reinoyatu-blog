@@ -5,6 +5,25 @@ import UserList from "@/components/profile/UserList"
 import { ArrowLeft, Users } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Metadata } from "next"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ profileId: string }>
+}): Promise<Metadata> {
+  const { profileId } = await params
+  const supabase = createClient()
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("name")
+    .eq("id", profileId)
+    .single()
+
+  return {
+    title: `${profile?.name || "ユーザー"} がフォロー中`,
+  }
+}
 
 export default async function FollowingPage({
   params,

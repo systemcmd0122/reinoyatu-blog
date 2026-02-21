@@ -1,6 +1,10 @@
-"use client"
-
 import BlogEditor from "@/components/blog/BlogEditor"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "AI確認用",
+  description: "AIによる記事の確認・検証用ページです。",
+}
 
 export default function VerifyAIPage() {
   return (

@@ -4,7 +4,7 @@ import NotificationList from "@/components/notifications/NotificationList"
 import { Bell } from "lucide-react"
 
 export const metadata = {
-  title: "通知 | 例のヤツ",
+  title: "通知",
   description: "あなたのアクティビティに関する通知一覧です。",
 }
 

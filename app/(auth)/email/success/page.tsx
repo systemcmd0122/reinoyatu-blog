@@ -1,3 +1,10 @@
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "確認メールを送信しました",
+  description: "メールアドレス変更のための確認メールを送信しました。",
+}
+
 const EmailSuccessPage = () => {
   return (
     <div className="w-[500px] bg-card text-card-foreground p-5 rounded-xl border">

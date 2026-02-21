@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "パスワード設定完了",
+  description: "パスワードの変更が完了しました。",
+}
 
 const PasswordSuccessPage = () => {
   return (

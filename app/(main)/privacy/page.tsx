@@ -2,7 +2,7 @@
 import PrivacyPolicy from "@/components/privacypolicy/page"
 
 export const metadata = {
-  title: 'プライバシーポリシー | 例のヤツ｜ブログ',
+  title: 'プライバシーポリシー',
   description: '個人情報の取り扱いと保護に関するプライバシーポリシー'
 }
 

@@ -252,6 +252,7 @@ const Signup = () => {
                         href="/privacy"
                         className="text-primary hover:underline"
                         target="_blank"
+                        rel="noopener noreferrer"
                       >
                         プライバシーポリシー
                       </Link>
