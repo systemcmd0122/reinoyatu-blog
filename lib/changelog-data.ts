@@ -2,6 +2,37 @@ import { ChangelogEntry } from "@/types/changelog"
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: "1.6.0",
+    date: "2026-02-21",
+    items: [
+      {
+        category: "Improvement",
+        content: "サイト全体のSEO・メタデータの大規模監査と改善",
+        description: "認証、設定、プロフィールなど、サイト内の全20ページ以上に渡って適切なメタデータ（タイトル・説明文）を設定しました。SNSシェア時の表示や検索エンジンへの最適化を大幅に強化しています。",
+      },
+      {
+        category: "Fix",
+        content: "内部リンクの整合性チェックと設定画面の不具合修正",
+        description: "存在しない古いガイドへのリンクを削除し、メール設定画面などで別の設定項目が表示されてしまう不具合を修正しました。すべての設定が正しく機能するように最適化されています。",
+      },
+      {
+        category: "Security",
+        content: "外部リンクのセキュリティを強化",
+        description: "すべての外部リンクに `rel=\"noopener noreferrer\"` を付与し、セキュリティリスクの低減とブラウザのパフォーマンス向上を実現しました。",
+      },
+      {
+        category: "Performance",
+        content: "PWAキャッシュ戦略の最適化",
+        description: "CSSやJavaScriptのキャッシュ方式を `NetworkFirst` に変更。デザインを更新した際に、古いキャッシュのせいで表示が崩れたり更新が反映されなかったりする問題を解消しました。",
+      },
+      {
+        category: "Improvement",
+        content: "不要な重複コードの整理",
+        description: "重複していた古いコンポーネントを削除し、プロジェクトの保守性とビルド速度を向上させました。",
+      },
+    ],
+  },
+  {
     version: "1.5.0",
     date: "2026-02-11",
     items: [
