@@ -25,6 +25,10 @@ const DataSettingsPage = async () => {
     getUserImages(),
   ])
 
+  if (!stats) {
+    redirect("/login?next=/settings/data")
+  }
+
   return (
     <DataManagement
       userId={user.id}
