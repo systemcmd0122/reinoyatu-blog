@@ -9,13 +9,15 @@ import { Heart, Clock, ArrowRight } from "lucide-react"
 import { getBlogDisplayData } from "@/utils/blog-helpers"
 import { BlogType } from "@/types"
 import { Badge } from "@/components/ui/badge"
+import BlogActionMenu from "../BlogActionMenu"
 
 interface MagazineItemProps {
   blog: BlogType
   priority?: boolean
+  currentUserId?: string | null
 }
 
-const MagazineItem: React.FC<MagazineItemProps> = ({ blog, priority }) => {
+const MagazineItem: React.FC<MagazineItemProps> = ({ blog, priority, currentUserId }) => {
   const router = useRouter()
   const data = getBlogDisplayData(blog)
 
@@ -73,12 +75,15 @@ const MagazineItem: React.FC<MagazineItemProps> = ({ blog, priority }) => {
 
         {/* Text Content */}
         <div className="flex-1 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-          <div className="hidden lg:flex flex-wrap gap-4 mb-8">
-            {data.tags.slice(0, 4).map((tag) => (
-              <span key={tag} className="text-xs font-black text-primary uppercase tracking-[0.3em] bg-primary/5 px-3 py-1 rounded-full">
-                #{tag}
-              </span>
-            ))}
+          <div className="hidden lg:flex items-center justify-between mb-8">
+            <div className="flex flex-wrap gap-4">
+              {data.tags.slice(0, 4).map((tag) => (
+                <span key={tag} className="text-xs font-black text-primary uppercase tracking-[0.3em] bg-primary/5 px-3 py-1 rounded-full">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+            <BlogActionMenu blog={blog} isOwner={currentUserId === blog.user_id} />
           </div>
 
           <Link href={`/blog/${data.id}`} className="block group/title mb-6">

@@ -11,7 +11,8 @@ import {
   Github,
   Globe,
   Heart,
-  Bookmark
+  Bookmark,
+  Share2
 } from "lucide-react"
 import { deleteBlog } from "@/actions/blog"
 import { cn } from "@/lib/utils"
@@ -30,6 +31,7 @@ import SeriesSidebar from "./SeriesSidebar"
 import { getBlogLikeStatus } from "@/actions/like"
 import { getBlogBookmarkStatus } from "@/actions/bookmark"
 import { useRealtime } from "@/hooks/use-realtime"
+import { shareContent } from "@/utils/share"
 
 // Structured Sub-components
 import ArticleHeader from "./detail/ArticleHeader"
@@ -294,6 +296,18 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                       onStateChange={setSharedBookmarkState}
                       initialIsLoaded={true}
                     />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-primary gap-2 font-bold px-3"
+                      onClick={() => shareContent({
+                        title: blogData.title,
+                        url: window.location.href
+                      })}
+                    >
+                      <Share2 className="h-4 w-4" />
+                      <span className="hidden sm:inline">共有</span>
+                    </Button>
                   </div>
 
                   {isMyBlog && (

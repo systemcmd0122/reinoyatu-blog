@@ -5,12 +5,14 @@ import Link from "next/link"
 import { getBlogDisplayData } from "@/utils/blog-helpers"
 import { BlogType } from "@/types"
 import { Badge } from "@/components/ui/badge"
+import BlogActionMenu from "../BlogActionMenu"
 
 interface CompactItemProps {
   blog: BlogType
+  currentUserId?: string | null
 }
 
-const CompactItem: React.FC<CompactItemProps> = ({ blog }) => {
+const CompactItem: React.FC<CompactItemProps> = ({ blog, currentUserId }) => {
   const data = getBlogDisplayData(blog)
 
   return (
@@ -42,7 +44,7 @@ const CompactItem: React.FC<CompactItemProps> = ({ blog }) => {
           </Link>
         </div>
 
-        {/* Author */}
+        {/* Author & Actions */}
         <div className="flex-shrink-0 flex items-center gap-3">
           <span className="text-xs font-bold text-muted-foreground hidden sm:inline-block">
             by <span className="text-foreground/80 group-hover:text-primary transition-colors">{data.author.name}</span>
@@ -50,6 +52,7 @@ const CompactItem: React.FC<CompactItemProps> = ({ blog }) => {
           <div className="sm:hidden text-[10px] font-bold text-muted-foreground/60">
             {data.dateDisplay}
           </div>
+          <BlogActionMenu blog={blog} isOwner={currentUserId === blog.user_id} />
         </div>
       </div>
     </div>

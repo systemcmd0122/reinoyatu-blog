@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge"
 import BlogListView from "@/components/blog/BlogListView"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { shareContent } from "@/utils/share"
 
 interface UserProfileProps {
   profile: ProfileType
@@ -210,7 +211,15 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
         <div className="h-48 md:h-64 w-full bg-gradient-to-br from-primary/20 via-secondary/10 to-primary/5 rounded-3xl overflow-hidden relative border border-border/50">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
           <div className="absolute top-0 right-0 p-6">
-            <Button variant="ghost" size="icon" className="rounded-full bg-background/50 backdrop-blur-md hover:bg-background/80 transition-all border border-border/50">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full bg-background/50 backdrop-blur-md hover:bg-background/80 transition-all border border-border/50"
+              onClick={() => shareContent({
+                title: `${profile.name}のプロフィール`,
+                url: window.location.href
+              })}
+            >
               <Share2 className="h-4 w-4" />
             </Button>
           </div>
