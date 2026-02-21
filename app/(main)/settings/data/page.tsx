@@ -19,15 +19,11 @@ const DataSettingsPage = async () => {
   }
 
   const [stats, blogsRes, collectionsRes, imagesRes] = await Promise.all([
-    getUserDataStats(),
-    getUserBlogs(),
-    getUserCollections(),
-    getUserImages(),
+    getUserDataStats(user.id),
+    getUserBlogs(user.id),
+    getUserCollections(user.id),
+    getUserImages(user.id),
   ])
-
-  if (!stats) {
-    redirect("/login?next=/settings/data")
-  }
 
   return (
     <DataManagement

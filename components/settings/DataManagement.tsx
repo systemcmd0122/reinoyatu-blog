@@ -98,7 +98,7 @@ export default function DataManagement({
 
   const handleDeleteImage = async (imageId: string) => {
     try {
-      const res = await deleteImage(imageId)
+      const res = await deleteImage(imageId, userId)
       if (res.success) {
         setImages(images.filter(i => i.id !== imageId))
         setStats(prev => ({ ...prev, imagesCount: prev.imagesCount - 1 }))
