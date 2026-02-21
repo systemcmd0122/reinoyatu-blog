@@ -53,14 +53,14 @@ const withPWA = withPWAInit({
       },
       {
         urlPattern: /\.(?:js)$/i,
-        handler: "StaleWhileRevalidate",
+        handler: "NetworkFirst",
         options: {
           cacheName: "static-js-assets",
         },
       },
       {
         urlPattern: /\.(?:css|less)$/i,
-        handler: "StaleWhileRevalidate",
+        handler: "NetworkFirst",
         options: {
           cacheName: "static-style-assets",
         },

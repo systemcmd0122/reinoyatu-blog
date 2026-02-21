@@ -151,7 +151,6 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   const mobileNavItems = [
     { href: "/", icon: House, label: "ホーム" },
     { href: "/changelog", icon: FileText, label: "アップデート" },
-    { href: "/guide/markdown", icon: FileText, label: "マークダウンガイド" },
     { href: "/blog/new", icon: PenSquare, label: "投稿する" },
     { href: "/settings/drafts", icon: FileText, label: "下書き一覧" },
     { href: "/bookmarks", icon: Bookmark, label: "ブックマーク" },

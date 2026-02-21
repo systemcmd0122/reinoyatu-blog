@@ -1,3 +1,10 @@
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "登録完了まであと一歩",
+  description: "アカウント作成の申請を受け付けました。メールボックスを確認してください。",
+}
+
 const SignupSuccessPage = () => {
   return (
     <div className="w-[500px] bg-card text-card-foreground p-5 rounded-xl border">

@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button"
 import { FileText } from "lucide-react"
 import Link from "next/link"
 import DraftList from "@/components/settings/DraftList"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "下書き一覧",
+  description: "作成中の記事を管理・編集できます。",
+}
 
 const DraftsPage = async () => {
   const supabase = createClient()

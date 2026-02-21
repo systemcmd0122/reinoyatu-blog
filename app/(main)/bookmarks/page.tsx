@@ -4,6 +4,12 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import BlogListView from "@/components/blog/BlogListView"
 import { getUserBookmarks } from "@/actions/bookmark"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "ブックマーク",
+  description: "お気に入りの記事、後で読みたい記事を一箇所にまとめてチェックできます。",
+}
 
 // ユーザーのブックマーク一覧を表示するコンポーネント
 const BookmarksList = async ({ userId }: { userId: string }) => {

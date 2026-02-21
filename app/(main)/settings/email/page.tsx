@@ -1,7 +1,13 @@
-import AppearanceSettings from "@/components/settings/AppearanceSettings"
+import Email from "@/components/settings/Email"
+import { Metadata } from "next"
 
-const AppearancePage = () => {
-  return <AppearanceSettings />
+export const metadata: Metadata = {
+  title: "メールアドレス設定",
+  description: "登録されているメールアドレスの確認や変更を行えます。",
 }
 
-export default AppearancePage
+const EmailPage = () => {
+  return <Email />
+}
+
+export default EmailPage

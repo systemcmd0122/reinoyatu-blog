@@ -20,11 +20,28 @@ import Image from "next/image"
 import BlogListView from "@/components/blog/BlogListView"
 import CollectionManageDialog from "@/components/collection/CollectionManageDialog"
 import { CollectionWithItemsType } from "@/types"
+import { Metadata } from "next"
 
 interface CollectionDetailPageProps {
   params: Promise<{
     collectionId: string
   }>
+}
+
+export async function generateMetadata({ params }: CollectionDetailPageProps): Promise<Metadata> {
+  const { collectionId } = await params
+  const collection = await getCollectionWithItems(collectionId) as unknown as CollectionWithItemsType | null
+
+  if (!collection) {
+    return {
+      title: "コレクションが見つかりません",
+    }
+  }
+
+  return {
+    title: collection.title,
+    description: collection.description || `${collection.profiles.name}による記事コレクションです。`,
+  }
 }
 
 export default async function CollectionDetailPage({ params }: CollectionDetailPageProps) {

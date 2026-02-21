@@ -1,6 +1,12 @@
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 import BlogEdit from "@/components/blog/BlogEdit"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "記事を編集",
+  description: "記事の内容を更新して、より良いコンテンツに仕上げましょう。",
+}
 
 interface BlogEditPageProps {
   params: Promise<{
