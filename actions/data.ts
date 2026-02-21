@@ -7,8 +7,12 @@ import { cleanupUnusedImages } from "./image"
 /**
  * ユーザーのデータ統計を取得する
  */
-export async function getUserDataStats(userId: string) {
+export async function getUserDataStats() {
   const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const userId = user.id
 
   const [blogsRes, collectionsRes, imagesRes, likesRes, bookmarksRes] = await Promise.all([
     supabase.from("blogs").select("id", { count: "exact", head: true }).eq("user_id", userId),
@@ -30,12 +34,15 @@ export async function getUserDataStats(userId: string) {
 /**
  * ユーザーのブログ一覧を取得する
  */
-export async function getUserBlogs(userId: string) {
+export async function getUserBlogs() {
   const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Unauthorized" }
+
   const { data, error } = await supabase
     .from("blogs")
     .select("id, title, created_at, is_published")
-    .eq("user_id", userId)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false })
 
   if (error) return { error: error.message }
@@ -45,12 +52,15 @@ export async function getUserBlogs(userId: string) {
 /**
  * ユーザーのコレクション一覧を取得する
  */
-export async function getUserCollections(userId: string) {
+export async function getUserCollections() {
   const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Unauthorized" }
+
   const { data, error } = await supabase
     .from("collections")
     .select("id, title, created_at, is_public")
-    .eq("user_id", userId)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false })
 
   if (error) return { error: error.message }
@@ -60,12 +70,15 @@ export async function getUserCollections(userId: string) {
 /**
  * ユーザーの画像ライブラリ一覧を取得する
  */
-export async function getUserImages(userId: string) {
+export async function getUserImages() {
   const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Unauthorized" }
+
   const { data, error } = await supabase
     .from("images")
     .select("id, public_url, storage_path, created_at")
-    .eq("user_id", userId)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false })
 
   if (error) return { error: error.message }
@@ -75,8 +88,10 @@ export async function getUserImages(userId: string) {
 /**
  * 特定の画像を削除する（未使用の場合のみストレージからも削除）
  */
-export async function deleteImage(imageId: string, userId: string) {
+export async function deleteImage(imageId: string) {
   const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Unauthorized" }
 
   // 権限チェック
   const { data: image } = await supabase
@@ -85,25 +100,28 @@ export async function deleteImage(imageId: string, userId: string) {
     .eq("id", imageId)
     .single()
 
-  if (!image || image.user_id !== userId) {
+  if (!image || image.user_id !== user.id) {
     return { error: "権限がありません" }
   }
 
   // cleanupUnusedImages を利用して削除を試みる
-  // この関数は article_images をチェックして未使用なら削除する
   const res = await cleanupUnusedImages([imageId])
 
   if (res.error) return { error: res.error }
 
-  revalidatePath("/settings/account/data")
+  revalidatePath("/settings/data")
   return { success: true }
 }
 
 /**
  * すべてのデータを削除する（非常に慎重に行う必要がある）
  */
-export async function deleteAllUserData(userId: string) {
+export async function deleteAllUserData() {
   const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Unauthorized" }
+
+  const userId = user.id
 
   // 1. ブログに関連付けられた画像を抽出（クリーンアップのため）
   const { data: blogImages } = await supabase
@@ -148,7 +166,7 @@ export async function deleteAllUserData(userId: string) {
 
   revalidatePath("/")
   revalidatePath("/profile/" + userId)
-  revalidatePath("/settings/account/data")
+  revalidatePath("/settings/data")
 
   return { success: true }
 }

@@ -140,7 +140,7 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
                 </span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-none bg-gradient-to-br from-foreground via-foreground to-foreground/50 bg-clip-text text-transparent">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-[1.1] bg-gradient-to-br from-foreground via-foreground to-foreground/50 bg-clip-text text-transparent">
                 {collection.title}
               </h1>
               
@@ -176,10 +176,7 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
                 <div className="flex gap-3">
                   <CollectionShareButton title={collection.title} />
                   {isOwner && (
-                    <>
-                      <CollectionManageDialog collection={collection} />
-                      <CollectionAddBlogDialog collectionId={collection.id} userId={user.id} />
-                    </>
+                    <CollectionManageDialog collection={collection} />
                   )}
                 </div>
               </div>

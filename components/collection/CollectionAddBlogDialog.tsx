@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -30,9 +30,14 @@ export default function CollectionAddBlogDialog({ collectionId, userId, onSucces
   const [isSearching, setIsSearching] = useState(false)
   const [isAdding, setIsAdding] = useState<string | null>(null)
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!query.trim()) return
+  useEffect(() => {
+    if (isOpen && !query) {
+      handleSearch()
+    }
+  }, [isOpen])
+
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
 
     setIsSearching(true)
     try {
