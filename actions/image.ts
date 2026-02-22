@@ -216,35 +216,39 @@ export const syncArticleImages = async (articleId: string, contentJson: string, 
  */
 export const cleanupUnusedImages = async (imageIds: string[]) => {
   try {
+    if (!imageIds.length) return { success: true }
     const supabase = createClient()
     
-    for (const imageId of imageIds) {
-      // 他に使用している記事があるかチェック
-      const { count, error: countError } = await supabase
-        .from("article_images")
-        .select("*", { count: "exact", head: true })
-        .eq("image_id", imageId)
+    // 他に使用している記事があるか一括チェック
+    const { data: usedRelations } = await supabase
+      .from("article_images")
+      .select("image_id")
+      .in("image_id", imageIds)
+
+    const usedImageIds = new Set(usedRelations?.map(r => r.image_id) || [])
+    const unusedImageIds = imageIds.filter(id => !usedImageIds.has(id))
+
+    if (unusedImageIds.length === 0) return { success: true }
+
+    // 未使用の画像情報を一括取得
+    const { data: imagesToDelete } = await supabase
+      .from("images")
+      .select("id, storage_path")
+      .in("id", unusedImageIds)
+
+    if (imagesToDelete && imagesToDelete.length > 0) {
+      const storagePaths = imagesToDelete.map(img => img.storage_path)
       
-      if (countError) continue
+      // ストレージから一括削除
+      await supabase.storage
+        .from("blogs")
+        .remove(storagePaths)
       
-      if (count === 0) {
-        // 画像情報を取得
-        const { data: image } = await supabase
-          .from("images")
-          .select("storage_path")
-          .eq("id", imageId)
-          .single()
-        
-        if (image) {
-          // ストレージから削除
-          await supabase.storage
-            .from("blogs")
-            .remove([image.storage_path])
-          
-          // DBから削除
-          await supabase.from("images").delete().eq("id", imageId)
-        }
-      }
+      // DBから一括削除
+      await supabase
+        .from("images")
+        .delete()
+        .in("id", imagesToDelete.map(img => img.id))
     }
     
     return { success: true }

@@ -148,20 +148,14 @@ export async function deleteAllUserData() {
   }
 
   // 5. ユーザー自身がアップロードした画像（ブログに使われていなかったものも含む）を削除
+  // cleanupUnusedImages を利用して一括クリーンアップ
   const { data: userImages } = await supabase
     .from("images")
-    .select("id, storage_path")
+    .select("id")
     .eq("user_id", userId)
   
   if (userImages && userImages.length > 0) {
-    for (const img of userImages) {
-        // 他の人のブログで使われていないかチェック
-        const { count } = await supabase.from("article_images").select("*", { count: 'exact', head: true }).eq("image_id", img.id)
-        if (count === 0) {
-            await supabase.storage.from("blogs").remove([img.storage_path])
-            await supabase.from("images").delete().eq("id", img.id)
-        }
-    }
+    await cleanupUnusedImages(userImages.map(img => img.id))
   }
 
   revalidatePath("/")
