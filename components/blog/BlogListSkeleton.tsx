@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { Search, TrendingUp, ChevronDown } from "lucide-react"
+import { TrendingUp } from "lucide-react"
 
-export default function Loading() {
+export default function BlogListSkeleton() {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
       <div className="max-w-screen-xl mx-auto px-4 py-6">
