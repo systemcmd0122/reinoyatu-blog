@@ -138,9 +138,10 @@ export const newBlog = async (values: newBlogProps) => {
     }
 
     // 共同投稿者の保存
+    const uniqueCoAuthorIds = [...new Set(values.coauthors || [])].filter(id => id !== values.userId)
     const authors = [
       { article_id: newBlog.id, user_id: values.userId, role: 'owner' as const },
-      ...(values.coauthors || []).filter(id => id !== values.userId).map(id => ({
+      ...uniqueCoAuthorIds.map(id => ({
         article_id: newBlog.id,
         user_id: id,
         role: 'editor' as const
@@ -235,58 +236,78 @@ export const editBlog = async (values: editBlogProps) => {
       return { error: updateError.message }
     }
 
-    // 共同投稿者の更新
-    // 一旦全削除して再登録（簡易実装）
-    await supabase
+    // 共同投稿者の更新（差分更新）
+    const { data: currentAuthors } = await supabase
       .from("article_authors")
-      .delete()
+      .select("user_id, role")
       .eq("article_id", values.blogId)
 
-    const authors = [
-      { article_id: values.blogId, user_id: values.userId, role: 'owner' as const },
-      ...(values.coauthors || []).filter(id => id !== values.userId).map(id => ({
+    const currentAuthorIds = currentAuthors?.map(a => a.user_id) || []
+    const uniqueCoAuthorIds = [...new Set(values.coauthors || [])].filter(id => id !== values.userId)
+    const allNewAuthorIds = [values.userId, ...uniqueCoAuthorIds]
+
+    // 削除すべき著者
+    const authorsToDelete = currentAuthorIds.filter(id => !allNewAuthorIds.includes(id))
+    if (authorsToDelete.length > 0) {
+      await supabase
+        .from("article_authors")
+        .delete()
+        .eq("article_id", values.blogId)
+        .in("user_id", authorsToDelete)
+    }
+
+    // 追加すべき著者
+    const authorsToInsert = allNewAuthorIds
+      .filter(id => !currentAuthorIds.includes(id))
+      .map(id => ({
         article_id: values.blogId,
         user_id: id,
-        role: 'editor' as const
+        role: (id === values.userId ? 'owner' : 'editor') as 'owner' | 'editor'
       }))
-    ]
 
-    await supabase
-      .from("article_authors")
-      .insert(authors)
+    if (authorsToInsert.length > 0) {
+      await supabase
+        .from("article_authors")
+        .insert(authorsToInsert)
+    }
 
     // 画像の関連付けを同期
     await syncArticleImages(values.blogId, values.content_json || "", image_url)
 
-    // 既存のタグ関連をすべて削除
-    const { error: deleteTagsError } = await supabase
+    // タグの処理（差分更新）
+    const tagIds = await upsertTags(values.tags || [])
+
+    const { data: currentBlogTags } = await supabase
       .from("blog_tags")
-      .delete()
+      .select("tag_id")
       .eq("blog_id", values.blogId)
 
-    if (deleteTagsError) {
-      console.error("タグ削除エラー:", deleteTagsError)
-      return { error: "タグの更新中にエラーが発生しました" }
+    const currentTagIds = currentBlogTags?.map(t => t.tag_id) || []
+
+    const tagsToDelete = currentTagIds.filter(id => !tagIds.includes(id))
+    const tagsToInsert = tagIds.filter(id => !currentTagIds.includes(id))
+
+    if (tagsToDelete.length > 0) {
+      await supabase
+        .from("blog_tags")
+        .delete()
+        .eq("blog_id", values.blogId)
+        .in("tag_id", tagsToDelete)
     }
 
-    // 新しいタグを関連付け
-    if (values.tags && values.tags.length > 0) {
-      const tagIds = await upsertTags(values.tags)
+    if (tagsToInsert.length > 0) {
+      const blogTagsToInsert = tagsToInsert.map(tagId => ({
+        blog_id: values.blogId,
+        tag_id: tagId,
+      }))
 
-      if (tagIds.length > 0) {
-        const blogTags = tagIds.map(tagId => ({
-          blog_id: values.blogId,
-          tag_id: tagId,
-        }))
+      const { error: blogTagsError } = await supabase
+        .from("blog_tags")
+        .insert(blogTagsToInsert)
 
-        const { error: blogTagsError } = await supabase
-          .from("blog_tags")
-          .insert(blogTags)
-
-        if (blogTagsError) {
-          console.error("タグ関連付けエラー:", blogTagsError)
-          return { error: "タグの更新中にエラーが発生しました" }
-        }
+      if (blogTagsError) {
+        console.error("タグ関連付けエラー:", blogTagsError)
+        return { error: "タグの更新中にエラーが発生しました" }
       }
     }
 

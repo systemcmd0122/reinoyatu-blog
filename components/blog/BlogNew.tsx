@@ -2,7 +2,7 @@
 
 import React from "react"
 import BlogEditor from "./BlogEditor"
-import { newBlog, deleteBlog } from "@/actions/blog"
+import { newBlog, editBlog, deleteBlog } from "@/actions/blog"
 import { z } from "zod"
 import { BlogSchema } from "@/schemas"
 import { useAuth } from "@/hooks/use-auth"
@@ -13,12 +13,28 @@ interface BlogNewProps {
 
 const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   useAuth()
+  const [createdBlogId, setCreatedBlogId] = React.useState<string | null>(null)
   
   const handleSubmit = async (values: z.infer<typeof BlogSchema> & { base64Image?: string, imageUrl?: string | null }) => {
-    return await newBlog({
+    if (createdBlogId) {
+      return await editBlog({
+        ...values,
+        blogId: createdBlogId,
+        userId,
+        imageUrl: values.imageUrl !== undefined ? values.imageUrl : null,
+      })
+    }
+
+    const res = await newBlog({
       ...values,
       userId,
     })
+
+    if (res.success && res.id) {
+      setCreatedBlogId(res.id)
+    }
+
+    return res
   }
 
   // 新規投稿画面でも、一度保存してIDが生成された後は削除可能にするためのハンドラー
@@ -36,7 +52,8 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
       mode="new" 
       userId={userId} 
       onSubmit={handleSubmit}
-      onDelete={handleDelete as any} // BlogEditor側でIDを渡すように調整が必要
+      onDelete={handleDelete as any}
+      initialData={createdBlogId ? { id: createdBlogId } as any : undefined}
     />
   )
 }

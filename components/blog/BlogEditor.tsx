@@ -150,6 +150,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [isEditorFocused, setIsEditorFocused] = useState(false)
   const isMobile = useMediaQuery("(max-width: 767px)")
   const editorRef = useRef<RichTextEditorRef>(null)
+  const isSaving = useRef(false)
   const [userCollections, setUserCollections] = useState<CollectionType[]>([])
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
   const [userProfile, setUserProfile] = useState<{ name: string; avatar_url: string | null } | null>(null)
@@ -270,10 +271,11 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   }, [isDirty, watchedTitle, watchedContent, status, viewMode])
 
   const handleAction = async (isPublished: boolean, silent: boolean = false) => {
-    if (status === "saving-draft" || status === "publishing") return
+    if (isSaving.current) return
     
     setError("")
     setStatus(isPublished ? "publishing" : "saving-draft")
+    isSaving.current = true
 
     try {
       let base64Image: string | undefined = undefined;
@@ -349,6 +351,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       console.error("Submission error:", error)
       setError("ネットワークエラーが発生しました。")
       setStatus("error")
+    } finally {
+      isSaving.current = false
     }
   }
 
