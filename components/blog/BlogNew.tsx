@@ -53,7 +53,6 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
       userId={userId} 
       onSubmit={handleSubmit}
       onDelete={handleDelete as any}
-      initialData={createdBlogId ? { id: createdBlogId } as any : undefined}
     />
   )
 }
