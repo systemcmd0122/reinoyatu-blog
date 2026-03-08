@@ -23,6 +23,8 @@ import { CharacterCount } from '@tiptap/extension-character-count'
 import { Mention } from '@tiptap/extension-mention'
 import { Markdown } from 'tiptap-markdown'
 import { common, createLowlight } from 'lowlight'
+import { uploadImage } from '@/actions/image'
+import { toast } from 'sonner'
 
 import { Mathematics } from './extensions/Mathematics'
 import { FocusMode } from './extensions/FocusMode'
@@ -64,6 +66,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
   userId,
 }, ref) => {
   const [isReady, setIsReady] = useState(false)
+
 
   const editor = useEditor({
     extensions: [
@@ -153,6 +156,95 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
     editorProps: {
       attributes: {
         class: 'prose max-w-none focus:outline-none min-h-[600px] py-4 px-4 md:px-12 md:py-16 !text-foreground/90 prose-p:!text-foreground/85 prose-h1:!text-foreground prose-h2:!text-foreground prose-h3:!text-foreground prose-h4:!text-foreground prose-h5:!text-foreground prose-h6:!text-foreground prose-strong:!text-foreground prose-strong:!font-semibold prose-em:!text-foreground prose-li:!text-foreground/85 prose-td:!text-foreground/85 prose-th:!text-foreground/85 prose-a:!text-blue-500',
+      },
+      handlePaste: (view, event) => {
+        const items = Array.from(event.clipboardData?.items || []);
+        const files = items
+          .filter(item => item.kind === 'file' && item.type.startsWith('image/'))
+          .map(item => item.getAsFile())
+          .filter((file): file is File => file !== null);
+
+        if (files.length > 0) {
+          event.preventDefault();
+
+          if (!userId) {
+            toast.error('画像のアップロードにはログインが必要です');
+            return true;
+          }
+
+          files.forEach(async (file) => {
+            const maxFileSize = 2 * 1024 * 1024; // 2MB
+            if (file.size > maxFileSize) {
+              toast.error(`画像サイズは2MB以下にしてください (${file.name})`);
+              return;
+            }
+
+            const toastId = toast.loading(`${file.name}をアップロード中...`);
+
+            try {
+              const reader = new FileReader();
+              const base64 = await new Promise<string>((resolve, reject) => {
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+              });
+
+              const result = await uploadImage(base64, userId);
+              if (result.error) throw new Error(result.error);
+
+              editor?.chain().focus().setImage({ src: result.data.public_url }).run();
+              toast.success(`${file.name}をアップロードしました`, { id: toastId });
+            } catch (error: any) {
+              console.error('Upload error:', error);
+              toast.error(`アップロードに失敗しました: ${file.name}`, { id: toastId });
+            }
+          });
+          return true;
+        }
+        return false;
+      },
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+          const files = Array.from(event.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+          if (files.length > 0) {
+            event.preventDefault();
+
+            if (!userId) {
+              toast.error('画像のアップロードにはログインが必要です');
+              return true;
+            }
+
+            files.forEach(async (file) => {
+              const maxFileSize = 2 * 1024 * 1024; // 2MB
+              if (file.size > maxFileSize) {
+                toast.error(`画像サイズは2MB以下にしてください (${file.name})`);
+                return;
+              }
+
+              const toastId = toast.loading(`${file.name}をアップロード中...`);
+
+              try {
+                const reader = new FileReader();
+                const base64 = await new Promise<string>((resolve, reject) => {
+                  reader.onload = () => resolve(reader.result as string);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(file);
+                });
+
+                const result = await uploadImage(base64, userId);
+                if (result.error) throw new Error(result.error);
+
+                editor?.chain().focus().setImage({ src: result.data.public_url }).run();
+                toast.success(`${file.name}をアップロードしました`, { id: toastId });
+              } catch (error: any) {
+                console.error('Upload error:', error);
+                toast.error(`アップロードに失敗しました: ${file.name}`, { id: toastId });
+              }
+            });
+            return true;
+          }
+        }
+        return false;
       },
     },
     immediatelyRender: false,

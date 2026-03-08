@@ -31,10 +31,10 @@ const navigation = [
         description: "名前、自己紹介、アイコンの設定"
       },
       {
-        name: "下書き一覧",
+        name: "記事管理",
         icon: FileText,
         href: "/settings/drafts",
-        description: "未公開の記事を編集・管理"
+        description: "作成した記事の管理・編集"
       },
       {
         name: "アカウント",

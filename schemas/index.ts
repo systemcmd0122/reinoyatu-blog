@@ -66,13 +66,21 @@ const urlRegex = /^https?:\/\/(?:[-\w.])+(?:[:\d]+)?(?:\/(?:[\w._~:/?#[\]@!$&'()
 const validateUrl = (url: string): boolean => {
   if (!url || url.trim() === "") return true // 空文字列は有効
   
+  // プロトコルが指定されている場合、http/https以外はエラー
+  if (url.match(/^[a-z]+:\/\//i) && !url.match(/^https?:\/\//i)) {
+    return false
+  }
+
+  // プロトコルがない場合は、正規化（https://を付与）した状態で検証を試みる
+  const normalizedUrl = url.match(/^https?:\/\//i) ? url : `https://${url}`
+
   try {
     // URLConstructorを使用した検証
-    const urlObj = new URL(url)
+    const urlObj = new URL(normalizedUrl)
     return urlObj.protocol === 'http:' || urlObj.protocol === 'https:'
   } catch {
     // URLConstructorが失敗した場合は正規表現で検証
-    return urlRegex.test(url)
+    return urlRegex.test(normalizedUrl)
   }
 }
 
@@ -81,26 +89,31 @@ const validateUrl = (url: string): boolean => {
 export const SocialLinksSchema = z.object({
   twitter: z.string()
     .optional()
+    .transform((val) => (val && val.trim() !== "" && !val.match(/^https?:\/\//i)) ? `https://${val.trim()}` : val)
     .refine((val) => validateUrl(val || ""), {
       message: "有効なTwitterのURLを入力してください（例: https://x.com/username）"
     }),
   github: z.string()
     .optional()
+    .transform((val) => (val && val.trim() !== "" && !val.match(/^https?:\/\//i)) ? `https://${val.trim()}` : val)
     .refine((val) => validateUrl(val || ""), {
       message: "有効なGitHubのURLを入力してください（例: https://github.com/username）"
     }),
   linkedin: z.string()
     .optional()
+    .transform((val) => (val && val.trim() !== "" && !val.match(/^https?:\/\//i)) ? `https://${val.trim()}` : val)
     .refine((val) => validateUrl(val || ""), {
       message: "有効なLinkedInのURLを入力してください（例: https://linkedin.com/in/username）"
     }),
   instagram: z.string()
     .optional()
+    .transform((val) => (val && val.trim() !== "" && !val.match(/^https?:\/\//i)) ? `https://${val.trim()}` : val)
     .refine((val) => validateUrl(val || ""), {
       message: "有効なInstagramのURLを入力してください（例: https://instagram.com/username）"
     }),
   facebook: z.string()
     .optional()
+    .transform((val) => (val && val.trim() !== "" && !val.match(/^https?:\/\//i)) ? `https://${val.trim()}` : val)
     .refine((val) => validateUrl(val || ""), {
       message: "有効なFacebookのURLを入力してください（例: https://facebook.com/username）"
     })
@@ -121,6 +134,7 @@ export const ProfileSchema = z.object({
     }),
   homepage_url: z.string()
     .optional()
+    .transform((val) => (val && val.trim() !== "" && !val.match(/^https?:\/\//i)) ? `https://${val.trim()}` : val)
     .refine((val) => validateUrl(val || ""), {
       message: "有効なホームページのURLを入力してください（例: https://example.com）"
     }),
