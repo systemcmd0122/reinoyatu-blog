@@ -139,13 +139,13 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
                   </div>
                 </div>
                 <CardDescription className="line-clamp-2 mt-2 text-sm leading-relaxed">
-                  {draft.summary || draft.content.substring(0, 150).replace(/[#_*`]/g, "") || "内容がありません"}
+                  {draft.summary || draft.content?.substring(0, 150).replace(/[#_*`]/g, "") || "内容がありません"}
                 </CardDescription>
               </CardHeader>
               <CardFooter className="pt-2 pb-5 px-6 flex justify-between items-center bg-muted/5 border-t border-border/30">
                 <div className="text-[10px] font-bold text-muted-foreground flex items-center gap-1">
                   <FileText className="h-3 w-3" />
-                  {draft.content.length} 文字
+                  {draft.content?.length || 0} 文字
                 </div>
                 <div className="flex gap-2">
                   <AlertDialog>

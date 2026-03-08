@@ -23,6 +23,24 @@ const DraftsPage = async () => {
   }
 
   const { blogs, error } = await getUserBlogs()
+
+  if (error) {
+    return (
+      <div className="space-y-8 animate-in fade-in duration-500">
+        <div>
+          <h2 className="text-3xl font-black tracking-tight mb-2">記事管理</h2>
+          <p className="text-muted-foreground text-sm">エラーが発生しました</p>
+        </div>
+        <Card className="border-destructive/20 bg-destructive/5 p-10 text-center rounded-3xl">
+          <CardTitle className="text-xl font-black text-destructive">データの取得に失敗しました</CardTitle>
+          <CardDescription className="mt-2">
+            {typeof error === "string" ? error : (error as any).message || "不明なエラーが発生しました"}
+          </CardDescription>
+        </Card>
+      </div>
+    )
+  }
+
   const drafts = blogs?.filter(b => !b.is_published) || []
   const published = blogs?.filter(b => b.is_published) || []
 
