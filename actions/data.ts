@@ -41,7 +41,7 @@ export async function getUserBlogs() {
 
   const { data, error } = await supabase
     .from("blogs")
-    .select("id, title, created_at, is_published")
+    .select("id, title, summary, image_url, created_at, updated_at, is_published")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
   

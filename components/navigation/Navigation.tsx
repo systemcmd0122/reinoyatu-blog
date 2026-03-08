@@ -152,7 +152,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
     { href: "/", icon: House, label: "ホーム" },
     { href: "/changelog", icon: FileText, label: "アップデート" },
     { href: "/blog/new", icon: PenSquare, label: "投稿する" },
-    { href: "/settings/drafts", icon: FileText, label: "下書き一覧" },
+    { href: "/settings/drafts", icon: FileText, label: "記事管理" },
     { href: "/bookmarks", icon: Bookmark, label: "ブックマーク" },
     { href: "/settings/profile", icon: Settings, label: "設定" },
     { href: "/privacy", icon: Shield, label: "プライバシーポリシー" },
@@ -261,7 +261,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                         <DropdownMenuItem asChild>
                           <Link href="/settings/drafts" className="cursor-pointer">
                             <FileText className="mr-2 h-4 w-4" />
-                            <span>下書き一覧</span>
+                            <span>記事管理</span>
                           </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>

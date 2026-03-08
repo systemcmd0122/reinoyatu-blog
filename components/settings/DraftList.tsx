@@ -76,7 +76,7 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
       })
 
       if (res.success) {
-        toast.success("下書きを削除しました")
+        toast.success("記事を削除しました")
         router.refresh()
       } else {
         toast.error(res.error || "削除に失敗しました")
@@ -91,7 +91,7 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="下書きを検索..."
+            placeholder="記事を検索..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-11 rounded-xl bg-muted/50 border-none focus-visible:ring-primary"
@@ -120,8 +120,13 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-none font-black uppercase text-[10px] tracking-widest px-2 py-0.5">
-                        Draft
+                      <Badge variant="outline" className={cn(
+                        "border-none font-black uppercase text-[10px] tracking-widest px-2 py-0.5",
+                        draft.is_published
+                          ? "bg-green-500/10 text-green-600"
+                          : "bg-amber-500/10 text-amber-600"
+                      )}>
+                        {draft.is_published ? "公開済み" : "下書き"}
                       </Badge>
                       <div className="flex items-center text-[10px] text-muted-foreground font-bold">
                         <Clock className="h-3 w-3 mr-1" />
@@ -152,7 +157,7 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>下書きを削除しますか？</AlertDialogTitle>
+                        <AlertDialogTitle>記事を削除しますか？</AlertDialogTitle>
                         <AlertDialogDescription>
                           この記事のデータは完全に削除され、元に戻すことはできません。
                         </AlertDialogDescription>
@@ -183,7 +188,7 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
         ) : (
           <div className="py-20 text-center bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
             <Search className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-20" />
-            <p className="text-muted-foreground font-bold">一致する下書きが見つかりませんでした</p>
+            <p className="text-muted-foreground font-bold">一致する記事が見つかりませんでした</p>
           </div>
         )}
       </div>
