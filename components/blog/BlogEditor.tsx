@@ -793,7 +793,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   {/* プレビューエリア */}
                   {(viewMode === "preview" || viewMode === "split") && (
                     <div className={cn(
-                      "bg-background rounded-2xl border border-border shadow-sm overflow-y-auto custom-scrollbar p-6 sm:p-10",
+                      "bg-background rounded-2xl border border-border shadow-sm overflow-y-auto custom-scrollbar p-4 sm:p-10",
                       viewMode === "split" ? "h-full" : "min-h-[70vh]"
                     )}>
                       {/* Header Info (Synced with BlogDetail) */}

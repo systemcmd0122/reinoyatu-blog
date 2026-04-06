@@ -37,7 +37,7 @@ const ListItem: React.FC<ListItemProps> = ({ blog, currentUserId }) => {
 
   return (
     <div className="group block bg-card hover:bg-muted/30 transition-all duration-200 border-b border-border/50 last:border-0">
-      <div className="p-5 sm:p-7 flex gap-5 items-start">
+      <div className="p-4 sm:p-7 flex gap-5 items-start">
         {/* Author Avatar */}
         <div 
           className="flex-shrink-0 cursor-pointer pt-1" 
