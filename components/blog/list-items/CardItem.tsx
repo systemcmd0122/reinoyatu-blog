@@ -57,7 +57,7 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
       </Link>
 
       {/* Content */}
-      <div className="flex-1 p-5 flex flex-col">
+      <div className="flex-1 p-4 sm:p-5 flex flex-col">
         {/* Tags and Action Menu */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex flex-wrap gap-2">

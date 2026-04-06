@@ -20,6 +20,14 @@ import { toast } from "sonner"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet"
 import Link from "next/link"
 import { CommentType, CollectionWithItemsType } from "@/types"
 import { NormalizedArticle } from "@/types/blog-detail"
@@ -221,8 +229,42 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
     })
   }
 
+  const TOCContent = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <nav className="space-y-1">
+      {headings.map((heading) => {
+        const item = (
+          <a
+            key={heading.id}
+            href={`#${heading.id}`}
+            className={cn(
+              "block py-2 text-sm transition-all hover:text-primary leading-tight",
+              heading.level === 1 ? "font-bold" :
+              heading.level === 2 ? "pl-4 text-muted-foreground" :
+              "pl-8 text-muted-foreground text-xs",
+              activeId === heading.id && "text-primary border-l-2 border-primary pl-[14px] bg-primary/5"
+            )}
+            onClick={(e) => {
+              e.preventDefault()
+              document.getElementById(heading.id)?.scrollIntoView({
+                behavior: "smooth"
+              })
+            }}
+          >
+            {heading.text}
+          </a>
+        )
+
+        return isMobile ? (
+          <SheetClose asChild key={heading.id}>
+            {item}
+          </SheetClose>
+        ) : item
+      })}
+    </nav>
+  )
+
   return (
-    <div className="min-h-screen bg-muted/30 dark:bg-background pb-20">
+    <div className="min-h-screen bg-muted/30 dark:bg-background pb-20 relative">
       {/* Scroll Progress Bar */}
       <div className="fixed top-0 left-0 w-full h-1 z-[var(--z-progress)] bg-transparent">
         <div 
@@ -236,7 +278,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
           {/* Main Content */}
           <main className="flex-1 min-w-0">
             <article className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-              <div className="p-6 sm:p-10">
+              <div className="p-4 sm:p-10">
                 {/* 1. ArticleHeader (Author, Dates, Reading Time, Title) */}
                 <ArticleHeader 
                   author={blogData.author}
@@ -351,7 +393,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
             </article>
 
             {/* Comments Section */}
-            <div className="mt-8 bg-card rounded-2xl border border-border p-6 sm:p-10 shadow-sm">
+            <div className="mt-8 bg-card rounded-2xl border border-border p-4 sm:p-10 shadow-sm">
               <CommentSection
                 blogId={blog.id}
                 currentUserId={currentUserId}
@@ -375,29 +417,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                   <h2 className="font-bold text-sm uppercase tracking-wider">目次</h2>
                 </div>
                 <ScrollArea className="flex-1 p-4">
-                  <nav className="space-y-1">
-                    {headings.map((heading) => (
-                      <a
-                        key={heading.id}
-                        href={`#${heading.id}`}
-                        className={cn(
-                          "block py-2 text-sm transition-all hover:text-primary leading-tight",
-                          heading.level === 1 ? "font-bold" : 
-                          heading.level === 2 ? "pl-4 text-muted-foreground" : 
-                          "pl-8 text-muted-foreground text-xs",
-                          activeId === heading.id && "text-primary border-l-2 border-primary pl-[14px] bg-primary/5"
-                        )}
-                        onClick={(e) => {
-                          e.preventDefault()
-                          document.getElementById(heading.id)?.scrollIntoView({
-                            behavior: "smooth"
-                          })
-                        }}
-                      >
-                        {heading.text}
-                      </a>
-                    ))}
-                  </nav>
+                  <TOCContent />
                 </ScrollArea>
               </div>
             )}
@@ -459,6 +479,30 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
           </aside>
         </div>
       </div>
+
+      {/* Mobile TOC Button */}
+      {headings.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-[var(--z-sticky)] lg:hidden">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button size="icon" className="h-12 w-12 rounded-full shadow-lg ring-4 ring-background">
+                <List className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-[2rem] max-h-[70vh] p-0">
+              <SheetHeader className="p-6 border-b">
+                <SheetTitle className="flex items-center gap-2">
+                  <List className="h-5 w-5 text-primary" />
+                  目次
+                </SheetTitle>
+              </SheetHeader>
+              <ScrollArea className="p-6 h-full overflow-y-auto">
+                <TOCContent isMobile />
+              </ScrollArea>
+            </SheetContent>
+          </Sheet>
+        </div>
+      )}
     </div>
   )
 }

@@ -23,6 +23,7 @@ import {
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import { ThemeToggle } from "./ThemeToggle"
 import { CommandMenu } from "./CommandMenu"
 import { useNotifications } from "@/hooks/use-notifications"
@@ -175,7 +176,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               <div className="bg-primary text-primary-foreground p-1.5 rounded-md font-black text-xl leading-none shadow-sm">
                 RY
               </div>
-              <span className="font-black text-lg md:text-xl tracking-tighter hidden sm:inline-block text-foreground">
+              <span className="font-black text-base sm:text-lg md:text-xl tracking-tighter hidden sm:inline-block text-foreground">
                 例のヤツ
               </span>
             </Link>
@@ -354,19 +355,33 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                         </Link>
                       </div>
                       <nav className="flex-1 p-4 space-y-2">
-                        {mobileNavItems.map((item) => (
-                          <SheetClose asChild key={item.label}>
-                            <Link
-                              href={item.href}
-                              className="flex items-center space-x-4 px-4 py-3 rounded-xl text-base font-medium text-foreground/80 hover:bg-muted hover:text-foreground transition-all active:scale-95"
-                            >
-                              <div className="p-2 bg-muted-foreground/10 rounded-lg">
-                                <item.icon className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                              <span>{item.label}</span>
-                            </Link>
-                          </SheetClose>
-                        ))}
+                        {mobileNavItems.map((item) => {
+                          const isActive = pathname === item.href
+                          return (
+                            <SheetClose asChild key={item.label}>
+                              <Link
+                                href={item.href}
+                                className={cn(
+                                  "flex items-center space-x-4 px-4 py-3 rounded-xl text-base font-medium transition-all active:scale-95",
+                                  isActive
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-foreground/80 hover:bg-muted hover:text-foreground"
+                                )}
+                              >
+                                <div className={cn(
+                                  "p-2 rounded-lg",
+                                  isActive ? "bg-primary/20" : "bg-muted-foreground/10"
+                                )}>
+                                  <item.icon className={cn(
+                                    "h-5 w-5",
+                                    isActive ? "text-primary" : "text-muted-foreground"
+                                  )} />
+                                </div>
+                                <span className={cn(isActive && "font-bold")}>{item.label}</span>
+                              </Link>
+                            </SheetClose>
+                          )
+                        })}
                         {(isInstallable || isIOS) && !isInstalled && (
                           <SheetClose asChild>
                             <button

@@ -164,7 +164,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           size="sm"
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
-          className="h-9 w-9 md:h-8 md:w-8 p-0"
+          className="h-11 w-11 md:h-8 md:w-8 p-0"
           aria-label="元に戻す"
         >
           <Undo className="h-4 w-4" />
@@ -174,7 +174,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           size="sm"
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
-          className="h-9 w-9 md:h-8 md:w-8 p-0"
+          className="h-11 w-11 md:h-8 md:w-8 p-0"
           aria-label="やり直し"
         >
           <Redo className="h-4 w-4" />
@@ -221,7 +221,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={cn('h-9 w-9 md:h-8 md:w-8 p-0', editor.isActive('bold') && 'bg-accent text-accent-foreground')}
+          className={cn('h-11 w-11 md:h-8 md:w-8 p-0', editor.isActive('bold') && 'bg-accent text-accent-foreground')}
           aria-label="太字"
         >
           <Bold className="h-4 w-4" />
@@ -230,7 +230,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={cn('h-9 w-9 md:h-8 md:w-8 p-0', editor.isActive('italic') && 'bg-accent text-accent-foreground')}
+          className={cn('h-11 w-11 md:h-8 md:w-8 p-0', editor.isActive('italic') && 'bg-accent text-accent-foreground')}
           aria-label="斜体"
         >
           <Italic className="h-4 w-4" />
@@ -239,7 +239,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={cn('h-9 w-9 md:h-8 md:w-8 p-0', editor.isActive('underline') && 'bg-accent text-accent-foreground')}
+          className={cn('h-11 w-11 md:h-8 md:w-8 p-0', editor.isActive('underline') && 'bg-accent text-accent-foreground')}
           aria-label="下線"
         >
           <Underline className="h-4 w-4" />
@@ -248,7 +248,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={cn('h-9 w-9 md:h-8 md:w-8 p-0', editor.isActive('strike') && 'bg-accent text-accent-foreground')}
+          className={cn('h-11 w-11 md:h-8 md:w-8 p-0', editor.isActive('strike') && 'bg-accent text-accent-foreground')}
           aria-label="取り消し線"
         >
           <Strikethrough className="h-4 w-4" />
@@ -257,7 +257,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleCode().run()}
-          className={cn('h-9 w-9 md:h-8 md:w-8 p-0', editor.isActive('code') && 'bg-accent text-accent-foreground')}
+          className={cn('h-11 w-11 md:h-8 md:w-8 p-0', editor.isActive('code') && 'bg-accent text-accent-foreground')}
           aria-label="インラインコード"
         >
           <Code className="h-4 w-4" />
@@ -355,7 +355,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={cn('h-9 w-9 md:h-8 md:w-8 p-0', editor.isActive('bulletList') && 'bg-accent text-accent-foreground')}
+          className={cn('h-11 w-11 md:h-8 md:w-8 p-0', editor.isActive('bulletList') && 'bg-accent text-accent-foreground')}
           aria-label="箇条書き"
         >
           <List className="h-4 w-4" />
@@ -364,7 +364,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={cn('h-9 w-9 md:h-8 md:w-8 p-0', editor.isActive('orderedList') && 'bg-accent text-accent-foreground')}
+          className={cn('h-11 w-11 md:h-8 md:w-8 p-0', editor.isActive('orderedList') && 'bg-accent text-accent-foreground')}
           aria-label="番号付きリスト"
         >
           <ListOrdered className="h-4 w-4" />
@@ -373,7 +373,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleTaskList().run()}
-          className={cn('h-9 w-9 md:h-8 md:w-8 p-0', editor.isActive('taskList') && 'bg-accent text-accent-foreground')}
+          className={cn('h-11 w-11 md:h-8 md:w-8 p-0', editor.isActive('taskList') && 'bg-accent text-accent-foreground')}
           aria-label="タスクリスト"
         >
           <CheckSquare className="h-4 w-4" />
@@ -389,7 +389,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-9 w-9 md:h-8 md:w-8 p-0"
+              className="h-11 w-11 md:h-8 md:w-8 p-0"
               aria-label="画像挿入"
               disabled={isUploading}
             >
@@ -419,7 +419,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           <Button
             variant="ghost"
             size="sm"
-            className={cn('h-9 w-9 md:h-8 md:w-8 p-0', editor.isActive('link') && 'bg-accent text-accent-foreground')}
+            className={cn('h-11 w-11 md:h-8 md:w-8 p-0', editor.isActive('link') && 'bg-accent text-accent-foreground')}
             aria-label="リンク挿入"
           >
             <LinkIcon className="h-4 w-4" />
@@ -429,7 +429,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           variant="ghost"
           size="sm"
           onClick={() => setMediaDialog({ type: 'youtube', isOpen: true })}
-          className="h-9 w-9 md:h-8 md:w-8 p-0"
+          className="h-11 w-11 md:h-8 md:w-8 p-0"
           aria-label="YouTube埋め込み"
         >
           <Youtube className="h-4 w-4" />
@@ -445,7 +445,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-9 w-9 md:h-8 md:w-8 p-0"
+              className="h-11 w-11 md:h-8 md:w-8 p-0"
               disabled={!editor.isActive('table')}
               aria-label="テーブル操作"
             >
@@ -469,7 +469,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          className={cn('h-9 w-9 md:h-8 md:w-8 p-0', editor.isActive({ textAlign: 'left' }) && 'bg-accent text-accent-foreground')}
+          className={cn('h-11 w-11 md:h-8 md:w-8 p-0', editor.isActive({ textAlign: 'left' }) && 'bg-accent text-accent-foreground')}
           aria-label="左揃え"
         >
           <AlignLeft className="h-4 w-4" />
@@ -478,7 +478,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          className={cn('h-9 w-9 md:h-8 md:w-8 p-0', editor.isActive({ textAlign: 'center' }) && 'bg-accent text-accent-foreground')}
+          className={cn('h-11 w-11 md:h-8 md:w-8 p-0', editor.isActive({ textAlign: 'center' }) && 'bg-accent text-accent-foreground')}
           aria-label="中央揃え"
         >
           <AlignCenter className="h-4 w-4" />
@@ -487,7 +487,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          className={cn('h-9 w-9 md:h-8 md:w-8 p-0', editor.isActive({ textAlign: 'right' }) && 'bg-accent text-accent-foreground')}
+          className={cn('h-11 w-11 md:h-8 md:w-8 p-0', editor.isActive({ textAlign: 'right' }) && 'bg-accent text-accent-foreground')}
           aria-label="右揃え"
         >
           <AlignRight className="h-4 w-4" />

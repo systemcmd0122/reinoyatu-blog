@@ -296,7 +296,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   }
 
   const getIndentClass = () => {
-    return nestLevel > 0 ? "border-l-2 border-border pl-4 ml-2" : ""
+    return nestLevel > 0 ? "border-l-2 border-border pl-2 sm:pl-4 ml-1 sm:ml-2" : ""
   }
 
   return (
