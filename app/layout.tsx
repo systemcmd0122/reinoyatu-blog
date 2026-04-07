@@ -5,6 +5,7 @@ import { M_PLUS_1 } from "next/font/google"
 import { createClient } from "@/utils/supabase/server"
 import Navigation from "@/components/navigation/Navigation"
 import Link from "next/link"
+import Script from "next/script"
 import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/providers/ThemeProvider"
 import { RealtimeProvider } from "@/components/providers/RealtimeProvider"
@@ -126,6 +127,12 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
   return (
     <html lang="ja" suppressHydrationWarning>
       <body className={mPlus1.className}>
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5931540016126544"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
