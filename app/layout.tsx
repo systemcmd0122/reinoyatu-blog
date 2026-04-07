@@ -127,13 +127,15 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
 
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body className={mPlus1.className}>
+      <head>
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5931540016126544"
           crossOrigin="anonymous"
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
         />
+      </head>
+      <body className={mPlus1.className}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
