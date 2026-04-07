@@ -87,6 +87,7 @@ export const metadata: Metadata = {
   },
 
   other: {
+    "google-adsense-account": "ca-pub-5931540016126544",
     "google-site-verification":
       "HRR3HjapAEcd9RMteRtz52tQQjG5WFSMMFNap--f4vI",
     "discord:type": "website",
