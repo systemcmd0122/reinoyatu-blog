@@ -163,7 +163,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   }
 
   return (
-    <div className={`markdown-content prose prose-xl prose-zinc dark:prose-invert max-w-none prose-headings:font-black prose-a:text-primary ${className}`}>
+    <div className={`markdown-content prose prose-zinc dark:prose-invert max-w-none prose-headings:font-black prose-a:text-primary ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
         rehypePlugins={[rehypeKatex, [rehypeRaw, { tagfilter: true }]]}

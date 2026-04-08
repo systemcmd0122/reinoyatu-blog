@@ -57,7 +57,7 @@ const ListItem: React.FC<ListItemProps> = ({ blog, currentUserId }) => {
         <div className="flex-1 min-w-0 space-y-2">
           {/* Author info and date */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center text-xs sm:text-sm text-muted-foreground gap-2 overflow-hidden flex-wrap">
+            <div className="flex items-center text-xs sm:text-sm text-muted-foreground gap-2 overflow-hidden flex-wrap min-h-[44px]">
             <span 
               className="font-black text-foreground hover:text-primary transition-colors cursor-pointer truncate max-w-[150px]"
               onClick={handleAuthorClick}
@@ -100,8 +100,8 @@ const ListItem: React.FC<ListItemProps> = ({ blog, currentUserId }) => {
           )}
 
           {/* Footer - Likes */}
-          <div className="flex items-center gap-5 pt-3">
-            <div className="flex items-center gap-1.5 text-muted-foreground group/like">
+          <div className="flex items-center gap-5 pt-3 min-h-[44px]">
+            <div className="flex items-center gap-1.5 text-muted-foreground group/like cursor-pointer">
               <Heart className="h-4 w-4 transition-colors group-hover/like:text-rose-500 group-hover/like:fill-rose-500" />
               <span className="text-sm font-bold">{data.likesCount}</span>
             </div>

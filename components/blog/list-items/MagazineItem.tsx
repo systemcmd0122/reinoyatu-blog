@@ -74,7 +74,7 @@ const MagazineItem: React.FC<MagazineItemProps> = ({ blog, priority, currentUser
         </Link>
 
         {/* Text Content */}
-        <div className="flex-1 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+        <div className="flex-1 p-6 sm:p-8 md:p-12 lg:p-16 flex flex-col justify-center">
           <div className="hidden lg:flex items-center justify-between mb-8">
             <div className="flex flex-wrap gap-4">
               {data.tags.slice(0, 4).map((tag) => (
@@ -86,24 +86,24 @@ const MagazineItem: React.FC<MagazineItemProps> = ({ blog, priority, currentUser
             <BlogActionMenu blog={blog} isOwner={currentUserId === blog.user_id} />
           </div>
 
-          <Link href={`/blog/${data.id}`} className="block group/title mb-6">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground leading-[1.1] tracking-tighter group-hover/title:text-primary transition-colors line-clamp-2">
+          <Link href={`/blog/${data.id}`} className="block group/title mb-4 sm:mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-foreground leading-[1.1] tracking-tighter group-hover/title:text-primary transition-colors line-clamp-2">
               {data.title}
             </h2>
           </Link>
 
           {data.summary && (
-            <p className="text-lg text-muted-foreground line-clamp-3 mb-10 leading-relaxed font-medium">
+            <p className="text-base sm:text-lg text-muted-foreground line-clamp-3 mb-6 sm:mb-10 leading-relaxed font-medium">
               {data.summary}
             </p>
           )}
 
           <div className="mt-auto flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div 
-              className="flex items-center gap-4 cursor-pointer group/author" 
+              className="flex items-center gap-4 cursor-pointer group/author min-h-[44px]"
               onClick={handleAuthorClick}
             >
-              <div className="relative h-12 w-12 rounded-2xl overflow-hidden ring-2 ring-border group-hover/author:ring-primary transition-all shadow-md rotate-3 group-hover:rotate-0">
+              <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-2xl overflow-hidden ring-2 ring-border group-hover/author:ring-primary transition-all shadow-md rotate-3 group-hover:rotate-0">
                 <Image
                   src={data.author.avatarUrl}
                   alt={data.author.name}

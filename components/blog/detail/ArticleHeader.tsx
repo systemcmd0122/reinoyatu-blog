@@ -37,9 +37,9 @@ const ArticleHeader: React.FC<ArticleHeaderProps> = ({
   const isUpdated = createdAt !== updatedAt
 
   return (
-    <header className="mb-12 space-y-8">
+    <header className="mb-8 md:mb-12 space-y-6 md:space-y-8">
       {/* Title */}
-      <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter text-foreground leading-[1.05] animate-in slide-in-from-bottom-4 duration-700">
+      <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-foreground leading-[1.1] md:leading-[1.05] animate-in slide-in-from-bottom-4 duration-700">
         {title}
       </h1>
 

@@ -225,13 +225,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
           </div>
         </div>
 
-        <div className="px-6 md:px-12 -mt-20 relative z-10">
+        <div className="px-4 sm:px-6 md:px-12 -mt-16 sm:-mt-20 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-4 sm:gap-6">
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="relative h-40 w-40 rounded-[2.5rem] overflow-hidden border-8 border-background bg-background shadow-2xl"
+                className="relative h-32 w-32 sm:h-40 sm:w-40 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border-4 sm:border-8 border-background bg-background shadow-2xl"
               >
                 {profile.avatar_url ? (
                   <Image
@@ -272,10 +272,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-3 pb-2">
+            <div className="flex items-center justify-center gap-3 pb-2 w-full md:w-auto">
               {isOwnProfile ? (
-                <Button asChild size="lg" className="rounded-2xl font-bold h-12 px-6 shadow-lg shadow-primary/20">
-                  <Link href="/settings/profile" className="flex items-center gap-2">
+                <Button asChild size="lg" className="flex-1 md:flex-none rounded-2xl font-bold h-12 px-6 shadow-lg shadow-primary/20">
+                  <Link href="/settings/profile" className="flex items-center justify-center gap-2">
                     <Edit3 className="h-4 w-4" />
                     Edit Profile
                   </Link>
@@ -384,23 +384,23 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
             onValueChange={(v) => setActiveTab(v as any)}
             className="w-full"
           >
-            <div className="flex items-center justify-between mb-6 bg-muted/50 p-1.5 rounded-2xl border border-border/50">
-              <TabsList className="bg-transparent h-auto p-0 gap-1 overflow-x-auto no-scrollbar">
+            <div className="flex items-center justify-between mb-6 bg-muted/50 p-1 sm:p-1.5 rounded-2xl border border-border/50">
+              <TabsList className="bg-transparent h-auto p-0 gap-1 overflow-x-auto no-scrollbar flex-1 sm:flex-none">
                 <TabsTrigger
                   value="posts"
-                  className="rounded-xl px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  className="flex-1 sm:flex-none rounded-xl px-4 sm:px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
                 >
                   Articles
                 </TabsTrigger>
                 <TabsTrigger
                   value="series"
-                  className="rounded-xl px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  className="flex-1 sm:flex-none rounded-xl px-4 sm:px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
                 >
                   Series
                 </TabsTrigger>
                 <TabsTrigger
                   value="about"
-                  className="rounded-xl px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  className="flex-1 sm:flex-none rounded-xl px-4 sm:px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
                 >
                   History
                 </TabsTrigger>

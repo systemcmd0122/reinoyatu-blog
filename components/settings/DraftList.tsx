@@ -87,21 +87,23 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="記事を検索..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-11 rounded-xl bg-muted/50 border-none focus-visible:ring-primary"
+            className="pl-10 h-11 rounded-xl bg-muted/50 border-none focus-visible:ring-primary w-full"
           />
         </div>
         <div className="flex gap-2">
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px] h-11 rounded-xl bg-muted/50 border-none font-bold">
-              <ArrowUpDown className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="並び替え" />
+            <SelectTrigger className="flex-1 sm:w-[200px] h-11 rounded-xl bg-muted/50 border-none font-bold">
+              <ArrowUpDown className="h-4 w-4 mr-2 flex-shrink-0" />
+              <div className="truncate">
+                <SelectValue placeholder="並び替え" />
+              </div>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="updated_at_desc">更新日が新しい順</SelectItem>
@@ -142,15 +144,15 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
                   {draft.summary || draft.content?.substring(0, 150).replace(/[#_*`]/g, "") || "内容がありません"}
                 </CardDescription>
               </CardHeader>
-              <CardFooter className="pt-2 pb-5 px-6 flex justify-between items-center bg-muted/5 border-t border-border/30">
-                <div className="text-[10px] font-bold text-muted-foreground flex items-center gap-1">
+              <CardFooter className="pt-3 pb-5 px-4 sm:px-6 flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center bg-muted/5 border-t border-border/30">
+                <div className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 order-2 sm:order-1">
                   <FileText className="h-3 w-3" />
                   {draft.content?.length || 0} 文字
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto order-1 sm:order-2">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-9 px-4 text-muted-foreground hover:text-destructive hover:bg-destructive/10 font-bold rounded-lg transition-colors">
+                      <Button variant="ghost" size="sm" className="flex-1 sm:flex-none h-11 sm:h-9 px-4 text-muted-foreground hover:text-destructive hover:bg-destructive/10 font-bold rounded-lg transition-colors">
                         <Trash2 className="h-4 w-4 mr-2" />
                         削除
                       </Button>
@@ -175,8 +177,8 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
                     </AlertDialogContent>
                   </AlertDialog>
                   
-                  <Link href={`/blog/${draft.id}/edit`}>
-                    <Button variant="default" size="sm" className="h-9 px-6 gap-2 font-black rounded-lg shadow-sm">
+                  <Link href={`/blog/${draft.id}/edit`} className="flex-1 sm:flex-none">
+                    <Button variant="default" size="sm" className="w-full h-11 sm:h-9 px-6 gap-2 font-black rounded-lg shadow-sm">
                       編集を再開
                       <ArrowRight className="h-4 w-4" />
                     </Button>

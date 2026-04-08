@@ -29,7 +29,7 @@ const TextItem: React.FC<TextItemProps> = ({ blog, currentUserId }) => {
 
   return (
     <div className="group block bg-card hover:bg-muted/30 transition-all duration-300 border-l-4 border-transparent hover:border-primary border-b border-border/50 last:border-b-0">
-      <div className="px-5 py-4 sm:px-8 sm:py-6">
+      <div className="px-5 py-4 sm:px-8 sm:py-6 min-h-[44px]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-2">
@@ -39,7 +39,7 @@ const TextItem: React.FC<TextItemProps> = ({ blog, currentUserId }) => {
                 </Badge>
               )}
               <div 
-                className="flex items-center gap-2 cursor-pointer group/author" 
+                className="flex items-center gap-2 cursor-pointer group/author min-h-[44px]"
                 onClick={handleAuthorClick}
               >
                 <div className="bg-muted rounded-full p-1 group-hover/author:bg-primary/20 transition-colors">

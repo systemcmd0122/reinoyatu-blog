@@ -17,7 +17,7 @@ const CompactItem: React.FC<CompactItemProps> = ({ blog, currentUserId }) => {
 
   return (
     <div className="group block bg-card hover:bg-muted/30 transition-colors duration-200 border-b border-border/50 last:border-0">
-      <div className="px-4 py-3 sm:px-6 flex items-center gap-4">
+      <div className="px-4 py-3 sm:px-6 flex items-center gap-4 min-h-[44px]">
         {/* Date/Status - Fixed width */}
         <div className="hidden sm:flex w-28 flex-shrink-0 text-[11px] font-bold text-muted-foreground/60 uppercase items-center gap-2">
           {data.dateDisplay.split(' (')[0].split('に')[0]} {/* Simple date display for compact */}

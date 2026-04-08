@@ -53,8 +53,8 @@ const MobileNav: React.FC<MobileNavProps> = ({ userId, unreadCount = 0 }) => {
 
   // Only show on mobile
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-[var(--z-nav)] px-4 pb-4 pointer-events-none">
-      <nav className="glass rounded-[2rem] shadow-2xl border-white/20 h-16 flex items-center justify-around pointer-events-auto overflow-hidden">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-[var(--z-nav)] px-4 pb-6 pointer-events-none">
+      <nav className="bg-background/80 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/60 rounded-[2rem] shadow-2xl border border-white/20 h-16 flex items-center justify-around pointer-events-auto overflow-hidden">
         {navItems.map((item) => {
           const isActive = pathname === item.href
 

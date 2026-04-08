@@ -2,6 +2,37 @@ import { ChangelogEntry } from "@/types/changelog"
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: "3.1.0",
+    date: "2026-02-26",
+    items: [
+      {
+        category: "Improvement",
+        content: "包括的なモバイル最適化とUIの洗練",
+        description: "すべてのデバイスで最高の体験を提供するため、サイト全体のレスポンシブデザインを徹底的に見直しました。特にモバイル端末での可読性と操作性を大幅に向上させています。",
+      },
+      {
+        category: "Design",
+        content: "ランディングページのレスポンシブ対応強化",
+        description: "ヒーローセクションのタイポグラフィと余白をデバイスサイズに応じて最適化し、スマートフォンでも迫力あるビジュアルを実現しました。",
+      },
+      {
+        category: "UX",
+        content: "モバイル・タッチターゲットの最適化",
+        description: "主要なボタンやインタラクティブ要素に44px以上のタッチターゲットを確保。誤操作を防ぎ、親指での快適な操作をサポートします。",
+      },
+      {
+        category: "Improvement",
+        content: "記事一覧とプロフィール画面のレイアウト調整",
+        description: "カード型・リスト型などの各記事表示モードや、プロフィール画面のタブ・スタッツ表示をモバイル向けに再設計。限られた画面スペースを最大限に活用します。",
+      },
+      {
+        category: "Fix",
+        content: "ボトムナビゲーションによる重なり問題の解消",
+        description: "モバイル版のボトムナビゲーションがコンテンツと重なってしまう問題を、レイアウト全体のパディング調整により修正しました。",
+      },
+    ],
+  },
+  {
     version: "3.0.0",
     date: "2026-02-25",
     items: [

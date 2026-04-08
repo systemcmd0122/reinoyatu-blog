@@ -30,7 +30,7 @@ export const LandingHero = () => {
   }
 
   return (
-    <section className="relative pt-32 pb-24 lg:pt-56 lg:pb-40 overflow-hidden bg-background">
+    <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 lg:pt-56 lg:pb-40 overflow-hidden bg-background">
       {/* Background Decor */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 overflow-hidden">
         <motion.div
@@ -65,7 +65,7 @@ export const LandingHero = () => {
               <Sparkles className="h-4 w-4" />
               <span className="uppercase tracking-widest">Next Generation Platform</span>
             </div>
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-foreground leading-[1.05] md:leading-[0.95]">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-foreground leading-[1.05] md:leading-[0.95]">
               あなたの知見を、<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-600 to-indigo-600">最高の体験</span>で。
             </h1>
@@ -81,16 +81,16 @@ export const LandingHero = () => {
 
           <motion.div
             variants={itemVariants}
-            className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 pt-6"
           >
-            <Link href="/signup">
-              <Button size="lg" className="h-16 px-10 rounded-2xl text-xl font-black gap-2 shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground group">
+            <Link href="/signup" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-10 rounded-2xl text-lg sm:text-xl font-black gap-2 shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground group">
                 今すぐ書き始める
-                <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline" className="h-16 px-10 rounded-2xl text-xl font-black bg-background hover:bg-muted active:scale-95 transition-all border-2">
+            <Link href="/login" className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-10 rounded-2xl text-lg sm:text-xl font-black bg-background hover:bg-muted active:scale-95 transition-all border-2">
                 ログイン
               </Button>
             </Link>

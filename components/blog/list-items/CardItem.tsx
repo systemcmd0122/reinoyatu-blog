@@ -67,7 +67,7 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
       </Link>
 
       {/* Content */}
-      <div className="flex-1 p-6 md:p-8 flex flex-col">
+      <div className="flex-1 p-5 sm:p-6 md:p-8 flex flex-col">
         {/* Header (Tags & Action) */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex flex-wrap gap-2">
@@ -88,24 +88,24 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
         </div>
 
         {/* Title */}
-        <Link href={`/blog/${data.id}`} className="block mb-4 group-hover:text-primary transition-colors duration-300">
-          <h2 className="text-2xl font-black text-foreground leading-[1.2] line-clamp-2 tracking-tight">
+        <Link href={`/blog/${data.id}`} className="block mb-3 sm:mb-4 group-hover:text-primary transition-colors duration-300">
+          <h2 className="text-xl sm:text-2xl font-black text-foreground leading-[1.2] line-clamp-2 tracking-tight">
             {data.title}
           </h2>
         </Link>
 
         {/* Summary */}
-        <p className="text-[15px] text-muted-foreground line-clamp-3 mb-6 leading-relaxed font-medium opacity-80">
+        <p className="text-sm sm:text-[15px] text-muted-foreground line-clamp-3 mb-4 sm:mb-6 leading-relaxed font-medium opacity-80">
           {data.summary || "概要はありません。"}
         </p>
 
         {/* Footer */}
-        <div className="mt-auto pt-6 border-t border-border/30 flex items-center justify-between">
+        <div className="mt-auto pt-4 sm:pt-6 border-t border-border/30 flex items-center justify-between">
           <div 
-            className="flex items-center gap-3 cursor-pointer group/author transition-all active:scale-95"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer group/author transition-all active:scale-95 min-h-[44px]"
             onClick={handleAuthorClick}
           >
-            <div className="relative h-9 w-9 rounded-full overflow-hidden border-2 border-border/50 group-hover/author:border-primary group-hover/author:shadow-lg transition-all">
+            <div className="relative h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden border-2 border-border/50 group-hover/author:border-primary group-hover/author:shadow-lg transition-all">
               <Image
                 src={data.author.avatarUrl}
                 alt={data.author.name}
@@ -123,12 +123,12 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-             <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-xl border border-border/20">
-              <Heart className="h-4 w-4 transition-colors group-hover:text-rose-500 group-hover:fill-rose-500" />
-              <span className="text-xs font-black">{data.likesCount}</span>
+          <div className="flex items-center gap-2 sm:gap-4">
+             <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground bg-muted/30 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border border-border/20 min-h-[36px] sm:min-h-[44px]">
+              <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4 transition-colors group-hover:text-rose-500 group-hover:fill-rose-500" />
+              <span className="text-[10px] sm:text-xs font-black">{data.likesCount}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-muted-foreground/40">
+            <div className="flex items-center gap-1 sm:gap-1.5 text-muted-foreground/40">
               <Clock className="h-3.5 w-3.5" />
               <span className="text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">
                 {data.dateDisplay}
