@@ -2,7 +2,6 @@
 
 import React from "react"
 import Link from "next/link"
-import { Heart } from "lucide-react"
 import { getBlogDisplayData } from "@/utils/blog-helpers"
 import { BlogType } from "@/types"
 import { Badge } from "@/components/ui/badge"
@@ -16,63 +15,69 @@ interface CompactItemProps {
 const CompactItem: React.FC<CompactItemProps> = ({ blog, currentUserId }) => {
   const data = getBlogDisplayData(blog)
 
-  /** Display only the date part — strip relative suffix if present */
-  const dateShort = data.dateDisplay.split(" (")[0].split("に")[0]
+  // Extract a clean short date string (first part before any parenthesis or long suffix)
+  const shortDate = data.dateDisplay.split("前")[0]
+    ? data.dateDisplay.split("前")[0] + "前"
+    : data.dateDisplay.split(" ")[0] ?? data.dateDisplay
 
   return (
-    <article className="group block bg-card hover:bg-muted/30 transition-colors duration-200 border-b border-border/50 last:border-0">
-      <div className="px-4 py-3 sm:px-6 flex items-center gap-4">
-
-        {/* Date / Draft badge — fixed width on sm+ */}
-        <div className="hidden sm:flex w-28 flex-shrink-0 items-center gap-2 text-[11px] font-bold text-muted-foreground/60 uppercase tracking-wide">
-          <time dateTime={dateShort}>{dateShort}</time>
+    <div className="group bg-card hover:bg-muted/30 transition-colors duration-200 border-b border-border/40 last:border-0">
+      <div className="px-4 py-3 sm:px-6 flex items-center gap-3 sm:gap-4">
+        {/* Date – fixed width, hidden on mobile */}
+        <div className="hidden sm:flex w-24 flex-shrink-0 items-center gap-1.5 text-[11px] font-semibold text-muted-foreground/60 uppercase whitespace-nowrap">
+          {shortDate}
           {!data.isPublished && (
             <Badge
               variant="outline"
-              className="text-[9px] h-3 px-1 border-primary/30 text-primary font-black leading-none"
+              className="text-[9px] h-3.5 px-1 border-primary/40 text-primary font-bold"
             >
               D
             </Badge>
           )}
         </div>
 
-        {/* Title + inline tags */}
+        {/* Title + Tags */}
         <div className="flex-1 min-w-0">
-          <Link href={`/blog/${data.id}`} className="flex items-center gap-3">
-            <h2 className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors truncate">
+          <Link href={`/blog/${data.id}`} className="flex items-center gap-3 group/link">
+            <h2 className="text-sm sm:text-[15px] font-bold text-foreground group-hover/link:text-primary transition-colors truncate leading-none">
               {data.title}
             </h2>
-            <div className="hidden md:flex gap-1.5 shrink-0">
-              {data.tags.slice(0, 2).map((tag) => (
-                <span key={tag} className="text-[10px] font-medium text-muted-foreground/40 whitespace-nowrap">
-                  #{tag}
-                </span>
-              ))}
-            </div>
+            {data.tags.length > 0 && (
+              <div className="hidden md:flex gap-2 overflow-hidden flex-shrink-0">
+                {data.tags.slice(0, 2).map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[10px] font-medium text-muted-foreground/40 whitespace-nowrap"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </Link>
         </div>
 
-        {/* Likes */}
-        <div className="flex items-center gap-1.5 text-muted-foreground/50 shrink-0">
-          <Heart className="h-3.5 w-3.5" aria-hidden="true" />
-          <span className="text-xs font-bold" aria-label={`${data.likesCount}いいね`}>{data.likesCount}</span>
-        </div>
-
-        {/* Author + mobile date + action menu */}
-        <div className="flex-shrink-0 flex items-center gap-3">
-          <span className="text-xs font-bold text-muted-foreground hidden sm:inline-block whitespace-nowrap">
+        {/* Right: author, mobile date, action */}
+        <div className="flex-shrink-0 flex items-center gap-2 sm:gap-3">
+          <span className="hidden sm:inline-block text-xs font-semibold text-muted-foreground whitespace-nowrap">
             by{" "}
             <span className="text-foreground/80 group-hover:text-primary transition-colors">
               {data.author.name}
             </span>
           </span>
-          <time className="sm:hidden text-[10px] font-bold text-muted-foreground/60">
-            {data.dateDisplay}
-          </time>
+          {/* Mobile: show draft badge */}
+          {!data.isPublished && (
+            <Badge
+              variant="outline"
+              className="sm:hidden text-[9px] h-4 px-1.5 border-primary/40 text-primary font-bold"
+            >
+              DRAFT
+            </Badge>
+          )}
           <BlogActionMenu blog={blog} isOwner={currentUserId === blog.user_id} />
         </div>
       </div>
-    </article>
+    </div>
   )
 }
 

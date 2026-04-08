@@ -3,7 +3,7 @@
 import React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Heart, ArrowRight } from "lucide-react"
+import { Heart, User, ArrowRight } from "lucide-react"
 import { getBlogDisplayData } from "@/utils/blog-helpers"
 import { BlogType } from "@/types"
 import { Badge } from "@/components/ui/badge"
@@ -27,51 +27,53 @@ const TextItem: React.FC<TextItemProps> = ({ blog, currentUserId }) => {
   }
 
   return (
-    <article className="group block bg-card/50 hover:bg-card transition-all duration-300 border-l-4 border-transparent hover:border-primary border-b border-border/40 last:border-b-0 hover:shadow-md">
-      <div className="px-5 py-4 sm:px-8 sm:py-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-
+    <div className="group bg-card hover:bg-muted/30 transition-all duration-300 border-l-[3px] border-transparent hover:border-primary border-b border-border/40 last:border-b-0">
+      <div className="px-5 py-4 sm:px-7 sm:py-5">
+        <div className="flex items-center justify-between gap-4">
           {/* Left: meta + title + tags */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-3 flex-wrap">
+          <div className="flex-1 min-w-0 space-y-1.5">
+            {/* Author + date row */}
+            <div className="flex items-center gap-2 flex-wrap">
               {!data.isPublished && (
                 <Badge
                   variant="outline"
-                  className="text-[10px] h-4 font-black border-primary/50 text-primary px-1.5 py-0 rounded-md"
+                  className="text-[10px] h-4 font-bold border-primary/60 text-primary px-1.5 py-0 flex-shrink-0"
                 >
                   DRAFT
                 </Badge>
               )}
               <button
                 type="button"
-                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                className="flex items-center gap-1.5 cursor-pointer group/author"
                 onClick={handleAuthorClick}
-                aria-label={`${data.author.name}のプロフィールを見る`}
               >
-                <span className="text-xs font-bold text-foreground/70 hover:text-primary transition-colors truncate max-w-[120px]">
-                  @{data.author.name}
+                <div className="bg-muted rounded-full p-1 group-hover/author:bg-primary/15 transition-colors">
+                  <User className="h-3 w-3 text-muted-foreground group-hover/author:text-primary transition-colors" />
+                </div>
+                <span className="text-xs font-bold text-muted-foreground group-hover/author:text-primary transition-colors truncate max-w-[120px] leading-none">
+                  {data.author.name}
                 </span>
               </button>
-              <span className="text-[10px] text-muted-foreground/30" aria-hidden="true">•</span>
-              <time className="text-[11px] text-muted-foreground/60 font-bold">
+              <span className="text-[10px] text-muted-foreground/30 leading-none">•</span>
+              <span className="text-[11px] text-muted-foreground/60 font-semibold uppercase tracking-wide leading-none whitespace-nowrap">
                 {data.dateDisplay}
-              </time>
+              </span>
             </div>
 
             {/* Title */}
             <Link href={`/blog/${data.id}`} className="block group/title">
-              <h2 className="text-lg sm:text-xl font-black text-foreground group-hover/title:text-primary transition-colors line-clamp-2">
+              <h2 className="text-base sm:text-lg font-black text-foreground group-hover/title:text-primary transition-colors line-clamp-1 leading-snug tracking-tight">
                 {data.title}
               </h2>
             </Link>
 
             {/* Tags */}
             {data.tags.length > 0 && (
-              <div className="flex items-center gap-2 mt-2 flex-wrap" aria-label="タグ">
+              <div className="flex items-center gap-2.5 pt-0.5 overflow-hidden">
                 {data.tags.slice(0, 3).map((tag) => (
                   <span
                     key={tag}
-                    className="text-[10px] font-bold text-muted-foreground/50 uppercase"
+                    className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest whitespace-nowrap"
                   >
                     #{tag}
                   </span>
@@ -80,24 +82,24 @@ const TextItem: React.FC<TextItemProps> = ({ blog, currentUserId }) => {
             )}
           </div>
 
-          {/* Right: likes + action menu + arrow */}
-          <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0 justify-between sm:justify-end w-full sm:w-auto">
-            <div className="flex items-center gap-1.5 text-muted-foreground hover:text-rose-500 transition-colors">
-              <Heart className="h-4 w-4" aria-hidden="true" />
-              <span className="text-sm font-bold" aria-label={`${data.likesCount}いいね`}>{data.likesCount}</span>
+          {/* Right: likes + action + arrow */}
+          <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Heart className="h-3.5 w-3.5" />
+              <span className="text-sm font-bold tabular-nums">{data.likesCount}</span>
             </div>
             <BlogActionMenu blog={blog} isOwner={currentUserId === blog.user_id} />
             <Link
               href={`/blog/${data.id}`}
-              className="hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300"
-              aria-label="記事を読む"
+              className="hidden sm:flex opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300"
+              aria-label="Read article"
             >
-              <ArrowRight className="h-5 w-5 text-primary/70 group-hover:text-primary" aria-hidden="true" />
+              <ArrowRight className="h-4 w-4 text-primary" />
             </Link>
           </div>
         </div>
       </div>
-    </article>
+    </div>
   )
 }
 
