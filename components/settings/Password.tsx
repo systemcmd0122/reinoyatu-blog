@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, EyeOffIcon, EyeIcon } from "lucide-react"
+import { Loader2, EyeOffIcon, EyeIcon, KeyRound } from "lucide-react"
 import { PasswordSchema } from "@/schemas"
 import { setPassword } from "@/actions/auth"
 import { useRouter } from "next/navigation"
@@ -22,9 +22,7 @@ import { toast } from "sonner"
 import FormError from "@/components/auth/FormError"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import SaveStatus from "./SaveStatus"
-import { KeyRound } from "lucide-react"
 
-// パスワード変更
 const Password = () => {
   const router = useRouter()
   const [error, setError] = useState("")
@@ -34,27 +32,18 @@ const Password = () => {
 
   const form = useForm<z.infer<typeof PasswordSchema>>({
     resolver: zodResolver(PasswordSchema),
-    defaultValues: {
-      password: "",
-      confirmation: "",
-    },
+    defaultValues: { password: "", confirmation: "" },
   })
 
-  // 送信
   const onSubmit = (values: z.infer<typeof PasswordSchema>) => {
     setError("")
-
     startTransition(async () => {
       try {
-        const res = await setPassword({
-          ...values,
-        })
-
+        const res = await setPassword({ ...values })
         if (res?.error) {
           setError(res.error)
           return
         }
-
         toast.success("パスワードを変更しました")
         form.reset()
         router.refresh()
@@ -67,12 +56,60 @@ const Password = () => {
 
   const isFormDirty = form.formState.isDirty
 
+  const PasswordInput = ({
+    name,
+    label,
+    visible,
+    onToggle,
+  }: {
+    name: "password" | "confirmation"
+    label: string
+    visible: boolean
+    onToggle: () => void
+  }) => (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel className="font-bold">{label}</FormLabel>
+          <FormControl>
+            <div className="relative">
+              <Input
+                type={visible ? "text" : "password"}
+                placeholder="••••••••"
+                {...field}
+                disabled={isPending}
+                className="h-11 pr-11"
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 flex items-center justify-center w-11 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={onToggle}
+                tabIndex={-1}
+                aria-label={visible ? "パスワードを隠す" : "パスワードを表示"}
+              >
+                {visible ? (
+                  <EyeOffIcon className="w-5 h-5" />
+                ) : (
+                  <EyeIcon className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* ヘッダー — モバイルでは縦積み */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">セキュリティ</h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             アカウントのセキュリティ設定を管理し、パスワードを更新します。
           </p>
         </div>
@@ -82,7 +119,7 @@ const Password = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center space-x-2">
-            <KeyRound className="h-5 w-5 text-primary" />
+            <KeyRound className="h-5 w-5 text-primary shrink-0" />
             <CardTitle>パスワード変更</CardTitle>
           </div>
           <CardDescription>
@@ -91,86 +128,32 @@ const Password = () => {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-bold">パスワード</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      type={passwordVisibility1 ? "text" : "password"}
-                      placeholder="********"
-                      {...field}
-                      disabled={isPending}
-                    />
-                    <div
-                      className="absolute inset-y-0 right-0 flex cursor-pointer items-center p-3 text-muted-foreground"
-                      onClick={() =>
-                        setPasswordVisibility1(!passwordVisibility1)
-                      }
-                    >
-                      {passwordVisibility1 ? (
-                        <EyeOffIcon className="w-5 h-5" />
-                      ) : (
-                        <EyeIcon className="w-5 h-5" />
-                      )}
-                    </div>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="confirmation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-bold">確認用パスワード</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      type={passwordVisibility2 ? "text" : "password"}
-                      placeholder="********"
-                      {...field}
-                      disabled={isPending}
-                    />
-                    <div
-                      className="absolute inset-y-0 right-0 flex cursor-pointer items-center p-3 text-muted-foreground"
-                      onClick={() =>
-                        setPasswordVisibility2(!passwordVisibility2)
-                      }
-                    >
-                      {passwordVisibility2 ? (
-                        <EyeOffIcon className="w-5 h-5" />
-                      ) : (
-                        <EyeIcon className="w-5 h-5" />
-                      )}
-                    </div>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-            <div className="space-y-4 w-full">
-              <FormError message={error} />
-              <Button
-                type="submit"
-                className="space-x-2 font-bold"
-                disabled={isPending || !isFormDirty}
-              >
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                <span>パスワードを更新</span>
-              </Button>
-            </div>
-          </form>
-        </Form>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <PasswordInput
+                name="password"
+                label="パスワード"
+                visible={passwordVisibility1}
+                onToggle={() => setPasswordVisibility1(!passwordVisibility1)}
+              />
+              <PasswordInput
+                name="confirmation"
+                label="確認用パスワード"
+                visible={passwordVisibility2}
+                onToggle={() => setPasswordVisibility2(!passwordVisibility2)}
+              />
+              <div className="space-y-4">
+                <FormError message={error} />
+                <Button
+                  type="submit"
+                  className="w-full sm:w-auto h-11 font-bold"
+                  disabled={isPending || !isFormDirty}
+                >
+                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  パスワードを更新
+                </Button>
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

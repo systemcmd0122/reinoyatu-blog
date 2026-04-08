@@ -29,7 +29,7 @@ const NotificationList = ({ userId }: NotificationListProps) => {
           .select('name, avatar_url')
           .eq('id', lastNotification.actor_id)
           .single()
-        
+
         const fullNotification = {
           ...lastNotification,
           actor: actorData || { name: "ユーザー", avatar_url: null }
@@ -58,9 +58,13 @@ const NotificationList = ({ userId }: NotificationListProps) => {
 
   const handleMarkAsRead = async (id: string) => {
     await markAsRead(id)
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.map(n => n.id === id ? { ...n, is_read: true } : n)
     )
+  }
+
+  const handleDelete = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id))
   }
 
   const handleMarkAllAsRead = async () => {
@@ -94,9 +98,9 @@ const NotificationList = ({ userId }: NotificationListProps) => {
       <div className="flex justify-between items-center px-4 md:px-0">
         <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Recent Activity</h2>
         {notifications.some(n => !n.is_read) && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleMarkAllAsRead}
             className="text-xs font-bold gap-2 hover:text-primary"
           >
@@ -105,14 +109,13 @@ const NotificationList = ({ userId }: NotificationListProps) => {
           </Button>
         )}
       </div>
-      
+
       <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
         {notifications.map((notification) => (
-          <NotificationItem 
-            key={notification.id} 
-            notification={notification} 
-            onMarkAsRead={handleMarkAsRead}
-          />
+          <NotificationItem
+            key={notification.id}
+            notification={notification}
+            onMarkAsRead={handleMarkAsRead} onDelete={handleDelete} />
         ))}
       </div>
     </div>

@@ -193,27 +193,29 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
                       </ul>
                     </div>
 
-                    <div className="space-y-4">
-                      <h4 className="font-semibold">アカウント</h4>
-                      <ul className="space-y-2 text-sm text-muted-foreground">
-                        <li>
-                          <Link
-                            href="/login"
-                            className="hover:text-primary transition-colors"
-                          >
-                            ログイン
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            href="/signup"
-                            className="hover:text-primary transition-colors"
-                          >
-                            新規登録
-                          </Link>
-                        </li>
-                      </ul>
-                    </div>
+                    {!user && (
+                      <div className="space-y-4">
+                        <h4 className="font-semibold">アカウント</h4>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          <li>
+                            <Link
+                              href="/login"
+                              className="hover:text-primary transition-colors"
+                            >
+                              ログイン
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/signup"
+                              className="hover:text-primary transition-colors"
+                            >
+                              新規登録
+                            </Link>
+                          </li>
+                        </ul>
+                      </div>
+                    )}
                   </div>
 
                   <div className="border-t pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">

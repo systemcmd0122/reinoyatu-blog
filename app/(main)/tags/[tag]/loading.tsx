@@ -4,12 +4,12 @@ import { BlogListSkeleton } from "@/components/blog/BlogListSkeleton"
 
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-muted/30 dark:bg-background">
-      <div className="max-w-screen-xl mx-auto px-4 py-6">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-screen-xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-6">
-          <main className="flex-1 min-w-0">
+          <main className="flex-1 min-w-0 animate-pulse">
             {/* Header Skeleton */}
-            <div className="mb-6 space-y-4">
+            <div className="mb-8 space-y-4">
               <Skeleton className="h-4 w-24" />
               <div className="flex items-center gap-4">
                 <div className="p-4 bg-muted rounded-2xl">
@@ -35,9 +35,9 @@ export default function Loading() {
             <BlogListSkeleton count={5} />
           </main>
 
-          <aside className="w-full lg:w-[300px] flex-shrink-0 space-y-6">
+          <aside className="w-full lg:w-[300px] flex-shrink-0 space-y-6 animate-pulse">
             <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
-              <div className="p-4 border-b border-border bg-muted/30">
+              <div className="p-4 border-b border-border bg-background/50">
                 <Skeleton className="h-4 w-32" />
               </div>
               <div className="p-4 flex flex-wrap gap-2">

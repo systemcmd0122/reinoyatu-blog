@@ -44,7 +44,9 @@ import {
   SheetContent,
   SheetTrigger,
   SheetClose,
+  SheetTitle,
 } from "@/components/ui/sheet"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -226,12 +228,12 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                           <UserIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                           <span>プロフィール</span>
                         </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
-                          <Link href="/settings/drafts">
-                            <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
-                            <span>記事管理</span>
-                          </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
+                        <Link href="/settings/drafts">
+                          <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <span>記事管理</span>
+                        </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
                         <Link href="/settings/profile">
@@ -239,19 +241,19 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                           <span>設定</span>
                         </Link>
                       </DropdownMenuItem>
-                        {(isInstallable || isIOS) && !isInstalled && (
-                          <DropdownMenuItem 
-                            onClick={() => promptInstall()}
-                            className="rounded-xl p-2 cursor-pointer font-bold"
-                          >
-                            {isIOS ? (
-                              <Share className="mr-2 h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <Download className="mr-2 h-4 w-4 text-muted-foreground" />
-                            )}
-                            <span>アプリをインストール</span>
-                          </DropdownMenuItem>
-                        )}
+                      {(isInstallable || isIOS) && !isInstalled && (
+                        <DropdownMenuItem
+                          onClick={() => promptInstall()}
+                          className="rounded-xl p-2 cursor-pointer font-bold"
+                        >
+                          {isIOS ? (
+                            <Share className="mr-2 h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Download className="mr-2 h-4 w-4 text-muted-foreground" />
+                          )}
+                          <span>アプリをインストール</span>
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator className="opacity-50" />
                     <DropdownMenuItem
@@ -283,6 +285,9 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-full max-w-xs p-0 bg-background/80 backdrop-blur-xl border-l border-border rounded-l-3xl overflow-hidden">
+                <VisuallyHidden>
+                  <SheetTitle>メニュー</SheetTitle>
+                </VisuallyHidden>
                 <div className="flex flex-col h-full">
                   <div className="p-6 border-b border-border bg-muted/20 flex items-center justify-between">
                     <span className="font-black text-xl tracking-tighter">Menu</span>

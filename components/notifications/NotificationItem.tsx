@@ -4,16 +4,21 @@ import { NotificationType } from "@/types"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatDistanceToNow } from "date-fns"
 import { ja } from "date-fns/locale"
-import { Heart, MessageSquare, UserPlus, Layers, AtSign, Bell, Sparkles } from "lucide-react"
+import { Heart, MessageSquare, UserPlus, Layers, AtSign, Bell, Sparkles, X } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { deleteNotification } from "@/actions/notification"
+import { useState } from "react"
 
 interface NotificationItemProps {
   notification: NotificationType
   onMarkAsRead: (id: string) => void
+  onDelete: (id: string) => void
 }
 
-const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps) => {
+const NotificationItem = ({ notification, onMarkAsRead, onDelete }: NotificationItemProps) => {
+  const [isDeleting, setIsDeleting] = useState(false)
+
   const getIcon = () => {
     switch (notification.type) {
       case 'like': return <Heart className="h-4 w-4 text-red-500 fill-red-500" />
@@ -56,41 +61,65 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
     }
   }
 
-  return (
-    <Link 
-      href={getLink()} 
-      onClick={() => !notification.is_read && onMarkAsRead(notification.id)}
-      className={cn(
-        "flex items-start gap-4 p-4 hover:bg-muted/50 transition-colors border-b last:border-0",
-        !notification.is_read && "bg-primary/5"
-      )}
-    >
-      <div className="relative">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={notification.actor?.avatar_url || "/default.png"} />
-          <AvatarFallback>{notification.actor?.name?.[0] || "U"}</AvatarFallback>
-        </Avatar>
-        <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-1 shadow-sm border border-border">
-          {getIcon()}
-        </div>
-      </div>
-      
-      <div className="flex-1 space-y-1">
-        <p className={cn(
-          "text-sm leading-snug",
-          !notification.is_read ? "font-bold" : "text-muted-foreground"
-        )}>
-          {getMessage()}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: ja })}
-        </p>
-      </div>
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
 
-      {!notification.is_read && (
-        <div className="w-2 h-2 bg-primary rounded-full mt-2" />
-      )}
-    </Link>
+    setIsDeleting(true)
+    const result = await deleteNotification(notification.id)
+
+    if (result.success) {
+      onDelete(notification.id)
+    }
+    setIsDeleting(false)
+  }
+
+  return (
+    <div className="relative group">
+      <Link
+        href={getLink()}
+        onClick={() => !notification.is_read && onMarkAsRead(notification.id)}
+        className={cn(
+          "flex items-start gap-4 p-4 hover:bg-muted/50 transition-colors border-b last:border-0",
+          !notification.is_read && "bg-primary/5"
+        )}
+      >
+        <div className="relative">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={notification.actor?.avatar_url || "/default.png"} />
+            <AvatarFallback>{notification.actor?.name?.[0] || "U"}</AvatarFallback>
+          </Avatar>
+          <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-1 shadow-sm border border-border">
+            {getIcon()}
+          </div>
+        </div>
+
+        <div className="flex-1 space-y-1">
+          <p className={cn(
+            "text-sm leading-snug",
+            !notification.is_read ? "font-bold" : "text-muted-foreground"
+          )}>
+            {getMessage()}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: ja })}
+          </p>
+        </div>
+
+        {!notification.is_read && (
+          <div className="w-2 h-2 bg-primary rounded-full mt-2" />
+        )}
+      </Link>
+
+      <button
+        onClick={handleDelete}
+        disabled={isDeleting}
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-destructive/10 rounded-lg text-muted-foreground hover:text-destructive disabled:opacity-50"
+        title="通知を削除"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
   )
 }
 

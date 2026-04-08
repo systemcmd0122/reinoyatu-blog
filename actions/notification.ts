@@ -62,7 +62,7 @@ export async function getUnreadCount() {
  */
 export async function markNotificationAsRead(notificationId: string) {
   const supabase = createClient()
-  
+
   const { error } = await supabase
     .from("notifications")
     .update({ is_read: true })
@@ -82,7 +82,7 @@ export async function markNotificationAsRead(notificationId: string) {
  */
 export async function notifyAIEdit(userId: string, blogId: string) {
   const supabase = createClient()
-  
+
   // AI自身がactorとして振る舞うか、システムがactorになる
   // ここではシステム的な意味でactor_idをuserIdにするか、固定のAI-IDがあればそれを使う
   // 現状は簡単のため、 actor_id = userId (自分への通知) とする
@@ -125,5 +125,53 @@ export async function markAllNotificationsAsRead() {
   }
 
   revalidatePath("/")
+  return { success: true }
+}
+
+/**
+ * 通知を削除する
+ */
+export async function deleteNotification(notificationId: string) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: "ログインが必要です" }
+
+  // ユーザー本人の通知のみ削除可能
+  const { error } = await supabase
+    .from("notifications")
+    .delete()
+    .eq("id", notificationId)
+    .eq("user_id", user.id)
+
+  if (error) {
+    console.error("Delete notification error:", error)
+    return { success: false, error: "通知の削除に失敗しました" }
+  }
+
+  revalidatePath("/notifications")
+  return { success: true }
+}
+
+/**
+ * すべての通知を削除する
+ */
+export async function deleteAllNotifications() {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: "ログインが必要です" }
+
+  const { error } = await supabase
+    .from("notifications")
+    .delete()
+    .eq("user_id", user.id)
+
+  if (error) {
+    console.error("Delete all notifications error:", error)
+    return { success: false, error: "通知の削除に失敗しました" }
+  }
+
+  revalidatePath("/notifications")
   return { success: true }
 }

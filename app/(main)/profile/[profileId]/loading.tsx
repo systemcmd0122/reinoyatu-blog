@@ -56,7 +56,7 @@ export default function Loading() {
 
         {/* Main Content Skeleton */}
         <div className="lg:col-span-8">
-          <div className="mb-6 bg-muted/50 p-1.5 rounded-2xl border border-border/50 flex gap-2">
+          <div className="mb-6 bg-background/50 p-1.5 rounded-2xl border border-border/50 flex gap-2">
             <Skeleton className="h-10 w-32 rounded-xl" />
             <Skeleton className="h-10 w-32 rounded-xl" />
             <Skeleton className="h-10 w-32 rounded-xl" />

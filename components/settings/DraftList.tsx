@@ -3,7 +3,7 @@
 import React, { useState, useTransition, useMemo } from "react"
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Calendar, ArrowRight, Trash2, Loader2, Search, ArrowUpDown, Clock } from "lucide-react"
+import { FileText, ArrowRight, Trash2, Loader2, Search, ArrowUpDown, Clock } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
 import { deleteBlog } from "@/actions/blog"
@@ -53,15 +53,12 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
         return title.includes(query) || summary.includes(query) || content.includes(query)
       })
       .sort((a, b) => {
-        if (sortBy === "updated_at_desc") {
+        if (sortBy === "updated_at_desc")
           return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-        }
-        if (sortBy === "updated_at_asc") {
+        if (sortBy === "updated_at_asc")
           return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
-        }
-        if (sortBy === "title_asc") {
+        if (sortBy === "title_asc")
           return (a.title || "").localeCompare(b.title || "")
-        }
         return 0
       })
   }, [drafts, searchQuery, sortBy])
@@ -69,12 +66,7 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
   const handleDelete = (id: string, imageUrl: string | null) => {
     setDeletingId(id)
     startTransition(async () => {
-      const res = await deleteBlog({
-        blogId: id,
-        imageUrl,
-        userId
-      })
-
+      const res = await deleteBlog({ blogId: id, imageUrl, userId })
       if (res.success) {
         toast.success("記事を削除しました")
         router.refresh()
@@ -86,8 +78,9 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-4">
+    <div className="space-y-5">
+      {/* 検索・ソート行 */}
+      <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -97,86 +90,108 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
             className="pl-10 h-11 rounded-xl bg-muted/50 border-none focus-visible:ring-primary"
           />
         </div>
-        <div className="flex gap-2">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px] h-11 rounded-xl bg-muted/50 border-none font-bold">
-              <ArrowUpDown className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="並び替え" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="updated_at_desc">更新日が新しい順</SelectItem>
-              <SelectItem value="updated_at_asc">更新日が古い順</SelectItem>
-              <SelectItem value="title_asc">タイトル順</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-full sm:w-[200px] h-11 rounded-xl bg-muted/50 border-none font-bold">
+            <ArrowUpDown className="h-4 w-4 mr-2 shrink-0" />
+            <SelectValue placeholder="並び替え" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="updated_at_desc">更新日が新しい順</SelectItem>
+            <SelectItem value="updated_at_asc">更新日が古い順</SelectItem>
+            <SelectItem value="title_asc">タイトル順</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
+      {/* 記事カード一覧 */}
       <div className="grid gap-4">
         {filteredAndSortedDrafts.length > 0 ? (
           filteredAndSortedDrafts.map((draft) => (
-            <Card key={draft.id} className="hover:border-primary/50 transition-all group shadow-sm hover:shadow-md rounded-2xl overflow-hidden border-border/50">
+            <Card
+              key={draft.id}
+              className="hover:border-primary/50 transition-all group shadow-sm hover:shadow-md rounded-2xl overflow-hidden border-border/50"
+            >
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={cn(
-                        "border-none font-black uppercase text-[10px] tracking-widest px-2 py-0.5",
+                <div className="space-y-2">
+                  {/* バッジ + 更新日 — 折り返し対応 */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "border-none font-black uppercase text-[10px] tracking-widest px-2 py-0.5 shrink-0",
                         draft.is_published
                           ? "bg-green-500/10 text-green-600"
                           : "bg-amber-500/10 text-amber-600"
-                      )}>
-                        {draft.is_published ? "公開済み" : "下書き"}
-                      </Badge>
-                      <div className="flex items-center text-[10px] text-muted-foreground font-bold">
-                        <Clock className="h-3 w-3 mr-1" />
-                        最終更新: {format(new Date(draft.updated_at), "yyyy/MM/dd HH:mm")}
-                      </div>
+                      )}
+                    >
+                      {draft.is_published ? "公開済み" : "下書き"}
+                    </Badge>
+                    <div className="flex items-center text-[10px] text-muted-foreground font-bold">
+                      <Clock className="h-3 w-3 mr-1 shrink-0" />
+                      {format(new Date(draft.updated_at), "yyyy/MM/dd HH:mm")}
                     </div>
-                    <CardTitle className="text-xl md:text-2xl font-black tracking-tight group-hover:text-primary transition-colors">
-                      {draft.title || "無題の記事"}
-                    </CardTitle>
                   </div>
+                  <CardTitle className="text-lg sm:text-xl font-black tracking-tight group-hover:text-primary transition-colors leading-snug">
+                    {draft.title || "無題の記事"}
+                  </CardTitle>
                 </div>
-                <CardDescription className="line-clamp-2 mt-2 text-sm leading-relaxed">
-                  {draft.summary || draft.content?.substring(0, 150).replace(/[#_*`]/g, "") || "内容がありません"}
+                <CardDescription className="line-clamp-2 mt-1 text-sm leading-relaxed">
+                  {draft.summary ||
+                    draft.content?.substring(0, 150).replace(/[#_*`]/g, "") ||
+                    "内容がありません"}
                 </CardDescription>
               </CardHeader>
-              <CardFooter className="pt-2 pb-5 px-6 flex justify-between items-center bg-muted/5 border-t border-border/30">
-                <div className="text-[10px] font-bold text-muted-foreground flex items-center gap-1">
-                  <FileText className="h-3 w-3" />
+
+              {/* フッター — モバイルでは縦積み */}
+              <CardFooter className="pt-3 pb-4 px-4 sm:px-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-muted/5 border-t border-border/30">
+                <div className="flex items-center text-[10px] font-bold text-muted-foreground gap-1 self-start sm:self-auto">
+                  <FileText className="h-3 w-3 shrink-0" />
                   {draft.content?.length || 0} 文字
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-9 px-4 text-muted-foreground hover:text-destructive hover:bg-destructive/10 font-bold rounded-lg transition-colors">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 sm:flex-none h-10 px-4 text-muted-foreground hover:text-destructive hover:bg-destructive/10 font-bold rounded-lg transition-colors"
+                      >
                         <Trash2 className="h-4 w-4 mr-2" />
                         削除
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="mx-4 rounded-2xl sm:mx-auto">
                       <AlertDialogHeader>
                         <AlertDialogTitle>記事を削除しますか？</AlertDialogTitle>
                         <AlertDialogDescription>
                           この記事のデータは完全に削除され、元に戻すことはできません。
                         </AlertDialogDescription>
                       </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className="font-bold">キャンセル</AlertDialogCancel>
-                        <AlertDialogAction 
+                      <AlertDialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+                        <AlertDialogCancel className="font-bold h-11 w-full sm:w-auto">
+                          キャンセル
+                        </AlertDialogCancel>
+                        <AlertDialogAction
                           onClick={() => handleDelete(draft.id, draft.image_url)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-bold"
+                          className="h-11 w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90 font-bold"
                           disabled={isPending && deletingId === draft.id}
                         >
-                          {(isPending && deletingId === draft.id) ? <Loader2 className="h-4 w-4 animate-spin" /> : "削除する"}
+                          {isPending && deletingId === draft.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "削除する"
+                          )}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                  
-                  <Link href={`/blog/${draft.id}/edit`}>
-                    <Button variant="default" size="sm" className="h-9 px-6 gap-2 font-black rounded-lg shadow-sm">
+
+                  <Link href={`/blog/${draft.id}/edit`} className="flex-1 sm:flex-none">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="w-full h-10 px-5 gap-2 font-black rounded-lg shadow-sm"
+                    >
                       編集を再開
                       <ArrowRight className="h-4 w-4" />
                     </Button>
@@ -186,9 +201,11 @@ const DraftList: React.FC<DraftListProps> = ({ drafts, userId }) => {
             </Card>
           ))
         ) : (
-          <div className="py-20 text-center bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
+          <div className="py-16 text-center bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
             <Search className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-20" />
-            <p className="text-muted-foreground font-bold">一致する記事が見つかりませんでした</p>
+            <p className="text-muted-foreground font-bold text-sm">
+              一致する記事が見つかりませんでした
+            </p>
           </div>
         )}
       </div>

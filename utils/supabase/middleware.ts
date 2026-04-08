@@ -37,11 +37,14 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // 保護されたルートの定義
-  const isProtectedRoute = 
+  const isProtectedRoute =
     pathname.startsWith("/blog/new") ||
     pathname.match(/^\/blog\/[^/]+\/edit/) ||
     pathname.startsWith("/bookmarks") ||
-    pathname.startsWith("/settings")
+    pathname.startsWith("/settings") ||
+    pathname.startsWith("/notifications") ||
+    pathname.startsWith("/collections") ||
+    pathname.startsWith("/profile")
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()

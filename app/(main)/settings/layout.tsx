@@ -2,22 +2,23 @@
 
 import { useState } from "react"
 import { usePathname } from "next/navigation"
-import { 
-  UserRoundPen, 
-  Mail, 
-  KeyRound, 
-  Menu, 
-  LayoutDashboard, 
-  Bell, 
-  ShieldCheck, 
+import {
+  UserRoundPen,
+  Mail,
+  KeyRound,
+  Menu,
+  LayoutDashboard,
+  Bell,
+  ShieldCheck,
   UserCircle,
   FileText
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 // ナビゲーション
 const navigation = [
@@ -102,8 +103,8 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
                   variant="ghost"
                   className={cn(
                     "w-full justify-start h-auto py-3 px-4 rounded-xl",
-                    isActive 
-                      ? "bg-primary/10 text-primary hover:bg-primary/15" 
+                    isActive
+                      ? "bg-primary/10 text-primary hover:bg-primary/15"
                       : "hover:bg-muted"
                   )}
                   onClick={() => setIsOpen(false)}
@@ -142,10 +143,13 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
                 <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-lg">開く</span>
               </Button>
             </SheetTrigger>
-            <SheetContent 
-              side="left" 
+            <SheetContent
+              side="left"
               className="w-[300px] bg-card text-card-foreground border-r p-0"
             >
+              <VisuallyHidden>
+                <SheetTitle>設定メニュー</SheetTitle>
+              </VisuallyHidden>
               <div className="p-6 pt-12">
                 <div className="flex items-center space-x-2 mb-8 px-2">
                   <UserCircle className="w-8 h-8 text-primary" />

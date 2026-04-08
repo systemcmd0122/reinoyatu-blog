@@ -4,7 +4,6 @@ import React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
 import { Heart, Clock, ChevronRight } from "lucide-react"
 import { getBlogDisplayData } from "@/utils/blog-helpers"
 import { BlogType } from "@/types"
@@ -30,9 +29,9 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
   }
 
   return (
-    <div className="group flex flex-col bg-card border border-border/40 rounded-[2rem] overflow-hidden shadow-premium hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 h-full relative">
+    <article className="group flex flex-col bg-card border border-border/40 rounded-[2rem] overflow-hidden shadow-premium hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 h-full relative">
       {/* Thumbnail */}
-      <Link href={`/blog/${data.id}`} className="relative aspect-[16/10] overflow-hidden bg-muted block">
+      <Link href={`/blog/${data.id}`} className="relative aspect-[16/10] overflow-hidden bg-muted block" aria-label={data.title}>
         {data.imageUrl ? (
           <Image
             src={data.imageUrl}
@@ -40,15 +39,16 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
             fill
             priority={priority}
             className="object-cover transition-transform duration-700 group-hover:scale-110"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 text-muted-foreground/10 font-black text-4xl select-none tracking-tighter">
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 text-muted-foreground/10 font-black text-4xl select-none tracking-tighter" aria-hidden="true">
             REINOYATU
           </div>
         )}
-        
-        {/* Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
 
         {!data.isPublished && (
           <div className="absolute top-4 left-4 z-10">
@@ -58,21 +58,24 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
           </div>
         )}
 
-        {/* Read more indicator on hover */}
-        <div className="absolute bottom-4 right-4 z-10 translate-x-10 group-hover:translate-x-0 transition-transform duration-500">
-           <div className="bg-white/90 dark:bg-black/90 backdrop-blur-md p-2 rounded-full shadow-xl">
-             <ChevronRight className="h-5 w-5 text-primary" />
-           </div>
+        {/* Read more arrow */}
+        <div className="absolute bottom-4 right-4 z-10 translate-x-10 group-hover:translate-x-0 transition-transform duration-500" aria-hidden="true">
+          <div className="bg-white/90 dark:bg-black/90 backdrop-blur-md p-2 rounded-full shadow-xl">
+            <ChevronRight className="h-5 w-5 text-primary" />
+          </div>
         </div>
       </Link>
 
       {/* Content */}
       <div className="flex-1 p-6 md:p-8 flex flex-col">
-        {/* Header (Tags & Action) */}
+        {/* Tags & Action */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" aria-label="タグ">
             {data.tags.slice(0, 2).map((tag) => (
-              <span key={tag} className="text-[11px] font-black text-primary/70 uppercase tracking-[0.1em] bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/5">
+              <span
+                key={tag}
+                className="text-[11px] font-black text-primary/70 uppercase tracking-[0.1em] bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/5"
+              >
                 #{tag}
               </span>
             ))}
@@ -88,8 +91,8 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
         </div>
 
         {/* Title */}
-        <Link href={`/blog/${data.id}`} className="block mb-4 group-hover:text-primary transition-colors duration-300">
-          <h2 className="text-2xl font-black text-foreground leading-[1.2] line-clamp-2 tracking-tight h-[2.4em]">
+        <Link href={`/blog/${data.id}`} className="block mb-4">
+          <h2 className="text-2xl font-black text-foreground group-hover:text-primary leading-[1.2] line-clamp-2 tracking-tight h-[2.4em] transition-colors duration-300">
             {data.title}
           </h2>
         </Link>
@@ -100,10 +103,12 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
         </p>
 
         {/* Footer */}
-        <div className="mt-auto pt-6 border-t border-border/30 flex items-center justify-between">
-          <div 
+        <footer className="mt-auto pt-6 border-t border-border/30 flex items-center justify-between">
+          <button
+            type="button"
             className="flex items-center gap-3 cursor-pointer group/author transition-all active:scale-95"
             onClick={handleAuthorClick}
+            aria-label={`${data.author.name}のプロフィールを見る`}
           >
             <div className="relative h-9 w-9 rounded-full overflow-hidden border-2 border-border/50 group-hover/author:border-primary group-hover/author:shadow-lg transition-all">
               <Image
@@ -111,9 +116,10 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
                 alt={data.author.name}
                 fill
                 className="object-cover"
+                sizes="36px"
               />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col text-left">
               <span className="text-sm font-black text-foreground group-hover/author:text-primary transition-colors truncate max-w-[120px] leading-none mb-0.5">
                 {data.author.name}
               </span>
@@ -121,23 +127,23 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
                 Author
               </span>
             </div>
-          </div>
+          </button>
 
           <div className="flex items-center gap-4">
-             <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-xl border border-border/20">
-              <Heart className="h-4 w-4 transition-colors group-hover:text-rose-500 group-hover:fill-rose-500" />
-              <span className="text-xs font-black">{data.likesCount}</span>
+            <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-xl border border-border/20">
+              <Heart className="h-4 w-4 transition-colors group-hover:text-rose-500 group-hover:fill-rose-500" aria-hidden="true" />
+              <span className="text-xs font-black" aria-label={`${data.likesCount}いいね`}>{data.likesCount}</span>
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground/40">
-              <Clock className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">
+              <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+              <time className="text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">
                 {data.dateDisplay}
-              </span>
+              </time>
             </div>
           </div>
-        </div>
+        </footer>
       </div>
-    </div>
+    </article>
   )
 }
 
