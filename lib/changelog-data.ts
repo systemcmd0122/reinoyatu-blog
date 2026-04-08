@@ -1,7 +1,37 @@
 import { ChangelogEntry } from "@/types/changelog"
 
 export const changelogData: ChangelogEntry[] = [
-  
+  {
+    version: "3.0.0",
+    date: "2026-02-25",
+    items: [
+      {
+        category: "Design",
+        content: "UI/UX Revolution: プレミアムなデザインへのフルモデルチェンジ",
+        description: "サイト全体のデザインシステムを再定義。グラスモーフィズム、高度なアニメーション、洗練されたタイポグラフィを導入し、最高級の執筆・閲覧体験を提供します。",
+      },
+      {
+        category: "New",
+        content: "モバイル・ボトムナビゲーションの導入",
+        description: "スマートフォンでの操作性を極限まで高めるため、親指で届きやすい位置に主要機能（ホーム、検索、投稿、ブックマーク、プロフィール）を配置したボトムバーを実装しました。",
+      },
+      {
+        category: "Improvement",
+        content: "ランディングページの視覚的インパクトを強化",
+        description: "ヒーローセクションに流体的な背景アニメーションと、スクロールに連動する要素の出現演出を追加。サービスの魅力をダイレクトに伝えます。",
+      },
+      {
+        category: "Improvement",
+        content: "記事一覧（フィード）の再設計",
+        description: "コントロールパネルの小型化と、記事カードの余白・タイポグラフィの最適化。ホバー時の浮遊エフェクトやスムーズな視点切り替えなど、回遊を楽しくする工夫を凝らしました。",
+      },
+      {
+        category: "Improvement",
+        content: "没入型・記事詳細体験",
+        description: "見出しの装飾、本文の行間調整、滑らかなスクロール進捗バーなど、長文も快適に読めるデザインへ進化。モバイル版の目次アクセスもより直感的になりました。",
+      },
+    ],
+  },
   {
     version: "2.2.0",
     date: "2026-02-23",
@@ -24,7 +54,7 @@ export const changelogData: ChangelogEntry[] = [
       {
         category: "New",
         content: "サイト全域でのスマート共有機能",
-        description: "プロフィール、記事詳細、シリーズの各ページに共有ボタンを実装。Web Share APIによるネイティブ共有とクリップボードコピーを自動で切り替える、使い勝手の良い共有体験を提供します。",
+        description: "プロフィール、記事詳細、シリーズの各ページに共有ボタンを実装. Web Share APIによるネイティブ共有とクリップボードコピーを自動で切り替える、使い勝手の良い共有体験を提供します。",
       },
       {
         category: "Security",
@@ -91,7 +121,7 @@ export const changelogData: ChangelogEntry[] = [
       {
         category: "Improvement",
         content: "AIによる自動メタデータ生成",
-        description: "記事のタイトル提案、要約生成、ハッシュタグ抽出をAIがワンクリックで実行。執筆以外の事務的な手間を最小限に抑えます。",
+        description: "記事のタイトル提案、要約生成、ハッシュタグ抽出をAIがワンクリックで実行. 執筆以外の事務的な手間を最小限に抑えます。",
       },
     ],
   },

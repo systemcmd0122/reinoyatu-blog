@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
-import { Filter, SortDesc } from "lucide-react"
+import { Filter, SortDesc, Sparkles } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -44,7 +44,6 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
     fetchUser()
   }, [])
 
-  // Filter and Sort blogs
   // リアルタイム購読 (ブログ本体)
   const lastBlogEvent = useRealtime<BlogType>('blogs', {
     event: '*',
@@ -102,7 +101,6 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
   useEffect(() => {
     if (!lastLikeEvent) return
 
-    // 重複処理を回避 (イベントIDがあればそれを使用、なければペイロードから生成)
     const eventId = (lastLikeEvent as any).commit_timestamp || JSON.stringify(lastLikeEvent.new || lastLikeEvent.old)
     if (lastProcessedLikeEventId.current === eventId) return
     lastProcessedLikeEventId.current = eventId
@@ -110,7 +108,6 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
     const like = (lastLikeEvent.new || lastLikeEvent.old) as { blog_id: string }
     const blogId = like.blog_id
 
-    // リストに含まれるブログのいいね数が変わった場合のみ更新
     setBlogs(currentBlogs => {
       if (currentBlogs.some(b => b.id === blogId)) {
         const refreshBlogLike = async () => {
@@ -149,7 +146,6 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
     // Sorting
     result.sort((a, b) => {
       if (sortBy === "newest") {
-        // Use updated_at for activity-based sorting
         return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       } else if (sortBy === "oldest") {
         return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
@@ -166,7 +162,7 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
     switch (mode) {
       case "card":
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 py-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 py-2">
             {processedBlogs.map((blog, index) => (
               <CardItem 
                 key={blog.id} 
@@ -179,7 +175,7 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
         )
       case "magazine":
         return (
-          <div className="grid grid-cols-1 gap-16 py-4">
+          <div className="grid grid-cols-1 gap-20 py-4">
             {processedBlogs.map((blog, index) => (
               <MagazineItem 
                 key={blog.id} 
@@ -191,35 +187,14 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
           </div>
         )
       case "compact":
-        return (
-          <div className="bg-card border border-border/50 rounded-2xl overflow-hidden divide-y divide-border/50 shadow-sm">
-            {processedBlogs.map((blog) => (
-              <CompactItem 
-                key={blog.id} 
-                blog={blog} 
-                currentUserId={currentUserId}
-              />
-            ))}
-          </div>
-        )
       case "text":
-        return (
-          <div className="bg-card border border-border/50 rounded-2xl overflow-hidden divide-y divide-border/50 shadow-sm">
-            {processedBlogs.map((blog) => (
-              <TextItem 
-                key={blog.id} 
-                blog={blog} 
-                currentUserId={currentUserId}
-              />
-            ))}
-          </div>
-        )
       case "list":
       default:
+        const ItemComponent = mode === "compact" ? CompactItem : mode === "text" ? TextItem : ListItem
         return (
-          <div className="bg-card border border-border/50 rounded-2xl overflow-hidden divide-y divide-border/50 shadow-sm">
+          <div className="bg-card border border-border/40 rounded-[2.5rem] overflow-hidden divide-y divide-border/40 shadow-premium">
             {processedBlogs.map((blog, index) => (
-              <ListItem 
+              <ItemComponent
                 key={blog.id} 
                 blog={blog} 
                 priority={index < 6} 
@@ -232,32 +207,36 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       {/* Control Panel */}
-      <div className="bg-card border border-border/50 p-2 rounded-[1.5rem] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2">
-        <div className="flex items-center gap-1 w-full sm:w-auto px-2 py-1">
-          <div className="h-2 w-2 rounded-full bg-primary animate-pulse mr-2" />
-          <h3 className="font-black text-foreground text-sm uppercase tracking-widest truncate">
-            {viewMode === 'card' ? 'Gallery' :
-              viewMode === 'compact' ? 'Compact' :
-                viewMode === 'magazine' ? 'Magazine' :
-                  viewMode === 'text' ? 'Text Only' : 'Feed'}
-            <span className="ml-2 text-muted-foreground/50 font-medium normal-case tracking-normal">
-              ({processedBlogs.length} articles)
+      <div className="bg-card/50 backdrop-blur-xl border border-border/40 p-3 rounded-[2rem] shadow-premium flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3 w-full md:w-auto px-4 py-2 bg-background/50 rounded-2xl border border-border/20">
+          <div className="p-2 bg-primary/10 rounded-xl">
+            <Sparkles className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex flex-col">
+            <h3 className="font-black text-foreground text-xs uppercase tracking-[0.2em] leading-none mb-1">
+              {viewMode === 'card' ? 'Gallery' :
+                viewMode === 'compact' ? 'Compact' :
+                  viewMode === 'magazine' ? 'Magazine' :
+                    viewMode === 'text' ? 'Text' : 'Feed'}
+            </h3>
+            <span className="text-[10px] text-muted-foreground font-bold normal-case tracking-wider opacity-60">
+              {processedBlogs.length} Articles Found
             </span>
-          </h3>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
           <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-            <SelectTrigger className="w-auto h-10 text-xs border-none bg-muted/50 hover:bg-muted transition-colors rounded-xl px-4 shadow-none focus:ring-0 font-bold">
+            <SelectTrigger className="w-auto h-12 text-sm border-none bg-background/50 hover:bg-background transition-all rounded-2xl px-5 shadow-sm focus:ring-2 focus:ring-primary/20 font-black tracking-tight">
               <SortDesc className="h-4 w-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Sort" />
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-border/50">
-              <SelectItem value="newest" className="font-bold">最新順</SelectItem>
-              <SelectItem value="oldest" className="font-bold">古い順</SelectItem>
-              <SelectItem value="most_liked" className="font-bold">人気順</SelectItem>
+            <SelectContent className="rounded-2xl border-border/40 shadow-2xl p-2">
+              <SelectItem value="newest" className="font-bold rounded-xl p-3">最新順</SelectItem>
+              <SelectItem value="oldest" className="font-bold rounded-xl p-3">古い順</SelectItem>
+              <SelectItem value="most_liked" className="font-bold rounded-xl p-3">人気順</SelectItem>
             </SelectContent>
           </Select>
 
@@ -267,12 +246,14 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
 
       {/* Main List Area */}
       {processedBlogs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-32 bg-muted/20 border-2 border-dashed border-border/50 rounded-[2.5rem] text-muted-foreground">
-          <Filter className="h-16 w-16 mb-6 opacity-10" />
-          <p className="font-bold text-xl">No articles found.</p>
+        <div className="flex flex-col items-center justify-center py-48 bg-muted/10 border-2 border-dashed border-border/30 rounded-[3rem] text-muted-foreground">
+          <div className="p-6 bg-background rounded-full shadow-xl mb-8 opacity-20">
+            <Filter className="h-16 w-16" />
+          </div>
+          <p className="font-black text-2xl tracking-tighter text-foreground/40">No articles found.</p>
           <button
             onClick={() => setSelectedTag(null)}
-            className="mt-4 text-sm text-primary hover:underline font-black uppercase tracking-widest"
+            className="mt-6 text-sm text-primary hover:underline font-black uppercase tracking-widest bg-primary/5 px-6 py-2 rounded-full border border-primary/10 transition-all hover:scale-105"
           >
             Clear Filters
           </button>
@@ -282,38 +263,38 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
           <AnimatePresence mode="wait">
             <motion.div
               key={viewMode + (isMounted ? 'mounted' : 'initial')}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: "circOut" }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
               {!isMounted ? (
-                <div className="space-y-6">
+                <div className="space-y-10">
                   {viewMode === 'card' ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
                       {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="space-y-4">
-                          <Skeleton className="aspect-video w-full rounded-xl" />
-                          <div className="space-y-2">
-                            <Skeleton className="h-6 w-3/4" />
-                            <Skeleton className="h-4 w-full" />
+                        <div key={i} className="space-y-6">
+                          <Skeleton className="aspect-video w-full rounded-3xl" />
+                          <div className="space-y-3">
+                            <Skeleton className="h-8 w-3/4 rounded-xl" />
+                            <Skeleton className="h-5 w-full rounded-lg" />
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="bg-card border border-border/50 rounded-2xl overflow-hidden divide-y divide-border/50 shadow-sm">
+                    <div className="bg-card border border-border/40 rounded-[2.5rem] overflow-hidden divide-y divide-border/40 shadow-premium">
                       {[1, 2, 3].map((i) => (
-                        <div key={i} className="p-6 flex gap-4">
+                        <div key={i} className="p-10 flex gap-8">
                           <div className="flex-1 space-y-4">
-                            <Skeleton className="h-6 w-3/4" />
-                            <Skeleton className="h-4 w-full" />
-                            <div className="flex gap-2">
-                              <Skeleton className="h-4 w-20" />
-                              <Skeleton className="h-4 w-20" />
+                            <Skeleton className="h-8 w-3/4 rounded-xl" />
+                            <Skeleton className="h-5 w-full rounded-lg" />
+                            <div className="flex gap-3">
+                              <Skeleton className="h-6 w-24 rounded-full" />
+                              <Skeleton className="h-6 w-24 rounded-full" />
                             </div>
                           </div>
-                          <Skeleton className="h-24 w-40 rounded-lg hidden sm:block" />
+                          <Skeleton className="h-32 w-48 rounded-2xl hidden sm:block" />
                         </div>
                       ))}
                     </div>

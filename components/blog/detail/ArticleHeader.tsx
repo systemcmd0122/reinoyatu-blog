@@ -1,7 +1,7 @@
 import React from "react"
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Clock } from "lucide-react"
+import { Clock, Calendar, RefreshCcw, User } from "lucide-react"
 import { formatJST } from "@/utils/date"
 
 interface ArticleHeaderProps {
@@ -34,54 +34,75 @@ const ArticleHeader: React.FC<ArticleHeaderProps> = ({
     { ...author, role: 'owner' as const }
   ]
 
+  const isUpdated = createdAt !== updatedAt
+
   return (
-    <header className="mb-8">
-      {/* Author Info */}
-      <div className="flex flex-wrap items-center gap-4 mb-6">
-        <div className="flex -space-x-3">
-          {displayAuthors.map((auth) => (
-            <Link key={auth.id} href={`/profile/${auth.id}`}>
-              <Avatar className="h-10 w-10 border-2 border-background shadow-sm hover:z-10 transition-transform hover:scale-110">
-                <AvatarImage src={auth.avatar_url || "/default.png"} className="object-cover" />
-                <AvatarFallback>{auth.name?.[0]}</AvatarFallback>
-              </Avatar>
-            </Link>
-          ))}
-        </div>
-        <div className="flex flex-col">
-          <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5">
-            {displayAuthors.map((auth, i) => (
-              <React.Fragment key={auth.id}>
-                <Link href={`/profile/${auth.id}`} className="text-sm font-bold hover:underline">
-                  @{auth.name}
-                </Link>
-                {i < displayAuthors.length - 1 && <span className="text-sm text-muted-foreground mr-1">,</span>}
-              </React.Fragment>
+    <header className="mb-12 space-y-8">
+      {/* Title */}
+      <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter text-foreground leading-[1.05] animate-in slide-in-from-bottom-4 duration-700">
+        {title}
+      </h1>
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-border/50 animate-in fade-in duration-1000">
+        {/* Author Info */}
+        <div className="flex items-center gap-4">
+          <div className="flex -space-x-3">
+            {displayAuthors.map((auth) => (
+              <Link key={auth.id} href={`/profile/${auth.id}`}>
+                <Avatar className="h-14 w-14 border-4 border-background shadow-premium hover:z-10 transition-all hover:scale-110 active:scale-95">
+                  <AvatarImage src={auth.avatar_url || "/default.png"} className="object-cover" />
+                  <AvatarFallback className="font-black">{auth.name?.[0]}</AvatarFallback>
+                </Avatar>
+              </Link>
             ))}
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 flex items-center gap-1">
+              <User className="h-3 w-3" />
+              Authors
+            </span>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              {displayAuthors.map((auth, i) => (
+                <React.Fragment key={auth.id}>
+                  <Link href={`/profile/${auth.id}`} className="text-lg font-black hover:text-primary transition-colors">
+                    {auth.name}
+                  </Link>
+                  {i < displayAuthors.length - 1 && <span className="text-muted-foreground font-black opacity-30">/</span>}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Meta Info */}
+        <div className="flex flex-wrap items-center gap-4 md:gap-8">
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              Published
+            </span>
+            <span className="text-sm font-bold">{formatJST(createdAt)}</span>
+          </div>
+
+          {isUpdated && (
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 flex items-center gap-1">
+                <RefreshCcw className="h-3 w-3" />
+                Updated
+              </span>
+              <span className="text-sm font-bold">{formatJST(updatedAt)}</span>
+            </div>
+          )}
+
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              Reading Time
+            </span>
+            <span className="text-sm font-bold">{readingTime} min read</span>
           </div>
         </div>
       </div>
-
-      {/* Meta Info */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground mb-6">
-        <div className="flex items-center gap-1">
-          <span>{formatJST(createdAt)}に投稿</span>
-          {createdAt !== updatedAt && (
-            <span className="text-muted-foreground/70">
-              (更新: {formatJST(updatedAt)})
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          <span>{readingTime}分で読めます</span>
-        </div>
-      </div>
-
-      {/* Title */}
-      <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground leading-[1.2]">
-        {title}
-      </h1>
     </header>
   )
 }
