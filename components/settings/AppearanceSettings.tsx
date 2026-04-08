@@ -32,7 +32,7 @@ interface AccountSettingsProps {
   identities: any[]
 }
 
-const AccountSettings = ({ email, identities }: AccountSettingsProps) => {
+const AppearanceSettings = ({ email, identities }: AccountSettingsProps) => {
   const router = useRouter()
   const [error, setError] = useState("")
   const [isPending, startTransition] = useTransition()
@@ -263,4 +263,4 @@ const AccountSettings = ({ email, identities }: AccountSettingsProps) => {
   )
 }
 
-export default AccountSettings
+export default AppearanceSettings
