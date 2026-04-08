@@ -120,11 +120,8 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   }
 
   const mobileNavItems = [
-    { href: "/", icon: House, label: "ホーム" },
     { href: "/changelog", icon: FileText, label: "アップデート" },
-    { href: "/blog/new", icon: PenSquare, label: "投稿する" },
     { href: "/settings/drafts", icon: FileText, label: "記事管理" },
-    { href: "/bookmarks", icon: Bookmark, label: "ブックマーク" },
     { href: "/settings/profile", icon: Settings, label: "設定" },
     { href: "/privacy", icon: Shield, label: "プライバシーポリシー" },
   ]
@@ -285,7 +282,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-full max-w-xs p-0 bg-background border-l border-border rounded-l-3xl overflow-hidden">
+              <SheetContent side="right" className="w-full max-w-xs p-0 bg-background/80 backdrop-blur-xl border-l border-border rounded-l-3xl overflow-hidden">
                 <div className="flex flex-col h-full">
                   <div className="p-6 border-b border-border bg-muted/20 flex items-center justify-between">
                     <span className="font-black text-xl tracking-tighter">Menu</span>

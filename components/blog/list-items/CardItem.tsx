@@ -89,7 +89,7 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
 
         {/* Title */}
         <Link href={`/blog/${data.id}`} className="block mb-4 group-hover:text-primary transition-colors duration-300">
-          <h2 className="text-2xl font-black text-foreground leading-[1.2] line-clamp-2 tracking-tight">
+          <h2 className="text-2xl font-black text-foreground leading-[1.2] line-clamp-2 tracking-tight h-[2.4em]">
             {data.title}
           </h2>
         </Link>

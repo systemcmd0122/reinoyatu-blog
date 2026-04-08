@@ -72,7 +72,7 @@ export const LandingFeatures = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-4xl md:text-6xl font-black text-foreground tracking-tighter"
+              className="text-3xl sm:text-4xl md:text-6xl font-black text-foreground tracking-tighter"
             >
               「書く」も「読む」も、<br className="sm:hidden" />すべてがプレミアム。
             </motion.h2>

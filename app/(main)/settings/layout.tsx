@@ -101,7 +101,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
                   key={itemIdx}
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start h-auto py-3 px-4",
+                    "w-full justify-start h-auto py-3 px-4 rounded-xl",
                     isActive 
                       ? "bg-primary/10 text-primary hover:bg-primary/15" 
                       : "hover:bg-muted"
@@ -134,12 +134,12 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
         <div className="md:hidden">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" className="w-full justify-between font-bold">
+              <Button variant="outline" className="w-full justify-between font-bold glass rounded-xl h-12 shadow-sm">
                 <div className="flex items-center">
                   <Menu className="h-5 w-5 mr-2" />
                   設定メニュー
                 </div>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">開く</span>
+                <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-lg">開く</span>
               </Button>
             </SheetTrigger>
             <SheetContent 
