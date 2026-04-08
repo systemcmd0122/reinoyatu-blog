@@ -162,7 +162,7 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
     switch (mode) {
       case "card":
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 py-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-10 py-2">
             {processedBlogs.map((blog, index) => (
               <CardItem 
                 key={blog.id} 

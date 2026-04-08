@@ -65,7 +65,7 @@ export const LandingHero = () => {
               <Sparkles className="h-4 w-4" />
               <span className="uppercase tracking-widest">Next Generation Platform</span>
             </div>
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-foreground leading-[1.05] md:leading-[0.95]">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-foreground leading-[1.05] md:leading-[0.95]">
               あなたの知見を、<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-600 to-indigo-600">最高の体験</span>で。
             </h1>

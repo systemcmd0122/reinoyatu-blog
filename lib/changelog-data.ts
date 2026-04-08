@@ -2,6 +2,27 @@ import { ChangelogEntry } from "@/types/changelog"
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: "3.2.0",
+    date: "2026-02-27",
+    items: [
+      {
+        category: "Improvement",
+        content: "モバイルUXの徹底的な洗練とレスポンシブ対応の強化",
+        description: "スマートフォンでの閲覧体験をさらに向上させるため、ヒーローセクションや記事タイトルのタイポグラフィをデバイスに合わせて最適化しました。また、ボトムナビゲーションとの干渉を防ぐレイアウト調整を行い、よりスムーズな操作感を実現しています。",
+      },
+      {
+        category: "Design",
+        content: "設定画面とナビゲーションUIのプレミアム化",
+        description: "設定メニューにグラスモーフィズムを採用し、ナビゲーションメニューの重複を整理。サイト全体の視覚的な一貫性を高め、より洗練された印象を与えます。",
+      },
+      {
+        category: "Improvement",
+        content: "記事リストの視覚的一貫性の向上",
+        description: "カード形式のタイトル表示を揃え、グリッドの余白をレスポンシブに調整することで、コンテンツがより整然と見えるよう改善しました。",
+      },
+    ],
+  },
+  {
     version: "3.0.0",
     date: "2026-02-25",
     items: [
