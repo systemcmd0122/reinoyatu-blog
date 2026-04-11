@@ -285,7 +285,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
           Back to Feed
         </Link>
 
-        <div className="flex flex-col lg:flex-row gap-12">
+        <div className="flex flex-col lg:flex-row gap-16">
           {/* Main Content */}
           <main className="flex-1 min-w-0">
             <article className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
@@ -312,7 +312,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 </div>
 
                 {/* 5. ArticleContent */}
-                <div className="bg-card rounded-[3rem] border border-border/40 p-8 md:p-16 shadow-premium relative overflow-hidden">
+                <div className="bg-card rounded-[3.5rem] border border-border/40 p-8 md:p-20 shadow-premium relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary/5 via-primary/20 to-primary/5" />
                   <ArticleContent content={blogData.content} />
                 </div>
@@ -439,14 +439,14 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
             {/* Table of Contents */}
             {headings.length > 0 && (
-              <div className="hidden lg:block sticky top-24 z-[var(--z-sticky)] bg-card/50 backdrop-blur-xl rounded-[2.5rem] border border-border/40 shadow-premium overflow-hidden max-h-[calc(100vh-140px)] flex flex-col animate-in slide-in-from-right-8 duration-700 delay-300">
-                <div className="p-6 border-b border-border/40 bg-muted/20 flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-xl">
-                    <List className="h-5 w-5 text-primary" />
+              <div className="hidden lg:block sticky top-24 z-[var(--z-sticky)] bg-background/40 backdrop-blur-2xl rounded-[2.5rem] border border-border/40 shadow-premium overflow-hidden max-h-[calc(100vh-140px)] flex flex-col animate-in slide-in-from-right-8 duration-700 delay-300">
+                <div className="p-8 border-b border-border/40 bg-muted/20 flex items-center gap-4">
+                  <div className="p-2.5 bg-primary rounded-xl shadow-lg shadow-primary/20">
+                    <List className="h-5 w-5 text-primary-foreground" />
                   </div>
-                  <h2 className="font-black text-xs uppercase tracking-[0.2em]">Table of Contents</h2>
+                  <h2 className="font-black text-[10px] uppercase tracking-[0.25em] text-foreground/50">Table of Contents</h2>
                 </div>
-                <ScrollArea className="flex-1 p-4">
+                <ScrollArea className="flex-1 p-6">
                   <TOCContent />
                 </ScrollArea>
               </div>

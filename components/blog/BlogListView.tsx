@@ -207,30 +207,22 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       {/* Control Panel */}
-      <div className="bg-card/50 backdrop-blur-xl border border-border/40 p-3 rounded-[2rem] shadow-premium flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3 w-full md:w-auto px-4 py-2 bg-background/50 rounded-2xl border border-border/20">
-          <div className="p-2 bg-primary/10 rounded-xl">
-            <Sparkles className="h-4 w-4 text-primary" />
+      <div className="sticky top-20 z-[var(--z-sticky)] bg-background/60 backdrop-blur-2xl border border-border/40 p-2 rounded-[2rem] shadow-premium flex flex-col md:flex-row items-center justify-between gap-3 mx-[-4px]">
+        <div className="flex items-center gap-4 flex-1 w-full md:w-auto px-4">
+          <div className="flex items-center gap-1 border-b-2 border-primary px-4 py-2 h-10">
+            <span className="font-black text-sm uppercase tracking-tighter">最新の投稿</span>
           </div>
-          <div className="flex flex-col">
-            <h3 className="font-black text-foreground text-xs uppercase tracking-[0.2em] leading-none mb-1">
-              {viewMode === 'card' ? 'Gallery' :
-                viewMode === 'compact' ? 'Compact' :
-                  viewMode === 'magazine' ? 'Magazine' :
-                    viewMode === 'text' ? 'Text' : 'Feed'}
-            </h3>
-            <span className="text-[10px] text-muted-foreground font-bold normal-case tracking-wider opacity-60">
-              {processedBlogs.length} Articles Found
-            </span>
+          <div className="flex items-center gap-1 border-b-2 border-transparent px-4 py-2 h-10 opacity-40 grayscale cursor-not-allowed">
+            <span className="font-black text-sm uppercase tracking-tighter">トレンド</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+        <div className="flex items-center gap-2 w-full md:w-auto justify-end px-2">
           <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-            <SelectTrigger className="w-auto h-12 text-sm border-none bg-background/50 hover:bg-background transition-all rounded-2xl px-5 shadow-sm focus:ring-2 focus:ring-primary/20 font-black tracking-tight">
-              <SortDesc className="h-4 w-4 mr-2 text-muted-foreground" />
+            <SelectTrigger className="w-auto h-10 text-xs border-none bg-muted/50 hover:bg-muted transition-all rounded-xl px-4 font-black tracking-tight">
+              <SortDesc className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Sort" />
             </SelectTrigger>
             <SelectContent className="rounded-2xl border-border/40 shadow-2xl p-2">

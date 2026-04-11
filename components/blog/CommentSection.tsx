@@ -331,9 +331,9 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       </div>
       
       {currentUserId ? (
-        <div className="mb-6 bg-muted/30 p-4 rounded-lg">
-          <label htmlFor="comment-textarea" className="text-sm font-medium mb-2 block">
-            コメントを投稿
+        <div className="mb-12 bg-muted/30 p-8 rounded-[2.5rem] border border-border/40 shadow-inner">
+          <label htmlFor="comment-textarea" className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground/50 mb-4 block">
+            Share your thoughts
           </label>
           <div className="relative">
             <Textarea
@@ -341,8 +341,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="コメントを入力..."
-              className="min-h-32 bg-background pr-10"
+              placeholder="素晴らしい記事へのコメントを入力しましょう..."
+              className="min-h-[140px] bg-background rounded-3xl border-border/40 focus:ring-primary/20 transition-all resize-none p-6 text-[15px] font-medium leading-relaxed shadow-sm pr-12"
               onKeyDown={handleKeyPress}
             />
             <Popover>
@@ -351,12 +351,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 bottom-2"
+                  className="absolute right-4 bottom-4 hover:bg-primary/10 rounded-xl transition-all"
                 >
-                  <Smile className="h-4 w-4" />
+                  <Smile className="h-5 w-5 text-primary" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent side="top" align="end" className="w-[350px] p-0 border-none shadow-none">
+              <PopoverContent side="top" align="end" className="w-[350px] p-0 border-none shadow-2xl rounded-3xl overflow-hidden">
                 <Picker
                   data={data}
                   onEmojiSelect={handleEmojiSelect}
@@ -365,18 +365,19 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               </PopoverContent>
             </Popover>
           </div>
-          <div className="flex justify-between items-center mt-2">
-            <p className="text-xs text-muted-foreground">
-              Ctrl+Enterで送信
+          <div className="flex justify-between items-center mt-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+              Press <kbd className="bg-muted px-1.5 py-0.5 rounded border border-border/50 text-foreground/60">Ctrl+Enter</kbd> to post
             </p>
             <Button 
               onClick={handleSubmit}
               disabled={isLoading || !content.trim()}
+              className="rounded-2xl font-black px-8 h-14 shadow-xl shadow-primary/20 hover:scale-[1.03] active:scale-[0.97] transition-all bg-primary text-primary-foreground"
             >
               {isLoading ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> 送信中</>
+                <><Loader2 className="mr-3 h-5 w-5 animate-spin" /> 送信中</>
               ) : (
-                <><Send className="mr-2 h-4 w-4" /> コメントを投稿</>
+                <><Send className="mr-3 h-5 w-5" /> コメントを投稿</>
               )}
             </Button>
           </div>
