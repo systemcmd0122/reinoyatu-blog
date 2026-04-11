@@ -279,7 +279,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
         {/* Back Button */}
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-black text-sm uppercase tracking-widest mb-12 group"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-all font-black text-sm uppercase tracking-[0.3em] mb-16 md:mb-24 group bg-muted/30 px-6 py-3 rounded-full hover:bg-primary/5 active:scale-95 shadow-sm"
         >
           <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Back to Feed

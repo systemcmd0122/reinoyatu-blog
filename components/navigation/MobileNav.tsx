@@ -63,15 +63,19 @@ const MobileNav: React.FC<MobileNavProps> = ({ userId, unreadCount = 0 }) => {
               key={item.label}
               href={item.href}
               className={cn(
-                "relative flex flex-col items-center justify-center w-full h-full transition-all active:scale-95 touch-none",
+                "relative flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 touch-none",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <div className={cn(
-                "p-3 rounded-2xl transition-all duration-500",
-                isActive && "bg-primary/10",
-                item.primary && "bg-primary text-primary-foreground shadow-xl shadow-primary/30 -translate-y-4 scale-125"
-              )}>
+              <motion.div
+                whileTap={{ scale: 0.8 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                className={cn(
+                  "p-3 rounded-2xl transition-all duration-500",
+                  isActive && "bg-primary/10",
+                  item.primary && "bg-primary text-primary-foreground shadow-premium shadow-primary/30 -translate-y-6 scale-125 rounded-[1.5rem]"
+                )}
+              >
                 <item.icon className={cn(
                   "h-6 w-6",
                   item.primary && "h-6 w-6"
@@ -80,7 +84,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ userId, unreadCount = 0 }) => {
                 {item.badge && (
                   <span className="absolute top-3 right-1/2 translate-x-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background" />
                 )}
-              </div>
+              </motion.div>
 
               {!item.primary && (
                 <span className={cn(

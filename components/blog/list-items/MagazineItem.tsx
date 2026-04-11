@@ -29,7 +29,7 @@ const MagazineItem: React.FC<MagazineItemProps> = ({ blog, priority, currentUser
   }
 
   return (
-    <div className="group relative bg-card border border-border/40 rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500">
+    <div className="group relative bg-card border border-border/40 rounded-[3rem] overflow-hidden shadow-premium hover:shadow-premium-hover transition-all duration-500">
       <div className="flex flex-col lg:flex-row">
         {/* Image panel */}
         <Link
@@ -96,14 +96,14 @@ const MagazineItem: React.FC<MagazineItemProps> = ({ blog, priority, currentUser
 
           {/* Title */}
           <Link href={`/blog/${data.id}`} className="block mb-4 group/title">
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-foreground leading-tight tracking-tight group-hover/title:text-primary transition-colors line-clamp-3">
+            <h2 className="text-2xl md:text-4xl lg:text-5xl font-black text-foreground leading-tight tracking-tighter group-hover/title:text-primary transition-colors line-clamp-3">
               {data.title}
             </h2>
           </Link>
 
           {/* Summary */}
           {data.summary && (
-            <p className="text-base text-muted-foreground/80 line-clamp-3 mb-8 leading-relaxed">
+            <p className="text-lg text-muted-foreground/80 line-clamp-3 mb-12 leading-relaxed font-medium">
               {data.summary}
             </p>
           )}

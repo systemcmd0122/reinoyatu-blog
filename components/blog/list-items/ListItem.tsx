@@ -35,8 +35,8 @@ const ListItem: React.FC<ListItemProps> = ({ blog, priority, currentUserId }) =>
   }
 
   return (
-    <div className="group bg-card hover:bg-muted/30 transition-all duration-200 border-b border-border/40 last:border-0">
-      <div className="p-4 sm:p-6 flex gap-4 items-start">
+    <div className="group bg-card hover:bg-muted/30 transition-all duration-500 border-b border-border/40 last:border-0">
+      <div className="p-6 md:p-10 flex gap-6 md:gap-10 items-start">
         {/* Author Avatar */}
         <button
           type="button"
@@ -44,7 +44,7 @@ const ListItem: React.FC<ListItemProps> = ({ blog, priority, currentUserId }) =>
           onClick={handleAuthorClick}
           aria-label={`View ${data.author.name}'s profile`}
         >
-          <div className="relative h-10 w-10 sm:h-11 sm:w-11 rounded-full overflow-hidden border-2 border-border group-hover:border-primary/60 transition-all shadow-sm">
+          <div className="relative h-11 w-11 md:h-14 md:w-14 rounded-full overflow-hidden border-2 border-border group-hover:border-primary/60 transition-all shadow-sm">
             <Image
               src={data.author.avatarUrl}
               alt={data.author.name}
@@ -56,7 +56,7 @@ const ListItem: React.FC<ListItemProps> = ({ blog, priority, currentUserId }) =>
         </button>
 
         {/* Main content */}
-        <div className="flex-1 min-w-0 space-y-2">
+        <div className="flex-1 min-w-0 space-y-3">
           {/* Author row */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -87,7 +87,7 @@ const ListItem: React.FC<ListItemProps> = ({ blog, priority, currentUserId }) =>
 
           {/* Title */}
           <Link href={`/blog/${data.id}`} className="block">
-            <h2 className="text-lg sm:text-xl font-black text-foreground group-hover:text-primary transition-colors leading-tight tracking-tight line-clamp-2">
+            <h2 className="text-xl md:text-2xl font-black text-foreground group-hover:text-primary transition-colors leading-tight tracking-tighter line-clamp-2">
               {data.title}
             </h2>
           </Link>
@@ -121,7 +121,7 @@ const ListItem: React.FC<ListItemProps> = ({ blog, priority, currentUserId }) =>
         {data.imageUrl && (
           <Link
             href={`/blog/${data.id}`}
-            className="hidden md:block flex-shrink-0 relative h-24 w-36 rounded-xl overflow-hidden border border-border/40 shadow-sm group-hover:shadow-md transition-all"
+            className="hidden md:block flex-shrink-0 relative h-28 w-44 rounded-2xl overflow-hidden border border-border/40 shadow-sm group-hover:shadow-md transition-all"
           >
             <Image
               src={data.imageUrl}

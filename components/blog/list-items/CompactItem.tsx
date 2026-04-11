@@ -21,8 +21,8 @@ const CompactItem: React.FC<CompactItemProps> = ({ blog, currentUserId }) => {
     : data.dateDisplay.split(" ")[0] ?? data.dateDisplay
 
   return (
-    <div className="group bg-card hover:bg-muted/30 transition-colors duration-200 border-b border-border/40 last:border-0">
-      <div className="px-4 py-3 sm:px-6 flex items-center gap-3 sm:gap-4">
+    <div className="group bg-card hover:bg-muted/30 transition-all duration-500 border-b border-border/40 last:border-0">
+      <div className="px-6 py-4 md:px-10 md:py-6 flex items-center gap-4 md:gap-8">
         {/* Date – fixed width, hidden on mobile */}
         <div className="hidden sm:flex w-24 flex-shrink-0 items-center gap-1.5 text-[11px] font-semibold text-muted-foreground/60 uppercase whitespace-nowrap">
           {shortDate}
@@ -38,8 +38,8 @@ const CompactItem: React.FC<CompactItemProps> = ({ blog, currentUserId }) => {
 
         {/* Title + Tags */}
         <div className="flex-1 min-w-0">
-          <Link href={`/blog/${data.id}`} className="flex items-center gap-3 group/link">
-            <h2 className="text-sm sm:text-[15px] font-bold text-foreground group-hover/link:text-primary transition-colors truncate leading-none">
+          <Link href={`/blog/${data.id}`} className="flex items-center gap-4 group/link">
+            <h2 className="text-base md:text-lg font-black tracking-tight text-foreground group-hover/link:text-primary transition-colors truncate leading-none">
               {data.title}
             </h2>
             {data.tags.length > 0 && (

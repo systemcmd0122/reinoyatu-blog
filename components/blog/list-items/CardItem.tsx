@@ -29,11 +29,11 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
   }
 
   return (
-    <div className="group flex flex-col bg-card border border-border/40 rounded-3xl overflow-hidden shadow-premium hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 h-full">
+    <div className="group flex flex-col bg-card border border-border/40 rounded-[2.5rem] overflow-hidden shadow-premium transition-all duration-500 h-full">
       {/* Thumbnail */}
       <Link
         href={`/blog/${data.id}`}
-        className="relative aspect-[16/9] overflow-hidden bg-muted block flex-shrink-0"
+        className="relative aspect-[16/10] overflow-hidden bg-muted block flex-shrink-0"
       >
         {data.imageUrl ? (
           <Image
@@ -75,9 +75,9 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
       </Link>
 
       {/* Content */}
-      <div className="flex-1 p-6 md:p-8 flex flex-col">
+      <div className="flex-1 p-8 md:p-10 flex flex-col">
         {/* Tags & Action */}
-        <div className="flex items-start justify-between gap-2 mb-4">
+        <div className="flex items-start justify-between gap-2 mb-6">
           <div className="flex flex-wrap gap-2 min-w-0">
             {data.tags.slice(0, 2).map((tag) => (
               <span
@@ -100,18 +100,18 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
 
         {/* Title */}
         <Link href={`/blog/${data.id}`} className="block mb-4">
-          <h2 className="text-2xl font-black text-foreground leading-tight line-clamp-2 tracking-tighter group-hover:text-primary transition-colors duration-300">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground leading-tight line-clamp-2 tracking-tighter group-hover:text-primary transition-colors duration-300">
             {data.title}
           </h2>
         </Link>
 
         {/* Summary */}
-        <p className="text-[15px] text-muted-foreground/70 line-clamp-3 leading-relaxed flex-1 mb-8 font-medium">
+        <p className="text-base text-muted-foreground/70 line-clamp-3 leading-relaxed flex-1 mb-10 font-medium">
           {data.summary || "概要はありません。"}
         </p>
 
         {/* Footer */}
-        <div className="pt-6 border-t border-border/40 flex items-center justify-between gap-2">
+        <div className="pt-8 border-t border-border/40 flex items-center justify-between gap-2">
           {/* Author */}
           <button
             type="button"

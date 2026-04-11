@@ -10,7 +10,7 @@ const CoverImage: React.FC<CoverImageProps> = ({ url, title }) => {
   if (!url) return null
 
   return (
-    <div className="mb-12 relative aspect-video rounded-2xl overflow-hidden border border-border shadow-md">
+    <div className="mb-16 md:mb-24 relative aspect-[21/9] rounded-[2.5rem] overflow-hidden border border-border/40 shadow-premium">
       <Image
         src={url}
         alt={title}

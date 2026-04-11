@@ -137,18 +137,18 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
 
   return (
     <>
-      <header className="border-b bg-background/80 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/60 sticky top-0 z-[var(--z-nav)] w-full transition-all duration-500">
-        <div className="max-w-screen-xl mx-auto flex h-16 items-center justify-between px-4">
+      <header className="sticky top-0 z-[var(--z-nav)] w-full bg-background/60 backdrop-blur-2xl border-b border-border/40 transition-all duration-500">
+        <div className="max-w-screen-xl mx-auto flex h-20 items-center justify-between px-4">
           <div className="flex items-center gap-4 flex-1">
             <Link
               href="/"
-              className="flex items-center space-x-3 hover:opacity-80 transition-all flex-shrink-0 group"
+              className="flex items-center space-x-3 group active:scale-95 transition-all duration-300 flex-shrink-0"
             >
-              <div className="bg-primary text-primary-foreground p-2 rounded-xl font-black text-xl leading-none shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
-                RY
+              <div className="bg-primary text-primary-foreground w-11 h-11 rounded-2xl flex items-center justify-center font-black text-2xl italic tracking-tighter shadow-premium group-hover:rotate-12 transition-all duration-500">
+                R
               </div>
-              <span className="font-black text-xl tracking-tighter hidden sm:inline-block text-foreground">
-                例のヤツ
+              <span className="font-black text-2xl tracking-tighter hidden sm:inline-block text-foreground group-hover:text-primary transition-colors">
+                REINOYATU
               </span>
             </Link>
 
@@ -293,13 +293,13 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-full max-w-xs p-0 bg-background/80 backdrop-blur-xl border-l border-border rounded-l-3xl overflow-hidden">
+              <SheetContent side="right" className="w-full max-w-xs p-0 bg-background/80 backdrop-blur-2xl border-l border-border rounded-l-[3rem] overflow-hidden">
                 <VisuallyHidden>
                   <SheetTitle>メニュー</SheetTitle>
                 </VisuallyHidden>
                 <div className="flex flex-col h-full">
-                  <div className="p-6 border-b border-border bg-muted/20 flex items-center justify-between">
-                    <span className="font-black text-xl tracking-tighter">Menu</span>
+                  <div className="p-8 border-b border-border bg-muted/30 flex items-center justify-between">
+                    <span className="font-black text-2xl tracking-tighter italic uppercase">Menu</span>
                     <ThemeToggle />
                   </div>
                   {user ? (

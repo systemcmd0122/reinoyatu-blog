@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
-import { Filter, SortDesc, Sparkles } from "lucide-react"
+import { Filter, SortDesc, Sparkles, TrendingUp } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -162,7 +162,7 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
     switch (mode) {
       case "card":
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-10 py-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-12 py-4">
             {processedBlogs.map((blog, index) => (
               <CardItem 
                 key={blog.id} 
@@ -192,7 +192,7 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
       default:
         const ItemComponent = mode === "compact" ? CompactItem : mode === "text" ? TextItem : ListItem
         return (
-          <div className="bg-card border border-border/40 rounded-[2.5rem] overflow-hidden divide-y divide-border/40 shadow-premium">
+          <div className="bg-card border border-border/40 rounded-[3rem] overflow-hidden divide-y divide-border/40 shadow-premium">
             {processedBlogs.map((blog, index) => (
               <ItemComponent
                 key={blog.id} 
@@ -209,14 +209,16 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
   return (
     <div className="space-y-10">
       {/* Control Panel */}
-      <div className="sticky top-20 z-[var(--z-sticky)] bg-background/60 backdrop-blur-2xl border border-border/40 p-2 rounded-[2rem] shadow-premium flex flex-col md:flex-row items-center justify-between gap-3 mx-[-4px]">
-        <div className="flex items-center gap-4 flex-1 w-full md:w-auto px-4">
-          <div className="flex items-center gap-1 border-b-2 border-primary px-4 py-2 h-10">
-            <span className="font-black text-sm uppercase tracking-tighter">最新の投稿</span>
-          </div>
-          <div className="flex items-center gap-1 border-b-2 border-transparent px-4 py-2 h-10 opacity-40 grayscale cursor-not-allowed">
-            <span className="font-black text-sm uppercase tracking-tighter">トレンド</span>
-          </div>
+      <div className="sticky top-24 z-[var(--z-sticky)] bg-background/60 backdrop-blur-2xl border border-border/40 p-2 rounded-[2rem] shadow-premium flex flex-col md:flex-row items-center justify-between gap-3 mx-[-4px]">
+        <div className="flex items-center gap-2 flex-1 w-full md:w-auto px-2">
+          <button className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-[1.25rem] h-11 transition-all active:scale-95 shadow-lg shadow-primary/20">
+            <Sparkles className="h-4 w-4" />
+            <span className="font-black text-sm uppercase tracking-tighter">Feed</span>
+          </button>
+          <button className="flex items-center gap-2 text-muted-foreground/40 px-6 py-2.5 rounded-[1.25rem] h-11 transition-all grayscale cursor-not-allowed">
+            <TrendingUp className="h-4 w-4" />
+            <span className="font-black text-sm uppercase tracking-tighter">Trending</span>
+          </button>
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto justify-end px-2">

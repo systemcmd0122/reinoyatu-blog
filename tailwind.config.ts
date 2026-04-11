@@ -61,6 +61,14 @@ const config: Config = {
 			md: 'calc(var(--radius) - 0.75rem)',
 			sm: 'calc(var(--radius) - 1rem)'
   		},
+		boxShadow: {
+			'premium': '0 20px 40px -15px rgba(0, 0, 0, 0.1)',
+			'premium-hover': '0 30px 60px -20px rgba(0, 0, 0, 0.15)',
+			'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+		},
+		transitionTimingFunction: {
+			'soft': 'cubic-bezier(0.16, 1, 0.3, 1)',
+		},
   		keyframes: {
   			'accordion-down': {
   				from: {
