@@ -202,16 +202,6 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
               </div>
             )}
 
-            {/* タブナビゲーション */}
-            <div className="bg-card border border-border rounded-t-lg flex items-center px-1 h-12 mb-4">
-              <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-primary text-foreground font-bold px-6 hover:bg-transparent">
-                最新の投稿
-              </Button>
-              <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground px-6 hover:bg-transparent" disabled>
-                トレンド
-              </Button>
-            </div>
-
             {/* ブログ一覧 */}
             <BlogListView blogs={blogsWithLikes} />
 
@@ -251,12 +241,12 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
           </main>
 
           {/* 右サイドバー */}
-          <aside className="w-full lg:w-[300px] flex-shrink-0 space-y-6">
+          <aside className="w-full lg:w-[320px] flex-shrink-0 space-y-8">
             {/* 投稿ボタン - サイドバー */}
             <div className="hidden lg:block">
               <Link href="/blog/new">
-                <Button size="lg" className="w-full gap-2 rounded-md h-12 shadow-none bg-primary hover:bg-primary/90 text-primary-foreground border-none font-bold text-lg">
-                  <PenSquare className="h-5 w-5" />
+                <Button size="lg" className="w-full gap-3 rounded-2xl h-16 shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground border-none font-black text-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
+                  <PenSquare className="h-6 w-6" />
                   記事を投稿する
                 </Button>
               </Link>

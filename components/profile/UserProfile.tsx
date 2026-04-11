@@ -205,33 +205,34 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
+    <div className="max-w-7xl mx-auto space-y-12 pb-32">
       {/* Header / Hero Section */}
-      <section className="relative group">
-        <div className="h-48 md:h-64 w-full bg-gradient-to-br from-primary/20 via-secondary/10 to-primary/5 rounded-3xl overflow-hidden relative border border-border/50">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-          <div className="absolute top-0 right-0 p-6">
+      <section className="relative group px-4 md:px-0">
+        <div className="h-56 md:h-80 w-full bg-gradient-to-br from-primary via-secondary to-accent rounded-[3.5rem] overflow-hidden relative shadow-2xl">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay" />
+          <div className="absolute top-0 right-0 p-8">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="rounded-full bg-background/50 backdrop-blur-md hover:bg-background/80 transition-all border border-border/50"
+              className="rounded-2xl h-14 w-14 bg-white/10 backdrop-blur-xl hover:bg-white/20 transition-all border border-white/20 text-white shadow-xl"
               onClick={() => shareContent({
                 title: `${profile.name}のプロフィール`,
                 url: window.location.href
               })}
             >
-              <Share2 className="h-4 w-4" />
+              <Share2 className="h-6 w-6" />
             </Button>
           </div>
         </div>
 
-        <div className="px-6 md:px-12 -mt-20 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
+        <div className="px-8 md:px-16 -mt-24 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-10">
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
+                initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="relative h-40 w-40 rounded-[2.5rem] overflow-hidden border-8 border-background bg-background shadow-2xl"
+                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                className="relative h-48 w-48 rounded-[3.5rem] overflow-hidden border-[12px] border-background bg-background shadow-premium"
               >
                 {profile.avatar_url ? (
                   <Image
@@ -247,9 +248,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                 )}
               </motion.div>
 
-              <div className="text-center md:text-left space-y-2 pb-2">
-                <div className="flex items-center justify-center md:justify-start gap-3">
-                  <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight">
+              <div className="text-center md:text-left space-y-4 pb-4">
+                <div className="flex items-center justify-center md:justify-start gap-4">
+                  <h1 className="text-4xl md:text-6xl font-black text-foreground tracking-tighter leading-none">
                     {profile.name}
                   </h1>
                   {isOwnProfile && (
@@ -272,11 +273,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-3 pb-2">
+            <div className="flex items-center justify-center gap-4 pb-4">
               {isOwnProfile ? (
-                <Button asChild size="lg" className="rounded-2xl font-bold h-12 px-6 shadow-lg shadow-primary/20">
-                  <Link href="/settings/profile" className="flex items-center gap-2">
-                    <Edit3 className="h-4 w-4" />
+                <Button asChild size="lg" className="rounded-[1.5rem] font-black h-16 px-10 shadow-2xl shadow-primary/20 bg-primary text-primary-foreground hover:scale-105 active:scale-95 transition-all">
+                  <Link href="/settings/profile" className="flex items-center gap-3">
+                    <Edit3 className="h-5 w-5" />
                     Edit Profile
                   </Link>
                 </Button>

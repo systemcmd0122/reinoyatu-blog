@@ -29,11 +29,11 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
   }
 
   return (
-    <div className="group flex flex-col bg-card border border-border/40 rounded-3xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 h-full">
+    <div className="group flex flex-col bg-card border border-border/40 rounded-3xl overflow-hidden shadow-premium hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 h-full">
       {/* Thumbnail */}
       <Link
         href={`/blog/${data.id}`}
-        className="relative aspect-[16/10] overflow-hidden bg-muted block flex-shrink-0"
+        className="relative aspect-[16/9] overflow-hidden bg-muted block flex-shrink-0"
       >
         {data.imageUrl ? (
           <Image
@@ -52,7 +52,7 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
         )}
 
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
         {/* Draft badge */}
         {!data.isPublished && (
@@ -67,28 +67,28 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
         )}
 
         {/* Read more indicator */}
-        <div className="absolute bottom-3 right-3 z-10 translate-x-8 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
-          <div className="bg-white/90 dark:bg-black/80 backdrop-blur-md p-1.5 rounded-full shadow-lg">
-            <ChevronRight className="h-4 w-4 text-primary" />
+        <div className="absolute bottom-4 right-4 z-10 translate-x-12 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 ease-out">
+          <div className="bg-primary text-primary-foreground p-2 rounded-xl shadow-xl">
+            <ChevronRight className="h-5 w-5" />
           </div>
         </div>
       </Link>
 
       {/* Content */}
-      <div className="flex-1 p-5 md:p-6 flex flex-col">
+      <div className="flex-1 p-6 md:p-8 flex flex-col">
         {/* Tags & Action */}
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex flex-wrap gap-1.5 min-w-0">
+        <div className="flex items-start justify-between gap-2 mb-4">
+          <div className="flex flex-wrap gap-2 min-w-0">
             {data.tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] font-bold text-primary/80 uppercase tracking-wider bg-primary/8 px-2 py-0.5 rounded-md border border-primary/10 truncate max-w-[110px]"
+                className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-3 py-1 rounded-lg border border-primary/10 truncate max-w-[120px]"
               >
                 #{tag}
               </span>
             ))}
             {data.tags.length > 2 && (
-              <span className="text-[10px] font-semibold text-muted-foreground/50 self-center">
+              <span className="text-[10px] font-bold text-muted-foreground/40 self-center uppercase tracking-widest">
                 +{data.tags.length - 2}
               </span>
             )}
@@ -99,26 +99,26 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
         </div>
 
         {/* Title */}
-        <Link href={`/blog/${data.id}`} className="block mb-3">
-          <h2 className="text-xl font-black text-foreground leading-snug line-clamp-2 tracking-tight group-hover:text-primary transition-colors duration-300">
+        <Link href={`/blog/${data.id}`} className="block mb-4">
+          <h2 className="text-2xl font-black text-foreground leading-tight line-clamp-2 tracking-tighter group-hover:text-primary transition-colors duration-300">
             {data.title}
           </h2>
         </Link>
 
         {/* Summary */}
-        <p className="text-sm text-muted-foreground/80 line-clamp-3 leading-relaxed flex-1 mb-5">
+        <p className="text-[15px] text-muted-foreground/70 line-clamp-3 leading-relaxed flex-1 mb-8 font-medium">
           {data.summary || "概要はありません。"}
         </p>
 
         {/* Footer */}
-        <div className="pt-4 border-t border-border/30 flex items-center justify-between gap-2">
+        <div className="pt-6 border-t border-border/40 flex items-center justify-between gap-2">
           {/* Author */}
           <button
             type="button"
-            className="flex items-center gap-2.5 cursor-pointer group/author transition-all active:scale-95 min-w-0 text-left"
+            className="flex items-center gap-3 cursor-pointer group/author transition-all active:scale-95 min-w-0 text-left"
             onClick={handleAuthorClick}
           >
-            <div className="relative h-8 w-8 rounded-full overflow-hidden border-2 border-border/50 group-hover/author:border-primary transition-all flex-shrink-0">
+            <div className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-border/50 group-hover/author:border-primary transition-all flex-shrink-0 shadow-sm">
               <Image
                 src={data.author.avatarUrl}
                 alt={data.author.name}
@@ -127,26 +127,28 @@ const CardItem: React.FC<CardItemProps> = ({ blog, priority, currentUserId }) =>
               />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-black text-foreground group-hover/author:text-primary transition-colors truncate max-w-[100px] leading-none mb-0.5">
+              <p className="text-sm font-black text-foreground group-hover/author:text-primary transition-colors truncate max-w-[120px] leading-tight mb-0.5 tracking-tight">
                 {data.author.name}
               </p>
-              <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-wider leading-none">
+              <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest leading-tight">
                 Author
               </p>
             </div>
           </button>
 
           {/* Stats */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="flex items-center gap-1.5 text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-lg border border-border/20">
-              <Heart className="h-3.5 w-3.5 group-hover:text-rose-500 transition-colors" />
-              <span className="text-xs font-bold">{data.likesCount}</span>
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <div className="flex items-center gap-2 text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-xl border border-border/20 shadow-sm">
+              <Heart className="h-4 w-4 group-hover:text-rose-500 transition-colors" />
+              <span className="text-sm font-black tracking-tighter">{data.likesCount}</span>
             </div>
-            <div className="hidden sm:flex items-center gap-1 text-muted-foreground/50">
-              <Clock className="h-3 w-3 flex-shrink-0" />
-              <span className="text-[10px] font-semibold uppercase tracking-tight whitespace-nowrap">
-                {data.dateDisplay}
-              </span>
+            <div className="hidden sm:flex flex-col items-end gap-0.5">
+              <div className="flex items-center gap-1 text-muted-foreground/40">
+                <Clock className="h-3 w-3" />
+                <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                  {data.dateDisplay}
+                </span>
+              </div>
             </div>
           </div>
         </div>

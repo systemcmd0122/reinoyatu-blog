@@ -87,10 +87,10 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false)
 
   const NavContent = () => (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {navigation.map((group, groupIdx) => (
-        <div key={groupIdx} className="space-y-2">
-          <h3 className="px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/70">
+        <div key={groupIdx} className="space-y-3">
+          <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40">
             {group.title}
           </h3>
           <div className="space-y-1">
@@ -102,18 +102,21 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
                   key={itemIdx}
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start h-auto py-3 px-4 rounded-xl",
+                    "w-full justify-start h-auto py-4 px-4 rounded-[1.25rem] transition-all duration-300 active:scale-[0.97]",
                     isActive
-                      ? "bg-primary/10 text-primary hover:bg-primary/15"
-                      : "hover:bg-muted"
+                      ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:bg-primary/90"
+                      : "hover:bg-primary/5 hover:text-primary"
                   )}
                   onClick={() => setIsOpen(false)}
                 >
                   <Link href={item.href} className="flex items-start">
-                    <item.icon className={cn("w-5 h-5 mr-3 mt-0.5", isActive ? "text-primary" : "text-muted-foreground")} />
+                    <item.icon className={cn("w-5 h-5 mr-4 mt-0.5", isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary")} />
                     <div className="flex flex-col items-start overflow-hidden">
-                      <span className="font-bold text-sm leading-tight">{item.name}</span>
-                      <span className="text-[10px] text-muted-foreground font-medium truncate w-full">
+                      <span className="font-black text-sm tracking-tight leading-tight">{item.name}</span>
+                      <span className={cn(
+                        "text-[10px] font-bold truncate w-full mt-0.5",
+                        isActive ? "text-primary-foreground/60" : "text-muted-foreground/60"
+                      )}>
                         {item.description}
                       </span>
                     </div>
@@ -122,38 +125,41 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
               )
             })}
           </div>
-          {groupIdx < navigation.length - 1 && <Separator className="mt-4 mx-2" />}
         </div>
       ))}
     </div>
   )
 
   return (
-    <div className="container mx-auto px-4 py-8 lg:py-12 max-w-6xl">
-      <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
+    <div className="container mx-auto px-4 py-12 lg:py-24 max-w-7xl">
+      <div className="flex flex-col md:flex-row gap-12 lg:gap-20">
         {/* Mobile Navigation */}
         <div className="md:hidden">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" className="w-full justify-between font-bold glass rounded-xl h-12 shadow-sm">
-                <div className="flex items-center">
-                  <Menu className="h-5 w-5 mr-2" />
-                  設定メニュー
+              <Button variant="outline" className="w-full justify-between font-black glass rounded-2xl h-16 shadow-premium px-6">
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary/10 p-2 rounded-xl">
+                    <Menu className="h-6 w-6 text-primary" />
+                  </div>
+                  <span className="uppercase tracking-widest text-xs">Settings Menu</span>
                 </div>
-                <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-lg">開く</span>
+                <div className="bg-muted px-3 py-1 rounded-lg text-[10px] uppercase font-black tracking-widest opacity-60">Open</div>
               </Button>
             </SheetTrigger>
             <SheetContent
               side="left"
-              className="w-[300px] bg-card text-card-foreground border-r p-0"
+              className="w-full sm:w-[380px] bg-background/80 backdrop-blur-2xl text-card-foreground border-r border-border/40 p-0 rounded-r-[3rem]"
             >
               <VisuallyHidden>
                 <SheetTitle>設定メニュー</SheetTitle>
               </VisuallyHidden>
-              <div className="p-6 pt-12">
-                <div className="flex items-center space-x-2 mb-8 px-2">
-                  <UserCircle className="w-8 h-8 text-primary" />
-                  <span className="font-black text-xl tracking-tighter italic">SETTINGS</span>
+              <div className="p-8 pt-16">
+                <div className="flex items-center space-x-3 mb-12 px-2">
+                  <div className="bg-primary text-primary-foreground p-2 rounded-xl shadow-lg shadow-primary/20">
+                    <UserCircle className="w-6 h-6" />
+                  </div>
+                  <span className="font-black text-2xl tracking-tighter italic uppercase">Settings</span>
                 </div>
                 <NavContent />
               </div>
@@ -162,11 +168,13 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
 
         {/* Sidebar for Desktop */}
-        <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0">
+        <aside className="hidden md:block w-72 lg:w-80 flex-shrink-0">
           <div className="sticky top-24 z-[var(--z-sticky)]">
-            <div className="flex items-center space-x-2 mb-8 px-4">
-              <UserCircle className="w-6 h-6 text-primary" />
-              <span className="font-black text-lg tracking-tighter italic uppercase">Settings</span>
+            <div className="flex items-center space-x-3 mb-10 px-4">
+              <div className="bg-primary/5 p-2 rounded-xl">
+                <UserCircle className="w-6 h-6 text-primary" />
+              </div>
+              <span className="font-black text-xl tracking-tighter italic uppercase opacity-40">System Preferences</span>
             </div>
             <NavContent />
           </div>
@@ -174,7 +182,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Content Area */}
         <main className="flex-1 min-w-0">
-          <div className="bg-card text-card-foreground shadow-sm rounded-2xl p-6 lg:p-10 border border-border transition-all duration-300">
+          <div className="bg-card text-card-foreground shadow-premium rounded-[3rem] p-8 lg:p-16 border border-border/40 transition-all duration-500 animate-in fade-in slide-in-from-bottom-8">
             {children}
           </div>
         </main>

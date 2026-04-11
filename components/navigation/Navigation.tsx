@@ -19,9 +19,11 @@ import {
   Loader2,
   Download,
   Share,
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "./ThemeToggle"
 import { CommandMenu } from "./CommandMenu"
@@ -135,7 +137,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
 
   return (
     <>
-      <header className="border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 sticky top-0 z-[var(--z-nav)] w-full transition-all duration-300">
+      <header className="border-b bg-background/80 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/60 sticky top-0 z-[var(--z-nav)] w-full transition-all duration-500">
         <div className="max-w-screen-xl mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-4 flex-1">
             <Link
@@ -151,12 +153,19 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
             </Link>
 
             <nav className="hidden lg:flex items-center gap-8 ml-8">
-              <Link
-                href="/changelog"
-                className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors tracking-tight"
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
               >
-                アップデート
-              </Link>
+                <Link
+                  href="/changelog"
+                  className="text-sm font-bold text-muted-foreground hover:text-primary transition-all tracking-tight flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-primary/5 group"
+                >
+                  <Sparkles className="h-4 w-4 text-primary/50 group-hover:text-primary transition-colors" />
+                  アップデート
+                </Link>
+              </motion.div>
             </nav>
 
             <div className="hidden md:flex flex-1 justify-center max-w-sm ml-8">
@@ -210,57 +219,57 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-64 mt-2 p-2 rounded-2xl shadow-2xl border-border/50" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal p-3">
+                  <DropdownMenuContent className="w-64 mt-2 p-2 rounded-[1.5rem] shadow-2xl border-border/40 bg-background/80 backdrop-blur-2xl" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal p-4">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-black leading-none">
+                        <p className="text-sm font-black leading-none tracking-tight">
                           {profile?.name || "ユーザー"}
                         </p>
-                        <p className="text-xs leading-none text-muted-foreground truncate opacity-70">
+                        <p className="text-xs leading-none text-muted-foreground truncate opacity-60">
                           {user.email}
                         </p>
                       </div>
                     </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="opacity-50" />
+                    <DropdownMenuSeparator className="opacity-40" />
                     <DropdownMenuGroup className="p-1">
-                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
+                      <DropdownMenuItem asChild className="rounded-xl p-3 cursor-pointer font-bold focus:bg-primary/5 focus:text-primary transition-colors">
                         <Link href={`/profile/${user.id}`}>
-                          <UserIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <UserIcon className="mr-3 h-4 w-4 opacity-70" />
                           <span>プロフィール</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
+                      <DropdownMenuItem asChild className="rounded-xl p-3 cursor-pointer font-bold focus:bg-primary/5 focus:text-primary transition-colors">
                         <Link href="/settings/drafts">
-                          <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <FileText className="mr-3 h-4 w-4 opacity-70" />
                           <span>記事管理</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
+                      <DropdownMenuItem asChild className="rounded-xl p-3 cursor-pointer font-bold focus:bg-primary/5 focus:text-primary transition-colors">
                         <Link href="/settings/profile">
-                          <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <Settings className="mr-3 h-4 w-4 opacity-70" />
                           <span>設定</span>
                         </Link>
                       </DropdownMenuItem>
                       {(isInstallable || isIOS) && !isInstalled && (
                         <DropdownMenuItem
                           onClick={() => promptInstall()}
-                          className="rounded-xl p-2 cursor-pointer font-bold"
+                          className="rounded-xl p-3 cursor-pointer font-bold focus:bg-primary/5 focus:text-primary transition-colors"
                         >
                           {isIOS ? (
-                            <Share className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <Share className="mr-3 h-4 w-4 opacity-70" />
                           ) : (
-                            <Download className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <Download className="mr-3 h-4 w-4 opacity-70" />
                           )}
                           <span>アプリをインストール</span>
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuGroup>
-                    <DropdownMenuSeparator className="opacity-50" />
+                    <DropdownMenuSeparator className="opacity-40" />
                     <DropdownMenuItem
                       onClick={() => setIsLogoutDialogOpen(true)}
-                      className="rounded-xl p-2 text-destructive focus:text-destructive cursor-pointer font-black"
+                      className="rounded-xl p-3 text-destructive focus:text-destructive focus:bg-destructive/5 cursor-pointer font-black transition-colors"
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
+                      <LogOut className="mr-3 h-4 w-4" />
                       <span>ログアウト</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
