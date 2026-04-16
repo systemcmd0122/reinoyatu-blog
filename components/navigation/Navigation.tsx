@@ -19,6 +19,7 @@ import {
   Loader2,
   Download,
   Share,
+  Mail,
 } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
@@ -122,7 +123,9 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   }
 
   const mobileNavItems = [
+    { href: "/about", icon: FileText, label: "このサイトについて" },
     { href: "/changelog", icon: FileText, label: "アップデート" },
+    { href: "/contact", icon: FileText, label: "お問い合わせ" },
     { href: "/settings/drafts", icon: FileText, label: "記事管理" },
     { href: "/settings/profile", icon: Settings, label: "設定" },
     { href: "/privacy", icon: Shield, label: "プライバシーポリシー" },
@@ -152,10 +155,22 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
 
             <nav className="hidden lg:flex items-center gap-8 ml-8">
               <Link
+                href="/about"
+                className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors tracking-tight"
+              >
+                このサイトについて
+              </Link>
+              <Link
                 href="/changelog"
                 className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors tracking-tight"
               >
                 アップデート
+              </Link>
+              <Link
+                href="/contact"
+                className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors tracking-tight"
+              >
+                お問い合わせ
               </Link>
             </nav>
 
@@ -254,6 +269,27 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                           <span>アプリをインストール</span>
                         </DropdownMenuItem>
                       )}
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator className="opacity-50" />
+                    <DropdownMenuGroup className="p-1">
+                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
+                        <Link href="/privacy">
+                          <Shield className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <span>プライバシーポリシー</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
+                        <Link href="/terms">
+                          <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <span>利用規約</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
+                        <Link href="/contact">
+                          <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <span>お問い合わせ</span>
+                        </Link>
+                      </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator className="opacity-50" />
                     <DropdownMenuItem

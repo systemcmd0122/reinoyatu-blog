@@ -1,0 +1,20 @@
+# robots.txt for reinoyatu-blog
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /auth/
+
+# Google Search Console
+User-agent: Googlebot
+Allow: /
+
+# AdSense crawler
+User-agent: AdsBot-Google
+Allow: /
+
+# Sitemap
+Sitemap: https://reinoyatu-blog.vercel.app/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1

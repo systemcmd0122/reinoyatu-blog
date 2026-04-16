@@ -114,6 +114,23 @@ export const LandingHero = () => {
               <span>Real-time Connect</span>
             </div>
           </motion.div>
+
+          <motion.div
+            variants={itemVariants}
+            className="pt-8 flex justify-center gap-4"
+          >
+            <Link href="/about" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              このサイトについて
+            </Link>
+            <span className="text-muted-foreground/50">•</span>
+            <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              プライバシーポリシー
+            </Link>
+            <span className="text-muted-foreground/50">•</span>
+            <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              お問い合わせ
+            </Link>
+          </motion.div>
         </motion.div>
       </div>
     </section>

@@ -176,6 +176,14 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
                         </li>
                         <li>
                           <Link
+                            href="/about"
+                            className="hover:text-primary transition-colors"
+                          >
+                            このサイトについて
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
                             href="/changelog"
                             className="hover:text-primary transition-colors"
                           >
@@ -188,6 +196,22 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
                             className="hover:text-primary transition-colors"
                           >
                             プライバシーポリシー
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            href="/terms"
+                            className="hover:text-primary transition-colors"
+                          >
+                            利用規約
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            href="/contact"
+                            className="hover:text-primary transition-colors"
+                          >
+                            お問い合わせ
                           </Link>
                         </li>
                       </ul>
