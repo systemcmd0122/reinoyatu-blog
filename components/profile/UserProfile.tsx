@@ -36,7 +36,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import BlogListView from "@/components/blog/BlogListView"
-import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { shareContent } from "@/utils/share"
 
@@ -208,9 +207,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
       {/* Header / Hero Section */}
       <section className="relative group">
-        <div className="h-48 md:h-64 w-full bg-gradient-to-br from-primary/20 via-secondary/10 to-primary/5 rounded-3xl overflow-hidden relative border border-border/50">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-          <div className="absolute top-0 right-0 p-6">
+        <div className="h-32 md:h-48 w-full bg-muted/30 rounded-lg overflow-hidden relative border border-border">
+          <div className="absolute top-0 right-0 p-4">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -225,14 +223,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
           </div>
         </div>
 
-        <div className="px-6 md:px-12 -mt-20 relative z-10">
+        <div className="px-6 md:px-12 -mt-16 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="relative h-40 w-40 rounded-[2.5rem] overflow-hidden border-8 border-background bg-background shadow-2xl"
-              >
+              <div className="relative h-32 w-32 rounded-lg overflow-hidden border-4 border-background bg-background shadow-sm">
                 {profile.avatar_url ? (
                   <Image
                     src={profile.avatar_url}
@@ -245,11 +239,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                     {profile.name?.[0] || "U"}
                   </div>
                 )}
-              </motion.div>
+              </div>
 
-              <div className="text-center md:text-left space-y-2 pb-2">
+              <div className="text-center md:text-left space-y-1 pb-2">
                 <div className="flex items-center justify-center md:justify-start gap-3">
-                  <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight">
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
                     {profile.name}
                   </h1>
                   {isOwnProfile && (
@@ -258,8 +252,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                 </div>
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-muted-foreground font-medium">
                   <div className="flex items-center gap-1.5">
-                    <Calendar className="h-4 w-4" />
-                    <span>Joined {profile.created_at ? new Date(profile.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' }) : '---'}</span>
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>{profile.created_at ? new Date(profile.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' }) : '---'} に登録</span>
                   </div>
                   {profile.homepage_url && (
                     <a href={profile.homepage_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-primary transition-colors">
@@ -274,10 +268,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
 
             <div className="flex items-center justify-center gap-3 pb-2">
               {isOwnProfile ? (
-                <Button asChild size="lg" className="rounded-2xl font-bold h-12 px-6 shadow-lg shadow-primary/20">
+                <Button asChild size="lg" className="rounded-md font-bold h-10 px-6">
                   <Link href="/settings/profile" className="flex items-center gap-2">
                     <Edit3 className="h-4 w-4" />
-                    Edit Profile
+                    プロフィールを編集
                   </Link>
                 </Button>
               ) : (
@@ -295,17 +289,17 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
         {/* Left Sidebar */}
         <aside className="lg:col-span-4 space-y-8">
           {/* Stats Card */}
-          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+          <Card className="rounded-lg border-border shadow-sm overflow-hidden">
             <CardContent className="p-0">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 divide-x divide-y md:divide-y-0 lg:divide-y divide-border">
                 {stats.map((stat, i) => {
                   const content = (
                     <>
-                      <div className="inline-flex p-2 rounded-xl bg-primary/5 text-primary mb-2">
-                        <stat.icon className="h-5 w-5" />
+                      <div className="inline-flex p-1.5 rounded-md bg-muted text-muted-foreground mb-2">
+                        <stat.icon className="h-4 w-4" />
                       </div>
-                      <div className="text-2xl font-black text-foreground">{stat.value}</div>
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{stat.label}</div>
+                      <div className="text-xl font-bold text-foreground">{stat.value}</div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</div>
                     </>
                   )
 
@@ -332,11 +326,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
           </Card>
 
           {/* About Card */}
-          <Card className="rounded-[2rem] border-border/50 shadow-sm">
-            <CardContent className="p-8 space-y-6">
+          <Card className="rounded-lg border-border shadow-sm">
+            <CardContent className="p-6 space-y-6">
               <div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-foreground/50 mb-4 flex items-center gap-2">
-                  About Me
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                  自己紹介
                 </h3>
                 {profile.introduce ? (
                   <div className="text-muted-foreground leading-relaxed font-medium">
@@ -349,9 +343,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
 
               {/* Socials */}
               {profile.social_links && Object.entries(profile.social_links).some(([_, v]) => v) && (
-                <div className="pt-6 border-t border-border/50">
-                  <h3 className="text-sm font-black uppercase tracking-widest text-foreground/50 mb-4">
-                    Connections
+                <div className="pt-6 border-t border-border">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+                    リンク
                   </h3>
                   <div className="flex flex-wrap gap-3">
                     {Object.entries(profile.social_links).map(([platform, url]) => {
@@ -364,7 +358,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-3 rounded-2xl bg-muted/50 hover:bg-background border border-transparent hover:border-border transition-all group"
+                          className="p-2.5 rounded-lg bg-muted/50 hover:bg-muted border border-transparent transition-all group"
                         >
                           <config.icon className={cn("h-5 w-5 transition-transform group-hover:scale-110", config.color)} />
                         </a>
@@ -384,40 +378,33 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
             onValueChange={(v) => setActiveTab(v as any)}
             className="w-full"
           >
-            <div className="flex items-center justify-between mb-6 bg-muted/50 p-1.5 rounded-2xl border border-border/50">
+            <div className="flex items-center justify-between mb-6 bg-muted/30 p-1 rounded-lg border border-border">
               <TabsList className="bg-transparent h-auto p-0 gap-1 overflow-x-auto no-scrollbar">
                 <TabsTrigger
                   value="posts"
-                  className="rounded-xl px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  className="rounded-md px-8 py-2 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
                 >
-                  Articles
+                  記事
                 </TabsTrigger>
                 <TabsTrigger
                   value="series"
-                  className="rounded-xl px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  className="rounded-md px-8 py-2 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
                 >
-                  Series
+                  シリーズ
                 </TabsTrigger>
                 <TabsTrigger
                   value="about"
-                  className="rounded-xl px-8 py-2.5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  className="rounded-md px-8 py-2 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
                 >
-                  History
+                  履歴
                 </TabsTrigger>
               </TabsList>
             </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
+            <div className="mt-0">
                 <TabsContent value="posts" className="mt-0 focus-visible:ring-0">
                   {isLoading ? (
-                    <div className="bg-card border border-border/50 rounded-[2rem] overflow-hidden divide-y divide-border/50 shadow-sm">
+                    <div className="bg-card border border-border rounded-lg overflow-hidden divide-y divide-border shadow-sm">
                       {[1, 2, 3].map((i) => (
                         <div key={i} className="p-8 flex gap-6">
                           <div className="flex-1 space-y-4">
@@ -428,24 +415,24 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                               <Skeleton className="h-4 w-24" />
                             </div>
                           </div>
-                          <Skeleton className="h-28 w-48 rounded-2xl hidden sm:block" />
+                          <Skeleton className="h-28 w-48 rounded-lg hidden sm:block" />
                         </div>
                       ))}
                     </div>
                   ) : blogPosts.length > 0 ? (
                     <BlogListView blogs={blogPosts} />
                   ) : (
-                    <div className="bg-card border border-border/50 rounded-[2rem] p-20 text-center">
-                      <div className="bg-muted w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                        <FileText className="h-10 w-10 text-muted-foreground/30" />
+                    <div className="bg-card border border-border rounded-lg p-20 text-center shadow-sm">
+                      <div className="bg-muted w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-6">
+                        <FileText className="h-8 w-8 text-muted-foreground/30" />
                       </div>
-                      <h3 className="text-xl font-bold mb-2">No articles yet</h3>
-                      <p className="text-muted-foreground mb-8">
-                        {isOwnProfile ? "Start sharing your thoughts with the world!" : "This user hasn't published any articles yet."}
+                      <h3 className="text-xl font-bold mb-2">まだ記事がありません</h3>
+                      <p className="text-muted-foreground mb-8 text-sm">
+                        {isOwnProfile ? "あなたの考えを世界に共有しましょう！" : "このユーザーはまだ記事を投稿していません。"}
                       </p>
                       {isOwnProfile && (
-                        <Button asChild className="rounded-xl font-bold">
-                          <Link href="/blog/new">Create First Post</Link>
+                        <Button asChild className="rounded-md font-bold">
+                          <Link href="/blog/new">最初の記事を書く</Link>
                         </Button>
                       )}
                     </div>
@@ -456,8 +443,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                   {isCollectionsLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="space-y-4 bg-card border border-border/50 p-6 rounded-[2rem]">
-                          <Skeleton className="aspect-video w-full rounded-2xl" />
+                        <div key={i} className="space-y-4 bg-card border border-border p-6 rounded-lg shadow-sm">
+                          <Skeleton className="aspect-video w-full rounded-md" />
                           <div className="space-y-2">
                             <Skeleton className="h-6 w-2/3" />
                             <Skeleton className="h-4 w-full" />
@@ -474,12 +461,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                 </TabsContent>
 
                 <TabsContent value="about" className="mt-0 focus-visible:ring-0">
-                  <Card className="rounded-[2rem] border-border/50 shadow-sm p-12 text-center text-muted-foreground">
-                    <p className="italic">Activity history coming soon...</p>
+                  <Card className="rounded-lg border-border shadow-sm p-12 text-center text-muted-foreground">
+                    <p className="text-sm">アクティビティ履歴は準備中です...</p>
                   </Card>
                 </TabsContent>
-              </motion.div>
-            </AnimatePresence>
+            </div>
           </Tabs>
         </div>
       </div>

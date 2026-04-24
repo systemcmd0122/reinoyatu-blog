@@ -102,9 +102,9 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
                   key={itemIdx}
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start h-auto py-3 px-4 rounded-xl",
+                    "w-full justify-start h-auto py-2.5 px-4 rounded-md",
                     isActive
-                      ? "bg-primary/10 text-primary hover:bg-primary/15"
+                      ? "bg-primary/5 text-primary hover:bg-primary/10"
                       : "hover:bg-muted"
                   )}
                   onClick={() => setIsOpen(false)}
@@ -135,12 +135,12 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
         <div className="md:hidden">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" className="w-full justify-between font-bold glass rounded-xl h-12 shadow-sm">
+              <Button variant="outline" className="w-full justify-between font-bold rounded-md h-12 shadow-sm">
                 <div className="flex items-center">
                   <Menu className="h-5 w-5 mr-2" />
                   設定メニュー
                 </div>
-                <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-lg">開く</span>
+                <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md">開く</span>
               </Button>
             </SheetTrigger>
             <SheetContent
@@ -151,9 +151,9 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
                 <SheetTitle>設定メニュー</SheetTitle>
               </VisuallyHidden>
               <div className="p-6 pt-12">
-                <div className="flex items-center space-x-2 mb-8 px-2">
-                  <UserCircle className="w-8 h-8 text-primary" />
-                  <span className="font-black text-xl tracking-tighter italic">SETTINGS</span>
+                <div className="flex items-center space-x-2 mb-8 px-2 border-b pb-4">
+                  <UserCircle className="w-6 h-6 text-primary" />
+                  <span className="font-bold text-lg">設定</span>
                 </div>
                 <NavContent />
               </div>
@@ -164,9 +164,9 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
         {/* Sidebar for Desktop */}
         <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0">
           <div className="sticky top-24 z-[var(--z-sticky)]">
-            <div className="flex items-center space-x-2 mb-8 px-4">
-              <UserCircle className="w-6 h-6 text-primary" />
-              <span className="font-black text-lg tracking-tighter italic uppercase">Settings</span>
+            <div className="flex items-center space-x-2 mb-6 px-4 border-b pb-4 border-border">
+              <UserCircle className="w-5 h-5 text-primary" />
+              <span className="font-bold text-lg">設定</span>
             </div>
             <NavContent />
           </div>
@@ -174,7 +174,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Content Area */}
         <main className="flex-1 min-w-0">
-          <div className="bg-card text-card-foreground shadow-sm rounded-2xl p-6 lg:p-10 border border-border transition-all duration-300">
+          <div className="bg-card text-card-foreground shadow-sm rounded-lg p-6 lg:p-10 border border-border transition-all duration-300">
             {children}
           </div>
         </main>

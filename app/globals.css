@@ -103,53 +103,48 @@
 }
 
 .prose h1, .prose h2, .prose h3, .prose h4 {
-  @apply font-black tracking-tight text-foreground mt-16 mb-8;
+  @apply font-bold tracking-tight text-foreground mt-12 mb-6;
   scroll-margin-top: 6rem;
 }
 
 .prose h1 {
-  @apply text-3xl md:text-5xl border-b-2 border-border/50 pb-4 mb-12;
+  @apply text-3xl md:text-4xl border-b border-border pb-4 mb-10;
 }
 
 .prose h2 {
-  @apply text-2xl md:text-4xl border-b border-border/50 pb-3 mb-10 flex items-center gap-3;
-}
-
-.prose h2::before {
-  content: "";
-  @apply w-1.5 h-8 bg-primary rounded-full hidden md:block;
+  @apply text-2xl md:text-3xl border-b border-border pb-2 mb-8;
 }
 
 .prose h3 {
-  @apply text-xl md:text-2xl mb-6;
+  @apply text-xl md:text-2xl mb-4;
 }
 
 .prose p {
-  @apply leading-relaxed mb-8 text-foreground/80;
+  @apply leading-relaxed mb-6 text-foreground/80;
 }
 
 .prose a {
-  @apply text-primary underline underline-offset-4 decoration-primary/30 hover:decoration-primary font-bold transition-all;
+  @apply text-primary underline underline-offset-4 decoration-primary/30 hover:decoration-primary font-medium transition-all;
 }
 
 .prose blockquote {
-  @apply border-l-4 border-primary bg-muted/30 px-8 py-4 italic rounded-r-2xl my-10 text-muted-foreground font-medium;
+  @apply border-l-4 border-primary/30 bg-muted/20 px-6 py-4 italic rounded-r-lg my-8 text-muted-foreground font-medium;
 }
 
 .prose code {
-  @apply bg-muted px-2 py-0.5 rounded-md font-mono text-sm font-semibold border border-border/30 before:content-none after:content-none;
+  @apply bg-muted px-1.5 py-0.5 rounded-md font-mono text-[0.9em] border border-border/50 before:content-none after:content-none;
 }
 
 .prose pre {
-  @apply rounded-2xl border border-border bg-[#0d1117] p-0 overflow-x-auto my-10 shadow-2xl;
+  @apply rounded-lg border border-border bg-[#0d1117] p-0 overflow-x-auto my-8 shadow-md;
 }
 
 .prose pre code {
-  @apply bg-transparent p-6 border-none text-[15px] leading-relaxed block;
+  @apply bg-transparent p-6 border-none text-[14px] leading-relaxed block;
 }
 
 .prose img {
-  @apply rounded-2xl border border-border shadow-2xl my-12 mx-auto transition-transform duration-500 hover:scale-[1.01];
+  @apply rounded-lg border border-border shadow-md my-10 mx-auto;
 }
 
 .prose table {
@@ -211,11 +206,11 @@
   }
 }
 
-/* スムーズなアニメーション */
+/* スムーズなアニメーション - 控えめに */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
 
   to {
@@ -225,35 +220,16 @@
 }
 
 .animate-in {
-  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
-/* Block entrance animation */
-.rich-text-editor .ProseMirror > * {
-  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-
-.rich-text-editor .ProseMirror > *:nth-child(1) { animation-delay: 0.05s; }
-.rich-text-editor .ProseMirror > *:nth-child(2) { animation-delay: 0.1s; }
-.rich-text-editor .ProseMirror > *:nth-child(3) { animation-delay: 0.15s; }
-
-/* カード要素のプレミアムシャドウ */
+/* カード要素のシャドウ - 落ち着いたものに */
 .shadow-premium {
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.dark .shadow-premium {
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+  @apply shadow-sm transition-shadow duration-300;
 }
 
 .shadow-premium:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
-}
-
-.dark .shadow-premium:hover {
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
+  @apply shadow-md;
 }
 
 /* ホバー時の装飾 */

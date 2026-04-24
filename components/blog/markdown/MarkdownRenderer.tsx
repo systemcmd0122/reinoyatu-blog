@@ -163,7 +163,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   }
 
   return (
-    <div className={`markdown-content prose prose-xl prose-zinc dark:prose-invert max-w-none prose-headings:font-black prose-a:text-primary ${className}`}>
+    <div className={`markdown-content prose prose-lg prose-zinc dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-primary ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
         rehypePlugins={[rehypeKatex, [rehypeRaw, { tagfilter: true }]]}
@@ -235,7 +235,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           h1: ({ children }) => {
             const id = typeof children === 'string' ? children.replace(/\s+/g, '-').toLowerCase() : ''
             return (
-              <h1 id={id} className="text-4xl font-black mb-10 pb-3 border-b-2 scroll-mt-20">
+              <h1 id={id} className="text-3xl font-bold mb-8 pb-3 border-b scroll-mt-20">
                 {children}
               </h1>
             )
@@ -244,7 +244,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           h2: ({ children }) => {
             const id = typeof children === 'string' ? children.replace(/\s+/g, '-').toLowerCase() : ''
             return (
-              <h2 id={id} className="text-3xl font-black mb-8 pb-2 border-b scroll-mt-20">
+              <h2 id={id} className="text-2xl font-bold mb-6 pb-2 border-b scroll-mt-20">
                 {children}
               </h2>
             )
@@ -253,26 +253,26 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           h3: ({ children }) => {
             const id = typeof children === 'string' ? children.replace(/\s+/g, '-').toLowerCase() : ''
             return (
-              <h3 id={id} className="text-2xl font-black mb-6 scroll-mt-20">
+              <h3 id={id} className="text-xl font-bold mb-4 scroll-mt-20">
                 {children}
               </h3>
             )
           },
 
           h4: ({ children }) => (
-            <h4 className="text-xl font-black mb-4 scroll-mt-20">
+            <h4 className="text-lg font-bold mb-4 scroll-mt-20">
               {children}
             </h4>
           ),
 
           h5: ({ children }) => (
-            <h5 className="text-lg font-black mb-3 scroll-mt-20">
+            <h5 className="text-base font-bold mb-3 scroll-mt-20">
               {children}
             </h5>
           ),
 
           h6: ({ children }) => (
-            <h6 className="text-base font-black mb-2 scroll-mt-20">
+            <h6 className="text-sm font-bold mb-2 scroll-mt-20">
               {children}
             </h6>
           ),
@@ -331,7 +331,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             </thead>
           ),
           th: ({ children, style }) => (
-            <th className="px-4 py-3 font-black uppercase tracking-wider" style={style}>
+            <th className="px-4 py-3 font-bold uppercase tracking-wider" style={style}>
               {children}
             </th>
           ),
