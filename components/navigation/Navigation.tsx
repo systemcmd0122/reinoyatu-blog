@@ -145,34 +145,14 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               href="/"
               className="flex items-center space-x-3 hover:opacity-80 transition-all flex-shrink-0 group"
             >
-              <div className="bg-primary text-primary-foreground p-2 rounded-xl font-black text-xl leading-none shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
+              <div className="bg-primary text-primary-foreground p-2 rounded-xl font-bold text-xl leading-none shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
                 RY
               </div>
-              <span className="font-black text-xl tracking-tighter hidden sm:inline-block text-foreground">
+              <span className="font-bold text-xl tracking-tighter hidden sm:inline-block text-foreground">
                 例のヤツ
               </span>
             </Link>
 
-            <nav className="hidden lg:flex items-center gap-8 ml-8">
-              <Link
-                href="/about"
-                className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors tracking-tight"
-              >
-                このサイトについて
-              </Link>
-              <Link
-                href="/changelog"
-                className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors tracking-tight"
-              >
-                アップデート
-              </Link>
-              <Link
-                href="/contact"
-                className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors tracking-tight"
-              >
-                お問い合わせ
-              </Link>
-            </nav>
 
             <div className="hidden md:flex flex-1 justify-center max-w-sm ml-8">
               <CommandMenu user={user} />
@@ -182,29 +162,20 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
           <div className="flex items-center gap-2 md:gap-4">
             <div className="hidden md:flex items-center gap-2">
               {user && (
-                <>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary relative rounded-xl hover:bg-primary/5" asChild>
-                    <Link href="/notifications" title="通知">
-                      <Bell className="h-5 w-5" />
-                      {unreadCount > 0 && (
-                        <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-background animate-pulse" />
-                      )}
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-primary rounded-xl hover:bg-primary/5">
-                    <Link href="/bookmarks" title="ブックマーク">
-                      <Bookmark className="h-5 w-5" />
-                    </Link>
-                  </Button>
-                </>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary relative rounded-xl hover:bg-primary/5" asChild>
+                  <Link href="/notifications" title="通知">
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-background animate-pulse" />
+                    )}
+                  </Link>
+                </Button>
               )}
-              <div className="w-[1px] h-4 bg-border mx-1" />
-              <ThemeToggle />
             </div>
 
             {user ? (
               <div className="flex items-center gap-3">
-                <Button variant="default" size="sm" asChild className="hidden sm:flex gap-2 rounded-xl px-5 font-black shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                <Button variant="default" size="sm" asChild className="hidden sm:flex gap-2 rounded-xl px-5 font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
                   <Link href="/blog/new">
                     <PenSquare className="h-4 w-4" />
                     <span>投稿する</span>
@@ -219,7 +190,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                           src={profile?.avatar_url || "/default.png"}
                           alt={profile?.name || "User"}
                         />
-                        <AvatarFallback className="bg-primary/5 text-primary text-xs font-black">
+                        <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
                           {profile?.name?.charAt(0).toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
@@ -228,7 +199,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                   <DropdownMenuContent className="w-64 mt-2 p-2 rounded-2xl shadow-2xl border-border/50" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal p-3">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-black leading-none">
+                        <p className="text-sm font-bold leading-none">
                           {profile?.name || "ユーザー"}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground truncate opacity-70">
@@ -256,6 +227,12 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                           <span>設定</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
+                        <Link href="/bookmarks">
+                          <Bookmark className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <span>ブックマーク</span>
+                        </Link>
+                      </DropdownMenuItem>
                       {(isInstallable || isIOS) && !isInstalled && (
                         <DropdownMenuItem
                           onClick={() => promptInstall()}
@@ -273,6 +250,24 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                     <DropdownMenuSeparator className="opacity-50" />
                     <DropdownMenuGroup className="p-1">
                       <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
+                        <Link href="/about">
+                          <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <span>このサイトについて</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
+                        <Link href="/changelog">
+                          <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <span>アップデート</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
+                        <Link href="/contact">
+                          <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <span>お問い合わせ</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
                         <Link href="/privacy">
                           <Shield className="mr-2 h-4 w-4 text-muted-foreground" />
                           <span>プライバシーポリシー</span>
@@ -284,17 +279,16 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                           <span>利用規約</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
-                        <Link href="/contact">
-                          <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
-                          <span>お問い合わせ</span>
-                        </Link>
-                      </DropdownMenuItem>
                     </DropdownMenuGroup>
+                    <DropdownMenuSeparator className="opacity-50" />
+                    <div className="p-2 flex items-center justify-between">
+                      <span className="text-xs font-bold text-muted-foreground ml-1">テーマ切り替え</span>
+                      <ThemeToggle />
+                    </div>
                     <DropdownMenuSeparator className="opacity-50" />
                     <DropdownMenuItem
                       onClick={() => setIsLogoutDialogOpen(true)}
-                      className="rounded-xl p-2 text-destructive focus:text-destructive cursor-pointer font-black"
+                      className="rounded-xl p-2 text-destructive focus:text-destructive cursor-pointer font-bold"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>ログアウト</span>
@@ -307,7 +301,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                 <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex font-bold rounded-xl hover:bg-muted transition-colors px-6">
                   <Link href="/login">ログイン</Link>
                 </Button>
-                <Button size="sm" asChild className="rounded-xl px-6 font-black shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                <Button size="sm" asChild className="rounded-xl px-6 font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
                   <Link href="/signup">はじめる</Link>
                 </Button>
               </div>
@@ -326,7 +320,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                 </VisuallyHidden>
                 <div className="flex flex-col h-full">
                   <div className="p-6 border-b border-border bg-muted/20 flex items-center justify-between">
-                    <span className="font-black text-xl tracking-tighter">Menu</span>
+                    <span className="font-bold text-xl tracking-tighter">Menu</span>
                     <ThemeToggle />
                   </div>
                   {user ? (
@@ -340,12 +334,12 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                                   src={profile?.avatar_url || "/default.png"}
                                   alt={profile?.name || "User"}
                                 />
-                                <AvatarFallback className="font-black">
+                                <AvatarFallback className="font-bold">
                                   {profile?.name?.charAt(0).toUpperCase() || "U"}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex flex-col truncate">
-                                <span className="font-black text-xl truncate group-hover:text-primary transition-colors">
+                                <span className="font-bold text-xl truncate group-hover:text-primary transition-colors">
                                   {profile?.name || "ユーザー"}
                                 </span>
                                 <span className="text-sm text-muted-foreground truncate opacity-70">
@@ -364,7 +358,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                               <Link
                                 href={item.href}
                                 className={cn(
-                                  "flex items-center space-x-4 px-5 py-4 rounded-[1.25rem] text-lg font-bold transition-all active:scale-95",
+                                  "flex items-center space-x-4 px-5 py-4 rounded-xl text-lg font-bold transition-all active:scale-95",
                                   isActive
                                     ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20"
                                     : "text-foreground/70 hover:bg-muted hover:text-foreground"
@@ -384,7 +378,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                         <SheetClose asChild>
                           <button
                             onClick={() => setIsLogoutDialogOpen(true)}
-                            className="flex items-center w-full space-x-4 px-6 py-4 rounded-[1.25rem] text-lg font-black text-destructive hover:bg-destructive/10 transition-all active:scale-95"
+                            className="flex items-center w-full space-x-4 px-6 py-4 rounded-xl text-lg font-bold text-destructive hover:bg-destructive/10 transition-all active:scale-95"
                           >
                             <LogOut className="h-6 w-6" />
                             <span>ログアウト</span>
@@ -397,7 +391,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                       <SheetClose asChild>
                         <Link
                           href="/login"
-                          className="flex items-center justify-center h-14 rounded-2xl font-black text-lg border-2 border-border hover:bg-muted transition-all active:scale-95"
+                          className="flex items-center justify-center h-14 rounded-2xl font-bold text-lg border-2 border-border hover:bg-muted transition-all active:scale-95"
                         >
                           ログイン
                         </Link>
@@ -405,7 +399,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                       <SheetClose asChild>
                         <Link
                           href="/signup"
-                          className="flex items-center justify-center h-14 rounded-2xl font-black text-lg bg-primary text-primary-foreground hover:opacity-90 shadow-2xl shadow-primary/20 transition-all active:scale-95"
+                          className="flex items-center justify-center h-14 rounded-2xl font-bold text-lg bg-primary text-primary-foreground hover:opacity-90 shadow-2xl shadow-primary/20 transition-all active:scale-95"
                         >
                           今すぐはじめる
                         </Link>
@@ -423,9 +417,9 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
       <MobileNav userId={user?.id} unreadCount={unreadCount} />
 
       <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-        <AlertDialogContent className="rounded-[2rem] p-8">
+        <AlertDialogContent className="rounded-2xl p-8">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-black tracking-tight">ログアウトしますか？</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold tracking-tight">ログアウトしますか？</AlertDialogTitle>
             <AlertDialogDescription className="text-lg font-medium">
               現在のアカウントからログアウトします。よろしいですか？
             </AlertDialogDescription>
@@ -436,7 +430,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               variant="destructive"
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="rounded-xl h-12 font-black"
+              className="rounded-xl h-12 font-bold"
             >
               {isLoggingOut ? (
                 <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> 処理中...</>

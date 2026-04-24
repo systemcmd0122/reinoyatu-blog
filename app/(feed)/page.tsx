@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import BlogListView from "@/components/blog/BlogListView"
 import LandingPage from "@/components/landing/LandingPage"
-import { TrendingUp, Search, PenSquare, ChevronDown } from "lucide-react"
+import { TrendingUp, Search, PenSquare, ChevronDown, List } from "lucide-react"
 import {
   Pagination,
   PaginationContent,
@@ -181,6 +181,18 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
   const popularTags = tags ? [...tags].sort((a, b) => b.count - a.count).slice(0, 15) : []
   const allTags = tags || []
 
+  // おすすめシリーズ（最新の公開コレクション）
+  const { data: recommendedCollections } = await supabase
+    .from("collections")
+    .select(`
+      id,
+      title,
+      profiles!user_id (name)
+    `)
+    .eq("is_public", true)
+    .order("created_at", { ascending: false })
+    .limit(5)
+
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
       <div className="max-w-screen-xl mx-auto px-4 py-6">
@@ -261,6 +273,36 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                 </Button>
               </Link>
             </div>
+
+            {/* おすすめシリーズ */}
+            {recommendedCollections && recommendedCollections.length > 0 && (
+              <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-border bg-muted/30">
+                  <h2 className="font-bold flex items-center gap-2 text-foreground">
+                    <List className="h-4 w-4 text-primary" />
+                    おすすめのシリーズ
+                  </h2>
+                </div>
+                <div className="p-2">
+                  <div className="flex flex-col">
+                    {recommendedCollections.map((col: any) => (
+                      <Link
+                        key={col.id}
+                        href={`/collections/${col.id}`}
+                        className="flex flex-col p-3 rounded-md hover:bg-muted transition-colors group"
+                      >
+                        <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                          {col.title}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          by {col.profiles?.name}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* トレンドタグセクション */}
             {popularTags.length > 0 && (

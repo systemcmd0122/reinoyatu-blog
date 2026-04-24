@@ -80,7 +80,6 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   const [error, setError] = useState("")
   const [, startTransition] = useTransition()
   const [isDeletePending, setIsDeletePending] = useState(false)
-  const [scrollProgress, setScrollProgress] = useState(0)
   const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([])
   const [activeId, setActiveId] = useState<string>("")
 
@@ -109,16 +108,6 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
     }
   }, [lastEvent, router])
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight
-      const progress = (window.scrollY / totalHeight) * 100
-      setScrollProgress(progress)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
 
   // 見出しの抽出
   useEffect(() => {
@@ -265,16 +254,6 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
   return (
     <div className="min-h-screen bg-muted/10 dark:bg-background pb-32 relative">
-      {/* Scroll Progress Bar */}
-      <div className="fixed top-0 left-0 w-full h-1.5 z-[var(--z-progress)] bg-transparent">
-        <motion.div
-          className="h-full bg-primary shadow-[0_0_10px_rgba(0,0,0,0.1)]"
-          initial={{ width: 0 }}
-          animate={{ width: `${scrollProgress}%` }}
-          transition={{ type: "spring", stiffness: 100, damping: 20 }}
-        />
-      </div>
-
       <div className="max-w-screen-xl mx-auto px-4 py-12 md:py-20">
         {/* Back Button */}
         <Link
@@ -337,7 +316,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
               )}
 
               {/* Article Footer Actions */}
-              <div className="mt-12 pt-8 border-t border-border/50 flex flex-col md:flex-row gap-6 justify-between items-center bg-card p-6 rounded-lg border border-border/40">
+              <div className="mt-12 pt-8 border-t flex flex-col md:flex-row gap-6 justify-between items-center p-6">
                 <div className="flex items-center gap-6">
                   <div className="bg-background rounded-md shadow-sm border border-border/30">
                     <LikeButton 
