@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
+import { createNotification } from "./notification"
 
 /**
  * ユーザーをフォローする
@@ -24,6 +25,15 @@ export async function followUser(followerId: string, followingId: string) {
     console.error("Follow error:", error)
     return { success: false, error: "フォローに失敗しました" }
   }
+
+  // 通知を送信
+  await createNotification({
+    userId: followingId,
+    actorId: followerId,
+    type: 'follow',
+    targetId: followerId,
+    targetType: 'profile'
+  })
 
   revalidatePath(`/profile/${followingId}`)
   return { success: true }

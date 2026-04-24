@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/server"
 import Navigation from "@/components/navigation/Navigation"
 import Link from "next/link"
 import Script from "next/script"
-import { Toaster } from "sonner"
+import { ToasterProvider } from "@/components/providers/ToasterProvider"
 import { ThemeProvider } from "@/components/providers/ThemeProvider"
 import { RealtimeProvider } from "@/components/providers/RealtimeProvider"
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -143,7 +143,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
           disableTransitionOnChange
         >
           <RealtimeProvider>
-            <Toaster richColors position="top-right" theme="system" closeButton />
+            <ToasterProvider />
 
             <div className="flex min-h-screen flex-col">
               <Navigation user={user} />

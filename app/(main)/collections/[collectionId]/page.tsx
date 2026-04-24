@@ -112,7 +112,7 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
                   <div className="p-6 rounded-full bg-primary/10">
                     <Play className="h-12 w-12 text-primary" />
                   </div>
-                  <span className="text-xs font-black uppercase tracking-[0.3em] text-primary/40">Series Playlist</span>
+                  <span className="text-xs font-black uppercase tracking-[0.3em] text-primary/40">シリーズ・プレイリスト</span>
                 </div>
               )}
               <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 backdrop-blur-[2px]">

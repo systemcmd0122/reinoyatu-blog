@@ -149,7 +149,7 @@ export default function DataManagement({
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <item.icon className={`h-5 w-5 ${item.color}`} />
-                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50">Total</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50">合計</span>
               </div>
               <div className="text-2xl font-black group-hover:scale-110 transition-transform origin-left">{item.value}</div>
               <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{item.label}</div>
@@ -331,7 +331,7 @@ export default function DataManagement({
       <section className="space-y-6 pt-4">
         <div className="flex items-center gap-2 text-destructive">
           <AlertTriangle className="h-5 w-5" />
-          <h3 className="text-xl font-black uppercase tracking-tighter">Danger Zone</h3>
+          <h3 className="text-xl font-black uppercase tracking-tighter text-destructive">危険地帯</h3>
         </div>
 
         <Card className="border-destructive/20 bg-destructive/5 rounded-2xl overflow-hidden shadow-sm">

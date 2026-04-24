@@ -356,7 +356,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
 
             {/* ガイド・規約など */}
             <div className="bg-card border border-border rounded-lg p-4 shadow-sm">
-              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Links</h3>
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">リンク</h3>
               <nav className="space-y-2">
                 <Link href="/privacy" className="block text-sm text-foreground/80 hover:text-primary transition-colors">
                   プライバシーポリシー

@@ -24,7 +24,7 @@ const NotificationsPage = async () => {
         </div>
         <div>
           <h1 className="text-3xl font-black tracking-tight">通知</h1>
-          <p className="text-muted-foreground font-medium">Activity & Updates</p>
+          <p className="text-muted-foreground font-medium">アクティビティとアップデート</p>
         </div>
       </div>
 

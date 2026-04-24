@@ -37,7 +37,7 @@ export function SortableBlogItem({ id, blog, onRemove }: SortableBlogItemProps) 
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex gap-4 p-4 rounded-2xl bg-card border border-border group relative",
+        "flex gap-4 p-4 rounded-xl bg-card border border-border group relative",
         isDragging && "shadow-2xl border-primary"
       )}
     >

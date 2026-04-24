@@ -134,7 +134,7 @@ export default function CollectionAddBlogDialog({ collectionId, userId, onSucces
           ) : (
              <div className="text-center py-12 text-muted-foreground/40">
                 <Search className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                <p className="text-xs font-bold uppercase tracking-widest">Search your articles</p>
+                <p className="text-xs font-bold uppercase tracking-widest">記事を検索</p>
              </div>
           )}
         </div>

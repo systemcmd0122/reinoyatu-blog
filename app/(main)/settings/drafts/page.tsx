@@ -31,7 +31,7 @@ const DraftsPage = async () => {
           <h2 className="text-3xl font-black tracking-tight mb-2">記事管理</h2>
           <p className="text-muted-foreground text-sm">エラーが発生しました</p>
         </div>
-        <Card className="border-destructive/20 bg-destructive/5 p-10 text-center rounded-3xl">
+        <Card className="border-destructive/20 bg-destructive/5 p-10 text-center rounded-2xl">
           <CardTitle className="text-xl font-black text-destructive">データの取得に失敗しました</CardTitle>
           <CardDescription className="mt-2">
             {typeof error === "string" ? error : (error as any).message || "不明なエラーが発生しました"}
@@ -73,7 +73,7 @@ const DraftsPage = async () => {
 
         <TabsContent value="drafts" className="mt-0 outline-none">
           {drafts.length === 0 ? (
-            <Card className="border-dashed bg-muted/5 flex flex-col items-center justify-center py-20 text-center rounded-3xl">
+            <Card className="border-dashed bg-muted/5 flex flex-col items-center justify-center py-20 text-center rounded-2xl">
               <div className="bg-muted p-5 rounded-2xl mb-4">
                 <FileText className="h-10 w-10 text-muted-foreground/50" />
               </div>
@@ -92,7 +92,7 @@ const DraftsPage = async () => {
 
         <TabsContent value="published" className="mt-0 outline-none">
           {published.length === 0 ? (
-            <Card className="border-dashed bg-muted/5 flex flex-col items-center justify-center py-20 text-center rounded-3xl">
+            <Card className="border-dashed bg-muted/5 flex flex-col items-center justify-center py-20 text-center rounded-2xl">
               <div className="bg-muted p-5 rounded-2xl mb-4">
                 <FileText className="h-10 w-10 text-muted-foreground/50" />
               </div>
