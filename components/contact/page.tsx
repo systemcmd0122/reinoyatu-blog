@@ -1,8 +1,7 @@
 // components/contact/page.tsx
 "use client"
 
-import { motion } from "framer-motion"
-import { Mail, MessageSquare, Github, Twitter, Zap } from "lucide-react"
+import { Mail, MessageSquare, Github, Twitter, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
@@ -83,16 +82,12 @@ const Contact = () => {
     return (
         <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
             {/* ヘッダー */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="max-w-4xl mx-auto text-center mb-16"
-            >
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/10 text-primary text-sm font-black mb-4">
-                    <Zap className="h-4 w-4" />
+            <div className="max-w-4xl mx-auto text-center mb-16">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/10 text-primary text-sm font-bold mb-4">
+                    <MessageCircle className="h-4 w-4" />
                     <span>お気軽にお問い合わせください</span>
                 </div>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-foreground mb-6">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground mb-6">
                     お問い合わせ
                 </h1>
                 <p className="text-lg text-muted-foreground">
@@ -100,7 +95,7 @@ const Contact = () => {
                     <br className="hidden sm:block" />
                     あなたのフィードバックはサービス改善の原動力です。
                 </p>
-            </motion.div>
+            </div>
 
             <div className="max-w-6xl mx-auto">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
@@ -108,13 +103,9 @@ const Contact = () => {
                     {contactMethods.map((method, idx) => {
                         const Icon = method.icon
                         return (
-                            <motion.div
+                            <div
                                 key={idx}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: idx * 0.1 }}
-                                className="bg-card border border-border rounded-2xl p-8 hover:shadow-lg hover:-translate-y-2 transition-all duration-300"
+                                className="bg-card border border-border rounded-lg p-8 shadow-sm transition-all duration-300"
                             >
                                 <div className={`${method.color} mb-4`}>
                                     <Icon className="w-10 h-10" />
@@ -122,18 +113,13 @@ const Contact = () => {
                                 <h3 className="text-xl font-bold text-foreground mb-2">{method.title}</h3>
                                 <p className="text-sm text-muted-foreground mb-3">{method.description}</p>
                                 <p className="font-semibold text-foreground">{method.contact}</p>
-                            </motion.div>
+                            </div>
                         )
                     })}
                 </div>
 
                 {/* お問い合わせフォーム */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="bg-card border border-border rounded-2xl p-8 sm:p-12 max-w-2xl mx-auto"
-                >
+                <div className="bg-card border border-border rounded-lg p-8 sm:p-12 max-w-2xl mx-auto shadow-sm">
                     <h2 className="text-3xl font-bold text-foreground mb-8">お問い合わせフォーム</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -217,15 +203,10 @@ const Contact = () => {
                             厳格に保護されます。お返事は通常3営業日以内に送信します。
                         </p>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* FAQ セクション */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="mt-16 max-w-2xl mx-auto"
-                >
+                <div className="mt-16 max-w-2xl mx-auto">
                     <h2 className="text-3xl font-bold text-foreground mb-8 text-center">よくあるご質問</h2>
 
                     <div className="space-y-4">
@@ -273,7 +254,7 @@ const Contact = () => {
                             </p>
                         </details>
                     </div>
-                </motion.div>
+                </div>
             </div>
         </div>
     )

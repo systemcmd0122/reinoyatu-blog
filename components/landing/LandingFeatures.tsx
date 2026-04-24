@@ -67,21 +67,21 @@ export const LandingFeatures = () => {
         <div className="absolute bottom-1/4 -left-20 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] -z-10" />
 
         <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-24 space-y-4">
+          <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
             <motion.h2
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-3xl sm:text-4xl md:text-6xl font-black text-foreground tracking-tighter"
+              className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground"
             >
-              「書く」も「読む」も、<br className="sm:hidden" />すべてがプレミアム。
+              「書く」も「読む」も、<br className="sm:hidden" />心地よい体験を。
             </motion.h2>
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-muted-foreground text-xl font-medium"
+              className="text-muted-foreground text-lg font-medium"
             >
               従来のブログの枠を超えた、双方向のコミュニケーションと最新技術の融合。
             </motion.p>
@@ -91,20 +91,17 @@ export const LandingFeatures = () => {
             {features.map((feature, idx) => (
               <motion.div 
                 key={idx}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.05, duration: 0.5 }}
-                className="bg-card border border-border/50 p-10 rounded-[2.5rem] shadow-premium hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden"
+                className="bg-card border border-border p-8 rounded-2xl shadow-sm hover:border-primary/30 transition-all duration-300 group relative overflow-hidden"
               >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-                  <feature.icon className="h-24 w-24" />
+                <div className={`w-12 h-12 ${feature.bg} rounded-lg flex items-center justify-center mb-6 group-hover:scale-105 transition-all duration-300`}>
+                  <feature.icon className={`h-6 w-6 ${feature.color}`} />
                 </div>
-                <div className={`w-16 h-16 ${feature.bg} rounded-[1.25rem] flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
-                  <feature.icon className={`h-8 w-8 ${feature.color}`} />
-                </div>
-                <h3 className="text-2xl font-black mb-4 text-foreground tracking-tight">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed font-medium">
+                <h3 className="text-xl font-bold mb-3 text-foreground">{feature.title}</h3>
+                <p className="text-muted-foreground leading-relaxed text-sm font-medium">
                   {feature.description}
                 </p>
               </motion.div>
@@ -116,17 +113,17 @@ export const LandingFeatures = () => {
       {/* Social Proof / Target Audience */}
       <section className="py-32 md:py-48 border-y border-border bg-background relative overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row items-center gap-20">
-            <div className="flex-1 space-y-10">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="flex-1 space-y-8">
               <motion.h2
-                initial={{ opacity: 0, x: -30 }}
+                initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground leading-[0.95] tracking-tighter"
+                className="text-4xl md:text-5xl font-bold text-foreground leading-tight"
               >
                 あなたの声が、<br />誰かの「きっかけ」になる。
               </motion.h2>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {[
                   "開発知見を共有したいエンジニア",
                   "日常の気づきを綴りたいクリエイター",
@@ -134,16 +131,14 @@ export const LandingFeatures = () => {
                 ].map((text, i) => (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={{ opacity: 0, x: -10 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 + 0.3 }}
-                    className="flex items-center gap-4 bg-muted/30 p-4 rounded-2xl border border-border/50 hover:bg-muted/50 transition-colors"
+                    transition={{ delay: i * 0.1 + 0.2 }}
+                    className="flex items-center gap-3 bg-muted/50 p-4 rounded-xl border border-border hover:bg-muted transition-colors"
                   >
-                    <div className="bg-primary/10 p-2 rounded-lg">
-                      <CheckCircle2 className="h-6 w-6 text-primary" />
-                    </div>
-                    <span className="text-xl font-bold text-foreground/80">{text}</span>
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                    <span className="text-lg font-bold text-foreground/80">{text}</span>
                   </motion.div>
                 ))}
               </div>
@@ -151,8 +146,8 @@ export const LandingFeatures = () => {
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.8 }}
-                className="text-muted-foreground text-xl leading-relaxed font-medium border-l-4 border-primary/20 pl-6"
+                transition={{ delay: 0.6 }}
+                className="text-muted-foreground text-lg leading-relaxed font-medium border-l-2 border-primary/20 pl-6"
               >
                 オープンでフラットなコミュニケーション。
                 多様なトピックが集まる、心地よい空間を目指しています。
@@ -160,29 +155,29 @@ export const LandingFeatures = () => {
             </div>
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, rotate: 2 }}
-              whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="flex-1 grid grid-cols-2 gap-6 w-full"
+              className="flex-1 grid grid-cols-2 gap-4 w-full"
             >
-              <div className="space-y-6 pt-12">
-                <div className="bg-primary/5 p-10 rounded-[3rem] border border-primary/10 aspect-square flex flex-col justify-center text-center shadow-xl">
-                  <div className="text-5xl font-black text-primary mb-2">3s</div>
-                  <div className="text-sm font-black text-muted-foreground uppercase tracking-widest">Quick Posting</div>
+              <div className="space-y-4 pt-8">
+                <div className="bg-primary/5 p-8 rounded-2xl border border-primary/10 aspect-square flex flex-col justify-center text-center shadow-sm">
+                  <div className="text-5xl font-bold text-primary mb-2">3s</div>
+                  <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Quick Posting</div>
                 </div>
-                <div className="bg-muted p-10 rounded-[3rem] border border-border aspect-[4/3] flex flex-col justify-center text-center shadow-inner">
-                  <div className="text-3xl font-black text-foreground mb-1 tracking-tighter">Markdown</div>
-                  <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Standard Support</div>
+                <div className="bg-muted p-8 rounded-2xl border border-border aspect-[4/3] flex flex-col justify-center text-center">
+                  <div className="text-2xl font-bold text-foreground mb-1">Markdown</div>
+                  <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Standard Support</div>
                 </div>
               </div>
-              <div className="space-y-6">
-                <div className="bg-card p-10 rounded-[3rem] border border-border aspect-[4/3] flex flex-col justify-center text-center shadow-2xl">
-                  <div className="text-3xl font-black text-foreground mb-1 tracking-tighter">PWA</div>
-                  <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">App Experience</div>
+              <div className="space-y-4">
+                <div className="bg-card p-8 rounded-2xl border border-border aspect-[4/3] flex flex-col justify-center text-center shadow-sm">
+                  <div className="text-2xl font-bold text-foreground mb-1">PWA</div>
+                  <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">App Experience</div>
                 </div>
-                <div className="bg-blue-600 p-10 rounded-[3rem] flex flex-col justify-center text-center shadow-xl shadow-blue-500/20">
-                  <div className="text-5xl font-black text-white mb-2 tracking-tighter">Real</div>
-                  <div className="text-sm font-black text-blue-100 uppercase tracking-widest">Time Sync</div>
+                <div className="bg-primary p-8 rounded-2xl flex flex-col justify-center text-center shadow-sm">
+                  <div className="text-5xl font-bold text-primary-foreground mb-2">Real</div>
+                  <div className="text-xs font-bold text-primary-foreground/80 uppercase tracking-widest">Time Sync</div>
                 </div>
               </div>
             </motion.div>

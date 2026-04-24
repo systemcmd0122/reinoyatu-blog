@@ -237,11 +237,11 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
             key={heading.id}
             href={`#${heading.id}`}
             className={cn(
-              "block py-3 text-sm transition-all hover:text-primary leading-tight font-bold rounded-xl px-4",
+              "block py-2 text-sm transition-all hover:text-primary leading-tight font-bold rounded-md px-3",
               heading.level === 1 ? "text-foreground" :
-              heading.level === 2 ? "ml-4 text-muted-foreground font-medium" :
-              "ml-8 text-muted-foreground text-xs font-medium",
-              activeId === heading.id ? "text-primary bg-primary/5 shadow-sm" : "hover:bg-muted/50"
+              heading.level === 2 ? "ml-4 text-muted-foreground font-medium text-xs" :
+              "ml-8 text-muted-foreground text-[11px] font-medium",
+              activeId === heading.id ? "text-primary bg-primary/5" : "hover:bg-muted/50"
             )}
             onClick={(e) => {
               e.preventDefault()
@@ -279,16 +279,16 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
         {/* Back Button */}
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-black text-sm uppercase tracking-widest mb-12 group"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-bold text-sm uppercase tracking-wider mb-8 group"
         >
           <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-          Back to Feed
+          フィードに戻る
         </Link>
 
-        <div className="flex flex-col lg:flex-row gap-12">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <main className="flex-1 min-w-0">
-            <article className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <article>
               {/* 1. ArticleHeader (Author, Dates, Reading Time, Title) */}
               <ArticleHeader
                 author={blogData.author}
@@ -307,13 +307,12 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 <SummarySection summary={blogData.ai_summary} />
 
                 {/* 4. CoverImage */}
-                <div className="rounded-[2.5rem] overflow-hidden shadow-2xl border border-border/40">
+                <div className="rounded-lg overflow-hidden shadow-sm border border-border/40">
                   <CoverImage url={blogData.cover_image_url} title={blogData.title} />
                 </div>
 
                 {/* 5. ArticleContent */}
-                <div className="bg-card rounded-[3rem] border border-border/40 p-8 md:p-16 shadow-premium relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary/5 via-primary/20 to-primary/5" />
+                <div className="bg-card rounded-lg border border-border/40 p-8 md:p-12 shadow-sm relative overflow-hidden">
                   <ArticleContent content={blogData.content} />
                 </div>
               </div>
@@ -338,9 +337,9 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
               )}
 
               {/* Article Footer Actions */}
-              <div className="mt-16 pt-12 border-t border-border/50 flex flex-col md:flex-row gap-6 justify-between items-center bg-card/50 p-8 rounded-[2rem] border border-border/40">
+              <div className="mt-12 pt-8 border-t border-border/50 flex flex-col md:flex-row gap-6 justify-between items-center bg-card p-6 rounded-lg border border-border/40">
                 <div className="flex items-center gap-6">
-                  <div className="p-1 bg-background rounded-2xl shadow-sm border border-border/30">
+                  <div className="bg-background rounded-md shadow-sm border border-border/30">
                     <LikeButton 
                       blogId={blog.id}
                       userId={currentUserId}
@@ -351,7 +350,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                       initialIsLoaded={true}
                     />
                   </div>
-                  <div className="p-1 bg-background rounded-2xl shadow-sm border border-border/30">
+                  <div className="bg-background rounded-md shadow-sm border border-border/30">
                     <BookmarkButton 
                       blogId={blog.id}
                       userId={currentUserId}
@@ -364,7 +363,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                   <Button
                     variant="ghost"
                     size="lg"
-                    className="text-muted-foreground hover:text-primary gap-3 font-black rounded-2xl px-6 hover:bg-primary/5"
+                    className="text-muted-foreground hover:text-primary gap-3 font-bold rounded-md px-6"
                     onClick={() => shareContent({
                       title: blogData.title,
                       url: window.location.href
@@ -377,7 +376,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
                 {isMyBlog && (
                   <div className="flex items-center gap-3">
-                    <Button variant="outline" size="lg" className="rounded-2xl font-black px-8 border-2" asChild>
+                    <Button variant="outline" size="lg" className="rounded-md font-bold px-8" asChild>
                       <Link href={`/blog/${blog.id}/edit`}>
                         <FilePenLine className="h-5 w-5 mr-3 text-primary" />
                         編集する
@@ -385,23 +384,23 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="lg" className="rounded-2xl font-black text-destructive hover:text-destructive hover:bg-destructive/10 px-8">
+                        <Button variant="ghost" size="lg" className="rounded-md font-bold text-destructive hover:text-destructive hover:bg-destructive/10 px-8">
                           <Trash2 className="h-5 w-5 mr-3" />
                           削除
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="rounded-[2.5rem] p-10">
+                      <AlertDialogContent className="rounded-lg p-8">
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="text-3xl font-black tracking-tighter">記事を削除しますか？</AlertDialogTitle>
-                          <AlertDialogDescription className="text-lg font-medium">
-                            この操作は取り消せません。あなたの素晴らしい言葉が失われてしまいます。
+                          <AlertDialogTitle className="text-2xl font-bold">記事を削除しますか？</AlertDialogTitle>
+                          <AlertDialogDescription className="text-base">
+                            この操作は取り消せません。記事を削除してもよろしいですか？
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter className="mt-8 gap-4">
-                          <AlertDialogCancel className="rounded-2xl h-14 font-bold border-2">キャンセル</AlertDialogCancel>
+                        <AlertDialogFooter className="mt-6 gap-4">
+                          <AlertDialogCancel className="rounded-md font-bold border">キャンセル</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={handleDelete}
-                            className={cn(buttonVariants({ variant: "destructive" }), "rounded-2xl h-14 font-black")}
+                            className={cn(buttonVariants({ variant: "destructive" }), "rounded-md font-bold")}
                             disabled={isDeletePending}
                           >
                             削除を確定する
@@ -415,10 +414,10 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
             </article>
 
             {/* Comments Section */}
-            <div className="mt-16 bg-card rounded-[3rem] border border-border/40 p-8 md:p-16 shadow-premium">
-              <div className="mb-12 flex items-center gap-4">
-                <div className="w-2 h-8 bg-primary rounded-full" />
-                <h2 className="text-3xl font-black tracking-tighter">Comments</h2>
+            <div className="mt-12 bg-card rounded-lg border border-border/40 p-8 md:p-12 shadow-sm">
+              <div className="mb-8 flex items-center gap-4">
+                <div className="w-1.5 h-6 bg-primary rounded-full" />
+                <h2 className="text-2xl font-bold">コメント</h2>
               </div>
               <CommentSection
                 blogId={blog.id}
@@ -429,57 +428,57 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
           </main>
 
           {/* Sidebar */}
-          <aside className="w-full lg:w-[380px] flex-shrink-0 space-y-10">
+          <aside className="w-full lg:w-[320px] flex-shrink-0 space-y-8">
             {/* Series Sidebar */}
             {collection && (
-              <div className="animate-in slide-in-from-right-8 duration-700 delay-200">
+              <div>
                 <SeriesSidebar collection={collection} currentBlogId={blog.id} />
               </div>
             )}
 
             {/* Table of Contents */}
             {headings.length > 0 && (
-              <div className="hidden lg:block sticky top-24 z-[var(--z-sticky)] bg-card/50 backdrop-blur-xl rounded-[2.5rem] border border-border/40 shadow-premium overflow-hidden max-h-[calc(100vh-140px)] flex flex-col animate-in slide-in-from-right-8 duration-700 delay-300">
-                <div className="p-6 border-b border-border/40 bg-muted/20 flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-xl">
-                    <List className="h-5 w-5 text-primary" />
+              <div className="hidden lg:block sticky top-24 z-[var(--z-sticky)] bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden max-h-[calc(100vh-140px)] flex flex-col">
+                <div className="p-4 border-b border-border/40 bg-muted/20 flex items-center gap-3">
+                  <div className="p-1.5 bg-primary/10 rounded-md">
+                    <List className="h-4 w-4 text-primary" />
                   </div>
-                  <h2 className="font-black text-xs uppercase tracking-[0.2em]">Table of Contents</h2>
+                  <h2 className="font-bold text-xs uppercase tracking-wider">目次</h2>
                 </div>
-                <ScrollArea className="flex-1 p-4">
+                <ScrollArea className="flex-1 p-2">
                   <TOCContent />
                 </ScrollArea>
               </div>
             )}
 
             {/* Author Profile Card */}
-            <div className="bg-card rounded-[2.5rem] border border-border/40 shadow-premium overflow-hidden animate-in slide-in-from-right-8 duration-700 delay-400">
-              <div className="h-32 bg-gradient-to-br from-primary/10 via-primary/5 to-indigo-500/10" />
-              <div className="px-8 pb-10">
-                <div className="relative -mt-16 mb-6">
-                  <Avatar className="h-28 w-28 border-4 border-card shadow-2xl">
+            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden">
+              <div className="h-24 bg-muted/30" />
+              <div className="px-6 pb-8">
+                <div className="relative -mt-12 mb-4">
+                  <Avatar className="h-24 w-24 border-4 border-card shadow-sm">
                     <AvatarImage src={blogData.author.avatar_url || "/default.png"} className="object-cover" />
-                    <AvatarFallback className="text-2xl font-black">{blogData.author.name?.[0]}</AvatarFallback>
+                    <AvatarFallback className="text-xl font-bold">{blogData.author.name?.[0]}</AvatarFallback>
                   </Avatar>
                 </div>
-                <h3 className="text-2xl font-black mb-1 tracking-tight">
+                <h3 className="text-xl font-bold mb-1">
                   <Link href={`/profile/${blogData.author.id}`} className="hover:text-primary transition-colors">
                     {blogData.author.name}
                   </Link>
                 </h3>
-                <p className="text-sm font-bold text-muted-foreground mb-6 opacity-60">
+                <p className="text-xs font-medium text-muted-foreground mb-4">
                   @{blogData.author.name}
                 </p>
                 {blogData.author.introduce && (
-                  <p className="text-[15px] text-foreground/70 line-clamp-4 mb-8 leading-relaxed font-medium">
+                  <p className="text-sm text-foreground/70 line-clamp-3 mb-6 leading-relaxed">
                     {blogData.author.introduce}
                   </p>
                 )}
                 
-                <Button size="lg" className="w-full rounded-[1.25rem] font-black group shadow-lg shadow-primary/10" asChild>
+                <Button size="lg" className="w-full rounded-md font-bold group" asChild>
                   <Link href={`/profile/${blogData.author.id}`}>
-                    View Profile
-                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                    プロフィールを見る
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>
 
@@ -514,20 +513,20 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
         <div className="fixed bottom-24 right-6 z-[var(--z-sticky)] lg:hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <Button size="icon" className="h-16 w-16 rounded-[1.5rem] shadow-2xl ring-4 ring-background bg-primary text-primary-foreground hover:scale-105 active:scale-90 transition-all">
-                <List className="h-8 w-8" />
+              <Button size="icon" className="h-14 w-14 rounded-full shadow-lg border-2 border-background bg-primary text-primary-foreground transition-all">
+                <List className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-[3rem] max-h-[80vh] p-0 overflow-hidden border-t-2 border-primary/20">
-              <SheetHeader className="p-8 border-b border-border/40 bg-muted/20">
-                <SheetTitle className="flex items-center gap-4 text-2xl font-black tracking-tighter">
-                  <div className="p-2 bg-primary rounded-xl">
-                    <List className="h-6 w-6 text-primary-foreground" />
+            <SheetContent side="bottom" className="rounded-t-xl max-h-[80vh] p-0 overflow-hidden">
+              <SheetHeader className="p-6 border-b border-border/40 bg-muted/20">
+                <SheetTitle className="flex items-center gap-3 text-xl font-bold">
+                  <div className="p-1.5 bg-primary rounded-md">
+                    <List className="h-5 w-5 text-primary-foreground" />
                   </div>
-                  Table of Contents
+                  目次
                 </SheetTitle>
               </SheetHeader>
-              <ScrollArea className="p-6 h-full overflow-y-auto pb-20">
+              <ScrollArea className="p-4 h-full overflow-y-auto pb-20">
                 <TOCContent isMobile />
               </ScrollArea>
             </SheetContent>
