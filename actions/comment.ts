@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server"
 import { emojiToShortcode, shortcodeToEmoji } from "@/utils/emoji"
+import { createNotification } from "./notification"
 
 interface NewCommentProps {
   blogId: string
@@ -36,6 +37,43 @@ export const newComment = async ({ blogId, userId, content, parentId }: NewComme
     // エラーチェック
     if (error) {
       return { error: error.message, comment: null }
+    }
+
+    // 通知の送信
+    // 1. 記事の投稿者に通知
+    const { data: blogData } = await supabase
+      .from("blogs")
+      .select("user_id")
+      .eq("id", blogId)
+      .single()
+
+    if (blogData) {
+      await createNotification({
+        userId: blogData.user_id,
+        actorId: userId,
+        type: 'comment',
+        targetId: blogId,
+        targetType: 'blog'
+      })
+    }
+
+    // 2. 返信の場合、親コメントの投稿者に通知
+    if (parentId) {
+      const { data: parentCommentData } = await supabase
+        .from("comments")
+        .select("user_id")
+        .eq("id", parentId)
+        .single()
+
+      if (parentCommentData && parentCommentData.user_id !== blogData?.user_id) {
+        await createNotification({
+          userId: parentCommentData.user_id,
+          actorId: userId,
+          type: 'comment',
+          targetId: blogId,
+          targetType: 'blog'
+        })
+      }
     }
 
     // プロフィール情報を取得（userIdが有効な場合のみ）

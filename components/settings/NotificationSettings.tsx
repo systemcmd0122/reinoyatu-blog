@@ -123,55 +123,18 @@ const NotificationSettings = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center space-x-2">
-            <Mail className="h-5 w-5 text-primary shrink-0" />
-            <CardTitle>メール通知</CardTitle>
-          </div>
-          <CardDescription>登録したメールアドレスに通知を送信します。</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <NotificationRow
-            label="新しい記事"
-            description="フォロー中のユーザーが新しい記事を投稿したとき"
-            settingKey="email_new_post"
-          />
-          <div className="border-t border-border/40" />
-          <NotificationRow
-            label="コメント"
-            description="自分の記事に新しいコメントがついたとき"
-            settingKey="email_new_comment"
-          />
-          <div className="border-t border-border/40" />
-          <NotificationRow
-            label="いいね"
-            description="自分の記事にいいねがついたとき"
-            settingKey="email_like"
-          />
-        </CardContent>
-      </Card>
-
-      {/* プッシュ通知 */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center space-x-2">
             <Bell className="h-5 w-5 text-primary shrink-0" />
-            <CardTitle>プッシュ通知</CardTitle>
+            <CardTitle>インアプリ通知</CardTitle>
           </div>
           <CardDescription>
-            ブラウザやデバイスに通知を表示します（PWA機能）。
+            サイト内の通知センターで受け取る通知の設定です。
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-5">
-          <NotificationRow
-            label="記事の更新"
-            description="重要なアップデートやお知らせがあるとき"
-            settingKey="push_new_post"
-          />
-          <div className="border-t border-border/40" />
-          <NotificationRow
-            label="ダイレクトアクション"
-            description="返信やメンションがあったとき"
-            settingKey="push_new_comment"
-          />
+        <CardContent>
+          <p className="text-sm text-muted-foreground py-4">
+            現在、すべての通知はインアプリ通知として送信されます。
+            メール通知やプッシュ通知は現在サポートされていません。
+          </p>
         </CardContent>
       </Card>
     </div>

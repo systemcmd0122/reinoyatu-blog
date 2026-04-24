@@ -208,7 +208,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
       {/* Header / Hero Section */}
       <section className="relative group">
-        <div className="h-32 md:h-48 w-full bg-muted/30 rounded-lg overflow-hidden relative border border-border">
+        <div className="h-32 md:h-48 w-full bg-muted/30 rounded-xl overflow-hidden relative border border-border">
           <div className="absolute top-0 right-0 p-4">
             <Button 
               variant="ghost" 
@@ -227,7 +227,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
         <div className="px-6 md:px-12 -mt-16 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-              <div className="relative h-32 w-32 rounded-lg overflow-hidden border-4 border-background bg-background shadow-sm">
+              <div className="relative h-32 w-32 rounded-xl overflow-hidden border-4 border-background bg-background shadow-sm">
                 {profile.avatar_url ? (
                   <Image
                     src={profile.avatar_url}
@@ -285,7 +285,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
         {/* Left Sidebar */}
         <aside className="lg:col-span-4 space-y-8">
           {/* Stats Card */}
-          <Card className="rounded-lg border-border shadow-sm overflow-hidden">
+          <Card className="rounded-xl border-border shadow-sm overflow-hidden">
             <CardContent className="p-0">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 divide-x divide-y md:divide-y-0 lg:divide-y divide-border">
                 {stats.map((stat, i) => {
@@ -322,7 +322,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
           </Card>
 
           {/* About Card */}
-          <Card className="rounded-lg border-border shadow-sm">
+          <Card className="rounded-xl border-border shadow-sm">
             <CardContent className="p-6 space-y-6">
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
@@ -374,7 +374,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
             onValueChange={(v) => setActiveTab(v as any)}
             className="w-full"
           >
-            <div className="flex items-center justify-between mb-6 bg-muted/30 p-1 rounded-lg border border-border">
+            <div className="flex items-center justify-between mb-6 bg-muted/30 p-1 rounded-xl border border-border">
               <TabsList className="bg-transparent h-auto p-0 gap-1 overflow-x-auto no-scrollbar">
                 <TabsTrigger
                   value="posts"
@@ -400,7 +400,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
             <div className="mt-0">
                 <TabsContent value="posts" className="mt-0 focus-visible:ring-0">
                   {isLoading ? (
-                    <div className="bg-card border border-border rounded-lg overflow-hidden divide-y divide-border shadow-sm">
+                    <div className="bg-card border border-border rounded-xl overflow-hidden divide-y divide-border shadow-sm">
                       {[1, 2, 3].map((i) => (
                         <div key={i} className="p-8 flex gap-6">
                           <div className="flex-1 space-y-4">
@@ -418,8 +418,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                   ) : blogPosts.length > 0 ? (
                     <BlogListView blogs={blogPosts} />
                   ) : (
-                    <div className="bg-card border border-border rounded-lg p-20 text-center shadow-sm">
-                      <div className="bg-muted w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-6">
+                    <div className="bg-card border border-border rounded-xl p-20 text-center shadow-sm">
+                      <div className="bg-muted w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6">
                         <FileText className="h-8 w-8 text-muted-foreground/30" />
                       </div>
                       <h3 className="text-xl font-bold mb-2">まだ記事がありません</h3>
@@ -439,7 +439,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                   {isCollectionsLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="space-y-4 bg-card border border-border p-6 rounded-lg shadow-sm">
+                        <div key={i} className="space-y-4 bg-card border border-border p-6 rounded-xl shadow-sm">
                           <Skeleton className="aspect-video w-full rounded-md" />
                           <div className="space-y-2">
                             <Skeleton className="h-6 w-2/3" />
@@ -457,7 +457,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                 </TabsContent>
 
                 <TabsContent value="about" className="mt-0 focus-visible:ring-0">
-                  <Card className="rounded-lg border-border shadow-sm p-12 text-center text-muted-foreground">
+                  <Card className="rounded-xl border-border shadow-sm p-12 text-center text-muted-foreground">
                     <p className="text-sm">アクティビティ履歴は準備中です...</p>
                   </Card>
                 </TabsContent>

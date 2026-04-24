@@ -320,7 +320,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                 </VisuallyHidden>
                 <div className="flex flex-col h-full">
                   <div className="p-6 border-b border-border bg-muted/20 flex items-center justify-between">
-                    <span className="font-bold text-xl tracking-tighter">Menu</span>
+                    <span className="font-bold text-xl tracking-tighter">メニュー</span>
                     <ThemeToggle />
                   </div>
                   {user ? (

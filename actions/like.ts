@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/utils/supabase/server"
+import { createNotification } from "./notification"
 
 interface ToggleLikeProps {
   blogId: string
@@ -23,6 +24,26 @@ export const toggleLike = async ({ blogId, userId }: ToggleLikeProps) => {
     if (error) {
       console.error('Toggle like error:', error)
       return { error: error.message, action: null }
+    }
+
+    // いいねされた場合、記事の投稿者に通知を送信
+    if (data === true) { // toggle_like RPC returns true if liked, false if unliked
+      // 記事の投稿者IDを取得
+      const { data: blogData } = await supabase
+        .from("blogs")
+        .select("user_id")
+        .eq("id", blogId)
+        .single()
+
+      if (blogData) {
+        await createNotification({
+          userId: blogData.user_id,
+          actorId: userId,
+          type: 'like',
+          targetId: blogId,
+          targetType: 'blog'
+        })
+      }
     }
 
     // データベース関数から返された action を使用

@@ -28,7 +28,7 @@ import { SignupSchema } from "@/schemas"
 import { z } from "zod"
 import { signup, signInWithGoogle } from "@/actions/auth"
 import { useRouter } from "next/navigation"
-import toast from "react-hot-toast"
+import { toast } from "sonner"
 import FormError from "@/components/auth/FormError"
 import Link from "next/link"
 

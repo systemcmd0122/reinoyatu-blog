@@ -96,7 +96,7 @@ const NotificationList = ({ userId }: NotificationListProps) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center px-4 md:px-0">
-        <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Recent Activity</h2>
+        <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground">最近のアクティビティ</h2>
         {notifications.some(n => !n.is_read) && (
           <Button
             variant="ghost"

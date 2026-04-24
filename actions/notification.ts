@@ -5,6 +5,45 @@ import { revalidatePath } from "next/cache"
 import { NotificationType } from "@/types"
 
 /**
+ * 新しい通知を作成する（内部用）
+ */
+export async function createNotification({
+  userId,
+  actorId,
+  type,
+  targetId,
+  targetType,
+}: {
+  userId: string
+  actorId: string
+  type: NotificationType["type"]
+  targetId?: string | null
+  targetType?: NotificationType["target_type"]
+}) {
+  // 自分自身への通知は作成しない
+  if (userId === actorId) return { success: true }
+
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from("notifications")
+    .insert({
+      user_id: userId,
+      actor_id: actorId,
+      type: type,
+      target_id: targetId || null,
+      target_type: targetType || null,
+    })
+
+  if (error) {
+    console.error("Create notification error:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+/**
  * 通知一覧を取得する
  */
 export async function getNotifications() {

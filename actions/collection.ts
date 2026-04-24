@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
 import { CollectionSchema } from "@/schemas"
+import { createNotification } from "./notification"
 import { z } from "zod"
 import { CollectionType, CollectionItemType } from "@/types"
 
@@ -107,6 +108,27 @@ export async function addBlogToCollection(collectionId: string, blogId: string) 
     }
     console.error("Add blog to collection error:", error)
     return { success: false, error: "コレクションへの追加に失敗しました" }
+  }
+
+  // 通知を送信
+  // 1. 記事の投稿者に通知
+  const { data: blogData } = await supabase
+    .from("blogs")
+    .select("user_id")
+    .eq("id", blogId)
+    .single()
+
+  if (blogData) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await createNotification({
+        userId: blogData.user_id,
+        actorId: user.id,
+        type: 'collection_add',
+        targetId: collectionId,
+        targetType: 'collection'
+      })
+    }
   }
 
   revalidatePath(`/blog/${blogId}`)
