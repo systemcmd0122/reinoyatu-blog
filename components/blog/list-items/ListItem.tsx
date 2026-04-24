@@ -100,7 +100,7 @@ const ListItem: React.FC<ListItemProps> = ({ blog, priority, currentUserId }) =>
                   key={tag}
                   type="button"
                   onClick={(e) => handleTagClick(e, tag)}
-                  className="text-[11px] font-semibold text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all cursor-pointer bg-muted/60 px-2 py-0.5 rounded-md leading-none"
+                  className="text-[11px] font-bold text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all cursor-pointer bg-muted/60 px-2.5 py-1 rounded-lg leading-none"
                 >
                   #{tag}
                 </button>

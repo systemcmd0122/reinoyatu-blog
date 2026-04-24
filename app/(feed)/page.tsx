@@ -215,11 +215,11 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
             )}
 
             {/* タブナビゲーション */}
-            <div className="bg-card border border-border rounded-t-lg flex items-center px-1 h-12 mb-4">
-              <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-primary text-foreground font-bold px-6 hover:bg-transparent">
+            <div className="flex items-center gap-1 mb-6 border-b border-border/50">
+              <Button variant="ghost" size="sm" className="rounded-none border-b-2 border-primary text-foreground font-bold px-4 h-10 hover:bg-transparent transition-none">
                 最新の投稿
               </Button>
-              <Button variant="ghost" size="sm" className="h-full rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground px-6 hover:bg-transparent" disabled>
+              <Button variant="ghost" size="sm" className="rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground px-4 h-10 hover:bg-transparent transition-none" disabled>
                 トレンド
               </Button>
             </div>
@@ -267,7 +267,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
             {/* 投稿ボタン - サイドバー */}
             <div className="hidden lg:block">
               <Link href="/blog/new">
-                <Button size="lg" className="w-full gap-2 rounded-md h-12 shadow-none bg-primary hover:bg-primary/90 text-primary-foreground border-none font-bold text-lg">
+                <Button size="lg" className="w-full gap-2 rounded-lg h-12 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground border-none font-bold text-lg transition-all hover:scale-[1.02] active:scale-[0.98]">
                   <PenSquare className="h-5 w-5" />
                   記事を投稿する
                 </Button>
@@ -291,7 +291,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                         href={`/collections/${col.id}`}
                         className="flex flex-col p-3 rounded-md hover:bg-muted transition-colors group"
                       >
-                        <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                        <span className="text-sm font-bold text-foreground group-hover:text-primary transition-all line-clamp-1">
                           {col.title}
                         </span>
                         <span className="text-[10px] text-muted-foreground">
@@ -319,12 +319,12 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                       <Link
                         key={tag.name}
                         href={`/tags/${encodeURIComponent(tag.name)}`}
-                        className="flex items-center justify-between p-3 rounded-md hover:bg-muted transition-colors group"
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-all group"
                       >
-                        <span className="text-sm font-medium text-foreground/80 group-hover:text-primary transition-colors">
+                        <span className="text-sm font-bold text-foreground/70 group-hover:text-primary transition-all">
                           #{tag.name}
                         </span>
-                        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full group-hover:bg-primary/10 group-hover:text-primary transition-all">
                           {tag.count}
                         </span>
                       </Link>

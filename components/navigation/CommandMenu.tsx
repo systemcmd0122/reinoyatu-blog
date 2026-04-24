@@ -88,7 +88,7 @@ export function CommandMenu({ user }: CommandMenuProps) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="relative inline-flex items-center whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-muted/40 hover:bg-muted h-9 px-4 py-2 justify-start text-sm font-medium text-muted-foreground shadow-none sm:pr-12 md:w-40 lg:w-64 rounded-md group"
+        className="relative inline-flex items-center whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-muted/40 hover:bg-muted h-9 px-4 py-2 justify-start text-sm font-bold text-muted-foreground shadow-none sm:pr-12 md:w-40 lg:w-64 rounded-lg group"
       >
         <Search className="mr-2 h-4 w-4" />
         <span className="hidden lg:inline-flex">記事や機能を検索...</span>
