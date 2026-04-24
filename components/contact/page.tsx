@@ -1,7 +1,7 @@
 // components/contact/page.tsx
 "use client"
 
-import { Mail, MessageSquare, Github, Twitter, MessageCircle } from "lucide-react"
+import { Mail, MessageSquare, Twitter, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
@@ -53,29 +53,22 @@ const Contact = () => {
             icon: Mail,
             title: "メール",
             description: "公式メールアドレス",
-            contact: "support@reinoyatu-blog.vercel.app",
+            contact: "Tisk.address@gmail.com",
             color: "text-blue-500"
         },
         {
             icon: MessageSquare,
             title: "お問い合わせフォーム",
             description: "ご質問やご意見をお送りください",
-            contact: "このフォームをご利用ください",
+            contact: "",
             color: "text-green-500"
         },
         {
             icon: Twitter,
             title: "Twitter",
-            description: "@reinoyatu",
-            contact: "リアルタイム対話",
+            description: "@min_brother2158",
+            contact: "https://x.com/min_brother2158",
             color: "text-cyan-500"
-        },
-        {
-            icon: Github,
-            title: "GitHub",
-            description: "Issue / Discussion",
-            contact: "オープンソース開発",
-            color: "text-gray-600"
         }
     ]
 

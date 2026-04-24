@@ -36,7 +36,7 @@ const siteConfig = {
   ],
   url: "https://reinoyatu-blog.vercel.app/",
   ogImage: "/og-image.png",
-  twitterHandle: "@reinoyatu",
+  twitterHandle: "@min_brother2158",
 }
 
 export const metadata: Metadata = {
@@ -255,14 +255,6 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
                         className="hover:text-primary transition-colors"
                       >
                         X (Twitter)
-                      </a>
-                      <a
-                        href="https://github.com/Reinoaytu"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-primary transition-colors"
-                      >
-                        GitHub
                       </a>
                     </div>
                   </div>
