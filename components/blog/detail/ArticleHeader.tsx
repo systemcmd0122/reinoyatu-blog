@@ -39,11 +39,11 @@ const ArticleHeader: React.FC<ArticleHeaderProps> = ({
   return (
     <header className="mb-12 space-y-8">
       {/* Title */}
-      <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-foreground leading-[1.2]">
+      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground leading-[1.3]">
         {title}
       </h1>
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-border/50">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         {/* Author Info */}
         <div className="flex items-center gap-4">
           <div className="flex -space-x-2">

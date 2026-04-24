@@ -1,13 +1,7 @@
 "use client"
 
 import React, { useState, useMemo, useEffect } from "react"
-import { useViewMode, ViewMode } from "@/hooks/use-view-mode"
-import ViewSwitcher from "./ViewSwitcher"
-import CardItem from "./list-items/CardItem"
 import ListItem from "./list-items/ListItem"
-import CompactItem from "./list-items/CompactItem"
-import MagazineItem from "./list-items/MagazineItem"
-import TextItem from "./list-items/TextItem"
 import { BlogType } from "@/types"
 import { useRealtime } from "@/hooks/use-realtime"
 import { createClient } from "@/utils/supabase/client"
@@ -18,9 +12,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
-import { Filter, SortDesc, Sparkles } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Skeleton } from "@/components/ui/skeleton"
+import { SortDesc } from "lucide-react"
 
 interface BlogListViewProps {
   blogs: BlogType[]
@@ -29,7 +21,6 @@ interface BlogListViewProps {
 type SortOption = "newest" | "oldest" | "most_liked"
 
 const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
-  const { viewMode, changeViewMode, isMounted } = useViewMode()
   const [blogs, setBlogs] = useState<BlogType[]>(initialBlogs)
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<SortOption>("newest")
@@ -158,153 +149,50 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
     return result
   }, [blogs, selectedTag, sortBy])
 
-  const renderItems = (mode: ViewMode) => {
-    switch (mode) {
-      case "card":
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-10 py-2">
-            {processedBlogs.map((blog, index) => (
-              <CardItem 
-                key={blog.id} 
-                blog={blog} 
-                priority={index < 6} 
-                currentUserId={currentUserId}
-              />
-            ))}
-          </div>
-        )
-      case "magazine":
-        return (
-          <div className="grid grid-cols-1 gap-20 py-4">
-            {processedBlogs.map((blog, index) => (
-              <MagazineItem 
-                key={blog.id} 
-                blog={blog} 
-                priority={index < 3} 
-                currentUserId={currentUserId}
-              />
-            ))}
-          </div>
-        )
-      case "compact":
-      case "text":
-      case "list":
-      default:
-        const ItemComponent = mode === "compact" ? CompactItem : mode === "text" ? TextItem : ListItem
-        return (
-          <div className="bg-card border border-border/40 rounded-[2.5rem] overflow-hidden divide-y divide-border/40 shadow-premium">
-            {processedBlogs.map((blog, index) => (
-              <ItemComponent
-                key={blog.id} 
-                blog={blog} 
-                priority={index < 6} 
-                currentUserId={currentUserId}
-              />
-            ))}
-          </div>
-        )
-    }
-  }
-
   return (
-    <div className="space-y-12">
-      {/* Control Panel */}
-      <div className="bg-card/50 backdrop-blur-xl border border-border/40 p-3 rounded-[2rem] shadow-premium flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3 w-full md:w-auto px-4 py-2 bg-background/50 rounded-2xl border border-border/20">
-          <div className="p-2 bg-primary/10 rounded-xl">
-            <Sparkles className="h-4 w-4 text-primary" />
-          </div>
-          <div className="flex flex-col">
-            <h3 className="font-black text-foreground text-xs uppercase tracking-[0.2em] leading-none mb-1">
-              {viewMode === 'card' ? 'Gallery' :
-                viewMode === 'compact' ? 'Compact' :
-                  viewMode === 'magazine' ? 'Magazine' :
-                    viewMode === 'text' ? 'Text' : 'Feed'}
-            </h3>
-            <span className="text-[10px] text-muted-foreground font-bold normal-case tracking-wider opacity-60">
-              {processedBlogs.length} Articles Found
-            </span>
-          </div>
+    <div className="space-y-8">
+      {/* Simple Control Panel */}
+      <div className="flex items-center justify-between border-b pb-4">
+        <div className="text-sm font-bold text-muted-foreground">
+          {processedBlogs.length} 件の記事
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+        <div className="flex items-center gap-3">
           <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-            <SelectTrigger className="w-auto h-12 text-sm border-none bg-background/50 hover:bg-background transition-all rounded-2xl px-5 shadow-sm focus:ring-2 focus:ring-primary/20 font-black tracking-tight">
-              <SortDesc className="h-4 w-4 mr-2 text-muted-foreground" />
-              <SelectValue placeholder="Sort" />
+            <SelectTrigger className="w-auto h-9 text-xs border-none bg-muted/50 hover:bg-muted transition-all rounded-md px-3 font-bold">
+              <SortDesc className="h-3.5 w-3.5 mr-2" />
+              <SelectValue placeholder="並び替え" />
             </SelectTrigger>
-            <SelectContent className="rounded-2xl border-border/40 shadow-2xl p-2">
-              <SelectItem value="newest" className="font-bold rounded-xl p-3">最新順</SelectItem>
-              <SelectItem value="oldest" className="font-bold rounded-xl p-3">古い順</SelectItem>
-              <SelectItem value="most_liked" className="font-bold rounded-xl p-3">人気順</SelectItem>
+            <SelectContent className="rounded-md border-border/40 shadow-xl p-1">
+              <SelectItem value="newest" className="font-bold rounded-sm text-xs">最新順</SelectItem>
+              <SelectItem value="oldest" className="font-bold rounded-sm text-xs">古い順</SelectItem>
+              <SelectItem value="most_liked" className="font-bold rounded-sm text-xs">人気順</SelectItem>
             </SelectContent>
           </Select>
-
-          <ViewSwitcher currentMode={viewMode} onModeChange={changeViewMode} />
         </div>
       </div>
 
       {/* Main List Area */}
       {processedBlogs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-48 bg-muted/10 border-2 border-dashed border-border/30 rounded-[3rem] text-muted-foreground">
-          <div className="p-6 bg-background rounded-full shadow-xl mb-8 opacity-20">
-            <Filter className="h-16 w-16" />
-          </div>
-          <p className="font-black text-2xl tracking-tighter text-foreground/40">No articles found.</p>
+        <div className="flex flex-col items-center justify-center py-24 bg-muted/5 border border-dashed rounded-xl text-muted-foreground">
+          <p className="font-bold text-lg">記事が見つかりませんでした。</p>
           <button
             onClick={() => setSelectedTag(null)}
-            className="mt-6 text-sm text-primary hover:underline font-black uppercase tracking-widest bg-primary/5 px-6 py-2 rounded-full border border-primary/10 transition-all hover:scale-105"
+            className="mt-4 text-sm text-primary hover:underline font-bold"
           >
-            Clear Filters
+            フィルターをクリア
           </button>
         </div>
       ) : (
-        <div className="min-h-[400px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={viewMode + (isMounted ? 'mounted' : 'initial')}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            >
-              {!isMounted ? (
-                <div className="space-y-10">
-                  {viewMode === 'card' ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
-                      {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="space-y-6">
-                          <Skeleton className="aspect-video w-full rounded-3xl" />
-                          <div className="space-y-3">
-                            <Skeleton className="h-8 w-3/4 rounded-xl" />
-                            <Skeleton className="h-5 w-full rounded-lg" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-card border border-border/40 rounded-[2.5rem] overflow-hidden divide-y divide-border/40 shadow-premium">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="p-10 flex gap-8">
-                          <div className="flex-1 space-y-4">
-                            <Skeleton className="h-8 w-3/4 rounded-xl" />
-                            <Skeleton className="h-5 w-full rounded-lg" />
-                            <div className="flex gap-3">
-                              <Skeleton className="h-6 w-24 rounded-full" />
-                              <Skeleton className="h-6 w-24 rounded-full" />
-                            </div>
-                          </div>
-                          <Skeleton className="h-32 w-48 rounded-2xl hidden sm:block" />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                renderItems(viewMode)
-              )}
-            </motion.div>
-          </AnimatePresence>
+        <div className="bg-card border rounded-xl overflow-hidden divide-y">
+          {processedBlogs.map((blog, index) => (
+            <ListItem
+              key={blog.id}
+              blog={blog}
+              priority={index < 6}
+              currentUserId={currentUserId}
+            />
+          ))}
         </div>
       )}
     </div>

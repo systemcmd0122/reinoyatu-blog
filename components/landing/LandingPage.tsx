@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { createClient } from "@/utils/supabase/server"
 import { Button } from "@/components/ui/button"
-import CardItem from "@/components/blog/list-items/CardItem"
+import ListItem from "@/components/blog/list-items/ListItem"
 import { BlogType } from "@/types"
 import { ArrowRight, Layers } from "lucide-react"
 import { LandingHero } from "./LandingHero"
@@ -42,9 +42,9 @@ const LandingPage = async () => {
               <h2 className="text-3xl md:text-4xl font-black text-foreground mb-4">最新の投稿</h2>
               <p className="text-muted-foreground text-lg">コミュニティで今、話題になっているストーリー。</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-card border rounded-xl overflow-hidden divide-y">
               {blogs.map((blog) => (
-                <CardItem key={blog.id} blog={blog} />
+                <ListItem key={blog.id} blog={blog} />
               ))}
             </div>
             <div className="mt-12 text-center">

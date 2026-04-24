@@ -2,6 +2,32 @@ import { ChangelogEntry } from "@/types/changelog"
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: "3.3.0",
+    date: "2026-03-01",
+    items: [
+      {
+        category: "Design",
+        content: "Note/Qiitaを参考にした、よりシンプルでプロフェッショナルなUIへの刷新",
+        description: "過剰な装飾やアニメーションを排除し、コンテンツに集中できるクリーンなデザインへ移行しました。記事リストのカードデザインの簡素化や、タイポグラフィの最適化を行い、読みやすさと使いやすさを追求しました。",
+      },
+      {
+        category: "Improvement",
+        content: "ナビゲーションの整理と不要な要素の削減",
+        description: "ナビゲーションバーの重複するリンクやアイコンを整理し、ユーザーメニューに集約することで、より広い閲覧スペースを確保しました。",
+      },
+      {
+        category: "Performance",
+        content: "レンダリングパフォーマンスの大幅な向上",
+        description: "不要なクライアントサイドのアニメーション処理（Framer Motion）を削減し、ページの読み込みと遷移速度を高速化しました。余計な処理を排除した、ストレスのないブラウジング体験を提供します。",
+      },
+      {
+        category: "New",
+        content: "シリーズ（コレクション）の発見性の向上",
+        description: "フィードのサイドバーに「おすすめのシリーズ」セクションを追加し、優れた連載記事をより簡単に見つけられるようにしました。",
+      },
+    ],
+  },
+  {
     version: "3.2.0",
     date: "2026-02-27",
     items: [
