@@ -95,7 +95,7 @@ export const LandingFeatures = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.05, duration: 0.5 }}
-                className="bg-card border border-border p-8 rounded-2xl shadow-sm hover:border-primary/30 transition-all duration-300 group relative overflow-hidden"
+                className="bg-card border border-border p-8 rounded-lg shadow-sm hover:border-primary/30 transition-all duration-300 group relative overflow-hidden"
               >
                 <div className={`w-12 h-12 ${feature.bg} rounded-lg flex items-center justify-center mb-6 group-hover:scale-105 transition-all duration-300`}>
                   <feature.icon className={`h-6 w-6 ${feature.color}`} />
@@ -135,7 +135,7 @@ export const LandingFeatures = () => {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 + 0.2 }}
-                    className="flex items-center gap-3 bg-muted/50 p-4 rounded-xl border border-border hover:bg-muted transition-colors"
+                    className="flex items-center gap-3 bg-muted/50 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
                   >
                     <CheckCircle2 className="h-5 w-5 text-primary" />
                     <span className="text-lg font-bold text-foreground/80">{text}</span>
@@ -161,21 +161,21 @@ export const LandingFeatures = () => {
               className="flex-1 grid grid-cols-2 gap-4 w-full"
             >
               <div className="space-y-4 pt-8">
-                <div className="bg-primary/5 p-8 rounded-2xl border border-primary/10 aspect-square flex flex-col justify-center text-center shadow-sm">
+                <div className="bg-primary/5 p-8 rounded-lg border border-primary/10 aspect-square flex flex-col justify-center text-center shadow-sm">
                   <div className="text-5xl font-bold text-primary mb-2">3s</div>
                   <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Quick Posting</div>
                 </div>
-                <div className="bg-muted p-8 rounded-2xl border border-border aspect-[4/3] flex flex-col justify-center text-center">
+                <div className="bg-muted p-8 rounded-lg border border-border aspect-[4/3] flex flex-col justify-center text-center">
                   <div className="text-2xl font-bold text-foreground mb-1">Markdown</div>
                   <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Standard Support</div>
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="bg-card p-8 rounded-2xl border border-border aspect-[4/3] flex flex-col justify-center text-center shadow-sm">
+                <div className="bg-card p-8 rounded-lg border border-border aspect-[4/3] flex flex-col justify-center text-center shadow-sm">
                   <div className="text-2xl font-bold text-foreground mb-1">PWA</div>
                   <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">App Experience</div>
                 </div>
-                <div className="bg-primary p-8 rounded-2xl flex flex-col justify-center text-center shadow-sm">
+                <div className="bg-primary p-8 rounded-lg flex flex-col justify-center text-center shadow-sm">
                   <div className="text-5xl font-bold text-primary-foreground mb-2">Real</div>
                   <div className="text-xs font-bold text-primary-foreground/80 uppercase tracking-widest">Time Sync</div>
                 </div>

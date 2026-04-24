@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge"
 import BlogListView from "@/components/blog/BlogListView"
 import { cn } from "@/lib/utils"
 import { shareContent } from "@/utils/share"
+import ProfileEditDialog from "./ProfileEditDialog"
 
 interface UserProfileProps {
   profile: ProfileType
@@ -268,12 +269,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
 
             <div className="flex items-center justify-center gap-3 pb-2">
               {isOwnProfile ? (
-                <Button asChild size="lg" className="rounded-md font-bold h-10 px-6">
-                  <Link href="/settings/profile" className="flex items-center gap-2">
-                    <Edit3 className="h-4 w-4" />
-                    プロフィールを編集
-                  </Link>
-                </Button>
+                <ProfileEditDialog profile={profile} />
               ) : (
                 <FollowButton
                   followerId={currentUserId}

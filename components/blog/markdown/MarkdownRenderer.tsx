@@ -68,33 +68,48 @@ const CodeBlock: React.FC<{
   }
 
   return (
-    <div className="relative group my-4 rounded-lg border border-border overflow-hidden bg-muted/20">
-      <div className="flex items-center justify-between px-4 py-2 bg-muted border-b border-border">
-        {language && (
-          <span className="text-xs font-medium text-muted-foreground uppercase">
-            {language}
-          </span>
-        )}
+    <div className="relative group my-6 rounded-xl border border-border/60 overflow-hidden bg-muted/20 shadow-sm transition-all duration-300 hover:shadow-md hover:border-border">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-muted/80 backdrop-blur-sm border-b border-border/60">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5 mr-2">
+            <div className="w-3 h-3 rounded-full bg-red-400/80 shadow-[inset_0_0_2px_rgba(0,0,0,0.1)]" />
+            <div className="w-3 h-3 rounded-full bg-yellow-400/80 shadow-[inset_0_0_2px_rgba(0,0,0,0.1)]" />
+            <div className="w-3 h-3 rounded-full bg-green-400/80 shadow-[inset_0_0_2px_rgba(0,0,0,0.1)]" />
+          </div>
+          {language && (
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] px-2 py-0.5 rounded-md bg-background/50 border border-border/40">
+              {language}
+            </span>
+          )}
+        </div>
         <button
           onClick={handleCopy}
-          className="flex items-center space-x-1 px-2 py-1 text-xs rounded hover:bg-accent hover:text-accent-foreground transition-colors"
+          className="flex items-center space-x-1.5 px-3 py-1 text-[11px] font-bold rounded-lg hover:bg-primary hover:text-primary-foreground transition-all duration-200 active:scale-95"
         >
-          {isCopied ? <Check size={14} /> : <Clipboard size={14} />}
-          <span>{isCopied ? "コピー済み" : "コピー"}</span>
+          {isCopied ? <Check size={12} className="text-green-500 group-hover:text-primary-foreground" /> : <Clipboard size={12} />}
+          <span>{isCopied ? "COPIED" : "COPY"}</span>
         </button>
       </div>
-      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted-foreground">
+      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40">
         <SyntaxHighlighter
           style={mounted && resolvedTheme === 'dark' ? oneDark : oneLight}
           language={language || 'text'}
           PreTag="div"
           showLineNumbers
+          lineNumberStyle={{
+            minWidth: '2.5em',
+            paddingRight: '1em',
+            color: 'rgba(120, 120, 120, 0.4)',
+            textAlign: 'right',
+            userSelect: 'none',
+          }}
           customStyle={{
             margin: 0,
-            padding: '1rem',
-            fontSize: '14px',
-            lineHeight: '1.6',
+            padding: '1.25rem 1rem',
+            fontSize: '13.5px',
+            lineHeight: '1.7',
             background: 'transparent',
+            fontFamily: 'var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
           }}
         >
           {code}

@@ -159,14 +159,14 @@ const BlogListView: React.FC<BlogListViewProps> = ({ blogs: initialBlogs }) => {
 
         <div className="flex items-center gap-3">
           <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-            <SelectTrigger className="w-auto h-9 text-xs border-none bg-muted/50 hover:bg-muted transition-all rounded-md px-3 font-bold">
+            <SelectTrigger className="w-auto h-9 text-xs border-none bg-muted/50 hover:bg-muted transition-all rounded-lg px-3 font-bold">
               <SortDesc className="h-3.5 w-3.5 mr-2" />
               <SelectValue placeholder="並び替え" />
             </SelectTrigger>
-            <SelectContent className="rounded-md border-border/40 shadow-xl p-1">
-              <SelectItem value="newest" className="font-bold rounded-sm text-xs">最新順</SelectItem>
-              <SelectItem value="oldest" className="font-bold rounded-sm text-xs">古い順</SelectItem>
-              <SelectItem value="most_liked" className="font-bold rounded-sm text-xs">人気順</SelectItem>
+            <SelectContent className="rounded-xl border-border/40 shadow-xl p-1">
+              <SelectItem value="newest" className="font-bold rounded-lg text-xs">最新順</SelectItem>
+              <SelectItem value="oldest" className="font-bold rounded-lg text-xs">古い順</SelectItem>
+              <SelectItem value="most_liked" className="font-bold rounded-lg text-xs">人気順</SelectItem>
             </SelectContent>
           </Select>
         </div>

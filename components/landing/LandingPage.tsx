@@ -39,17 +39,17 @@ const LandingPage = async () => {
         <section className="py-24 bg-background">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-3xl md:text-4xl font-black text-foreground mb-4">最新の投稿</h2>
-              <p className="text-muted-foreground text-lg">コミュニティで今、話題になっているストーリー。</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 tracking-tight">最新の投稿</h2>
+              <p className="text-muted-foreground text-lg font-medium">コミュニティで今、話題になっているストーリー。</p>
             </div>
-            <div className="bg-card border rounded-xl overflow-hidden divide-y">
+            <div className="bg-card border rounded-lg overflow-hidden divide-y shadow-sm">
               {blogs.map((blog) => (
                 <ListItem key={blog.id} blog={blog} />
               ))}
             </div>
             <div className="mt-12 text-center">
               <Link href="/login">
-                <Button variant="outline" size="lg" className="rounded-2xl font-bold px-8">
+                <Button variant="outline" size="lg" className="rounded-lg font-bold px-8">
                   すべての記事を見る
                 </Button>
               </Link>
@@ -60,23 +60,23 @@ const LandingPage = async () => {
 
       {/* CTA Section */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-primary/5 -z-10" />
+        <div className="absolute inset-0 bg-primary/[0.03] -z-10" />
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto space-y-8">
-            <h2 className="text-4xl md:text-5xl font-black text-foreground">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
               さあ、新時代のブログ体験へ
             </h2>
-            <p className="text-xl text-muted-foreground leading-relaxed">
+            <p className="text-xl text-muted-foreground leading-relaxed font-medium">
               登録はわずか1分。あなたの物語を今すぐ世界へ。
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link href="/signup">
-                <Button size="lg" className="h-16 px-10 rounded-2xl text-xl font-bold gap-2 bg-primary text-primary-foreground">
+                <Button size="lg" className="h-14 px-10 rounded-lg text-lg font-bold gap-2 bg-primary text-primary-foreground shadow-lg shadow-primary/20">
                   無料でアカウント登録
                 </Button>
               </Link>
               <Link href="/login">
-                <Button size="lg" variant="outline" className="h-16 px-10 rounded-2xl text-xl font-bold bg-background">
+                <Button size="lg" variant="outline" className="h-14 px-10 rounded-lg text-lg font-bold bg-background">
                   ログインする
                 </Button>
               </Link>
