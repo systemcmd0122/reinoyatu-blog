@@ -69,14 +69,6 @@ export default {
         },
       },
       {
-        title: 'タスクリスト',
-        description: 'チェックボックス付きのリストを作成します',
-        icon: <CheckSquare className="h-4 w-4" />,
-        command: ({ editor, range }: any) => {
-          editor.chain().focus().deleteRange(range).toggleTaskList().run()
-        },
-      },
-      {
         title: '引用',
         description: '引用文を挿入します',
         icon: <Quote className="h-4 w-4" />,
@@ -93,6 +85,23 @@ export default {
         },
       },
       {
+        title: '画像',
+        description: '画像を挿入します',
+        icon: <ImageIcon className="h-4 w-4" />,
+        command: ({ editor, range }: any) => {
+          editor.chain().focus().deleteRange(range).run()
+          window.dispatchEvent(new CustomEvent('open-media-dialog', { detail: { type: 'image' } }));
+        },
+      },
+      {
+        title: 'タスクリスト',
+        description: 'チェックボックス付きのリストを作成します',
+        icon: <CheckSquare className="h-4 w-4" />,
+        command: ({ editor, range }: any) => {
+          editor.chain().focus().deleteRange(range).toggleTaskList().run()
+        },
+      },
+      {
         title: 'テーブル',
         description: '3x3のテーブルを挿入します',
         icon: <TableIcon className="h-4 w-4" />,
@@ -106,21 +115,6 @@ export default {
         icon: <Minus className="h-4 w-4" />,
         command: ({ editor, range }: any) => {
           editor.chain().focus().deleteRange(range).setHorizontalRule().run()
-        },
-      },
-      {
-        title: '画像',
-        description: '画像を挿入します',
-        icon: <ImageIcon className="h-4 w-4" />,
-        command: ({ editor, range }: any) => {
-          editor.chain().focus().deleteRange(range).run()
-          // For slash commands, we need a way to trigger the dialog. 
-          // Since this is a static object, we might need to emit an event or 
-          // use a state from the parent. 
-          // For now, let's use a simpler approach: focus the toolbar or just 
-          // assume we'll implement a better event system.
-          // BUT, to keep it functional and prompt-free, let's use a custom event.
-          window.dispatchEvent(new CustomEvent('open-media-dialog', { detail: { type: 'image' } }));
         },
       },
       {

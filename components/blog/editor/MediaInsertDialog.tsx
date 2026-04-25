@@ -33,11 +33,24 @@ const MediaInsertDialog: React.FC<MediaInsertDialogProps> = ({ editor, userId, t
     if (!url && type !== 'table') return;
 
     if (type === 'image') {
+      if (!url.startsWith('http') && !url.startsWith('/')) {
+        toast.error('有効な画像URLを入力してください');
+        return;
+      }
       editor.chain().focus().setImage({ src: url }).run();
     } else if (type === 'youtube') {
+      const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+      if (!isYoutube) {
+        toast.error('有効なYouTube URLを入力してください');
+        return;
+      }
       editor.commands.setYoutubeVideo({ src: url });
       editor.chain().focus().updateAttributes('youtube', { showDetails: youtubeDetails }).run();
     } else if (type === 'iframe') {
+      if (!url.startsWith('http')) {
+        toast.error('有効なURL（https://...）を入力してください');
+        return;
+      }
       editor.commands.setIframe({ src: url });
     }
 
