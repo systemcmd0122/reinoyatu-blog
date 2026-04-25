@@ -1,22 +1,28 @@
 -- profilesテーブル作成
 create table profiles (
   id uuid primary key references auth.users on delete cascade,
-  name text,
+  name text not null default 'No Name',
   introduce text,
-  avatar_url text
+  avatar_url text,
+  header_image_url text,
+  email text,
+  homepage_url text,
+  social_links jsonb default '{}'::jsonb,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 -- profilesテーブルRLS設定
 alter table profiles enable row level security;
 create policy "プロフィールは誰でも参照可能" on profiles for select using (true);
-create policy "プロフィールを更新" on profiles for update using (true);
+create policy "プロフィールを更新" on profiles for update using (auth.uid() = id);
 
 -- サインアップ時にプロフィールテーブル作成する関数
 create function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id)
-  values (new.id);
+  insert into public.profiles (id, name, email)
+  values (new.id, coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', 'No Name'), new.email);
   return new;
 end;
 $$ language plpgsql security definer set search_path = public;
@@ -60,6 +66,14 @@ create trigger set_updated_at
 before update on blogs
 for each row
 execute function update_updated_at_column();
+
+-- インデックスの追加（パフォーマンス向上のため）
+create index idx_blogs_user_id on blogs(user_id);
+create index idx_blogs_created_at on blogs(created_at desc);
+create index idx_likes_blog_id on likes(blog_id);
+create index idx_likes_user_id on likes(user_id);
+create index idx_bookmarks_user_id on bookmarks(user_id);
+create index idx_comments_blog_id on comments(blog_id);
 
 -- blogsテーブルRLS設定
 alter table blogs enable row level security;

@@ -1,73 +1,52 @@
 "use server"
 
 import { createClient } from "@/utils/supabase/server"
-import { decode } from "base64-arraybuffer"
+import { parseBase64Image, optimizeImage, validateUser, calculateHash } from "@/utils/image-helpers"
 import { v4 as uuidv4 } from "uuid"
-import crypto from "crypto"
-
-/**
- * 画像のハッシュ値を計算する
- */
-const calculateHash = (buffer: Buffer): string => {
-  return crypto.createHash("sha256").update(buffer).digest("hex")
-}
-
-interface UploadImageProps {
-  base64Image?: string
-  file?: File // Note: File can't be passed directly to Server Action from client easily in some cases, but we'll handle base64
-  userId: string
-}
+import { ActionResponse } from "@/schemas"
 
 /**
  * 画像をアップロードし、メタデータをDBに保存する。
  * 同一ハッシュの画像が存在する場合は再利用する。
  */
-export const uploadImage = async (base64Image: string, userId: string) => {
+export const uploadImage = async (base64Image: string): Promise<ActionResponse> => {
   try {
+    const user = await validateUser()
     const supabase = createClient()
     
     // base64データのパース
-    const matches = base64Image.match(/^data:(.+);base64,(.+)$/)
-    if (!matches || matches.length !== 3) {
-      return { error: "無効な画像データです" }
-    }
-    const contentType = matches[1]
-    const base64Data = matches[2]
-    const buffer = Buffer.from(base64Data, "base64")
+    const { buffer: originalBuffer } = parseBase64Image(base64Image)
+
+    // 画像の最適化 (WebP)
+    const { buffer, contentType, extension } = await optimizeImage(originalBuffer)
     
-    // ハッシュ計算
+    // ハッシュ計算 (最適化後の画像で計算)
     const hash = calculateHash(buffer)
     
     // 既存のハッシュをチェック
-    const { data: existingImage, error: searchError } = await supabase
+    const { data: existingImage } = await supabase
       .from("images")
       .select("*")
       .eq("hash", hash)
       .maybeSingle()
-    
-    if (searchError) {
-      console.error("画像検索エラー:", searchError)
-    }
     
     if (existingImage) {
       return { success: true, data: existingImage }
     }
     
     // 新規アップロード
-    const fileExt = contentType.split("/")[1] || "png"
-    const fileName = `${uuidv4()}.${fileExt}`
-    const storagePath = `${userId}/${fileName}`
+    const fileName = `${uuidv4()}.${extension}`
+    const storagePath = `${user.id}/${fileName}`
     
     const { error: uploadError } = await supabase.storage
       .from("blogs")
-      .upload(storagePath, decode(base64Data), {
+      .upload(storagePath, buffer, {
         contentType,
         upsert: true
       })
     
     if (uploadError) {
-      console.error("ストレージアップロードエラー:", uploadError)
-      return { error: uploadError.message }
+      return { success: false, error: "ストレージへのアップロードに失敗しました" }
     }
     
     const { data: urlData } = supabase.storage
@@ -80,7 +59,7 @@ export const uploadImage = async (base64Image: string, userId: string) => {
     const { data: newImage, error: insertError } = await supabase
       .from("images")
       .insert({
-        user_id: userId,
+        user_id: user.id,
         storage_path: storagePath,
         public_url: publicUrl,
         hash: hash
@@ -89,38 +68,36 @@ export const uploadImage = async (base64Image: string, userId: string) => {
       .single()
     
     if (insertError) {
-      console.error("画像メタデータ保存エラー:", insertError)
-      return { error: insertError.message }
+      return { success: false, error: "メタデータの保存に失敗しました" }
     }
     
     return { success: true, data: newImage }
-  } catch (err) {
+  } catch (err: any) {
     console.error("画像アップロードエラー:", err)
-    return { error: "エラーが発生しました" }
+    return { success: false, error: err.message || "エラーが発生しました" }
   }
 }
 
 /**
  * ユーザーがアップロードした過去の画像一覧を取得
  */
-export const getUserImages = async (userId: string) => {
+export const getUserImages = async (): Promise<ActionResponse> => {
   try {
+    const user = await validateUser()
     const supabase = createClient()
     const { data, error } = await supabase
       .from("images")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
     
     if (error) {
-      console.error("画像取得エラー:", error)
-      return { error: error.message }
+      return { success: false, error: error.message }
     }
     
-    return { success: true, images: data }
-  } catch (err) {
-    console.error("画像取得エラー:", err)
-    return { error: "エラーが発生しました" }
+    return { success: true, data }
+  } catch (err: any) {
+    return { success: false, error: err.message }
   }
 }
 
@@ -139,7 +116,6 @@ export const syncArticleImages = async (articleId: string, contentJson: string, 
     if (contentJson) {
       try {
         const json = JSON.parse(contentJson)
-        // 再帰的にimageノードを探す
         const extractImages = (node: any) => {
           if (node.type === "image" && node.attrs?.src) {
             urls.add(node.attrs.src)
@@ -155,25 +131,21 @@ export const syncArticleImages = async (articleId: string, contentJson: string, 
     }
     
     if (urls.size === 0) {
-      // 関連を削除
       await supabase.from("article_images").delete().eq("article_id", articleId)
       return { success: true }
     }
     
-    // URLに対応するimage_idを取得
     const { data: images, error: fetchError } = await supabase
       .from("images")
       .select("id, public_url")
       .in("public_url", Array.from(urls))
     
     if (fetchError) {
-      console.error("画像ID取得エラー:", fetchError)
-      return { error: fetchError.message }
+      return { success: false, error: fetchError.message }
     }
     
     const imageIds = images.map(img => img.id)
     
-    // 現在の関連を取得
     const { data: existingRelations } = await supabase
       .from("article_images")
       .select("image_id")
@@ -181,7 +153,6 @@ export const syncArticleImages = async (articleId: string, contentJson: string, 
     
     const existingIds = existingRelations?.map(r => r.image_id) || []
     
-    // 不要な関連を削除
     const toDelete = existingIds.filter(id => !imageIds.includes(id))
     if (toDelete.length > 0) {
       await supabase
@@ -190,11 +161,9 @@ export const syncArticleImages = async (articleId: string, contentJson: string, 
         .eq("article_id", articleId)
         .in("image_id", toDelete)
       
-      // 削除された画像が他の記事でも使われていないかチェックし、未使用ならクリーンアップ
       await cleanupUnusedImages(toDelete)
     }
     
-    // 新規関連を追加
     const toInsert = imageIds.filter(id => !existingIds.includes(id))
     if (toInsert.length > 0) {
       const inserts = toInsert.map(id => ({
@@ -205,9 +174,9 @@ export const syncArticleImages = async (articleId: string, contentJson: string, 
     }
     
     return { success: true }
-  } catch (err) {
+  } catch (err: any) {
     console.error("画像同期エラー:", err)
-    return { error: "エラーが発生しました" }
+    return { success: false, error: err.message }
   }
 }
 
@@ -219,7 +188,6 @@ export const cleanupUnusedImages = async (imageIds: string[]) => {
     if (!imageIds.length) return { success: true }
     const supabase = createClient()
     
-    // 他に使用している記事があるか一括チェック
     const { data: usedRelations } = await supabase
       .from("article_images")
       .select("image_id")
@@ -230,7 +198,6 @@ export const cleanupUnusedImages = async (imageIds: string[]) => {
     
     if (unusedImageIds.length === 0) return { success: true }
 
-    // 未使用の画像情報を一括取得
     const { data: imagesToDelete } = await supabase
       .from("images")
       .select("id, storage_path")
@@ -239,12 +206,10 @@ export const cleanupUnusedImages = async (imageIds: string[]) => {
     if (imagesToDelete && imagesToDelete.length > 0) {
       const storagePaths = imagesToDelete.map(img => img.storage_path)
       
-      // ストレージから一括削除
       await supabase.storage
         .from("blogs")
         .remove(storagePaths)
       
-      // DBから一括削除
       await supabase
         .from("images")
         .delete()
@@ -252,8 +217,8 @@ export const cleanupUnusedImages = async (imageIds: string[]) => {
     }
     
     return { success: true }
-  } catch (err) {
+  } catch (err: any) {
     console.error("クリーンアップエラー:", err)
-    return { error: "エラーが発生しました" }
+    return { success: false, error: err.message }
   }
 }

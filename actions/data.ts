@@ -3,14 +3,16 @@
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
 import { cleanupUnusedImages } from "./image"
+import { ActionResponse } from "@/schemas"
+import { validateUser } from "@/utils/image-helpers"
 
 /**
  * ユーザーのデータ統計を取得する
  */
-export async function getUserDataStats() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+export async function getUserDataStats(): Promise<ActionResponse> {
+  try {
+    const user = await validateUser()
+    const supabase = createClient()
 
   const userId = user.id
   
@@ -22,31 +24,44 @@ export async function getUserDataStats() {
     supabase.from("bookmarks").select("id", { count: "exact", head: true }).eq("user_id", userId),
   ])
 
-  return {
-    blogsCount: blogsRes.count || 0,
-    collectionsCount: collectionsRes.count || 0,
-    imagesCount: imagesRes.count || 0,
-    likesCount: likesRes.count || 0,
-    bookmarksCount: bookmarksRes.count || 0,
+    return {
+      success: true,
+      data: {
+        blogsCount: blogsRes.count || 0,
+        collectionsCount: collectionsRes.count || 0,
+        imagesCount: imagesRes.count || 0,
+        likesCount: likesRes.count || 0,
+        bookmarksCount: bookmarksRes.count || 0,
+      }
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message }
   }
 }
 
 /**
  * ユーザーのブログ一覧を取得する
  */
-export async function getUserBlogs() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: "Unauthorized" }
+export async function getUserBlogs(page = 1, limit = 10): Promise<ActionResponse> {
+  try {
+    const user = await validateUser()
+    const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from("blogs")
-    .select("id, title, summary, image_url, created_at, updated_at, is_published")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-  
-  if (error) return { error: error.message }
-  return { blogs: data }
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+
+    const { data, error, count } = await supabase
+      .from("blogs")
+      .select("id, title, summary, image_url, created_at, updated_at, is_published", { count: "exact" })
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .range(from, to)
+
+    if (error) throw error
+    return { success: true, data: { blogs: data, count } }
+  } catch (err: any) {
+    return { success: false, error: err.message }
+  }
 }
 
 /**

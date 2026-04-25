@@ -1,15 +1,15 @@
 "use server"
 
-import { BlogSchema } from "@/schemas"
+import { BlogSchema, ActionResponse } from "@/schemas"
 import { createClient } from "@/utils/supabase/server"
 import { z } from "zod"
 import { v4 as uuidv4 } from "uuid"
-import { decode } from "base64-arraybuffer"
 import { generateSummaryFromContent } from "@/utils/gemini"
 import { uploadImage, syncArticleImages, cleanupUnusedImages } from "./image"
 import { GoogleGenAI } from "@google/genai"
+import { validateUser } from "@/utils/image-helpers"
 
-// タグをDBに保存し、IDを返すヘルパー関数（完全修正版）
+// タグをDBに保存し、IDを返すヘルパー関数
 const upsertTags = async (tagNames: string[]) => {
   const supabase = createClient()
   
@@ -97,22 +97,24 @@ const isValidImageUrl = (url: string | null) => {
   }
 }
 
-// ブログ投稿（完全修正版）
-export const newBlog = async (values: newBlogProps) => {
+// ブログ投稿
+export const newBlog = async (values: newBlogProps): Promise<ActionResponse> => {
   try {
+    const user = await validateUser()
     const supabase = createClient()
 
-    if (values.imageUrl && !isValidImageUrl(values.imageUrl)) {
-      return { error: "無効な画像URLです" }
+    const validatedFields = BlogSchema.safeParse(values)
+    if (!validatedFields.success) {
+      return { success: false, error: validatedFields.error.errors[0].message }
     }
 
     let image_url = values.imageUrl || null
 
-    // 画像アップロード処理（重複防止対応版）
+    // 画像アップロード処理
     if (values.base64Image) {
-      const result = await uploadImage(values.base64Image, values.userId)
+      const result = await uploadImage(values.base64Image)
       if (result.error) {
-        return { error: result.error }
+        return { success: false, error: result.error }
       }
       image_url = result.data.public_url
     }
@@ -198,22 +200,47 @@ interface editBlogProps extends z.infer<typeof BlogSchema> {
   is_published?: boolean
 }
 
-// ブログ編集（完全修正版）
-export const editBlog = async (values: editBlogProps) => {
+// ブログ編集
+export const editBlog = async (values: editBlogProps): Promise<ActionResponse> => {
   try {
+    const user = await validateUser()
     const supabase = createClient()
 
-    if (values.imageUrl && !isValidImageUrl(values.imageUrl)) {
-      return { error: "無効な画像URLです" }
+    const validatedFields = BlogSchema.safeParse(values)
+    if (!validatedFields.success) {
+      return { success: false, error: validatedFields.error.errors[0].message }
+    }
+
+    // 権限チェック
+    const { data: blog, error: blogError } = await supabase
+      .from("blogs")
+      .select("user_id")
+      .eq("id", values.blogId)
+      .single()
+
+    if (blogError || !blog) {
+      return { success: false, error: "記事が見つかりません" }
+    }
+
+    // 共同投稿者かどうかもチェック
+    const { data: coauthor } = await supabase
+      .from("article_authors")
+      .select("role")
+      .eq("article_id", values.blogId)
+      .eq("user_id", user.id)
+      .single()
+
+    if (blog.user_id !== user.id && !coauthor) {
+      return { success: false, error: "編集権限がありません" }
     }
 
     let image_url = values.imageUrl
 
-    // 画像更新処理（重複防止対応版）
+    // 画像更新処理
     if (values.base64Image) {
-      const result = await uploadImage(values.base64Image, values.userId)
+      const result = await uploadImage(values.base64Image)
       if (result.error) {
-        return { error: result.error }
+        return { success: false, error: result.error }
       }
       image_url = result.data.public_url
     }
@@ -319,14 +346,15 @@ export const editBlog = async (values: editBlogProps) => {
 }
 
 // 閲覧数を増やす
-export const incrementViewCount = async (blogId: string) => {
+export const incrementViewCount = async (blogId: string): Promise<ActionResponse> => {
   try {
     const supabase = createClient()
-    await supabase.rpc('increment_view_count', { blog_id: blogId })
+    const { error } = await supabase.rpc('increment_view_count', { blog_id: blogId })
+    if (error) throw error
     return { success: true }
-  } catch (err) {
+  } catch (err: any) {
     console.error("閲覧数更新エラー:", err)
-    return { error: "エラーが発生しました" }
+    return { success: false, error: err.message || "エラーが発生しました" }
   }
 }
 
@@ -341,9 +369,25 @@ export const deleteBlog = async ({
   blogId,
   imageUrl,
   userId,
-}: deleteBlogProps) => {
+}: deleteBlogProps): Promise<ActionResponse> => {
   try {
+    const user = await validateUser()
     const supabase = createClient()
+
+    // 権限チェック
+    const { data: blog, error: blogError } = await supabase
+      .from("blogs")
+      .select("user_id")
+      .eq("id", blogId)
+      .single()
+
+    if (blogError || !blog) {
+      return { success: false, error: "記事が見つかりません" }
+    }
+
+    if (blog.user_id !== user.id) {
+      return { success: false, error: "削除権限がありません" }
+    }
 
     // 関連している画像IDを先に取得しておく
     const { data: articleImages } = await supabase

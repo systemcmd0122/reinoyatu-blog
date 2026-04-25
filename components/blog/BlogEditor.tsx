@@ -304,6 +304,13 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       const res = await onSubmit({ ...values, base64Image, imageUrl: currentImageUrl })
 
       if (res?.error) {
+        // フィールドエラーがある場合はセットする（Zodバリデーション結果の反映など）
+        if (typeof res.error === 'string' && res.error.includes('タイトル')) {
+           form.setError("title", { message: res.error });
+        } else if (typeof res.error === 'string' && res.error.includes('内容')) {
+           form.setError("content", { message: res.error });
+        }
+
         setError(`送信に失敗しました: ${res.error}`)
         setStatus("error")
         toast.error(res.error)
