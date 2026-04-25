@@ -91,23 +91,51 @@ const PrivacyPolicy = () => {
           <PrivacySection title="第三者への情報提供" icon={Globe}>
             <p>
               法的要求がある場合を除き、ユーザーの同意なく個人情報を第三者に提供することはありません。
-              Google OAuth認証を利用する際は、Googleのプライバシーポリシーが適用されます。
+            </p>
+            <p className="mt-2">
+              当サービスでは、認証やアナリティクス、広告配信のために以下の第三者サービスを利用しています：
+            </p>
+            <ul className="list-disc list-inside pl-4 space-y-2 mt-3 text-sm">
+              <li><strong>Google Auth:</strong> ユーザー認証のために利用されます。</li>
+              <li><strong>Google Analytics:</strong> サイトの利用状況を把握し、サービス改善に役立てるためにCookieを使用しています。</li>
+              <li><strong>Google AdSense:</strong> 広告配信のために利用されます（詳細は「広告の配信について」をご確認ください）。</li>
+            </ul>
+          </PrivacySection>
+
+          {/* 広告の配信について */}
+          <PrivacySection title="広告の配信について" icon={ShieldCheck}>
+            <p>
+              当サイトでは、第三者配信事業者である「Google」が提供する広告サービス「Google AdSense」を利用しています。
+            </p>
+            <p className="mt-2">
+              Googleなどの第三者配信事業者は、Cookie（クッキー）を使用して、ユーザーが当サイトや他のウェブサイトに過去にアクセスした際の情報に基づき、適切な広告をユーザーに表示します。
+            </p>
+            <p className="mt-2">
+              Googleが広告Cookieを使用することにより、ユーザーが当サイトや他のサイトにアクセスした際の情報に基づいて、Googleやそのパートナーが適切な広告をユーザーに表示できることになります。
+            </p>
+            <p className="mt-2">
+              ユーザーは、Googleの<a href="https://adssettings.google.com/authenticated" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">広告設定</a>でパーソナライズ広告を無効にすることができます。また、<a href="https://www.aboutads.info/choices" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.aboutads.info</a>にアクセスすれば、第三者配信事業者がパーソナライズ広告の掲載で使用するCookieを無効にできます。
+            </p>
+          </PrivacySection>
+
+          {/* Cookie（クッキー）の利用 */}
+          <PrivacySection title="Cookie（クッキー）の利用" icon={FileText}>
+            <p>
+              当サービスでは、ユーザーの利便性向上、広告の配信、および統計データの取得のため、Cookieを使用しています。
+            </p>
+            <p className="mt-2">
+              Cookieは、ウェブサイトの利用履歴などをユーザーのコンピュータにファイルとして保存しておく仕組みです。これには氏名、メールアドレス、電話番号、住所など、個人を特定する情報は一切含まれません。
+            </p>
+            <p className="mt-2">
+              ユーザーは、ブラウザの設定によりCookieの受け入れを拒否したり、Cookieが送信された際に警告を表示させたりすることが可能です。設定方法はブラウザによって異なりますので、お使いのブラウザのヘルプをご確認ください。
             </p>
           </PrivacySection>
 
           {/* ポリシーの変更 */}
           <PrivacySection title="ポリシーの変更" icon={RefreshCw}>
             <p>
-              本プライバシーポリシーは、サービス改善のため予告なく変更する場合があります。
-              重要な変更については、ウェブサイト上で通知いたします。
-            </p>
-          </PrivacySection>
-
-          {/* Cookieの利用 */}
-          <PrivacySection title="Cookieの利用" icon={FileText}>
-            <p>
-              当サービスでは、ユーザー体験の向上や利用状況の分析のためにCookieを使用しています。
-              ブラウザの設定でCookieを無効にすることも可能ですが、一部の機能が制限される場合があります。
+              本プライバシーポリシーは、法令の改正やサービスの改善に合わせて予告なく変更する場合があります。
+              重要な変更については、本ウェブサイト上での告知等、適切な方法で通知いたします。
             </p>
           </PrivacySection>
 
