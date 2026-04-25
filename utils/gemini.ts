@@ -162,6 +162,7 @@ export const generateBlogContent = async (
 
     const prompt = `
 あなたは、与えられたMarkdownの仕様に従って記事を改善する優秀なブログ編集AIです。
+出力は、コードブロック等を除き、すべて日本語で行ってください。
 以下の最優先事項を必ず守ってください：
 
 1. 「サポートされているMarkdown記法」に記載されたルールを**厳密に**守ること。リストにない記法は絶対に使用しないでください。
@@ -241,6 +242,9 @@ ${summaryLength ? `
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-lite",
       contents: prompt,
+      config: {
+        tools: [{ googleSearchRetrieval: {} } as any],
+      }
     });
     
     if (!response.text) {
@@ -266,6 +270,7 @@ export const generateTags = async (
 
     const prompt = `
 あなたはプロのSEO専門家です。
+回答はすべて日本語で出力してください。
 以下のブログ記事のタイトルと内容を分析し、記事の主要なテーマを表す関連性の高いタグを3〜7個生成してください。
 
 ### Markdown記法について
@@ -313,6 +318,9 @@ ${content}
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-lite",
       contents: prompt,
+      config: {
+        tools: [{ googleSearchRetrieval: {} } as any],
+      }
     });
 
     if (!response.text) {
@@ -345,6 +353,7 @@ export const generateTitleSuggestions = async (
 
     const prompt = `
 あなたは、読者の目を引く魅力的な記事タイトルを考えるプロのコピーライターです。
+回答はすべて日本語で出力してください。
 以下の記事の内容を分析し、内容を的確に表しつつ、クリックしたくなるようなタイトルを5つ提案してください。
 
 ### 指示
@@ -367,6 +376,9 @@ ${content.substring(0, 3000)}
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-lite",
       contents: prompt,
+      config: {
+        tools: [{ googleSearchRetrieval: {} } as any],
+      }
     });
 
     if (!response.text) {
@@ -412,6 +424,7 @@ export const generateSummaryFromContent = async (
 
     const prompt = `
 あなたは、読者の興味を引くのが得意なプロの編集者です。
+回答はすべて日本語で出力してください。
 以下のブログ記事のタイトルと内容を読み、記事の核心を突いた、簡潔で魅力的な要約を生成してください。
 
 ### 指示
@@ -435,6 +448,9 @@ ${plainContent.substring(0, 3000)}
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-lite",
       contents: prompt,
+      config: {
+        tools: [{ googleSearchRetrieval: {} } as any],
+      }
     });
 
     if (!response.text) {

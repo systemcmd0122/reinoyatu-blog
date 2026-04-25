@@ -71,6 +71,8 @@ const EditorChat: React.FC<EditorChatProps> = ({ onApplySuggestion, currentConte
     try {
       // 文脈として現在の本文を含める
       const contextPrompt = `
+あなたは優秀な執筆アシスタントです。最新の情報が必要な場合はウェブ検索を自由に行って、正確な情報に基づいて回答してください。
+
 現在の記事本文:
 ---
 ${currentContent || '(まだ記事本文がありません)'}

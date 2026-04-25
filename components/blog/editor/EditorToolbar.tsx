@@ -156,9 +156,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
   };
 
   return (
-    <div className="flex items-center md:flex-wrap gap-2 py-2 px-2 md:px-4 border-b border-border/50 bg-background/80 sticky top-0 z-[var(--z-editor-toolbar)] backdrop-blur-sm overflow-x-auto no-scrollbar md:overflow-x-visible transition-all max-w-full">
+    <div className="flex items-center md:flex-wrap gap-2 py-1 px-2 md:px-4 border-b border-border bg-background/95 sticky top-0 z-[var(--z-editor-toolbar)] backdrop-blur-sm overflow-x-auto no-scrollbar md:overflow-x-visible transition-all max-w-full">
       {/* undo/redo */}
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-0.5 shrink-0">
         <Button
           variant="ghost"
           size="sm"
@@ -216,7 +216,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
       <Separator orientation="vertical" className="mx-1 h-5 shrink-0" />
 
       {/* テキスト装飾 */}
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-0.5 shrink-0">
         <Button
           variant="ghost"
           size="sm"
@@ -350,7 +350,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
 
 
       {/* リスト機能 */}
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-0.5 shrink-0">
         <Button
           variant="ghost"
           size="sm"
@@ -383,7 +383,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
       <Separator orientation="vertical" className="mx-1 h-5 shrink-0" />
 
       {/* メディア・リンク */}
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-0.5 shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

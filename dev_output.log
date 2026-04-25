@@ -7,13 +7,7 @@
 - Network:       http://192.168.0.2:3000
 
 ✓ Starting...
-Attention: Next.js now collects completely anonymous telemetry regarding usage.
-This information is used to shape Next.js' roadmap and prioritize features.
-You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
-https://nextjs.org/telemetry
-
  ○ (pwa) PWA support is disabled.
 ✓ Ready in 2.6s
 ○ Compiling /login ...
- GET /login?next=%2Fsettings%2Fprofile 200 in 26.0s (compile: 24.4s, proxy.ts: 11ms, render: 1529ms)
- GET /login?next=%2Fsettings%2Fprofile 200 in 224ms (compile: 13ms, proxy.ts: 13ms, render: 198ms)
+ GET /login?next=%2Fblog%2Fnew 200 in 20.4s (compile: 18.9s, proxy.ts: 14ms, render: 1429ms)

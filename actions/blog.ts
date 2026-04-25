@@ -639,7 +639,10 @@ export const chatWithAI = async (messages: { role: 'user' | 'model', content: st
     // チャットセッションを作成
     const chat = ai.chats.create({
       model: "gemini-2.5-flash-lite",
-      history: history
+      history: history,
+      config: {
+        tools: [{ googleSearchRetrieval: {} } as any],
+      }
     });
 
     // 最後のメッセージを送信
