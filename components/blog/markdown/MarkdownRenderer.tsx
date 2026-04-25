@@ -13,6 +13,7 @@ import Link from "next/link"
 import { useTheme } from "next-themes"
 
 import YouTubeEmbed from "./YouTubeEmbed"
+import IframeEmbed from "./IframeEmbed"
 import Callout from "./Callout"
 import Accordion from "./Accordion"
 import { Timeline, TimelineItem } from "./Timeline"
@@ -42,6 +43,11 @@ interface YouTubeMatch {
   index: number
   videoId: string
   showDetails: boolean
+}
+
+interface IframeMatch {
+  index: number
+  src: string
 }
 
 // コードブロックコンポーネント
@@ -153,7 +159,28 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
     return { content: processedContent, matches }
   }
 
-  const { content: processedContent, matches: youtubeMatches } = extractYouTubeEmbeds(content || '')
+  // iframe埋め込みの抽出
+  const extractIframeEmbeds = (markdownContent: string): {
+    content: string
+    matches: IframeMatch[]
+  } => {
+    const matches: IframeMatch[] = []
+
+    const processedContent = markdownContent.replace(
+      /\{\{iframe:([^}]+)\}\}/g,
+      (match, src) => {
+        const trimmedSrc = src.trim()
+        const index = matches.length
+        matches.push({ index, src: trimmedSrc })
+        return `--iframe-embed-${index}--`
+      }
+    )
+
+    return { content: processedContent, matches }
+  }
+
+  const { content: withYoutube, matches: youtubeMatches } = extractYouTubeEmbeds(content || '')
+  const { content: processedContent, matches: iframeMatches } = extractIframeEmbeds(withYoutube)
 
   const renderYouTubeComponent = (placeholderText: string) => {
     const match = placeholderText.match(/--youtube-embed-(\d+)--/)
@@ -169,6 +196,23 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         key={`youtube-${index}`} 
         videoId={youtubeData.videoId}
         showDetails={youtubeData.showDetails}
+      />
+    )
+  }
+
+  const renderIframeComponent = (placeholderText: string) => {
+    const match = placeholderText.match(/--iframe-embed-(\d+)--/)
+    if (!match) return placeholderText
+
+    const index = parseInt(match[1], 10)
+    const iframeData = iframeMatches[index]
+
+    if (!iframeData) return placeholderText
+
+    return (
+      <IframeEmbed
+        key={`iframe-${index}`}
+        src={iframeData.src}
       />
     )
   }
@@ -295,10 +339,13 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           p: ({ children }) => {
             const processChildren = (nodes: React.ReactNode): React.ReactNode => {
               if (typeof nodes === 'string') {
-                const parts = nodes.split(/(--youtube-embed-\d+--)/)
+                const parts = nodes.split(/(--youtube-embed-\d+--|--iframe-embed-\d+--)/)
                 return parts.map((part) => {
                   if (part.match(/--youtube-embed-\d+--/)) {
                     return renderYouTubeComponent(part)
+                  }
+                  if (part.match(/--iframe-embed-\d+--/)) {
+                    return renderIframeComponent(part)
                   }
                   return part
                 })

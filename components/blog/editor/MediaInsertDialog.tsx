@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Image as ImageIcon, Youtube, Link as LinkIcon, Check, Upload, Library, Loader2 } from 'lucide-react';
+import { Image as ImageIcon, Youtube, Link as LinkIcon, Check, Upload, Library, Loader2, Globe } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { uploadImage } from '@/actions/image';
 import ImageLibraryDialog from './ImageLibraryDialog';
@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 interface MediaInsertDialogProps {
   editor: Editor;
   userId?: string;
-  type: 'image' | 'youtube' | 'table';
+  type: 'image' | 'youtube' | 'table' | 'iframe';
   isOpen: boolean;
   onClose: () => void;
 }
@@ -37,6 +37,8 @@ const MediaInsertDialog: React.FC<MediaInsertDialogProps> = ({ editor, userId, t
     } else if (type === 'youtube') {
       editor.commands.setYoutubeVideo({ src: url });
       editor.chain().focus().updateAttributes('youtube', { showDetails: youtubeDetails }).run();
+    } else if (type === 'iframe') {
+      editor.commands.setIframe({ src: url });
     }
 
     setUrl('');
@@ -46,12 +48,14 @@ const MediaInsertDialog: React.FC<MediaInsertDialogProps> = ({ editor, userId, t
   const getTitle = () => {
     if (type === 'image') return '画像を挿入';
     if (type === 'youtube') return 'YouTube動画を埋め込み';
+    if (type === 'iframe') return '外部サイトを埋め込み';
     return 'コンテンツを挿入';
   };
 
   const getIcon = () => {
     if (type === 'image') return <ImageIcon className="h-5 w-5 mr-2 text-primary" />;
     if (type === 'youtube') return <Youtube className="h-5 w-5 mr-2 text-red-500" />;
+    if (type === 'iframe') return <Globe className="h-5 w-5 mr-2 text-blue-500" />;
     return null;
   };
 
@@ -146,7 +150,13 @@ const MediaInsertDialog: React.FC<MediaInsertDialogProps> = ({ editor, userId, t
               <Input
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder={type === 'youtube' ? 'https://www.youtube.com/watch?v=...' : 'https://example.com/image.jpg'}
+                placeholder={
+                  type === 'youtube'
+                    ? 'https://www.youtube.com/watch?v=...'
+                    : type === 'iframe'
+                      ? 'https://example.com'
+                      : 'https://example.com/image.jpg'
+                }
                 className="h-10"
                 autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && handleInsert()}
