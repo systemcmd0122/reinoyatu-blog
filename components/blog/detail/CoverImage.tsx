@@ -17,6 +17,7 @@ const CoverImage: React.FC<CoverImageProps> = ({ url, title }) => {
         fill
         className="object-cover transition-transform duration-500 hover:scale-105"
         priority
+        unoptimized
       />
     </div>
   )

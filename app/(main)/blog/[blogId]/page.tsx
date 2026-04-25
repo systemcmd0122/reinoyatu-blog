@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server"
 import BlogDetail from "@/components/blog/BlogDetail"
 import { Metadata } from "next"
 import { getCollectionWithItems } from "@/actions/collection"
+import { calculateReadingTime } from "@/utils/blog-helpers"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { NormalizedArticle } from "@/types/blog-detail"
@@ -199,8 +200,9 @@ const BlogDetailPage = async ({ params, searchParams }: BlogDetailPageProps) => 
       }],
       created_at: blogData.created_at,
       updated_at: blogData.updated_at,
-      reading_time: Math.ceil((blogData.content?.length || 0) / 400) || 1,
+      reading_time: calculateReadingTime(blogData.content || ""),
       likes_count: likesCountData || 0,
+      view_count: blogData.view_count || 0,
       is_published: blogData.is_published,
       user_id: blogData.user_id,
     }

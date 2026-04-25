@@ -24,6 +24,7 @@ export interface ProfileType {
   name: string
   introduce: string | null
   avatar_url: string | null
+  header_image_url?: string | null
   email?: string | null
   homepage_url?: string | null
   created_at?: string

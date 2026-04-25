@@ -318,6 +318,18 @@ export const editBlog = async (values: editBlogProps) => {
   }
 }
 
+// 閲覧数を増やす
+export const incrementViewCount = async (blogId: string) => {
+  try {
+    const supabase = createClient()
+    await supabase.rpc('increment_view_count', { blog_id: blogId })
+    return { success: true }
+  } catch (err) {
+    console.error("閲覧数更新エラー:", err)
+    return { error: "エラーが発生しました" }
+  }
+}
+
 interface deleteBlogProps {
   blogId: string
   imageUrl: string | null
@@ -449,6 +461,55 @@ export const getAllTags = async () => {
 }
 
 // 記事を検索
+// 関連記事を取得（同じタグを持つ記事）
+export const getRelatedBlogs = async (blogId: string, tags: string[], limit: number = 3) => {
+  try {
+    const supabase = createClient()
+
+    if (!tags || tags.length === 0) return { blogs: [] }
+
+    const { data, error } = await supabase
+      .from("blogs")
+      .select(`
+        id,
+        title,
+        summary,
+        image_url,
+        updated_at,
+        view_count,
+        profiles!user_id (
+          id,
+          name,
+          avatar_url
+        ),
+        tags!inner (
+          name
+        ),
+        likes:likes(count)
+      `)
+      .eq("is_published", true)
+      .neq("id", blogId)
+      .in("tags.name", tags)
+      .order("created_at", { ascending: false })
+      .limit(limit)
+
+    if (error) {
+      console.error("関連記事取得エラー:", error)
+      return { blogs: [], error: error.message }
+    }
+
+    const blogsWithLikes = (data || []).map((blog: any) => ({
+      ...blog,
+      likes_count: blog.likes?.[0]?.count || 0
+    }))
+
+    return { blogs: blogsWithLikes, error: null }
+  } catch (err) {
+    console.error("関連記事取得エラー:", err)
+    return { blogs: [], error: "エラーが発生しました" }
+  }
+}
+
 export const searchBlogs = async (query: string, userId?: string) => {
   try {
     const supabase = createClient()

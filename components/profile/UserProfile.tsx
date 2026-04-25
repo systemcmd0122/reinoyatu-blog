@@ -208,7 +208,18 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
       {/* Header / Hero Section */}
       <section className="relative group">
-        <div className="h-32 md:h-48 w-full bg-muted/30 rounded-xl overflow-hidden relative border border-border">
+        <div className="h-48 md:h-72 w-full bg-muted/30 rounded-2xl overflow-hidden relative border border-border">
+          {profile.header_image_url ? (
+            <Image
+              src={profile.header_image_url}
+              alt={`${profile.name}'s cover`}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/5 via-muted/30 to-secondary/5" />
+          )}
           <div className="absolute top-0 right-0 p-4">
             <Button 
               variant="ghost" 

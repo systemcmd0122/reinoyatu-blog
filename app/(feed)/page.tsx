@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import BlogListView from "@/components/blog/BlogListView"
 import LandingPage from "@/components/landing/LandingPage"
-import { TrendingUp, Search, PenSquare, ChevronDown, List } from "lucide-react"
+import { TrendingUp, Search, PenSquare, ChevronDown, List, Eye } from "lucide-react"
 import {
   Pagination,
   PaginationContent,
@@ -181,6 +181,19 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
   const popularTags = tags ? [...tags].sort((a, b) => b.count - a.count).slice(0, 15) : []
   const allTags = tags || []
 
+  // 人気の記事（閲覧数順）
+  const { data: popularBlogs } = await supabase
+    .from("blogs")
+    .select(`
+      id,
+      title,
+      view_count,
+      profiles!user_id (name)
+    `)
+    .eq("is_published", true)
+    .order("view_count", { ascending: false })
+    .limit(5)
+
   // おすすめシリーズ（最新の公開コレクション）
   const { data: recommendedCollections } = await supabase
     .from("collections")
@@ -273,6 +286,42 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                 </Button>
               </Link>
             </div>
+
+            {/* 人気の記事 */}
+            {popularBlogs && popularBlogs.length > 0 && (
+              <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-border bg-muted/30">
+                  <h2 className="font-bold flex items-center gap-2 text-foreground">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    人気の記事
+                  </h2>
+                </div>
+                <div className="p-2">
+                  <div className="flex flex-col">
+                    {popularBlogs.map((b: any) => (
+                      <Link
+                        key={b.id}
+                        href={`/blog/${b.id}`}
+                        className="flex flex-col p-3 rounded-md hover:bg-muted transition-colors group"
+                      >
+                        <span className="text-sm font-bold text-foreground group-hover:text-primary transition-all line-clamp-1">
+                          {b.title}
+                        </span>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-[10px] text-muted-foreground">
+                            by {b.profiles?.name}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            {b.view_count || 0}
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* おすすめシリーズ */}
             {recommendedCollections && recommendedCollections.length > 0 && (

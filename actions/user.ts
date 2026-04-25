@@ -96,6 +96,7 @@ export const updateProfile = async (values: updateProfileProps) => {
         name: values.name.trim(),
         introduce: values.introduce?.trim() || null,
         avatar_url,
+        header_image_url: values.header_image_url?.trim() || null,
         email: values.email?.trim() || null,
         homepage_url: values.homepage_url?.trim() || null,
         social_links: processedSocialLinks,
