@@ -22,9 +22,10 @@ const DraftsPage = async () => {
     redirect("/login?next=/settings/drafts")
   }
 
-  const { blogs, error } = await getUserBlogs()
+  const blogsRes = await getUserBlogs(1, 100) // 全件取得に近い形にする
 
-  if (error) {
+  if (!blogsRes.success) {
+    const error = blogsRes.error
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
         <div>
@@ -41,8 +42,9 @@ const DraftsPage = async () => {
     )
   }
 
-  const drafts = blogs?.filter(b => !b.is_published) || []
-  const published = blogs?.filter(b => b.is_published) || []
+  const blogs = blogsRes.data.blogs || []
+  const drafts = blogs.filter((b: any) => !b.is_published)
+  const published = blogs.filter((b: any) => b.is_published)
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

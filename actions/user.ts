@@ -1,11 +1,11 @@
 "use server"
 
-import { ProfileSchema, EmailSchema } from "@/schemas"
+import { ProfileSchema, EmailSchema, ActionResponse } from "@/schemas"
 import { createClient } from "@/utils/supabase/server"
 import { z } from "zod"
 import { v4 as uuidv4 } from "uuid"
 import { ProfileType } from "@/types"
-import { decode } from "base64-arraybuffer"
+import { parseBase64Image, optimizeImage, validateUser } from "@/utils/image-helpers"
 
 type updateProfileProps = z.infer<typeof ProfileSchema> & {
   profile: ProfileType
@@ -13,69 +13,55 @@ type updateProfileProps = z.infer<typeof ProfileSchema> & {
 }
 
 // プロフィール更新
-export const updateProfile = async (values: updateProfileProps) => {
+export const updateProfile = async (values: updateProfileProps): Promise<ActionResponse> => {
   try {
+    const user = await validateUser()
+    const supabase = createClient()
+
+    // 権限チェック
+    if (user.id !== values.profile.id) {
+      return { success: false, error: "更新権限がありません" }
+    }
+
     // バリデーション
     const result = ProfileSchema.safeParse(values)
     if (!result.success) {
-      console.error("Profile validation error:", result.error)
       return { success: false, error: result.error.errors[0].message }
     }
 
-    const supabase = createClient()
     let avatar_url = values.profile.avatar_url
 
     // 画像処理
     if (values.base64Image) {
-      // 画像サイズと形式のバリデーション
-      const matches = values.base64Image.match(/^data:(.+);base64,(.+)$/)
-      if (!matches || matches.length !== 3) {
-        return { success: false, error: "無効な画像データです" }
-      }
+      const { buffer: originalBuffer } = parseBase64Image(values.base64Image)
 
-      const contentType = matches[1]
-      const base64Data = matches[2]
+      // 画像の最適化
+      const { buffer, contentType, extension } = await optimizeImage(originalBuffer, 400) // プロフィール画像は小さく
 
-      // 画像形式の確認
-      if (!['image/jpeg', 'image/png', 'image/gif'].includes(contentType)) {
-        return { success: false, error: "jpeg, png, gif形式のみ対応しています" }
-      }
-
-      // サイズチェック（base64データのサイズを計算）
-      const sizeInBytes = Math.ceil((base64Data.length / 4) * 3)
-      if (sizeInBytes > 5 * 1024 * 1024) { // 5MB制限
-        return { success: false, error: "画像サイズは5MB以下にしてください" }
-      }
-
-      // 拡張子を取得
-      const fileExt = contentType.split("/")[1] // 例: "png"
-
-      // ファイル名を生成
-      const fileName = `${uuidv4()}.${fileExt}`
+      const fileName = `${uuidv4()}.${extension}`
 
       const { error: storageError } = await supabase.storage
         .from("profile")
-        .upload(`${values.profile.id}/${fileName}`, decode(base64Data), {
+        .upload(`${user.id}/${fileName}`, buffer, {
           contentType,
         })
 
       if (storageError) {
-        console.error("Storage upload error:", storageError)
-        return { success: false, error: storageError.message }
+        return { success: false, error: "画像のアップロードに失敗しました" }
       }
 
       // 古い画像を削除
       if (avatar_url) {
-        const fileName = avatar_url.split("/").slice(-1)[0]
+        const oldFileName = avatar_url.split("/").slice(-1)[0]
         await supabase.storage
           .from("profile")
-          .remove([`${values.profile.id}/${fileName}`])
+          .remove([`${user.id}/${oldFileName}`])
       }
 
       // 画像のURLを取得
       const { data: urlData } = await supabase.storage
         .from("profile")
-        .getPublicUrl(`${values.profile.id}/${fileName}`)
+        .getPublicUrl(`${user.id}/${fileName}`)
 
       avatar_url = urlData.publicUrl
     }
@@ -111,10 +97,10 @@ export const updateProfile = async (values: updateProfileProps) => {
     }
 
     console.log("Profile updated successfully")
-    return { success: true, error: null }
-  } catch (err) {
+    return { success: true }
+  } catch (err: any) {
     console.error("Unexpected error:", err)
-    return { success: false, error: "エラーが発生しました" }
+    return { success: false, error: err.message || "エラーが発生しました" }
   }
 }
 
@@ -166,23 +152,24 @@ export const deleteAccount = async () => {
     // ログアウト
     await supabase.auth.signOut()
 
-    return { success: true, error: null }
-  } catch (err) {
+    return { success: true }
+  } catch (err: any) {
     console.error("Account deletion error:", err)
-    return { success: false, error: "アカウントの削除中にエラーが発生しました" }
+    return { success: false, error: err.message || "アカウントの削除中にエラーが発生しました" }
   }
 }
 
 // メールアドレス変更
-export const updateEmail = async (values: z.infer<typeof EmailSchema>) => {
+export const updateEmail = async (values: z.infer<typeof EmailSchema>): Promise<ActionResponse> => {
   try {
+    await validateUser()
+    const supabase = createClient()
+
     // バリデーション
     const result = EmailSchema.safeParse(values)
     if (!result.success) {
       return { success: false, error: result.error.errors[0].message }
     }
-
-    const supabase = createClient()
 
     // メールアドレス変更メールを送信
     const { error: updateUserError } = await supabase.auth.updateUser(
@@ -203,10 +190,10 @@ export const updateEmail = async (values: z.infer<typeof EmailSchema>) => {
       return { success: false, error: signOutError.message }
     }
 
-    return { success: true, error: null }
-  } catch (err) {
+    return { success: true }
+  } catch (err: any) {
     console.error("Unexpected error:", err)
-    return { success: false, error: "エラーが発生しました" }
+    return { success: false, error: err.message || "エラーが発生しました" }
   }
 }
 

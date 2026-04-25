@@ -41,9 +41,9 @@ const ImageLibraryDialog: React.FC<ImageLibraryDialogProps> = ({
   const fetchImages = async () => {
     setIsLoading(true)
     try {
-      const result = await getUserImages(userId)
+      const result = await getUserImages()
       if (result.success) {
-        setImages(result.images || [])
+        setImages(result.data || [])
       }
     } catch (err) {
       console.error("Failed to fetch images:", err)

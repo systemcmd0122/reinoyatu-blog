@@ -363,6 +363,7 @@ const Profile = ({ profile }: ProfileProps) => {
                             <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                               {...field}
+                              value={field.value || ""}
                               placeholder="your@email.com"
                               className="pl-10"
                               disabled={isPending || isSaving}
@@ -385,6 +386,7 @@ const Profile = ({ profile }: ProfileProps) => {
                             <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                               {...field}
+                              value={field.value || ""}
                               placeholder="example.com または https://example.com"
                               className="pl-10"
                               disabled={isPending || isSaving}
@@ -419,6 +421,7 @@ const Profile = ({ profile }: ProfileProps) => {
                             <Twitter className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                               {...field}
+                              value={field.value || ""}
                               placeholder="x.com/username または https://x.com/username"
                               className="pl-10"
                               disabled={isPending || isSaving}
@@ -441,6 +444,7 @@ const Profile = ({ profile }: ProfileProps) => {
                             <Github className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                               {...field}
+                              value={field.value || ""}
                               placeholder="github.com/username または https://github.com/username"
                               className="pl-10"
                               disabled={isPending || isSaving}
@@ -463,6 +467,7 @@ const Profile = ({ profile }: ProfileProps) => {
                             <Linkedin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                               {...field}
+                              value={field.value || ""}
                               placeholder="linkedin.com/in/username"
                               className="pl-10"
                               disabled={isPending || isSaving}
@@ -485,6 +490,7 @@ const Profile = ({ profile }: ProfileProps) => {
                             <Instagram className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                               {...field}
+                              value={field.value || ""}
                               placeholder="instagram.com/username"
                               className="pl-10"
                               disabled={isPending || isSaving}
@@ -507,6 +513,7 @@ const Profile = ({ profile }: ProfileProps) => {
                             <Facebook className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                               {...field}
+                              value={field.value || ""}
                               placeholder="facebook.com/username"
                               className="pl-10"
                               disabled={isPending || isSaving}
