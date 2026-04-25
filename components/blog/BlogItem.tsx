@@ -5,8 +5,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Heart } from "lucide-react"
+import { Heart, Eye, Clock } from "lucide-react"
 import { formatRelativeTime } from "@/utils/date"
+import { calculateReadingTime } from "@/utils/blog-helpers"
 
 interface BlogItemProps {
   blog: {
@@ -16,6 +17,7 @@ interface BlogItemProps {
     image_url: string | null
     updated_at: string
     likes_count?: number
+    view_count?: number
     profiles: {
       id: string
       name: string
@@ -57,6 +59,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
               alt={blog.profiles?.name || "Unknown User"}
               fill
               className="object-cover"
+              unoptimized
             />
           </div>
         </div>
@@ -99,11 +102,19 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
             </div>
           )}
 
-          {/* Footer - Likes */}
+          {/* Footer - Likes & Views & Reading Time */}
           <div className="flex items-center gap-4 pt-2">
             <div className="flex items-center gap-1.5 text-muted-foreground text-xs sm:text-sm">
               <Heart className="h-4 w-4 fill-none" />
               <span>{blog.likes_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-muted-foreground text-xs sm:text-sm">
+              <Eye className="h-4 w-4" />
+              <span>{blog.view_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-muted-foreground text-xs sm:text-sm ml-auto sm:ml-0">
+              <Clock className="h-4 w-4" />
+              <span>{calculateReadingTime(blog.content || "")}分</span>
             </div>
           </div>
         </div>
@@ -116,6 +127,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
               alt={blog.title}
               fill
               className="object-cover"
+              unoptimized
             />
           </div>
         )}

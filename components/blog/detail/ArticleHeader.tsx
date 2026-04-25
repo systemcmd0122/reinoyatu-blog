@@ -1,7 +1,7 @@
 import React from "react"
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Clock, Calendar, RefreshCcw, User } from "lucide-react"
+import { Clock, Calendar, RefreshCcw, User, Eye } from "lucide-react"
 import { formatJST } from "@/utils/date"
 
 interface ArticleHeaderProps {
@@ -19,6 +19,7 @@ interface ArticleHeaderProps {
   createdAt: string
   updatedAt: string
   readingTime: number
+  viewCount?: number
   title: string
 }
 
@@ -28,6 +29,7 @@ const ArticleHeader: React.FC<ArticleHeaderProps> = ({
   createdAt,
   updatedAt,
   readingTime,
+  viewCount = 0,
   title,
 }) => {
   const displayAuthors = authors && authors.length > 0 ? authors : [
@@ -100,6 +102,14 @@ const ArticleHeader: React.FC<ArticleHeaderProps> = ({
               読了時間
             </span>
             <span className="text-sm font-medium text-foreground/80">{readingTime} 分で読めます</span>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5 flex items-center gap-1">
+              <Eye className="h-3 w-3" />
+              閲覧数
+            </span>
+            <span className="text-sm font-medium text-foreground/80">{viewCount} 回</span>
           </div>
         </div>
       </div>

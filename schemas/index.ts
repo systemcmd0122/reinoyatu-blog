@@ -127,6 +127,12 @@ export const ProfileSchema = z.object({
   introduce: z.string()
     .max(500, { message: "自己紹介は500文字以内で入力してください" })
     .optional(),
+  header_image_url: z.string()
+    .optional()
+    .transform((val) => (val && val.trim() !== "" && !val.match(/^https?:\/\//i)) ? `https://${val.trim()}` : val)
+    .refine((val) => validateUrl(val || ""), {
+      message: "有効なヘッダー画像のURLを入力してください"
+    }),
   email: z.string()
     .optional()
     .refine((val) => !val || val.trim() === "" || z.string().email().safeParse(val).success, {

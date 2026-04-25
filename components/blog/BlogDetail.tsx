@@ -6,11 +6,13 @@ import {
   FilePenLine,
   List,
   Trash2, 
+  Download,
   ArrowRight,
   Twitter,
   Github,
   Globe,
   Share2,
+  Heart,
   ChevronLeft
 } from "lucide-react"
 import { deleteBlog } from "@/actions/blog"
@@ -37,9 +39,12 @@ import SeriesNavigation from "./SeriesNavigation"
 import SeriesSidebar from "./SeriesSidebar"
 import { getBlogLikeStatus } from "@/actions/like"
 import { getBlogBookmarkStatus } from "@/actions/bookmark"
+import { incrementViewCount, getRelatedBlogs } from "@/actions/blog"
+import { calculateReadingTime } from "@/utils/blog-helpers"
 import { useRealtime } from "@/hooks/use-realtime"
 import { shareContent } from "@/utils/share"
 import { motion, AnimatePresence } from "framer-motion"
+import Image from "next/image"
 
 // Structured Sub-components
 import ArticleHeader from "./detail/ArticleHeader"
@@ -76,6 +81,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   collection
 }) => {
   const [blogData, setBlogData] = useState<NormalizedArticle>(blog)
+  const [relatedBlogs, setRelatedBlogs] = useState<any[]>([])
   const router = useRouter()
   const [error, setError] = useState("")
   const [, startTransition] = useTransition()
@@ -100,7 +106,8 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
         cover_image_url: updated.image_url !== undefined ? updated.image_url : prev.cover_image_url,
         ai_summary: updated.summary !== undefined ? updated.summary : prev.ai_summary,
         updated_at: updated.updated_at || prev.updated_at,
-        reading_time: Math.ceil((updated.content?.length || 0) / 400) || 1,
+        view_count: updated.view_count !== undefined ? updated.view_count : prev.view_count,
+        reading_time: calculateReadingTime(updated.content || prev.content),
       }))
     } else if (lastEvent.eventType === 'DELETE') {
       toast.error("この記事は削除されました")
@@ -156,6 +163,14 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
     isBookmarked: false,
   })
 
+  // 閲覧数を増やす
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      incrementViewCount(blog.id)
+    }, 2000) // 2秒滞在でカウント
+    return () => clearTimeout(timer)
+  }, [blog.id])
+
   useEffect(() => {
     const fetchInitialData = async () => {
       if (!currentUserId) return
@@ -189,6 +204,17 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
     fetchInitialData()
   }, [blog.id, currentUserId, blogData.likes_count])
 
+  // 関連記事を取得
+  useEffect(() => {
+    const fetchRelated = async () => {
+      if (blog.tags && blog.tags.length > 0) {
+        const { blogs: related } = await getRelatedBlogs(blog.id, blog.tags)
+        setRelatedBlogs(related || [])
+      }
+    }
+    fetchRelated()
+  }, [blog.id, blog.tags])
+
   const handleDelete = () => {
     setIsDeletePending(true)
     setError("")
@@ -216,6 +242,20 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
         setIsDeletePending(false)
       }
     })
+  }
+
+  const handleExportMarkdown = () => {
+    const markdownContent = `# ${blogData.title}\n\n${blogData.content}`
+    const blob = new Blob([markdownContent], { type: "text/markdown" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `${blogData.title}.md`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    toast.success("Markdownをエクスポートしました")
   }
 
   const TOCContent = ({ isMobile = false }: { isMobile?: boolean }) => (
@@ -275,6 +315,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 createdAt={blogData.created_at}
                 updatedAt={blogData.updated_at}
                 readingTime={blogData.reading_time}
+                viewCount={blogData.view_count}
                 title={blogData.title}
               />
 
@@ -355,6 +396,15 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
                 {isMyBlog && (
                   <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="rounded-md font-bold px-6 border-primary/20 hover:bg-primary/5 text-primary"
+                      onClick={handleExportMarkdown}
+                    >
+                      <Download className="h-5 w-5 mr-2" />
+                      Markdown
+                    </Button>
                     <Button variant="outline" size="lg" className="rounded-md font-bold px-8" asChild>
                       <Link href={`/blog/${blog.id}/edit`}>
                         <FilePenLine className="h-5 w-5 mr-3 text-primary" />
@@ -391,6 +441,43 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 )}
               </div>
             </article>
+
+            {/* Related Articles */}
+            {relatedBlogs.length > 0 && (
+              <div className="mt-16">
+                <div className="mb-8 flex items-center gap-4">
+                  <div className="w-1.5 h-6 bg-primary rounded-full" />
+                  <h2 className="text-2xl font-bold">関連記事</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {relatedBlogs.map((related) => (
+                    <Link key={related.id} href={`/blog/${related.id}`} className="group flex flex-col bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
+                      <div className="relative aspect-video bg-muted overflow-hidden">
+                        {related.image_url ? (
+                          <Image src={related.image_url} alt={related.title} fill className="object-cover transition-transform group-hover:scale-105" unoptimized />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground font-bold text-xs p-4 text-center">
+                            {related.title}
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4 flex flex-col flex-1">
+                        <h3 className="font-bold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                          {related.title}
+                        </h3>
+                        <div className="mt-auto flex items-center justify-between text-[10px] text-muted-foreground">
+                          <span>{related.profiles?.name}</span>
+                          <span className="flex items-center gap-1">
+                            <Heart className="h-3 w-3" />
+                            {related.likes_count}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Comments Section */}
             <div className="mt-12 bg-card rounded-lg border border-border/40 p-8 md:p-12 shadow-sm">

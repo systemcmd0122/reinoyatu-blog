@@ -33,3 +33,13 @@ export const getBlogDisplayData = (blog: BlogType) => {
     tags: tags?.map(t => t.name) || []
   }
 }
+
+/**
+ * 読了時間の推定（日本語：1分500文字換算）
+ */
+export const calculateReadingTime = (content: string): number => {
+  if (!content) return 1
+  const wordsPerMinute = 500
+  const minutes = Math.ceil(content.length / wordsPerMinute)
+  return minutes > 0 ? minutes : 1
+}

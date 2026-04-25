@@ -23,6 +23,7 @@ export interface NormalizedArticle {
   updated_at: string
   reading_time: number
   likes_count: number
+  view_count: number
   is_published: boolean
   user_id: string
 }
