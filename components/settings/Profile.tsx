@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Globe, Loader2, Mail, Twitter, Github, Linkedin, Instagram, Facebook } from "lucide-react"
+import { Globe, Loader2, Mail, Twitter, Github, Linkedin, Instagram, Facebook, Image as ImageIcon } from "lucide-react"
 import { ProfileSchema } from "@/schemas"
 import { updateProfile } from "@/actions/user"
 import { useRouter } from "next/navigation"
@@ -87,6 +87,7 @@ const Profile = ({ profile }: ProfileProps) => {
     defaultValues: {
       name: profile.name || "",
       introduce: profile.introduce || "",
+      header_image_url: profile.header_image_url || "",
       homepage_url: profile.homepage_url || "",
       email: profile.email || "",
       social_links: {
@@ -274,6 +275,32 @@ const Profile = ({ profile }: ProfileProps) => {
                         />
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="header_image_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ヘッダー画像URL (GIF/外部画像対応)</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <ImageIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="https://example.com/image.gif"
+                            className="pl-10"
+                            disabled={isPending || isSaving}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                      <p className="text-sm text-muted-foreground">
+                        プロフィールページの上部に表示されるカバー画像です。GIFアニメーションも対応しています。
+                      </p>
                     </FormItem>
                   )}
                 />
