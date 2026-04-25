@@ -60,8 +60,9 @@ const About = () => {
                             例のヤツ｜ブログについて
                         </h1>
                         <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
-                            プログラミングの深い知見、ガジェットレビュー、趣味の記録、ライフハックまで。
-                            多岐にわたるテーマの記事が集まる、共創型ブログプラットフォーム。
+                            単なる情報の消費ではなく、知識の「共創」を。
+                            プログラミング、ガジェット、ライフハックなど、各分野の専門家や熱狂的なファンが集まり、
+                            価値ある体験を分かち合う次世代型ブログプラットフォームです。
                         </p>
                     </motion.div>
                 </div>
@@ -187,8 +188,59 @@ const About = () => {
                 </div>
             </section>
 
-            {/* CTA セクション */}
+            {/* 運営者情報セクション */}
             <section className="py-16 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-4xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="bg-card border border-border rounded-2xl p-8 md:p-12"
+                    >
+                        <h2 className="text-3xl font-bold text-foreground mb-8 text-center">運営者情報</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">運営者 / 代表者</h3>
+                                    <p className="text-lg font-bold text-foreground">例のヤツ (ReinoYatu)</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">活動拠点</h3>
+                                    <p className="text-lg text-foreground">日本</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">お問い合わせ</h3>
+                                    <p className="text-lg text-foreground">
+                                        <Link href="/contact" className="text-primary hover:underline">
+                                            お問い合わせフォーム
+                                        </Link>
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">主な活動内容</h3>
+                                    <p className="text-muted-foreground">
+                                        共創型ブログプラットフォーム「例のヤツ｜ブログ」の開発・運営。
+                                        エンジニアリング、ガジェット、ライフスタイルなど、多岐にわたる分野の情報発信を支援。
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">SNS</h3>
+                                    <p className="text-lg text-foreground">
+                                        <a href="https://x.com/min_brother2158" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                            X (Twitter)
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* CTA セクション */}
+            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">
                 <div className="max-w-3xl mx-auto text-center space-y-8">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
