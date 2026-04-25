@@ -6,6 +6,7 @@ import {
   FilePenLine,
   List,
   Trash2, 
+  Flag,
   Download,
   ArrowRight,
   Twitter,
@@ -437,6 +438,29 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+                    <Button
+                      variant="ghost"
+                      size="lg"
+                      className="rounded-md font-bold text-muted-foreground hover:text-red-500 hover:bg-red-500/10 px-8"
+                      onClick={() => toast.info("報告機能は現在準備中です。お問い合わせフォームよりご連絡ください。")}
+                    >
+                      <Flag className="h-5 w-5 mr-3" />
+                      報告
+                    </Button>
+                  </div>
+                )}
+
+                {!isMyBlog && (
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="ghost"
+                      size="lg"
+                      className="rounded-md font-bold text-muted-foreground hover:text-red-500 hover:bg-red-500/10 px-8"
+                      onClick={() => toast.info("報告機能は現在準備中です。お問い合わせフォームよりご連絡ください。")}
+                    >
+                      <Flag className="h-5 w-5 mr-3" />
+                      記事を報告
+                    </Button>
                   </div>
                 )}
               </div>

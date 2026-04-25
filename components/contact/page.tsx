@@ -203,48 +203,64 @@ const Contact = () => {
                     <h2 className="text-3xl font-bold text-foreground mb-8 text-center">よくあるご質問</h2>
 
                     <div className="space-y-4">
-                        <details className="bg-card border border-border rounded-lg p-6 group cursor-pointer">
-                            <summary className="font-bold text-foreground flex items-center justify-between">
-                                <span>アカウント削除をしたいのですが</span>
-                                <span className="group-open:rotate-180 transition-transform">▼</span>
+                        <details className="bg-card border border-border rounded-2xl p-6 group cursor-pointer transition-all hover:border-primary/50">
+                            <summary className="font-bold text-foreground flex items-center justify-between list-none">
+                                <span className="flex items-center gap-3">
+                                    <span className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-black">Q</span>
+                                    アカウント削除をしたいのですが
+                                </span>
+                                <span className="group-open:rotate-180 transition-transform text-muted-foreground">▼</span>
                             </summary>
-                            <p className="text-muted-foreground mt-4">
-                                設定ページからアカウント削除をリクエストできます。
-                                確認メールが送信されますので、指定のリンクをクリックして削除を完了してください。
-                            </p>
+                            <div className="text-muted-foreground mt-4 pl-11 text-sm leading-relaxed">
+                                設定ページの「データ管理」セクションから、作成した全ての記事や画像を削除することができます。
+                                アカウント自体の完全な削除をご希望の場合は、「アカウント設定」内の「アカウント削除」ボタンより手続きを行ってください。
+                                削除されたデータは復元できませんのでご注意ください。
+                            </div>
                         </details>
 
-                        <details className="bg-card border border-border rounded-lg p-6 group cursor-pointer">
-                            <summary className="font-bold text-foreground flex items-center justify-between">
-                                <span>不適切なコンテンツを見つけた場合</span>
-                                <span className="group-open:rotate-180 transition-transform">▼</span>
+                        <details className="bg-card border border-border rounded-2xl p-6 group cursor-pointer transition-all hover:border-primary/50">
+                            <summary className="font-bold text-foreground flex items-center justify-between list-none">
+                                <span className="flex items-center gap-3">
+                                    <span className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 text-xs font-black">Q</span>
+                                    不適切なコンテンツを見つけた場合
+                                </span>
+                                <span className="group-open:rotate-180 transition-transform text-muted-foreground">▼</span>
                             </summary>
-                            <p className="text-muted-foreground mt-4">
-                                記事の右上にある「…」メニューから「報告」を選択してください。
-                                詳細な説明を記入していただければ、当社が確認・対応します。
-                            </p>
+                            <div className="text-muted-foreground mt-4 pl-11 text-sm leading-relaxed">
+                                各記事の詳細ページにある「報告」ボタン（現在準備中）、またはこのお問い合わせフォームより、
+                                該当記事のURLと問題の内容を記載してご連絡ください。
+                                当サービスはAdSenseポリシーおよび利用規約に基づき、迅速に確認と対応を行います。
+                            </div>
                         </details>
 
-                        <details className="bg-card border border-border rounded-lg p-6 group cursor-pointer">
-                            <summary className="font-bold text-foreground flex items-center justify-between">
-                                <span>マネタイズについて質問があります</span>
-                                <span className="group-open:rotate-180 transition-transform">▼</span>
+                        <details className="bg-card border border-border rounded-2xl p-6 group cursor-pointer transition-all hover:border-primary/50">
+                            <summary className="font-bold text-foreground flex items-center justify-between list-none">
+                                <span className="flex items-center gap-3">
+                                    <span className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 text-xs font-black">Q</span>
+                                    マネタイズについて質問があります
+                                  </span>
+                                <span className="group-open:rotate-180 transition-transform text-muted-foreground">▼</span>
                             </summary>
-                            <p className="text-muted-foreground mt-4">
-                                AdSenseやアフィリエイトプログラムについてのご質問は、
-                                このフォームでお送りください。専門チームがお答えします。
-                            </p>
+                            <div className="text-muted-foreground mt-4 pl-11 text-sm leading-relaxed">
+                                当プラットフォームでは、将来的に良質なコンテンツ作成者への還元機能を検討しています。
+                                現在は、ご自身の記事内でのアフィリエイトリンクの掲載などをガイドラインの範囲内で許可しています。
+                                詳細は利用規約をご確認いただくか、具体的な提携のご相談はこのフォームよりお問い合わせください。
+                            </div>
                         </details>
 
-                        <details className="bg-card border border-border rounded-lg p-6 group cursor-pointer">
-                            <summary className="font-bold text-foreground flex items-center justify-between">
-                                <span>他の言語でのサポートは？</span>
-                                <span className="group-open:rotate-180 transition-transform">▼</span>
+                        <details className="bg-card border border-border rounded-2xl p-6 group cursor-pointer transition-all hover:border-primary/50">
+                            <summary className="font-bold text-foreground flex items-center justify-between list-none">
+                                <span className="flex items-center gap-3">
+                                    <span className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 text-xs font-black">Q</span>
+                                    他の言語でのサポートは？
+                                </span>
+                                <span className="group-open:rotate-180 transition-transform text-muted-foreground">▼</span>
                             </summary>
-                            <p className="text-muted-foreground mt-4">
-                                現在、日本語サポートのみとなっています。
-                                他の言語でのサポートをご希望の場合は、お問い合わせください。
-                            </p>
+                            <div className="text-muted-foreground mt-4 pl-11 text-sm leading-relaxed">
+                                現在、UIおよびサポートは日本語のみに対応しています。
+                                英語をはじめとする多言語対応については、今後のロードマップに含まれております。
+                                アップデート情報は「アップデート」ページにて随時公開いたします。
+                            </div>
                         </details>
                     </div>
                 </div>

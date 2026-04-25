@@ -21,6 +21,7 @@ import {
   Clock,
   Activity,
   FileText,
+  Globe,
 } from 'lucide-react'
 import SlashCommandList from './SlashCommandList'
 
@@ -161,6 +162,15 @@ export default {
         icon: <Clock className="h-4 w-4" />,
         command: ({ editor, range }: any) => {
           editor.chain().focus().deleteRange(range).setTimeline().run()
+        },
+      },
+      {
+        title: 'サイト埋め込み',
+        description: '外部サイトを埋め込みます',
+        icon: <Globe className="h-4 w-4" />,
+        command: ({ editor, range }: any) => {
+          editor.chain().focus().deleteRange(range).run()
+          window.dispatchEvent(new CustomEvent('open-media-dialog', { detail: { type: 'iframe' } }));
         },
       },
     ].filter((item) => item.title.toLowerCase().startsWith(query.toLowerCase()))

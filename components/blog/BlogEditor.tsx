@@ -263,12 +263,12 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
 
     const timer = setTimeout(() => {
       if (watchedTitle && watchedContent) {
-        handleAction(false, true)
+        handleAction(!!watchedIsPublished, true)
       }
     }, 3000)
 
     return () => clearTimeout(timer)
-  }, [isDirty, watchedTitle, watchedContent, status, viewMode])
+  }, [isDirty, watchedTitle, watchedContent, status, viewMode, watchedIsPublished])
 
   const handleAction = async (isPublished: boolean, silent: boolean = false) => {
     if (isSaving.current) return
@@ -346,7 +346,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
         window.history.replaceState(null, "", `/blog/${res.id}/edit`)
       }
 
-      if (isPublished) {
+      if (isPublished && !silent) {
         // 公開時はトップへ（これはユーザーの意図した明示的なアクション後の遷移）
         setTimeout(() => {
           router.push("/")

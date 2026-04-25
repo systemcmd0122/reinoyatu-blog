@@ -37,6 +37,7 @@ import { Accordion } from './extensions/Accordion'
 import { Timeline, TimelineItem } from './extensions/Timeline'
 import { ProgressBar } from './extensions/ProgressBar'
 import { CustomYoutube } from './extensions/CustomYoutube'
+import { Iframe } from './extensions/Iframe'
 
 import EditorToolbar from './EditorToolbar'
 
@@ -138,6 +139,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
         width: 640,
         height: 480,
       }),
+      Iframe,
       Markdown.configure({
         html: true,
         tightLists: true,
