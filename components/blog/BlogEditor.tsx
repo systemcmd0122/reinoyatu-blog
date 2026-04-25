@@ -176,11 +176,14 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   }, [userId])
 
   // プレゼンスによる他ユーザーの編集状況の追跡
-  const presenceState = usePresence(`blog-editor-${currentBlogId || 'new'}`, {
+  // userStatusをmemo化して無限ループを防止
+  const userStatus = React.useMemo(() => ({
     userId,
     blogId: currentBlogId,
     lastActive: new Date().toISOString()
-  })
+  }), [userId, currentBlogId])
+
+  const presenceState = usePresence(`blog-editor-${currentBlogId || 'new'}`, userStatus)
 
   const otherEditors = Object.values(presenceState)
     .flat()

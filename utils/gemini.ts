@@ -15,7 +15,7 @@ export const getGeminiClient = () => {
   return ai;
 };
 
-const DEFAULT_MODEL = "gemini-2.0-flash";
+const DEFAULT_MODEL = "gemini-2.5-flash-lite";
 
 // スタイルIDを具体的な指示にマッピング
 const styleInstructionMap: Record<string, string> = {
@@ -127,10 +127,10 @@ const handleGeminiError = (error: any, defaultMessage: string): string => {
     return "サーバーエラーが発生しました。Google AIサービスが一時的に停止している可能性があります。";
   }
 
-  if (error.status === 404) {
-    return "指定されたAIモデルが見つかりませんでした。管理者にお問い合わせください。";
+  if (error.status === 404 || error.message?.includes("not found")) {
+    return "指定されたAIモデルが見つかりませんでした。APIの設定を確認してください。";
   }
-  
+
   if (error.message?.includes("API key")) {
     return "APIキーの設定に問題があります。管理者に連絡してください。";
   }
