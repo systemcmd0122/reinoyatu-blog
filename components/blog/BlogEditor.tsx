@@ -512,24 +512,31 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     isSaving.current = true;
     setStatus("saving-draft");
 
-    if (mode === 'append') {
-      const current = form.getValues("content")
-      form.setValue("content", current + "\n\n" + content, { shouldValidate: true })
-    } else {
-      form.setValue("content", content, { shouldValidate: true })
-    }
-    
-    // AI編集通知の送信
-    if (currentBlogId) {
-      const { notifyAIEdit } = await import("@/actions/notification")
-      await notifyAIEdit(userId, currentBlogId)
-    }
+    try {
+      if (mode === 'append') {
+        const current = form.getValues("content")
+        form.setValue("content", current + "\n\n" + content, { shouldValidate: true })
+      } else {
+        form.setValue("content", content, { shouldValidate: true })
+      }
 
-    toast.success("AIの提案を本文に反映しました")
+      // AI編集通知の送信
+      if (currentBlogId) {
+        const { notifyAIEdit } = await import("@/actions/notification")
+        await notifyAIEdit(userId, currentBlogId)
+      }
 
-    // 反映後に即座に保存
-    await handleAction(watchedIsPublished || false, true);
-    isSaving.current = false;
+      toast.success("AIの提案を本文に反映しました")
+
+      // 反映後に即座に保存
+      await handleAction(watchedIsPublished || false, true);
+    } catch (error) {
+      console.error("AI application error:", error);
+      toast.error("AIの提案の反映に失敗しました");
+      setStatus("error");
+    } finally {
+      isSaving.current = false;
+    }
   }
 
   const handleBack = () => {
@@ -1026,12 +1033,19 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     isSaving.current = true;
     setStatus("saving-draft");
 
-            form.setValue("content", content, { shouldValidate: true })
-            setIsAIDialogOpen(false)
-            toast.success("AIの提案を適用しました")
+    try {
+      form.setValue("content", content, { shouldValidate: true })
+      setIsAIDialogOpen(false)
+      toast.success("AIの提案を適用しました")
 
-    await handleAction(watchedIsPublished || false, true);
-    isSaving.current = false;
+      await handleAction(watchedIsPublished || false, true);
+    } catch (error) {
+      console.error("AI apply error:", error);
+      toast.error("AIの提案の適用に失敗しました");
+      setStatus("error");
+    } finally {
+      isSaving.current = false;
+    }
           }}
           onGenerate={async (styles, options) => {
             setIsGenerating(true)

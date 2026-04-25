@@ -71,7 +71,9 @@ const EditorChat: React.FC<EditorChatProps> = ({ onApplySuggestion, currentConte
     try {
       // 文脈として現在の本文を含める
       const contextPrompt = `
-あなたは優秀な執筆アシスタントです。最新の情報が必要な場合はウェブ検索を自由に行って、正確な情報に基づいて回答してください。
+あなたは執筆のプロフェッショナルであり、優秀なAIアシスタントです。
+最新の情報や客観的な事実が必要な場合は、必ずウェブ検索（Google Search Grounding）を活用して、正確かつ信頼性の高い情報に基づいて回答してください。
+回答は前置きや余計な解説を最小限にし、具体的で実用的な提案を**日本語のみ**で行ってください。
 
 現在の記事本文:
 ---
@@ -80,7 +82,7 @@ ${currentContent || '(まだ記事本文がありません)'}
 
 ユーザーの要望: ${input}
 
-上記の記事本文の内容を踏まえて、ユーザーの要望に応えてください。記事の執筆を支援する立場として、具体的で実用的な提案をしてください。
+上記の記事本文の内容と、必要に応じて検索した最新情報に基づき、ユーザーの要望に完璧に応えてください。
 `
       const result = await chatWithAI([...messages, { role: 'user', content: contextPrompt }])
       
