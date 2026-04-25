@@ -68,8 +68,8 @@ const MediaInsertDialog: React.FC<MediaInsertDialogProps> = ({ editor, userId, t
         reader.readAsDataURL(file);
       });
 
-      const result = await uploadImage(base64, userId);
-      if (result.error) throw new Error(result.error);
+      const result = await uploadImage(base64);
+      if (!result.success) throw new Error(result.error);
 
       editor.chain().focus().setImage({ src: result.data.public_url }).run();
       toast.success('画像をアップロードしました');

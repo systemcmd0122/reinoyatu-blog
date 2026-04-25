@@ -136,7 +136,7 @@ export const newBlog = async (values: newBlogProps): Promise<ActionResponse> => 
 
     if (insertError) {
       console.error("ブログ作成エラー:", insertError)
-      return { error: insertError.message }
+      return { success: false, error: insertError.message }
     }
 
     // 共同投稿者の保存
@@ -184,9 +184,9 @@ export const newBlog = async (values: newBlogProps): Promise<ActionResponse> => 
     }
 
     return { success: true, id: newBlog.id }
-  } catch (err) {
+  } catch (err: any) {
     console.error("ブログ投稿エラー:", err)
-    return { error: "エラーが発生しました" }
+    return { success: false, error: err.message || "エラーが発生しました" }
   }
 }
 
@@ -260,7 +260,7 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
 
     if (updateError) {
       console.error("ブログ更新エラー:", updateError)
-      return { error: updateError.message }
+      return { success: false, error: updateError.message }
     }
 
     // 共同投稿者の更新（差分更新）
@@ -334,14 +334,14 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
 
       if (blogTagsError) {
         console.error("タグ関連付けエラー:", blogTagsError)
-        return { error: "タグの更新中にエラーが発生しました" }
+        return { success: false, error: "タグの更新中にエラーが発生しました" }
       }
     }
 
     return { success: true }
-  } catch (err) {
+  } catch (err: any) {
     console.error("ブログ編集エラー:", err)
-    return { error: "エラーが発生しました" }
+    return { success: false, error: err.message || "エラーが発生しました" }
   }
 }
 
@@ -405,7 +405,7 @@ export const deleteBlog = async ({
 
     if (error) {
       console.error("ブログ削除エラー:", error)
-      return { error: error.message }
+      return { success: false, error: error.message }
     }
 
     // 不要になった画像をクリーンアップ
@@ -414,9 +414,9 @@ export const deleteBlog = async ({
     }
 
     return { success: true }
-  } catch (err) {
+  } catch (err: any) {
     console.error("ブログ削除エラー:", err)
-    return { error: "エラーが発生しました" }
+    return { success: false, error: err.message || "エラーが発生しました" }
   }
 }
 

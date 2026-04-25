@@ -108,9 +108,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
         reader.readAsDataURL(file);
       });
 
-      const result = await uploadImage(base64, userId);
+      const result = await uploadImage(base64);
 
-      if (result.error) {
+      if (!result.success) {
         throw new Error(result.error);
       }
 

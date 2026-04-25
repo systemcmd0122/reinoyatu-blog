@@ -6,6 +6,7 @@ export type ActionResponse<T = any> = {
   data?: T;
   error?: string;
   code?: string;
+  id?: string; // IDを直接返すケースも多いため追加
 };
 
 // URLバリデーション用の正規表現
@@ -94,7 +95,7 @@ export const BlogSchema = z.object({
   tags: z.array(z.string()).optional(),
   is_published: z.boolean().optional(),
   coauthors: z.array(z.string()).optional(),
-  imageUrl: urlSchema, // 追加
+  imageUrl: urlSchema.nullable(),
 });
 
 export const SocialLinksSchema = z.object({
@@ -112,10 +113,10 @@ export const ProfileSchema = z.object({
   introduce: z.string()
     .max(500, { message: "自己紹介は500文字以内で入力してください" })
     .optional(),
-  header_image_url: urlSchema,
-  email: z.string().email().optional().or(z.literal("")),
-  homepage_url: urlSchema,
-  social_links: SocialLinksSchema.optional()
+  header_image_url: urlSchema.nullable(),
+  email: z.string().email().optional().or(z.literal("")).nullable(),
+  homepage_url: urlSchema.nullable(),
+  social_links: SocialLinksSchema.optional().nullable()
 });
 
 export const CollectionSchema = z.object({

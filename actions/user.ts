@@ -97,10 +97,10 @@ export const updateProfile = async (values: updateProfileProps): Promise<ActionR
     }
 
     console.log("Profile updated successfully")
-    return { success: true, error: null }
-  } catch (err) {
+    return { success: true }
+  } catch (err: any) {
     console.error("Unexpected error:", err)
-    return { success: false, error: "エラーが発生しました" }
+    return { success: false, error: err.message || "エラーが発生しました" }
   }
 }
 
@@ -152,10 +152,10 @@ export const deleteAccount = async () => {
     // ログアウト
     await supabase.auth.signOut()
 
-    return { success: true, error: null }
-  } catch (err) {
+    return { success: true }
+  } catch (err: any) {
     console.error("Account deletion error:", err)
-    return { success: false, error: "アカウントの削除中にエラーが発生しました" }
+    return { success: false, error: err.message || "アカウントの削除中にエラーが発生しました" }
   }
 }
 
@@ -190,10 +190,10 @@ export const updateEmail = async (values: z.infer<typeof EmailSchema>): Promise<
       return { success: false, error: signOutError.message }
     }
 
-    return { success: true, error: null }
-  } catch (err) {
+    return { success: true }
+  } catch (err: any) {
     console.error("Unexpected error:", err)
-    return { success: false, error: "エラーが発生しました" }
+    return { success: false, error: err.message || "エラーが発生しました" }
   }
 }
 

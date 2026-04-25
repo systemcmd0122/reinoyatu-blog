@@ -28,10 +28,10 @@ const DataSettingsPage = async () => {
   return (
     <DataManagement
       userId={user.id}
-      stats={stats!}
-      initialBlogs={blogsRes.blogs || []}
-      initialCollections={collectionsRes.collections || []}
-      initialImages={imagesRes.images || []}
+      stats={stats.success ? stats.data : { blogsCount: 0, collectionsCount: 0, imagesCount: 0, likesCount: 0, bookmarksCount: 0 }}
+      initialBlogs={blogsRes.success ? blogsRes.data.blogs : []}
+      initialCollections={collectionsRes.success ? collectionsRes.data : []}
+      initialImages={imagesRes.success ? imagesRes.data : []}
     />
   )
 }

@@ -300,7 +300,12 @@ const ProfileEditDialog = ({ profile, trigger }: ProfileEditDialogProps) => {
                       <FormControl>
                         <div className="relative">
                           <ImageIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input {...field} className="pl-10 bg-muted/30" placeholder="https://example.com/image.gif" />
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            className="pl-10 bg-muted/30"
+                            placeholder="https://example.com/image.gif"
+                          />
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -337,7 +342,12 @@ const ProfileEditDialog = ({ profile, trigger }: ProfileEditDialogProps) => {
                         <FormControl>
                           <div className="relative">
                             <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input {...field} className="pl-10 bg-muted/30" placeholder="your@email.com" />
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              className="pl-10 bg-muted/30"
+                              placeholder="your@email.com"
+                            />
                           </div>
                         </FormControl>
                         <FormMessage />
@@ -354,7 +364,12 @@ const ProfileEditDialog = ({ profile, trigger }: ProfileEditDialogProps) => {
                         <FormControl>
                           <div className="relative">
                             <Globe className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input {...field} className="pl-10 bg-muted/30" placeholder="example.com" />
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              className="pl-10 bg-muted/30"
+                              placeholder="example.com"
+                            />
                           </div>
                         </FormControl>
                         <FormMessage />
@@ -374,7 +389,12 @@ const ProfileEditDialog = ({ profile, trigger }: ProfileEditDialogProps) => {
                           <FormControl>
                             <div className="relative">
                               <Twitter className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                              <Input {...field} className="pl-10 bg-muted/30" placeholder="Twitter / X" />
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                className="pl-10 bg-muted/30"
+                                placeholder="Twitter / X"
+                              />
                             </div>
                           </FormControl>
                         </FormItem>
@@ -388,7 +408,12 @@ const ProfileEditDialog = ({ profile, trigger }: ProfileEditDialogProps) => {
                           <FormControl>
                             <div className="relative">
                               <Github className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                              <Input {...field} className="pl-10 bg-muted/30" placeholder="GitHub" />
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                className="pl-10 bg-muted/30"
+                                placeholder="GitHub"
+                              />
                             </div>
                           </FormControl>
                         </FormItem>
@@ -402,7 +427,12 @@ const ProfileEditDialog = ({ profile, trigger }: ProfileEditDialogProps) => {
                           <FormControl>
                             <div className="relative">
                               <Linkedin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                              <Input {...field} className="pl-10 bg-muted/30" placeholder="LinkedIn" />
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                className="pl-10 bg-muted/30"
+                                placeholder="LinkedIn"
+                              />
                             </div>
                           </FormControl>
                         </FormItem>
@@ -416,7 +446,12 @@ const ProfileEditDialog = ({ profile, trigger }: ProfileEditDialogProps) => {
                           <FormControl>
                             <div className="relative">
                               <Instagram className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                              <Input {...field} className="pl-10 bg-muted/30" placeholder="Instagram" />
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                className="pl-10 bg-muted/30"
+                                placeholder="Instagram"
+                              />
                             </div>
                           </FormControl>
                         </FormItem>
@@ -430,7 +465,12 @@ const ProfileEditDialog = ({ profile, trigger }: ProfileEditDialogProps) => {
                           <FormControl>
                             <div className="relative">
                               <Facebook className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                              <Input {...field} className="pl-10 bg-muted/30" placeholder="Facebook" />
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                className="pl-10 bg-muted/30"
+                                placeholder="Facebook"
+                              />
                             </div>
                           </FormControl>
                         </FormItem>

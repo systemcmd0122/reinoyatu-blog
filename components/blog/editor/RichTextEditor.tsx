@@ -189,8 +189,8 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
                 reader.readAsDataURL(file);
               });
 
-              const result = await uploadImage(base64, userId);
-              if (result.error) throw new Error(result.error);
+              const result = await uploadImage(base64);
+              if (!result.success) throw new Error(result.error);
 
               editor?.chain().focus().setImage({ src: result.data.public_url }).run();
               toast.success(`${file.name}をアップロードしました`, { id: toastId });
@@ -231,8 +231,8 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
                   reader.readAsDataURL(file);
                 });
 
-                const result = await uploadImage(base64, userId);
-                if (result.error) throw new Error(result.error);
+                const result = await uploadImage(base64);
+                if (!result.success) throw new Error(result.error);
 
                 editor?.chain().focus().setImage({ src: result.data.public_url }).run();
                 toast.success(`${file.name}をアップロードしました`, { id: toastId });
