@@ -15,6 +15,8 @@ export const getGeminiClient = () => {
   return ai;
 };
 
+const DEFAULT_MODEL = "gemini-2.0-flash";
+
 // スタイルIDを具体的な指示にマッピング
 const styleInstructionMap: Record<string, string> = {
   professional: "ビジネス文書として通用する、プロフェッショナルで洗練されたトーンで記述してください。専門用語を適切に用い、客観的で信頼性の高い文章を心がけてください。",
@@ -240,7 +242,7 @@ ${summaryLength ? `
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: DEFAULT_MODEL,
       contents: prompt,
       config: {
         tools: [{ googleSearchRetrieval: {} } as any],
@@ -316,7 +318,7 @@ ${content}
 **出力:**`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: DEFAULT_MODEL,
       contents: prompt,
       config: {
         tools: [{ googleSearchRetrieval: {} } as any],
@@ -374,7 +376,7 @@ ${content.substring(0, 3000)}
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: DEFAULT_MODEL,
       contents: prompt,
       config: {
         tools: [{ googleSearchRetrieval: {} } as any],
@@ -446,7 +448,7 @@ ${plainContent.substring(0, 3000)}
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: DEFAULT_MODEL,
       contents: prompt,
       config: {
         tools: [{ googleSearchRetrieval: {} } as any],

@@ -822,7 +822,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                             @{userProfile?.name || "Author"}
                           </span>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>{formatJST(new Date().toISOString())}に投稿</span>
+                            <span>{isMounted ? formatJST(new Date().toISOString()) : ""}に投稿</span>
                             <span className="mx-1">•</span>
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />

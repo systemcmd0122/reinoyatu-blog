@@ -92,6 +92,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
     extensions: [
       StarterKit.configure({
         codeBlock: false,
+        link: false,
       }),
       Underline,
       TextStyle,
@@ -165,6 +166,8 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
         bulletListMarker: '-',
         linkify: true,
         breaks: true,
+        transformPastedText: true,
+        transformCopiedText: true,
       }),
     ],
     onUpdate: ({ editor }) => {

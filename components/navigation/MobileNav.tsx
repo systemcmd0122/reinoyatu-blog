@@ -51,6 +51,10 @@ const MobileNav: React.FC<MobileNavProps> = ({ userId, unreadCount = 0 }) => {
     },
   ]
 
+  const isEditorPage = pathname === "/blog/new" || /^\/blog\/[^/]+\/edit$/.test(pathname || "")
+
+  if (isEditorPage) return null
+
   // Only show on mobile
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-[var(--z-nav)] px-4 pb-4 pointer-events-none">

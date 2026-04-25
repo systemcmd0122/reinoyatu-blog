@@ -162,7 +162,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
   };
 
   return (
-    <div className="flex items-center md:flex-wrap gap-2 py-1 px-2 md:px-4 border-b border-border bg-background/95 sticky top-0 z-[var(--z-editor-toolbar)] backdrop-blur-sm overflow-x-auto no-scrollbar md:overflow-x-visible transition-all max-w-full">
+    <div className="flex items-center md:flex-wrap gap-2 py-1 px-2 md:px-4 border-b border-border bg-background/95 sticky top-0 z-[var(--z-editor-toolbar)] backdrop-blur-sm overflow-x-auto no-scrollbar md:overflow-x-visible transition-all max-w-full touch-pan-x">
       {/* 履歴グループ */}
       <div className="flex items-center gap-0.5 shrink-0">
         <Tooltip>

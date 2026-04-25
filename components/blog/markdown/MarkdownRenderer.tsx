@@ -275,6 +275,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                   style={{ width: '100%', height: 'auto' }}
                   onError={() => handleImageError(src)}
                   className="rounded-lg object-contain"
+                  unoptimized
                 />
               )
             }
