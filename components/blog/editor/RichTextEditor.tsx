@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useImperativeHandle, forwardRef } from 'react'
 import { useEditor, EditorContent, Editor } from '@tiptap/react'
-import { BubbleMenu, FloatingMenu } from '@tiptap/react/menus'
+import { BubbleMenu } from '@tiptap/react/menus'
 import { StarterKit } from '@tiptap/starter-kit'
 import { Underline } from '@tiptap/extension-underline'
 import { Link } from '@tiptap/extension-link'
@@ -58,6 +58,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 
 const lowlight = createLowlight(common)
 
@@ -175,7 +176,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
     onBlur,
     editorProps: {
       attributes: {
-        class: 'prose max-w-[850px] mx-auto focus:outline-none min-h-[1056px] py-12 px-8 md:px-20 md:py-24 bg-white dark:bg-zinc-900 shadow-2xl my-8 mb-20 rounded-sm border border-border/50 !text-foreground/90 prose-p:!text-foreground/85 prose-h1:!text-foreground prose-h2:!text-foreground prose-h3:!text-foreground prose-h4:!text-foreground prose-h5:!text-foreground prose-h6:!text-foreground prose-strong:!text-foreground prose-strong:!font-semibold prose-em:!text-foreground prose-li:!text-foreground/85 prose-td:!text-foreground/85 prose-th:!text-foreground/85 prose-a:!text-blue-500',
+        class: 'prose max-w-3xl mx-auto focus:outline-none min-h-[1056px] py-12 px-4 md:px-8 bg-transparent !text-foreground/90 prose-p:!text-foreground/85 prose-p:leading-8 text-lg prose-h1:!text-foreground prose-h2:!text-foreground prose-h3:!text-foreground prose-h4:!text-foreground prose-h5:!text-foreground prose-h6:!text-foreground prose-strong:!text-foreground prose-strong:!font-semibold prose-em:!text-foreground prose-li:!text-foreground/85 prose-td:!text-foreground/85 prose-th:!text-foreground/85 prose-a:!text-blue-500 leading-relaxed',
       },
       handlePaste: (view, event) => {
         const items = Array.from(event.clipboardData?.items || []);
@@ -192,53 +193,12 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
             return true;
           }
 
-          files.forEach(async (file) => {
-            const maxFileSize = 2 * 1024 * 1024; // 2MB
-            if (file.size > maxFileSize) {
-              toast.error(`画像サイズは2MB以下にしてください (${file.name})`);
-              return;
-            }
-
-            const toastId = toast.loading(`${file.name}をアップロード中...`);
-
-            try {
-              const reader = new FileReader();
-              const base64 = await new Promise<string>((resolve, reject) => {
-                reader.onload = () => resolve(reader.result as string);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-              });
-
-              const result = await uploadImage(base64);
-              if (!result.success) throw new Error(result.error);
-
-              editor?.chain().focus().setImage({ src: result.data.public_url }).run();
-              toast.success(`${file.name}をアップロードしました`, { id: toastId });
-            } catch (error: any) {
-              console.error('Upload error:', error);
-              toast.error(`アップロードに失敗しました: ${file.name}`, { id: toastId });
-            }
-          });
-          return true;
-        }
-        return false;
-      },
-      handleDrop: (view, event, slice, moved) => {
-        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
-          const files = Array.from(event.dataTransfer.files).filter(file => file.type.startsWith('image/'));
-          if (files.length > 0) {
-            event.preventDefault();
-
-            if (!userId) {
-              toast.error('画像のアップロードにはログインが必要です');
-              return true;
-            }
-
-            files.forEach(async (file) => {
+          (async () => {
+            for (const file of files) {
               const maxFileSize = 2 * 1024 * 1024; // 2MB
               if (file.size > maxFileSize) {
                 toast.error(`画像サイズは2MB以下にしてください (${file.name})`);
-                return;
+                continue;
               }
 
               const toastId = toast.loading(`${file.name}をアップロード中...`);
@@ -260,7 +220,52 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
                 console.error('Upload error:', error);
                 toast.error(`アップロードに失敗しました: ${file.name}`, { id: toastId });
               }
-            });
+            }
+          })();
+          return true;
+        }
+        return false;
+      },
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+          const files = Array.from(event.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+          if (files.length > 0) {
+            event.preventDefault();
+
+            if (!userId) {
+              toast.error('画像のアップロードにはログインが必要です');
+              return true;
+            }
+
+            (async () => {
+              for (const file of files) {
+                const maxFileSize = 2 * 1024 * 1024; // 2MB
+                if (file.size > maxFileSize) {
+                  toast.error(`画像サイズは2MB以下にしてください (${file.name})`);
+                  continue;
+                }
+
+                const toastId = toast.loading(`${file.name}をアップロード中...`);
+
+                try {
+                  const reader = new FileReader();
+                  const base64 = await new Promise<string>((resolve, reject) => {
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                  });
+
+                  const result = await uploadImage(base64);
+                  if (!result.success) throw new Error(result.error);
+
+                  editor?.chain().focus().setImage({ src: result.data.public_url }).run();
+                  toast.success(`${file.name}をアップロードしました`, { id: toastId });
+                } catch (error: any) {
+                  console.error('Upload error:', error);
+                  toast.error(`アップロードに失敗しました: ${file.name}`, { id: toastId });
+                }
+              }
+            })();
             return true;
           }
         }
@@ -308,114 +313,54 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
         <EditorToolbar editor={editor} userId={userId} />
       </div>
 
-      <div className="flex-1 relative overflow-y-auto custom-scrollbar bg-muted/10">
+      <div className="flex-1 relative overflow-y-auto custom-scrollbar bg-muted/5">
         {editor && (
-          <>
-            <BubbleMenu editor={editor} className="flex items-center gap-1 p-1 bg-background border border-border rounded-lg shadow-xl backdrop-blur-md">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => editor.chain().focus().toggleBold().run()}
-                className={editor.isActive('bold') ? 'bg-accent' : ''}
-              >
-                <Bold className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => editor.chain().focus().toggleItalic().run()}
-                className={editor.isActive('italic') ? 'bg-accent' : ''}
-              >
-                <Italic className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => editor.chain().focus().toggleUnderline().run()}
-                className={editor.isActive('underline') ? 'bg-accent' : ''}
-              >
-                <UnderlineIcon className="h-4 w-4" />
-              </Button>
-              <Separator orientation="vertical" className="h-4 mx-1" />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => editor.chain().focus().toggleLink({ href: '' }).run()}
-                className={editor.isActive('link') ? 'bg-accent' : ''}
-              >
-                <LinkIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => editor.chain().focus().toggleCode().run()}
-                className={editor.isActive('code') ? 'bg-accent' : ''}
-              >
-                <Code className="h-4 w-4" />
-              </Button>
-            </BubbleMenu>
-
-            <FloatingMenu editor={editor} className="flex flex-col gap-1 p-1 bg-background border border-border rounded-lg shadow-xl backdrop-blur-md overflow-hidden min-w-[180px]">
-              <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">クイック挿入</div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                className="justify-start gap-2 h-9"
-              >
-                <Heading1 className="h-4 w-4" />
-                <span>見出し 1</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                className="justify-start gap-2 h-9"
-              >
-                <Heading2 className="h-4 w-4" />
-                <span>見出し 2</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => editor.chain().focus().toggleBulletList().run()}
-                className="justify-start gap-2 h-9"
-              >
-                <List className="h-4 w-4" />
-                <span>箇条書き</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                className="justify-start gap-2 h-9"
-              >
-                <ListOrdered className="h-4 w-4" />
-                <span>番号付きリスト</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                className="justify-start gap-2 h-9"
-              >
-                <Quote className="h-4 w-4" />
-                <span>引用</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const event = new CustomEvent('open-media-dialog', { detail: { type: 'image' } })
-                  window.dispatchEvent(event)
-                }}
-                className="justify-start gap-2 h-9"
-              >
-                <ImageIcon className="h-4 w-4" />
-                <span>画像アップロード</span>
-              </Button>
-            </FloatingMenu>
-          </>
+          <BubbleMenu
+            editor={editor}
+            className="flex items-center gap-1 p-1 bg-background/80 backdrop-blur-xl border border-primary/10 rounded-full shadow-2xl"
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              className={cn("h-8 w-8 p-0 rounded-full", editor.isActive('bold') && 'bg-primary/10 text-primary')}
+            >
+              <Bold className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              className={cn("h-8 w-8 p-0 rounded-full", editor.isActive('italic') && 'bg-primary/10 text-primary')}
+            >
+              <Italic className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().toggleUnderline().run()}
+              className={cn("h-8 w-8 p-0 rounded-full", editor.isActive('underline') && 'bg-primary/10 text-primary')}
+            >
+              <UnderlineIcon className="h-4 w-4" />
+            </Button>
+            <Separator orientation="vertical" className="h-4 mx-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().toggleLink({ href: '' }).run()}
+              className={cn("h-8 w-8 p-0 rounded-full", editor.isActive('link') && 'bg-primary/10 text-primary')}
+            >
+              <LinkIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().toggleCode().run()}
+              className={cn("h-8 w-8 p-0 rounded-full", editor.isActive('code') && 'bg-primary/10 text-primary')}
+            >
+              <Code className="h-4 w-4" />
+            </Button>
+          </BubbleMenu>
         )}
         <div className="max-w-full overflow-x-hidden pb-32">
           <EditorContent editor={editor} />

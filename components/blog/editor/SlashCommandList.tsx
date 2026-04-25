@@ -88,7 +88,7 @@ const SlashCommandList = forwardRef((props: SlashCommandListProps, ref) => {
               <CommandItem
                 key={index}
                 onSelect={() => selectItem(index)}
-                className={`flex items-center gap-2 px-2 py-1.5 text-sm rounded-md cursor-pointer ${
+                className={`flex items-center gap-2 px-2 py-1.5 text-sm rounded-md cursor-pointer transition-all duration-200 hover:bg-accent/50 active:scale-[0.98] ${
                   index === selectedIndex ? 'bg-accent text-accent-foreground' : ''
                 }`}
               >

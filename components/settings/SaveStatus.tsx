@@ -19,6 +19,7 @@ const SaveStatus = ({ status, className }: SaveStatusProps) => {
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className="flex items-center text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-full whitespace-nowrap"
           >
             <Circle className="h-3 w-3 mr-1.5 fill-current shrink-0" />
@@ -31,6 +32,7 @@ const SaveStatus = ({ status, className }: SaveStatusProps) => {
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className="flex items-center text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 shadow-sm shadow-primary/5 relative overflow-hidden whitespace-nowrap"
           >
             <motion.div
@@ -48,6 +50,7 @@ const SaveStatus = ({ status, className }: SaveStatusProps) => {
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className="flex items-center text-green-600 dark:text-green-400 bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20 whitespace-nowrap"
           >
             <CheckCircle2 className="h-3 w-3 mr-1.5 shrink-0" />
@@ -60,6 +63,7 @@ const SaveStatus = ({ status, className }: SaveStatusProps) => {
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className="flex items-center text-destructive bg-destructive/10 px-3 py-1.5 rounded-full whitespace-nowrap"
           >
             <AlertCircle className="h-3 w-3 mr-1.5 shrink-0" />
