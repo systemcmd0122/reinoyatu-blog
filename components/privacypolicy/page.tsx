@@ -97,7 +97,7 @@ const PrivacyPolicy = () => {
             </p>
             <ul className="list-disc list-inside pl-4 space-y-2 mt-3 text-sm">
               <li><strong>Google Auth:</strong> ユーザー認証のために利用されます。</li>
-              <li><strong>Google Analytics:</strong> サイトの利用状況を把握し、サービス改善に役立てるためにCookieを使用しています。</li>
+              <li><strong>Vercel Analytics:</strong> サイトの利用状況を把握し、サービス改善に役立てるために利用されています。</li>
               <li><strong>Google AdSense:</strong> 広告配信のために利用されます（詳細は「広告の配信について」をご確認ください）。</li>
             </ul>
           </PrivacySection>
