@@ -29,20 +29,20 @@ const EditorChat: React.FC<EditorChatProps> = ({ onApplySuggestion, currentConte
   const isInternalUpdate = useRef(false)
 
   // ブロードキャストによる他タブとの同期
-  const { send } = useBroadcast(`editor-chat-sync`, (payload: Message[]) => {
+  const { send } = useBroadcast(`editor-chat-sync`, (payload: Message) => {
     // 他のタブからのメッセージを反映
     isInternalUpdate.current = true
     setMessages(prev => {
-      // 内容が同じなら更新しない（無限ループ防止）
-      if (JSON.stringify(prev) === JSON.stringify(payload)) return prev
-      return payload
+      // 最後のメッセージが同じなら追加しない
+      if (prev.length > 0 && JSON.stringify(prev[prev.length - 1]) === JSON.stringify(payload)) return prev
+      return [...prev, payload]
     })
   })
 
-  // メッセージが更新されたら他タブに通知
+  // メッセージが更新されたら他タブに通知（最後の1件のみ）
   useEffect(() => {
     if (messages.length > 0 && !isInternalUpdate.current) {
-      send(messages)
+      send(messages[messages.length - 1])
     }
     isInternalUpdate.current = false
   }, [messages, send])

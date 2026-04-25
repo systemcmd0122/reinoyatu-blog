@@ -15,6 +15,8 @@ export const getGeminiClient = () => {
   return ai;
 };
 
+const DEFAULT_MODEL = "gemini-2.5-flash-lite";
+
 // スタイルIDを具体的な指示にマッピング
 const styleInstructionMap: Record<string, string> = {
   professional: "ビジネス文書として通用する、プロフェッショナルで洗練されたトーンで記述してください。専門用語を適切に用い、客観的で信頼性の高い文章を心がけてください。",
@@ -125,10 +127,10 @@ const handleGeminiError = (error: any, defaultMessage: string): string => {
     return "サーバーエラーが発生しました。Google AIサービスが一時的に停止している可能性があります。";
   }
 
-  if (error.status === 404) {
-    return "指定されたAIモデルが見つかりませんでした。管理者にお問い合わせください。";
+  if (error.status === 404 || error.message?.includes("not found")) {
+    return "指定されたAIモデルが見つかりませんでした。APIの設定を確認してください。";
   }
-  
+
   if (error.message?.includes("API key")) {
     return "APIキーの設定に問題があります。管理者に連絡してください。";
   }
@@ -240,7 +242,7 @@ ${summaryLength ? `
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: DEFAULT_MODEL,
       contents: prompt,
       config: {
         tools: [{ googleSearchRetrieval: {} } as any],
@@ -316,7 +318,7 @@ ${content}
 **出力:**`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: DEFAULT_MODEL,
       contents: prompt,
       config: {
         tools: [{ googleSearchRetrieval: {} } as any],
@@ -374,7 +376,7 @@ ${content.substring(0, 3000)}
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: DEFAULT_MODEL,
       contents: prompt,
       config: {
         tools: [{ googleSearchRetrieval: {} } as any],
@@ -446,7 +448,7 @@ ${plainContent.substring(0, 3000)}
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: DEFAULT_MODEL,
       contents: prompt,
       config: {
         tools: [{ googleSearchRetrieval: {} } as any],

@@ -24,57 +24,43 @@ const upsertTags = async (tagNames: string[]) => {
     return []
   }
 
-  const tagIds: string[] = []
+  // 既存のタグを一括検索
+  const { data: existingTags, error: searchError } = await supabase
+    .from("tags")
+    .select("id, name")
+    .in("name", cleanedTagNames)
 
-  // 各タグを個別に処理（確実に取得するため）
-  for (const tagName of cleanedTagNames) {
-    try {
-      // 既存のタグを検索
-      const { data: existingTag, error: searchError } = await supabase
-        .from("tags")
-        .select("id")
-        .eq("name", tagName)
-        .maybeSingle()
-
-      if (searchError) {
-        console.error(`タグ検索エラー (${tagName}):`, searchError)
-        continue
-      }
-
-      if (existingTag) {
-        // 既存タグのIDを使用
-        tagIds.push(existingTag.id)
-      } else {
-        // 新規タグを作成
-        const { data: newTag, error: insertError } = await supabase
-          .from("tags")
-          .insert({ name: tagName })
-          .select("id")
-          .single()
-
-        if (insertError) {
-          console.error(`タグ作成エラー (${tagName}):`, insertError)
-          
-          // 同時作成による競合の可能性があるため、再度検索
-          const { data: retryTag } = await supabase
-            .from("tags")
-            .select("id")
-            .eq("name", tagName)
-            .maybeSingle()
-          
-          if (retryTag) {
-            tagIds.push(retryTag.id)
-          }
-        } else if (newTag) {
-          tagIds.push(newTag.id)
-        }
-      }
-    } catch (err) {
-      console.error(`タグ処理エラー (${tagName}):`, err)
-    }
+  if (searchError) {
+    console.error("タグ一括検索エラー:", searchError)
   }
 
-  return tagIds
+  const existingTagNames = existingTags?.map(t => t.name) || []
+  const existingTagIds = existingTags?.map(t => t.id) || []
+
+  // 新規に作成が必要なタグ名
+  const newTagNames = cleanedTagNames.filter(name => !existingTagNames.includes(name))
+
+  let newTagIds: string[] = []
+  if (newTagNames.length > 0) {
+    const { data: createdTags, error: insertError } = await supabase
+      .from("tags")
+      .insert(newTagNames.map(name => ({ name })))
+      .select("id")
+
+    if (insertError) {
+      console.error("タグ一括作成エラー:", insertError)
+      // 競合等で失敗した場合は、再度全検索して確実にIDを取得する
+      const { data: allTags } = await supabase
+        .from("tags")
+        .select("id")
+        .in("name", cleanedTagNames)
+      return allTags?.map(t => t.id) || []
+    }
+
+    newTagIds = createdTags?.map(t => t.id) || []
+  }
+
+  return [...existingTagIds, ...newTagIds]
 }
 
 interface newBlogProps extends z.infer<typeof BlogSchema> {
