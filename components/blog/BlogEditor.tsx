@@ -144,6 +144,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [status, setStatus] = useState<EditorStatus>("idle")
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image_url || null)
+  // 画像が明示的に削除されたかどうかを追跡するフラグ
+  const [imageRemoved, setImageRemoved] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(initialData?.updated_at ? new Date(initialData.updated_at) : null)
   const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">("edit")
@@ -261,12 +263,41 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
 
     const timer = setTimeout(() => {
       if (watchedTitle && watchedContent) {
+        // 自動保存時は現在の is_published 状態を維持する（公開状態を変えない）
         handleAction(!!watchedIsPublished, true)
       }
     }, 3000)
 
     return () => clearTimeout(timer)
-  }, [isDirty, watchedTitle, watchedContent, status, viewMode, watchedIsPublished])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDirty, watchedTitle, watchedContent, status, viewMode])
+  // ↑ watchedIsPublished を依存に含めると公開状態変更のたびに自動保存タイマーがリセットされるため意図的に除外
+
+  /**
+   * 画像URLを計算するヘルパー
+   *
+   * - imageFile がある  → base64Image をサーバーへ送るので imageUrl は null
+   * - imagePreview が外部URL → そのURLをそのまま使う
+   * - imagePreview が null かつ imageRemoved → 明示的に画像を削除したので null
+   * - それ以外（initialData の画像を変更していない）→ undefined（サーバー側で更新しない）
+   */
+  const computeImageUrl = (): string | null | undefined => {
+    if (imageFile) {
+      // base64Image がある場合、サーバー側でアップロードするので imageUrl は null でよい
+      return null
+    }
+    if (imagePreview && !imagePreview.startsWith('data:')) {
+      // 外部URL（ライブラリ選択 or URL指定）またはすでにアップロード済みのURL
+      return imagePreview
+    }
+    if (imagePreview === null && imageRemoved) {
+      // ユーザーが明示的に画像を削除した
+      return null
+    }
+    // imagePreview が null だが imageRemoved でない = 初期から画像がなかった新規投稿
+    // この場合も null を渡して画像なしで保存する
+    return null
+  }
 
   const handleAction = async (isPublished: boolean, silent: boolean = false) => {
     if (isSaving.current) return
@@ -276,7 +307,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     isSaving.current = true
 
     try {
-      let base64Image: string | undefined = undefined;
+      // 1. 画像の base64 変換（imageFile がある場合のみ）
+      let base64Image: string | undefined = undefined
       if (imageFile) {
         try {
           base64Image = await new Promise<string>((resolve, reject) => {
@@ -288,61 +320,52 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
         } catch (e) {
           setError("画像の処理中にエラーが発生しました。")
           setStatus("error")
+          isSaving.current = false
           return
         }
       }
 
+      // 2. is_published をフォームに反映してから値を取得
       form.setValue("is_published", isPublished)
       const values = form.getValues()
 
-      // 画像URL の計算ロジック：
-      // 1. 新しい画像をアップロード中 → null (base64Image が処理される)
-      // 2. 新しい画像をアップロードしていない → undefined (既存の画像を保持)
-      // 3. 画像を削除 → null (imagePreview === null)
-      let currentImageUrl: string | null | undefined = undefined
+      // 3. 画像URLを計算
+      const currentImageUrl = computeImageUrl()
 
-      if (imageFile) {
-        // 新しい画像がアップロードされている場合
-        currentImageUrl = null  // base64Image がサーバーで処理される
-      } else if (imagePreview && !imagePreview.startsWith('data:')) {
-        // 既存のURL がある場合（新規作成時の base64 は除外）
-        currentImageUrl = imagePreview
-      } else if (imagePreview === null) {
-        // 画像を削除した場合
-        currentImageUrl = null
-      }
-      // undefined の場合は、サーバーで image_url を更新しない
-
+      // 4. サーバーへ送信
       const res = await onSubmit({ ...values, base64Image, imageUrl: currentImageUrl })
 
       if (res?.error) {
-        // フィールドエラーがある場合はセットする（Zodバリデーション結果の反映など）
         if (typeof res.error === 'string' && res.error.includes('タイトル')) {
-          form.setError("title", { message: res.error });
+          form.setError("title", { message: res.error })
         } else if (typeof res.error === 'string' && res.error.includes('内容')) {
-          form.setError("content", { message: res.error });
+          form.setError("content", { message: res.error })
         }
 
         setError(`送信に失敗しました: ${res.error}`)
         setStatus("error")
         toast.error(res.error)
+        isSaving.current = false
         return
       }
 
-      // コレクションへの追加・削除
-      if (res.id || currentBlogId) {
-        const blogId = res.id || currentBlogId!
-        const initialCollections = initialData?.id ? (await getBlogCollections(initialData.id)).map(c => c.id) : []
+      // 5. コレクションへの追加・削除
+      const savedBlogId = res.id || currentBlogId
+      if (savedBlogId) {
+        const initialCollections = initialData?.id
+          ? (await getBlogCollections(initialData.id)).map(c => c.id)
+          : []
 
         const toAdd = selectedCollections.filter(id => !initialCollections.includes(id))
         const toRemove = initialCollections.filter(id => !selectedCollections.includes(id))
 
         await Promise.all([
-          ...toAdd.map(id => addBlogToCollection(id, blogId)),
-          ...toRemove.map(id => removeBlogFromCollection(id, blogId))
+          ...toAdd.map(id => addBlogToCollection(id, savedBlogId)),
+          ...toRemove.map(id => removeBlogFromCollection(id, savedBlogId))
         ])
       }
 
+      // 6. 保存成功後の状態更新
       if (!silent) {
         toast.success(isPublished ? "記事を公開しました" : "下書きを保存しました")
       }
@@ -350,26 +373,29 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       setLastSaved(new Date())
       setStatus("saved")
 
-      // 保存成功後、アップロードされた画像をクリア
-      // base64Image がある場合、サーバーで処理されているので、次回以降のために状態をリセット
+      // 7. imageFile のリセット（アップロード完了）
       if (base64Image) {
         setImageFile(null)
-        // base64 プレビューをクリア（後ほど、必要があれば、ブログデータを再取得して URL を設定）
-        // ただし、新規作成の場合はまだ既存の画像URL がないので base64 を保持
-        if (internalMode === "edit") {
-          // 編集モードの場合は、既存の画像URLで更新されているはず（サーバーから返される）
-          // 現在のコードではサーバーが image_url を返していないので、既存の imagePreview を保持
-          // （initialData から再取得する必要があるかもしれない）
+        // 新規作成でIDが発行された場合、モードと currentBlogId を更新
+        if (res.id && internalMode === "new") {
+          setInternalMode("edit")
+          setCurrentBlogId(res.id)
+          // URLをエディタページに更新（ページリロードなし）
+          window.history.replaceState(null, "", `/blog/${res.id}/edit`)
         }
+      } else if (res.id && internalMode === "new") {
+        // 画像なし新規作成でも同様にモード・ID を更新
+        setInternalMode("edit")
+        setCurrentBlogId(res.id)
         window.history.replaceState(null, "", `/blog/${res.id}/edit`)
       }
 
+      // 8. 明示的な公開アクション（silentでない）の場合のみ遷移
       if (isPublished && !silent) {
-        // 公開時はトップへ（これはユーザーの意図した明示的なアクション後の遷移）
+        setIsSidebarOpen(false)
         setTimeout(() => {
           router.push("/")
-          router.refresh()
-        }, 1500)
+        }, 1200)
       }
 
     } catch (error) {
@@ -413,6 +439,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
           // GIF はクロップせずそのまま使用（アニメーションを保持するため）
           setImageFile(file)
           setImagePreview(dataUrl)
+          setImageRemoved(false)
           setStatus("idle")
           setIsDirty(true)
           toast.success("GIF画像を読み込みました（アニメーション保持）")
@@ -631,7 +658,6 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                             if (res.success) {
                               toast.success("記事を削除しました")
                               router.push("/")
-                              router.refresh()
                             } else {
                               setStatus("idle")
                               toast.error(res.error || "削除に失敗しました")
@@ -675,7 +701,16 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                                 <Upload className="h-3 w-3 mr-1" />
                                 変更
                               </Button>
-                              <Button size="sm" variant="destructive" onClick={() => { setImageFile(null); setImagePreview(null); setIsDirty(true); }}>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  setImageFile(null)
+                                  setImagePreview(null)
+                                  setImageRemoved(true)
+                                  setIsDirty(true)
+                                }}
+                              >
                                 削除
                               </Button>
                             </div>
@@ -932,6 +967,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
           onSelect={(imageUrl) => {
             setImagePreview(imageUrl)
             setImageFile(null)
+            setImageRemoved(false)
             setIsDirty(true)
           }}
         />
@@ -943,6 +979,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
           onSelect={(imageUrl) => {
             setImagePreview(imageUrl)
             setImageFile(null)
+            setImageRemoved(false)
             setIsDirty(true)
           }}
         />
@@ -956,12 +993,14 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
           onCrop={(croppedDataUrl, croppedFile) => {
             setImageFile(croppedFile)
             setImagePreview(croppedDataUrl)
+            setImageRemoved(false)
             setIsDirty(true)
             toast.success("画像をトリミングしました")
           }}
           onSkipCrop={(dataUrl, file) => {
             setImageFile(file)
             setImagePreview(dataUrl)
+            setImageRemoved(false)
             setIsDirty(true)
             toast.success("画像を読み込みました")
           }}
