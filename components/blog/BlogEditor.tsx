@@ -543,7 +543,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
           {/* スリムで洗練されたヘッダー */}
           <header className={cn(
             "border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-2 md:px-4 z-[var(--z-nav)] shrink-0 transition-all duration-300",
-            (isEditorFocused && isMobile) ? "h-0 opacity-0 -translate-y-full overflow-hidden" : "h-14 md:h-16 opacity-100 translate-y-0"
+            (isEditorFocused && isMounted && isMobile) ? "h-0 opacity-0 -translate-y-full overflow-hidden" : "h-14 md:h-16 opacity-100 translate-y-0"
           )}>
             <div className="flex items-center space-x-2 md:space-x-4">
               <Button variant="ghost" size="icon" onClick={handleBack} className="h-9 w-9" aria-label="戻る">
@@ -571,7 +571,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   <SaveStatus status={getSaveStatus() as any} />
 
                   {/* 他の編集者を表示 */}
-                  {otherEditors.length > 0 && (
+                  {isMounted && otherEditors.length > 0 && (
                     <div className="flex -space-x-2 ml-2">
                       {otherEditors.map((p: any, idx) => (
                         <Tooltip key={idx}>

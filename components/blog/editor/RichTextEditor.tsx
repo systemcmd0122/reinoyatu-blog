@@ -93,6 +93,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
       StarterKit.configure({
         codeBlock: false,
         link: false,
+        underline: false,
       }),
       Underline,
       TextStyle,

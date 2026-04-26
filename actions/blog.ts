@@ -2,6 +2,7 @@
 
 import { BlogSchema, ActionResponse } from "@/schemas"
 import { createClient } from "@/utils/supabase/server"
+import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { v4 as uuidv4 } from "uuid"
 import { generateSummaryFromContent } from "@/utils/gemini"
@@ -116,8 +117,6 @@ export const newBlog = async (values: newBlogProps): Promise<ActionResponse> => 
         image_url: image_url || null,
         user_id: values.userId,
         is_published: values.is_published,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       })
       .select("id")
       .single()
@@ -149,6 +148,10 @@ export const newBlog = async (values: newBlogProps): Promise<ActionResponse> => 
     // 画像の関連付けを同期
     await syncArticleImages(newBlog.id, values.content_json || "", image_url)
 
+    revalidatePath("/")
+    revalidatePath(`/blog/${newBlog.id}`)
+    revalidatePath(`/profile/${values.userId}`)
+
     // タグの処理
     if (values.tags && values.tags.length > 0) {
       const tagIds = await upsertTags(values.tags)
@@ -173,7 +176,11 @@ export const newBlog = async (values: newBlogProps): Promise<ActionResponse> => 
 
     return { success: true, id: newBlog.id }
   } catch (err: any) {
-    console.error("ブログ投稿エラー:", err)
+    console.error("ブログ投稿エラー詳細:", {
+      message: err.message,
+      stack: err.stack,
+      values: { ...values, base64Image: values.base64Image ? "present" : "absent" }
+    })
     return { success: false, error: err.message || "エラーが発生しました" }
   }
 }
@@ -247,7 +254,6 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
       content_json: values.content_json || null,
       summary: values.summary || null,
       is_published: values.is_published,
-      updated_at: new Date().toISOString(), // 明示的にタイムスタンプを設定（Supabaseの自動更新を上書き）
     }
 
     if (shouldUpdateImage) {
@@ -302,6 +308,10 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
     // 画像の関連付けを同期
     await syncArticleImages(values.blogId, values.content_json || "", image_url ?? null)
 
+    revalidatePath("/")
+    revalidatePath(`/blog/${values.blogId}`)
+    revalidatePath(`/profile/${values.userId}`)
+
     // タグの処理（差分更新）
     const tagIds = await upsertTags(values.tags || [])
 
@@ -341,7 +351,12 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
 
     return { success: true }
   } catch (err: any) {
-    console.error("ブログ編集エラー:", err)
+    console.error("ブログ編集エラー詳細:", {
+      message: err.message,
+      stack: err.stack,
+      blogId: values.blogId,
+      values: { ...values, base64Image: values.base64Image ? "present" : "absent" }
+    })
     return { success: false, error: err.message || "エラーが発生しました" }
   }
 }
@@ -408,6 +423,9 @@ export const deleteBlog = async ({
       console.error("ブログ削除エラー:", error)
       return { success: false, error: error.message }
     }
+
+    revalidatePath("/")
+    revalidatePath(`/profile/${userId}`)
 
     // 不要になった画像をクリーンアップ
     if (imageIds.length > 0) {
