@@ -40,13 +40,13 @@ const ArticleHeader: React.FC<ArticleHeaderProps> = ({
   const isUpdated = createdAt !== updatedAt
 
   return (
-    <header className="mb-16 space-y-8 animate-in max-w-3xl mx-auto">
+    <header className="mb-20 space-y-10 animate-in max-w-3xl mx-auto">
       {/* Title */}
-      <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground leading-[1.25] tracking-tight text-balance">
+      <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-foreground leading-[1.15] tracking-tight text-balance">
         {title}
       </h1>
 
-      <div className="flex items-center justify-between gap-4 pt-2">
+      <div className="flex items-center justify-between gap-4 pt-4 border-t border-border/40">
         {/* Author Info */}
         <div className="flex items-center gap-4">
           <div className="flex -space-x-1.5">
