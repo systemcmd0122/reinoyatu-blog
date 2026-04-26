@@ -104,6 +104,11 @@ const withPWA = withPWAInit({
 });
 
 export default withPWA({
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+  },
   serverExternalPackages: ["sharp"],
   images: {
     remotePatterns: [

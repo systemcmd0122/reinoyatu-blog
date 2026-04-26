@@ -240,9 +240,9 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
       }
       image_url = result.data.public_url
       shouldUpdateImage = true
-    } else if (image_url !== null && image_url !== undefined) {
-      // 既存のURLが明示的に指定された場合のみ更新
-      // (新規画像がなく、URLが指定されている = 画像URLを変更)
+    } else if (image_url !== undefined) {
+      // image_url が null の場合は削除、文字列の場合はURL更新
+      // undefined 以外が渡された場合は何らかの変更があったとみなす
       shouldUpdateImage = true
     }
     // undefined の場合は、既存の画像を保持するため、更新しない
@@ -351,11 +351,11 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
 
     return { success: true }
   } catch (err: any) {
-    console.error("ブログ編集エラー詳細:", {
+    const user = await validateUser().catch(() => null)
+    console.error("ブログ編集エラー:", {
       message: err.message,
-      stack: err.stack,
       blogId: values.blogId,
-      values: { ...values, base64Image: values.base64Image ? "present" : "absent" }
+      userId: user?.id
     })
     return { success: false, error: err.message || "エラーが発生しました" }
   }

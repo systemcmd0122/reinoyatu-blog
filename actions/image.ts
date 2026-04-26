@@ -73,7 +73,11 @@ export const uploadImage = async (base64Image: string): Promise<ActionResponse> 
     
     return { success: true, data: newImage }
   } catch (err: any) {
-    console.error("画像アップロードエラー:", err)
+    const user = await validateUser().catch(() => null)
+    console.error("画像アップロードエラー:", {
+      message: err.message,
+      userId: user?.id
+    })
     return { success: false, error: err.message || "エラーが発生しました" }
   }
 }
