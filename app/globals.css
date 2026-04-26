@@ -16,7 +16,7 @@
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 40%;
+    --muted-foreground: 240 3.8% 46%;
     --accent: 240 4.8% 95.9%;
     --accent-foreground: 240 5.9% 10%;
     --destructive: 0 84.2% 60.2%;
@@ -31,7 +31,7 @@
     --chart-5: 27 87% 67%;
     --radius: 0.75rem;
 
-    /* Z-index hierarchy */
+    /* Z-index 階層 */
     --z-hide: -1;
     --z-base: 0;
     --z-sticky: 30;
@@ -84,7 +84,9 @@
   }
 }
 
-/* Glassmorphism utilities */
+/* ─────────────────────────────────────────────
+   グラスモーフィズム
+───────────────────────────────────────────── */
 @layer utilities {
   .glass {
     @apply bg-background/70 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 border border-white/10;
@@ -95,91 +97,206 @@
   }
 }
 
-/* Typography and Markdown refinements */
-.prose {
+/* ─────────────────────────────────────────────
+   記事本文のMarkdownスタイル
+   .article-markdown クラスに限定して適用
+   Tailwind proseと協調し、コードブロックには干渉しない
+───────────────────────────────────────────── */
+
+/* prose の基本設定を上書き（max-widthはコンポーネント側で制御） */
+.article-markdown.prose {
   max-width: none;
-  line-height: 2;
+  line-height: 1.85;
   letter-spacing: 0.01em;
-  @apply text-[17px] md:text-[18px];
+  font-size: 16px;
+  color: hsl(var(--foreground) / 0.92);
 }
 
-.prose h1, .prose h2, .prose h3, .prose h4 {
-  @apply font-black tracking-tight text-foreground mt-16 mb-8;
-  scroll-margin-top: 6rem;
+@media (min-width: 768px) {
+  .article-markdown.prose {
+    font-size: 17px;
+  }
 }
 
-.prose h1 {
-  @apply text-3xl md:text-4xl border-b-4 border-primary/5 pb-6 mb-12;
+/* ─── 見出し ─────────────────────────────── */
+.article-markdown.prose :where(h1, h2, h3, h4, h5, h6) {
+  color: hsl(var(--foreground));
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
 }
 
-.prose h2 {
-  @apply text-2xl md:text-3xl border-b-2 border-primary/5 pb-4 mb-10;
+.article-markdown.prose h1 {
+  font-size: 1.75em;
+  margin-top: 2.5rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 2px solid hsl(var(--border));
 }
 
-.prose h3 {
-  @apply text-xl md:text-2xl mb-6;
+.article-markdown.prose h2 {
+  font-size: 1.4em;
+  margin-top: 2.25rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
-.prose p {
-  @apply leading-[2.0] mb-8 text-foreground/90;
+.article-markdown.prose h3 {
+  font-size: 1.2em;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
 }
 
-.prose a {
-  @apply text-primary underline underline-offset-4 decoration-primary/30 hover:decoration-primary font-medium transition-all;
+.article-markdown.prose h4 {
+  font-size: 1.05em;
+  margin-top: 1.75rem;
+  margin-bottom: 0.6rem;
 }
 
-.prose blockquote {
-  @apply border-l-4 border-primary/40 bg-muted/30 px-6 py-4 italic rounded-r-xl my-10 text-muted-foreground font-medium shadow-sm;
+/* ─── 段落 ───────────────────────────────── */
+.article-markdown.prose p {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  line-height: 1.9;
 }
 
-.prose ul, .prose ol {
-  @apply my-8 pl-6 space-y-3;
+/* ─── リンク ─────────────────────────────── */
+.article-markdown.prose a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: hsl(var(--primary) / 0.3);
+  font-weight: 500;
+  transition: text-decoration-color 0.15s;
 }
 
-.prose li {
-  @apply leading-relaxed;
+.article-markdown.prose a:hover {
+  text-decoration-color: hsl(var(--primary));
 }
 
-.prose code {
-  @apply bg-muted/80 text-foreground px-1.5 py-0.5 rounded font-mono text-[0.85em] border border-border/40 font-medium mx-0.5 before:content-none after:content-none;
+/* ─── リスト ─────────────────────────────── */
+.article-markdown.prose ul {
+  list-style-type: disc;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
 }
 
-.prose pre {
-  @apply rounded-xl border border-border/10 bg-[#0d1117] p-0 overflow-x-auto my-6 shadow-lg;
+.article-markdown.prose ol {
+  list-style-type: decimal;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
 }
 
-.prose pre code {
-  @apply bg-transparent p-4 border-none text-[13.5px] leading-relaxed block;
+.article-markdown.prose li {
+  margin-top: 0.4rem;
+  margin-bottom: 0.4rem;
+  line-height: 1.75;
 }
 
-.prose img {
-  @apply rounded-xl border border-border/40 shadow-premium my-12 mx-auto;
+.article-markdown.prose li > p {
+  margin-bottom: 0.5rem;
 }
 
-.prose table {
-  @apply border-collapse w-full my-12 overflow-hidden rounded-xl border border-border;
+/* ネストされたリスト */
+.article-markdown.prose ul ul,
+.article-markdown.prose ol ol,
+.article-markdown.prose ul ol,
+.article-markdown.prose ol ul {
+  margin-top: 0.4rem;
+  margin-bottom: 0.4rem;
 }
 
-.prose thead {
-  @apply bg-muted/80;
+/* ─── 引用 ───────────────────────────────── */
+.article-markdown.prose blockquote {
+  border-left: 3px solid hsl(var(--primary) / 0.4);
+  background: hsl(var(--muted) / 0.4);
+  margin: 1.75rem 0;
+  padding: 1rem 1.25rem;
+  border-radius: 0 8px 8px 0;
+  color: hsl(var(--muted-foreground));
+  font-style: normal;
 }
 
-.prose th {
-  @apply px-6 py-4 text-left font-black text-sm uppercase tracking-wider border-b border-border;
+.article-markdown.prose blockquote p {
+  margin-bottom: 0;
 }
 
-.prose td {
-  @apply px-6 py-4 text-sm border-b border-border transition-colors;
+/* ─── インラインコード
+   【重要】prose の code スタイルをリセット。
+   実際のスタイルは InlineCode コンポーネントで適用する。 */
+.article-markdown.prose :not(pre) > code::before,
+.article-markdown.prose :not(pre) > code::after {
+  content: none !important;
 }
 
-.prose tr:hover td {
-  @apply bg-muted/30;
+/* prose がつけるデフォルトのインラインコードスタイルをリセット */
+.article-markdown.prose :not(pre) > code {
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  color: inherit !important;
 }
 
-.prose tr:last-child td {
-  @apply border-b-0;
+/* ─── コードブロック（not-prose でproseから切り離し済み）
+   prose の pre スタイルをリセットして、CodeBlock の
+   スタイルだけが効くようにする。 */
+.article-markdown.prose pre {
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  overflow: visible !important;
 }
 
+.article-markdown.prose pre code {
+  background: none !important;
+  padding: 0 !important;
+  border: none !important;
+  font-size: inherit !important;
+  color: inherit !important;
+}
+
+/* ─── 画像 ───────────────────────────────── */
+.article-markdown.prose img {
+  border-radius: 10px;
+  border: 1px solid hsl(var(--border) / 0.5);
+  margin: 2rem auto;
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ─── テーブル（not-prose でproseから切り離し済み） */
+.article-markdown.prose table {
+  background: none;
+  border: none;
+  margin: 0;
+}
+
+/* ─── 水平線 ─────────────────────────────── */
+.article-markdown.prose hr {
+  border-color: hsl(var(--border) / 0.6);
+  margin: 2.5rem 0;
+}
+
+/* ─── KaTeX 数式 ─────────────────────────── */
+.article-markdown.prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+  margin: 1.5rem 0;
+}
+
+/* ─────────────────────────────────────────────
+   ユーティリティ
+───────────────────────────────────────────── */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -187,8 +304,8 @@
 
   /* カスタムスクロールバー */
   .scrollbar-thin::-webkit-scrollbar {
-    height: 8px;
-    width: 8px;
+    height: 6px;
+    width: 6px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
@@ -196,15 +313,15 @@
   }
 
   .scrollbar-thumb-muted-foreground::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground) / 0.3);
+    background-color: hsl(var(--muted-foreground) / 0.25);
     border-radius: 9999px;
   }
 
   .scrollbar-thumb-muted-foreground:hover::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground) / 0.5);
+    background-color: hsl(var(--muted-foreground) / 0.45);
   }
 
-  /* スクロールバーを非表示にする */
+  /* スクロールバーを非表示 */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -215,13 +332,14 @@
   }
 }
 
-/* スムーズなアニメーション - 控えめに */
+/* ─────────────────────────────────────────────
+   アニメーション
+───────────────────────────────────────────── */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -229,34 +347,39 @@
 }
 
 .animate-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.35s ease-out forwards;
 }
 
-/* カード要素のシャドウ - プレミアムな質感に */
+/* ─────────────────────────────────────────────
+   シャドウ・ホバー
+───────────────────────────────────────────── */
 .shadow-premium {
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
+  box-shadow:
+    0 4px 16px -4px rgba(0, 0, 0, 0.06),
+    0 1px 4px -1px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .dark .shadow-premium {
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3), 0 4px 10px -5px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 4px 16px -4px rgba(0, 0, 0, 0.3),
+    0 1px 4px -1px rgba(0, 0, 0, 0.2);
 }
 
 .shadow-premium:hover {
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.12), 0 10px 20px -10px rgba(0, 0, 0, 0.06);
-  transform: translateY(-2px);
+  box-shadow:
+    0 12px 32px -8px rgba(0, 0, 0, 0.1),
+    0 4px 12px -4px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
 }
 
-/* ホバー時の装飾 */
 .hover-lift {
-  @apply transition-transform duration-300 hover:-translate-y-1;
+  @apply transition-transform duration-200 hover:-translate-y-0.5;
 }
 
-.hover-glow {
-  @apply transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.05)];
-}
-
-/* ローディング状態のスケルトン */
+/* ─────────────────────────────────────────────
+   スケルトンローディング
+───────────────────────────────────────────── */
 @keyframes skeleton-loading {
   0% {
     background-position: 200% 0;
@@ -267,7 +390,8 @@
 }
 
 .skeleton-premium {
-  background: linear-gradient(90deg,
+  background: linear-gradient(
+    90deg,
     hsl(var(--muted)) 25%,
     hsl(var(--accent)) 37%,
     hsl(var(--muted)) 63%
@@ -276,15 +400,20 @@
   animation: skeleton-loading 1.4s ease infinite;
 }
 
-/* モバイルでのタッチ最適化 */
+/* ─────────────────────────────────────────────
+   フォーム・インタラクション
+───────────────────────────────────────────── */
+/* モバイルタッチ最適化 */
 @media (hover: none) and (pointer: coarse) {
   .active-scale:active {
-    transform: scale(0.96);
+    transform: scale(0.97);
   }
 }
 
-/* フォーム要素のフォーカス状態 */
-input:focus, textarea:focus, select:focus {
+/* フォーカス */
+input:focus,
+textarea:focus,
+select:focus {
   @apply ring-2 ring-primary/20 border-primary transition-all;
 }
 
@@ -297,7 +426,7 @@ input:focus, textarea:focus, select:focus {
 
 /* カスタムセレクション */
 ::selection {
-  background-color: hsl(var(--primary) / 0.1);
+  background-color: hsl(var(--primary) / 0.12);
   color: hsl(var(--primary));
 }
 
