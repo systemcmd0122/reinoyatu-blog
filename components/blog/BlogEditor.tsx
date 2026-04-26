@@ -41,7 +41,8 @@ import {
   Type,
   Layers,
   Lock,
-  Clock
+  Clock,
+  FileUp
 } from "lucide-react"
 import { BlogSchema } from "@/schemas"
 import { useRouter } from "next/navigation"
@@ -378,6 +379,51 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     }
   }
 
+  const handleMarkdownImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.name.endsWith('.md') && !file.name.endsWith('.markdown')) {
+      toast.error("Markdownファイル(.md)を選択してください")
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e.target?.result as string
+      if (!content) return
+
+      // タイトルの抽出 (# Title または最初の行)
+      let title = ""
+      let body = content
+
+      const titleMatch = content.match(/^#\s+(.+)$/m)
+      if (titleMatch) {
+        title = titleMatch[1].trim()
+        // 見出し行を削除
+        body = content.replace(/^#\s+.+$/m, "").trim()
+      } else {
+        // 最初の空行でない行をタイトル候補にする
+        const lines = content.split('\n').filter(l => l.trim().length > 0)
+        if (lines.length > 0) {
+          title = lines[0].trim().replace(/^#+\s+/, "")
+          body = content.replace(lines[0], "").trim()
+        }
+      }
+
+      form.setValue("title", title)
+      form.setValue("content", body)
+      form.setValue("content_json", "") // 既存のJSONデータをクリアしてMarkdownからの変換を優先させる
+
+      // Tiptapエディタの中身も更新するためにisDirtyをトリガー
+      setIsDirty(true)
+      toast.success("Markdownファイルをインポートしました")
+    }
+    reader.readAsText(file)
+    // inputをリセット
+    event.target.value = ""
+  }
+
   const handleBack = () => {
     if (isDirty) {
       if (confirm("未保存の変更があります。離脱しますか？")) {
@@ -460,6 +506,28 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
 
           <div className="flex items-center space-x-3">
             <div className="flex items-center gap-2">
+              <input
+                type="file"
+                id="markdown-import"
+                className="hidden"
+                accept=".md,.markdown"
+                onChange={handleMarkdownImport}
+              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="font-bold hidden md:flex h-9"
+                    onClick={() => document.getElementById('markdown-import')?.click()}
+                  >
+                    <FileUp className="h-4 w-4 mr-2" />
+                    読み込む
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Markdownファイルをインポート</TooltipContent>
+              </Tooltip>
+
               <Button 
                 variant="ghost"
                 size="sm" 

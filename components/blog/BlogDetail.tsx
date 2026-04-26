@@ -357,11 +357,22 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
           </Link>
         </motion.div>
 
-        <div className="flex flex-col lg:flex-row gap-12">
+        <div className="flex flex-col items-center">
           {/* Main Content */}
-          <main className="flex-1 min-w-0">
+          <main className="w-full max-w-4xl min-w-0">
             <article>
-              {/* 1. ArticleHeader (Author, Dates, Reading Time, Title) */}
+              {/* 4. CoverImage - Move to top for note-style impact */}
+              {blogData.cover_image_url && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-[2.5rem] overflow-hidden shadow-premium border border-border/40 mb-12"
+                >
+                  <CoverImage url={blogData.cover_image_url} title={blogData.title} />
+                </motion.div>
+              )}
+
+              {/* 1. ArticleHeader */}
               <ArticleHeader
                 author={blogData.author}
                 authors={blogData.authors}
@@ -372,37 +383,77 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 title={blogData.title}
               />
 
-              <div className="space-y-12">
+              <div className="max-w-3xl mx-auto space-y-12">
                 {/* 2. TagSection */}
                 <TagSection tags={blogData.tags} />
 
                 {/* 3. SummarySection */}
                 <SummarySection summary={blogData.ai_summary} />
 
-                {/* 4. CoverImage */}
+                {/* 5. ArticleContent - Note: removed background/border for cleaner look */}
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
-                  className="rounded-[2.5rem] overflow-hidden shadow-premium border border-border/40"
-                >
-                  <CoverImage url={blogData.cover_image_url} title={blogData.title} />
-                </motion.div>
-
-                {/* 5. ArticleContent */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  className="bg-card rounded-[2.5rem] border border-border/40 p-8 md:p-20 shadow-premium relative overflow-hidden"
+                  className="relative overflow-hidden py-4"
                 >
                   <ArticleContent content={blogData.content} />
                 </motion.div>
               </div>
 
+              {/* Author Profile Card - Note: Move to bottom of article */}
+              <div className="max-w-3xl mx-auto mt-24 mb-16">
+                <div className="bg-card rounded-[2rem] border border-border/40 shadow-premium overflow-hidden transition-all hover:shadow-xl group/author">
+                  <div className="h-32 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent relative overflow-hidden">
+                    <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,transparent)]" />
+                  </div>
+                  <div className="px-8 pb-10">
+                    <div className="relative -mt-16 mb-6 flex justify-between items-end">
+                      <Avatar className="h-32 w-32 border-[6px] border-card shadow-premium transition-transform group-hover/author:scale-105 duration-500">
+                        <AvatarImage src={blogData.author.avatar_url || "/default.png"} className="object-cover" />
+                        <AvatarFallback className="text-3xl font-bold">{blogData.author.name?.[0]}</AvatarFallback>
+                      </Avatar>
+
+                      <div className="flex gap-2 mb-2">
+                         {blogData.author.homepage_url && (
+                          <a href={blogData.author.homepage_url} target="_blank" rel="noopener noreferrer" className="p-3 rounded-xl bg-muted/50 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all">
+                            <Globe className="h-4 w-4" />
+                          </a>
+                        )}
+                        {blogData.author.social_links?.twitter && (
+                          <a href={blogData.author.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-3 rounded-xl bg-muted/50 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all">
+                            <Twitter className="h-4 w-4" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <h3 className="text-2xl font-black mb-1">
+                      <Link href={`/profile/${blogData.author.id}`} className="hover:text-primary transition-colors tracking-tight">
+                        {blogData.author.name}
+                      </Link>
+                    </h3>
+                    <p className="text-sm font-bold text-muted-foreground mb-6">
+                      @{blogData.author.name}
+                    </p>
+                    {blogData.author.introduce && (
+                      <p className="text-sm text-foreground/70 line-clamp-4 mb-8 leading-relaxed font-medium">
+                        {blogData.author.introduce}
+                      </p>
+                    )}
+
+                    <Button size="xl" className="w-full rounded-2xl font-black group shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all py-6" asChild>
+                      <Link href={`/profile/${blogData.author.id}`}>
+                        プロフィールを見る
+                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
               {/* Series Navigation */}
               {collection && (
-                <div className="mt-16">
+                <div className="max-w-3xl mx-auto mt-16">
                   <SeriesNavigation 
                     collection={collection}
                     currentIndex={collection.collection_items.findIndex(item => item.blog_id === blog.id)}
@@ -420,7 +471,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
               )}
 
               {/* Article Footer Actions */}
-              <div className="mt-12 pt-8 border-t flex flex-col md:flex-row gap-6 justify-between items-center p-6">
+              <div className="max-w-3xl mx-auto mt-12 pt-8 border-t flex flex-col md:flex-row gap-6 justify-between items-center p-6">
                 <div className="flex items-center gap-6">
                   <div className="bg-background rounded-md shadow-sm border border-border/30">
                     <LikeButton 
@@ -500,29 +551,6 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                    <Button
-                      variant="ghost"
-                      size="lg"
-                      className="rounded-md font-bold text-muted-foreground hover:text-red-500 hover:bg-red-500/10 px-8"
-                      onClick={() => toast.info("報告機能は現在準備中です。お問い合わせフォームよりご連絡ください。")}
-                    >
-                      <Flag className="h-5 w-5 mr-3" />
-                      報告
-                    </Button>
-                  </div>
-                )}
-
-                {!isMyBlog && (
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="ghost"
-                      size="lg"
-                      className="rounded-md font-bold text-muted-foreground hover:text-red-500 hover:bg-red-500/10 px-8"
-                      onClick={() => toast.info("報告機能は現在準備中です。お問い合わせフォームよりご連絡ください。")}
-                    >
-                      <Flag className="h-5 w-5 mr-3" />
-                      記事を報告
-                    </Button>
                   </div>
                 )}
               </div>
@@ -530,15 +558,15 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
             {/* Related Articles */}
             {relatedBlogs.length > 0 && (
-              <div className="mt-16">
+              <div className="max-w-3xl mx-auto mt-24">
                 <div className="mb-8 flex items-center gap-4">
                   <div className="w-1.5 h-6 bg-primary rounded-full" />
-                  <h2 className="text-2xl font-bold">関連記事</h2>
+                  <h2 className="text-2xl font-bold text-foreground">関連記事</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {relatedBlogs.map((related) => (
-                    <Link key={related.id} href={`/blog/${related.id}`} className="group flex flex-col bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-                      <div className="relative aspect-video bg-muted overflow-hidden">
+                    <Link key={related.id} href={`/blog/${related.id}`} className="group flex flex-col bg-card rounded-[2rem] border border-border/40 overflow-hidden shadow-premium hover:shadow-xl transition-all">
+                      <div className="relative aspect-[16/10] bg-muted overflow-hidden">
                         {related.image_url ? (
                           <Image src={related.image_url} alt={related.title} fill className="object-cover transition-transform group-hover:scale-105" unoptimized />
                         ) : (
@@ -547,12 +575,18 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                           </div>
                         )}
                       </div>
-                      <div className="p-4 flex flex-col flex-1">
-                        <h3 className="font-bold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                      <div className="p-8 flex flex-col flex-1">
+                        <h3 className="font-bold text-lg line-clamp-2 mb-4 group-hover:text-primary transition-colors leading-snug">
                           {related.title}
                         </h3>
-                        <div className="mt-auto flex items-center justify-between text-[10px] text-muted-foreground">
-                          <span>{related.profiles?.name}</span>
+                        <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground font-bold">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={related.profiles?.avatar_url || "/default.png"} />
+                              <AvatarFallback>{related.profiles?.name?.[0]}</AvatarFallback>
+                            </Avatar>
+                            <span>{related.profiles?.name}</span>
+                          </div>
                           <span className="flex items-center gap-1">
                             <Heart className="h-3 w-3" />
                             {related.likes_count}
@@ -566,9 +600,9 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
             )}
 
             {/* Comments Section */}
-            <div className="mt-12 bg-card rounded-lg border border-border/40 p-8 md:p-12 shadow-sm">
-              <div className="mb-8 flex items-center gap-4">
-                <div className="w-1.5 h-6 bg-primary rounded-full" />
+            <div className="max-w-3xl mx-auto mt-24 bg-card rounded-[2rem] border border-border/40 p-8 md:p-12 shadow-premium">
+              <div className="mb-10 flex items-center gap-4">
+                <div className="w-1.5 h-8 bg-primary rounded-full" />
                 <h2 className="text-2xl font-bold">コメント</h2>
               </div>
               <CommentSection
@@ -579,94 +613,18 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
             </div>
           </main>
 
-          {/* Sidebar */}
-          <aside className="w-full lg:w-[320px] flex-shrink-0 space-y-8">
-            {/* Series Sidebar */}
-            {collection && (
-              <div>
-                <SeriesSidebar collection={collection} currentBlogId={blog.id} />
-              </div>
-            )}
-
-            {/* Table of Contents */}
-            {headings.length > 0 && (
-              <div className="hidden lg:block sticky top-24 z-[var(--z-sticky)] bg-card rounded-2xl border border-border/40 shadow-premium overflow-hidden max-h-[calc(100vh-120px)] flex flex-col">
-                <div className="p-5 border-b border-border/40 bg-muted/20 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <List className="h-4 w-4 text-primary" />
-                    </div>
-                    <h2 className="font-bold text-sm tracking-tight">目次</h2>
-                  </div>
-                  <div className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase">
-                    {headings.length} sections
-                  </div>
+          {/* Floating TOC for large screens */}
+          {headings.length > 0 && (
+            <aside className="hidden xl:block fixed top-32 left-[calc(50%+28rem)] w-64">
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-6 text-muted-foreground">
+                  <List className="h-4 w-4" />
+                  <span className="font-bold text-xs uppercase tracking-widest">目次</span>
                 </div>
-                <ScrollArea className="flex-1">
-                  <div className="p-3">
-                    <TOCContent />
-                  </div>
-                </ScrollArea>
-                <div className="p-4 bg-gradient-to-t from-background to-transparent pointer-events-none absolute bottom-0 left-0 right-0 h-12" />
+                <TOCContent />
               </div>
-            )}
-
-            {/* Author Profile Card */}
-            <div className="bg-card rounded-[2rem] border border-border/40 shadow-premium overflow-hidden transition-all hover:shadow-xl group/author">
-              <div className="h-32 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent relative overflow-hidden">
-                <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,transparent)]" />
-              </div>
-              <div className="px-8 pb-10">
-                <div className="relative -mt-16 mb-6">
-                  <Avatar className="h-32 w-32 border-[6px] border-card shadow-premium transition-transform group-hover/author:scale-105 duration-500">
-                    <AvatarImage src={blogData.author.avatar_url || "/default.png"} className="object-cover" />
-                    <AvatarFallback className="text-3xl font-bold">{blogData.author.name?.[0]}</AvatarFallback>
-                  </Avatar>
-                </div>
-                <h3 className="text-2xl font-black mb-1">
-                  <Link href={`/profile/${blogData.author.id}`} className="hover:text-primary transition-colors tracking-tight">
-                    {blogData.author.name}
-                  </Link>
-                </h3>
-                <p className="text-sm font-bold text-muted-foreground mb-6">
-                  @{blogData.author.name}
-                </p>
-                {blogData.author.introduce && (
-                  <p className="text-sm text-foreground/70 line-clamp-4 mb-8 leading-relaxed font-medium">
-                    {blogData.author.introduce}
-                  </p>
-                )}
-                
-                <Button size="xl" className="w-full rounded-2xl font-black group shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all py-6" asChild>
-                  <Link href={`/profile/${blogData.author.id}`}>
-                    プロフィールを見る
-                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </Button>
-
-                {/* Social Links */}
-                {((blogData.author.social_links && Object.keys(blogData.author.social_links).length > 0) || blogData.author.homepage_url) && (
-                  <div className="mt-10 flex flex-wrap gap-3 pt-8 border-t border-border/30">
-                    {blogData.author.homepage_url && (
-                      <a href={blogData.author.homepage_url} target="_blank" rel="noopener noreferrer" className="p-3.5 rounded-2xl bg-muted/50 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all hover:scale-110">
-                        <Globe className="h-5 w-5" />
-                      </a>
-                    )}
-                    {blogData.author.social_links?.twitter && (
-                      <a href={blogData.author.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-3.5 rounded-2xl bg-muted/50 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all hover:scale-110">
-                        <Twitter className="h-5 w-5" />
-                      </a>
-                    )}
-                    {blogData.author.social_links?.github && (
-                      <a href={blogData.author.social_links.github} target="_blank" rel="noopener noreferrer" className="p-3.5 rounded-2xl bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-all hover:scale-110">
-                        <Github className="h-5 w-5" />
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </aside>
+            </aside>
+          )}
         </div>
       </div>
 
