@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useState, useEffect } from "react"
 import { CheckCircle2, Loader2, AlertCircle, Circle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
@@ -10,6 +11,23 @@ interface SaveStatusProps {
 }
 
 const SaveStatus = ({ status, className }: SaveStatusProps) => {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) {
+    return (
+      <div className={cn("flex items-center shrink-0 text-sm font-medium transition-all duration-300", className)}>
+        <div className="flex items-center text-green-600 dark:text-green-400 bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20 whitespace-nowrap opacity-0">
+          <Circle className="h-3 w-3 mr-1.5 fill-current shrink-0" />
+          <span className="text-xs">読み込み中</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={cn("flex items-center shrink-0 text-sm font-medium transition-all duration-300", className)}>
       <AnimatePresence mode="wait">

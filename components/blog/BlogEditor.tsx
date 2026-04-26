@@ -128,7 +128,7 @@ const ALLOWED_TYPES_UPLOAD = [
   'image/gif',  'image/webp', 'image/svg+xml',
   'image/avif', 'image/bmp',
 ]
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB（GIF は大きくなりやすいため余裕を持たせる）
+const MAX_FILE_SIZE = 3 * 1024 * 1024 // 3MB（Server Action のペイロード制限 4.5MB を考慮）
 
 const BlogEditor: React.FC<BlogEditorProps> = ({
   initialData,
@@ -198,22 +198,6 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     .flat()
     .filter((p: any) => p.userId !== userId)
 
-  useEffect(() => {
-    setIsMounted(true)
-    const fetchCollections = async () => {
-      const collections = await getCollections(userId)
-      setUserCollections(collections)
-    }
-    fetchCollections()
-
-    if (initialData?.id) {
-      const fetchBlogCollections = async () => {
-        const collections = await getBlogCollections(initialData.id)
-        setSelectedCollections(collections.map(c => c.id))
-      }
-      fetchBlogCollections()
-    }
-  }, [userId, initialData?.id])
 
   const form = useForm<z.infer<typeof BlogSchema>>({
     resolver: zodResolver(BlogSchema),
@@ -254,6 +238,27 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const watchedSummary = form.watch("summary")
   const watchedTags = form.watch("tags")
   const watchedIsPublished = form.watch("is_published")
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const isMobileEffective = isMounted ? isMobile : false;
+
+  // マウント後の処理
+  useEffect(() => {
+    setIsMounted(true)
+    const fetchCollections = async () => {
+      const collections = await getCollections(userId)
+      setUserCollections(collections)
+    }
+    fetchCollections()
+
+    if (initialData?.id) {
+      const fetchBlogCollections = async () => {
+        const collections = await getBlogCollections(initialData.id)
+        setSelectedCollections(collections.map(c => c.id))
+      }
+      fetchBlogCollections()
+    }
+  }, [userId, initialData?.id])
 
   // 自動保存
   useEffect(() => {
@@ -543,7 +548,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
           {/* スリムで洗練されたヘッダー */}
           <header className={cn(
             "border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-2 md:px-4 z-[var(--z-nav)] shrink-0 transition-all duration-300",
-            (isEditorFocused && isMobile) ? "h-0 opacity-0 -translate-y-full overflow-hidden" : "h-14 md:h-16 opacity-100 translate-y-0"
+            (isEditorFocused && isMobileEffective) ? "h-0 opacity-0 -translate-y-full overflow-hidden" : "h-14 md:h-16 opacity-100 translate-y-0"
           )}>
             <div className="flex items-center space-x-2 md:space-x-4">
               <Button variant="ghost" size="icon" onClick={handleBack} className="h-9 w-9" aria-label="戻る">
@@ -571,7 +576,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   <SaveStatus status={getSaveStatus() as any} />
 
                   {/* 他の編集者を表示 */}
-                  {otherEditors.length > 0 && (
+                  {isMounted && otherEditors.length > 0 && (
                     <div className="flex -space-x-2 ml-2">
                       {otherEditors.map((p: any, idx) => (
                         <Tooltip key={idx}>

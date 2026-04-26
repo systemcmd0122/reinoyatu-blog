@@ -104,6 +104,7 @@ const withPWA = withPWAInit({
 });
 
 export default withPWA({
+  serverExternalPackages: ["sharp"],
   images: {
     remotePatterns: [
       {

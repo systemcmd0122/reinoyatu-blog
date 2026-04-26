@@ -32,6 +32,15 @@ export const optimizeImage = async (buffer: Buffer, maxWidth = 1200): Promise<{ 
   const image = sharp(buffer);
   const metadata = await image.metadata();
 
+  // GIFの場合はアニメーションを保持するため最適化をスキップしてそのまま返す
+  if (metadata.format === 'gif') {
+    return {
+      buffer,
+      contentType: "image/gif",
+      extension: "gif"
+    };
+  }
+
   let processor = image.webp({ quality: 80 });
 
   if (metadata.width && metadata.width > maxWidth) {
