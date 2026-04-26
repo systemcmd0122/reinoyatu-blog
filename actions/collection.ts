@@ -103,15 +103,14 @@ export async function addBlogToCollection(collectionId: string, blogId: string) 
     })
 
   if (error) {
-    if (error.code === "23505") { // Unique violation
+    if (error.code === "23505") {
       return { success: false, error: "この記事は既にコレクションに含まれています" }
     }
     console.error("Add blog to collection error:", error)
     return { success: false, error: "コレクションへの追加に失敗しました" }
   }
 
-  // 通知を送信
-  // 1. 記事の投稿者に通知
+  // 記事の投稿者に通知
   const { data: blogData } = await supabase
     .from("blogs")
     .select("user_id")
@@ -160,23 +159,27 @@ export async function removeBlogFromCollection(collectionId: string, blogId: str
 
 /**
  * コレクション内アイテムの順序を更新する
+ *
+ * upsert は blog_id NOT NULL 制約で失敗するため、
+ * collection_items の行 id を使って個別に update する。
  */
 export async function updateCollectionItemsOrder(collectionId: string, itemIds: string[]) {
   const supabase = createClient()
 
-  // 複数の更新を一括で行う（Supabaseのupsertを利用）
-  const updates = itemIds.map((id, index) => ({
-    id,
-    order_index: index,
-    collection_id: collectionId, // FK制約のため必要
-  }))
+  // Promise.all で並列更新
+  const results = await Promise.all(
+    itemIds.map((id, index) =>
+      supabase
+        .from("collection_items")
+        .update({ order_index: index })
+        .eq("id", id)
+        .eq("collection_id", collectionId) // 安全のため collection_id も条件に加える
+    )
+  )
 
-  const { error } = await supabase
-    .from("collection_items")
-    .upsert(updates)
-
-  if (error) {
-    console.error("Update collection items order error:", error)
+  const failed = results.find((r) => r.error)
+  if (failed?.error) {
+    console.error("Update collection items order error:", failed.error)
     return { success: false, error: "順序の更新に失敗しました" }
   }
 
@@ -246,7 +249,6 @@ export async function getCollectionWithItems(collectionId: string) {
     return null
   }
 
-  // collection_itemsをorder_indexでソート
   if (data.collection_items) {
     data.collection_items.sort((a: any, b: any) => a.order_index - b.order_index)
   }
