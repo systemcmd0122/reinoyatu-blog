@@ -82,6 +82,24 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   collection
 }) => {
   const [blogData, setBlogData] = useState<NormalizedArticle>(blog)
+  const [scrollProgress, setScrollProgress] = useState(0)
+
+  // スクロール進捗の計算
+  useEffect(() => {
+    const updateScrollProgress = () => {
+      const currentScrollY = window.scrollY
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
+      if (scrollHeight <= 0) {
+        setScrollProgress(0)
+        return
+      }
+      const progress = Math.min(Math.max((currentScrollY / scrollHeight) * 100, 0), 100)
+      setScrollProgress(progress)
+    }
+
+    window.addEventListener("scroll", updateScrollProgress)
+    return () => window.removeEventListener("scroll", updateScrollProgress)
+  }, [])
   const [relatedBlogs, setRelatedBlogs] = useState<any[]>([])
   const router = useRouter()
   const [error, setError] = useState("")
@@ -260,27 +278,46 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   }
 
   const TOCContent = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <nav className="space-y-1">
+    <nav className="space-y-1 px-1">
       {headings.map((heading) => {
         const item = (
           <a
             key={heading.id}
             href={`#${heading.id}`}
             className={cn(
-              "block py-2 text-sm transition-all hover:text-primary leading-tight font-bold rounded-md px-3",
-              heading.level === 1 ? "text-foreground" :
-              heading.level === 2 ? "ml-4 text-muted-foreground font-medium text-xs" :
-              "ml-8 text-muted-foreground text-[11px] font-medium",
-              activeId === heading.id ? "text-primary bg-primary/5" : "hover:bg-muted/50"
+              "group relative block py-2.5 text-sm transition-all hover:text-primary leading-snug rounded-xl px-4",
+              heading.level === 1 ? "font-bold text-foreground" :
+              heading.level === 2 ? "ml-4 font-semibold text-muted-foreground text-[13px]" :
+              "ml-8 font-medium text-muted-foreground text-[12px]",
+              activeId === heading.id
+                ? "text-primary bg-primary/5 shadow-sm ring-1 ring-primary/10"
+                : "hover:bg-muted/50"
             )}
             onClick={(e) => {
               e.preventDefault()
-              document.getElementById(heading.id)?.scrollIntoView({
-                behavior: "smooth"
-              })
+              const element = document.getElementById(heading.id)
+              if (element) {
+                const offset = 100
+                const bodyRect = document.body.getBoundingClientRect().top
+                const elementRect = element.getBoundingClientRect().top
+                const elementPosition = elementRect - bodyRect
+                const offsetPosition = elementPosition - offset
+
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: "smooth"
+                })
+              }
             }}
           >
-            {heading.text}
+            {activeId === heading.id && (
+              <motion.div
+                layoutId="active-toc-indicator"
+                className="absolute left-1.5 top-2 bottom-2 w-1 bg-primary rounded-full"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10">{heading.text}</span>
           </a>
         )
 
@@ -295,17 +332,32 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
   return (
     <div className="min-h-screen bg-muted/10 dark:bg-background pb-32 relative">
+      {/* Reading Progress Bar */}
+      <div className="fixed top-0 left-0 right-0 h-1 z-[var(--z-progress)] bg-muted/30">
+        <motion.div
+          className="h-full bg-primary"
+          style={{ width: `${scrollProgress}%` }}
+          transition={{ type: "spring", stiffness: 100, damping: 20 }}
+        />
+      </div>
+
       <div className="max-w-screen-xl mx-auto px-4 py-12 md:py-20">
         {/* Back Button */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-bold text-sm uppercase tracking-wider mb-8 group"
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-          フィードに戻る
-        </Link>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-bold text-sm uppercase tracking-wider mb-8 group"
+          >
+            <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+            フィードに戻る
+          </Link>
+        </motion.div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-12">
           {/* Main Content */}
           <main className="flex-1 min-w-0">
             <article>
@@ -328,14 +380,24 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 <SummarySection summary={blogData.ai_summary} />
 
                 {/* 4. CoverImage */}
-                <div className="rounded-lg overflow-hidden shadow-sm border border-border/40">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="rounded-[2.5rem] overflow-hidden shadow-premium border border-border/40"
+                >
                   <CoverImage url={blogData.cover_image_url} title={blogData.title} />
-                </div>
+                </motion.div>
 
                 {/* 5. ArticleContent */}
-                <div className="bg-card rounded-lg border border-border/40 p-8 md:p-12 shadow-sm relative overflow-hidden">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="bg-card rounded-[2.5rem] border border-border/40 p-8 md:p-20 shadow-premium relative overflow-hidden"
+                >
                   <ArticleContent content={blogData.content} />
-                </div>
+                </motion.div>
               </div>
 
               {/* Series Navigation */}
@@ -528,65 +590,75 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
             {/* Table of Contents */}
             {headings.length > 0 && (
-              <div className="hidden lg:block sticky top-24 z-[var(--z-sticky)] bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden max-h-[calc(100vh-140px)] flex flex-col">
-                <div className="p-4 border-b border-border/40 bg-muted/20 flex items-center gap-3">
-                  <div className="p-1.5 bg-primary/10 rounded-md">
-                    <List className="h-4 w-4 text-primary" />
+              <div className="hidden lg:block sticky top-24 z-[var(--z-sticky)] bg-card rounded-2xl border border-border/40 shadow-premium overflow-hidden max-h-[calc(100vh-120px)] flex flex-col">
+                <div className="p-5 border-b border-border/40 bg-muted/20 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <List className="h-4 w-4 text-primary" />
+                    </div>
+                    <h2 className="font-bold text-sm tracking-tight">目次</h2>
                   </div>
-                  <h2 className="font-bold text-xs uppercase tracking-wider">目次</h2>
+                  <div className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase">
+                    {headings.length} sections
+                  </div>
                 </div>
-                <ScrollArea className="flex-1 p-2">
-                  <TOCContent />
+                <ScrollArea className="flex-1">
+                  <div className="p-3">
+                    <TOCContent />
+                  </div>
                 </ScrollArea>
+                <div className="p-4 bg-gradient-to-t from-background to-transparent pointer-events-none absolute bottom-0 left-0 right-0 h-12" />
               </div>
             )}
 
             {/* Author Profile Card */}
-            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden">
-              <div className="h-24 bg-muted/30" />
-              <div className="px-6 pb-8">
-                <div className="relative -mt-12 mb-4">
-                  <Avatar className="h-24 w-24 border-4 border-card shadow-sm">
+            <div className="bg-card rounded-[2rem] border border-border/40 shadow-premium overflow-hidden transition-all hover:shadow-xl group/author">
+              <div className="h-32 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent relative overflow-hidden">
+                <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,transparent)]" />
+              </div>
+              <div className="px-8 pb-10">
+                <div className="relative -mt-16 mb-6">
+                  <Avatar className="h-32 w-32 border-[6px] border-card shadow-premium transition-transform group-hover/author:scale-105 duration-500">
                     <AvatarImage src={blogData.author.avatar_url || "/default.png"} className="object-cover" />
-                    <AvatarFallback className="text-xl font-bold">{blogData.author.name?.[0]}</AvatarFallback>
+                    <AvatarFallback className="text-3xl font-bold">{blogData.author.name?.[0]}</AvatarFallback>
                   </Avatar>
                 </div>
-                <h3 className="text-xl font-bold mb-1">
-                  <Link href={`/profile/${blogData.author.id}`} className="hover:text-primary transition-colors">
+                <h3 className="text-2xl font-black mb-1">
+                  <Link href={`/profile/${blogData.author.id}`} className="hover:text-primary transition-colors tracking-tight">
                     {blogData.author.name}
                   </Link>
                 </h3>
-                <p className="text-xs font-medium text-muted-foreground mb-4">
+                <p className="text-sm font-bold text-muted-foreground mb-6">
                   @{blogData.author.name}
                 </p>
                 {blogData.author.introduce && (
-                  <p className="text-sm text-foreground/70 line-clamp-3 mb-6 leading-relaxed">
+                  <p className="text-sm text-foreground/70 line-clamp-4 mb-8 leading-relaxed font-medium">
                     {blogData.author.introduce}
                   </p>
                 )}
                 
-                <Button size="lg" className="w-full rounded-md font-bold group" asChild>
+                <Button size="xl" className="w-full rounded-2xl font-black group shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all py-6" asChild>
                   <Link href={`/profile/${blogData.author.id}`}>
                     プロフィールを見る
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>
 
                 {/* Social Links */}
                 {((blogData.author.social_links && Object.keys(blogData.author.social_links).length > 0) || blogData.author.homepage_url) && (
-                  <div className="mt-8 flex flex-wrap gap-4 pt-8 border-t border-border/30">
+                  <div className="mt-10 flex flex-wrap gap-3 pt-8 border-t border-border/30">
                     {blogData.author.homepage_url && (
-                      <a href={blogData.author.homepage_url} target="_blank" rel="noopener noreferrer" className="p-3 rounded-xl bg-muted/50 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all">
+                      <a href={blogData.author.homepage_url} target="_blank" rel="noopener noreferrer" className="p-3.5 rounded-2xl bg-muted/50 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all hover:scale-110">
                         <Globe className="h-5 w-5" />
                       </a>
                     )}
                     {blogData.author.social_links?.twitter && (
-                      <a href={blogData.author.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-3 rounded-xl bg-muted/50 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all">
+                      <a href={blogData.author.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-3.5 rounded-2xl bg-muted/50 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all hover:scale-110">
                         <Twitter className="h-5 w-5" />
                       </a>
                     )}
                     {blogData.author.social_links?.github && (
-                      <a href={blogData.author.social_links.github} target="_blank" rel="noopener noreferrer" className="p-3 rounded-xl bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
+                      <a href={blogData.author.social_links.github} target="_blank" rel="noopener noreferrer" className="p-3.5 rounded-2xl bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-all hover:scale-110">
                         <Github className="h-5 w-5" />
                       </a>
                     )}
@@ -600,23 +672,29 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
 
       {/* Mobile TOC Button */}
       {headings.length > 0 && (
-        <div className="fixed bottom-24 right-6 z-[var(--z-sticky)] lg:hidden">
+        <div className="fixed bottom-10 right-6 z-[var(--z-sticky)] lg:hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <Button size="icon" className="h-14 w-14 rounded-full shadow-lg border-2 border-background bg-primary text-primary-foreground transition-all">
-                <List className="h-6 w-6" />
+              <Button size="icon" className="h-16 w-16 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-4 border-background bg-primary text-primary-foreground transition-all hover:scale-110 active:scale-95">
+                <List className="h-7 w-7" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-xl max-h-[80vh] p-0 overflow-hidden">
-              <SheetHeader className="p-6 border-b border-border/40 bg-muted/20">
-                <SheetTitle className="flex items-center gap-3 text-xl font-bold">
-                  <div className="p-1.5 bg-primary rounded-md">
-                    <List className="h-5 w-5 text-primary-foreground" />
+            <SheetContent side="bottom" className="rounded-t-[2.5rem] max-h-[85vh] p-0 overflow-hidden border-none shadow-2xl">
+              <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mt-4 mb-2" />
+              <SheetHeader className="p-8 border-b border-border/40 bg-muted/10">
+                <SheetTitle className="flex items-center justify-between text-2xl font-black">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-primary rounded-2xl shadow-lg shadow-primary/20">
+                      <List className="h-6 w-6 text-primary-foreground" />
+                    </div>
+                    目次
                   </div>
-                  目次
+                  <span className="text-xs font-bold text-muted-foreground bg-muted px-3 py-1 rounded-full uppercase tracking-widest">
+                    {headings.length} Topics
+                  </span>
                 </SheetTitle>
               </SheetHeader>
-              <ScrollArea className="p-4 h-full overflow-y-auto pb-20">
+              <ScrollArea className="p-6 h-[60vh] overflow-y-auto pb-32">
                 <TOCContent isMobile />
               </ScrollArea>
             </SheetContent>
