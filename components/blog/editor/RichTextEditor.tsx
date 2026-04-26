@@ -179,7 +179,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
     onBlur,
     editorProps: {
       attributes: {
-        class: 'prose max-w-3xl mx-auto focus:outline-none min-h-[1056px] py-12 px-4 md:px-8 bg-transparent !text-foreground/90 prose-p:!text-foreground/85 prose-p:leading-8 text-lg prose-h1:!text-foreground prose-h2:!text-foreground prose-h3:!text-foreground prose-h4:!text-foreground prose-h5:!text-foreground prose-h6:!text-foreground prose-strong:!text-foreground prose-strong:!font-semibold prose-em:!text-foreground prose-li:!text-foreground/85 prose-td:!text-foreground/85 prose-th:!text-foreground/85 prose-a:!text-blue-500 leading-relaxed',
+        class: 'prose prose-lg max-w-3xl mx-auto focus:outline-none min-h-[1056px] pt-4 pb-32 px-0 bg-transparent !text-foreground/90 prose-p:!text-foreground/85 prose-p:leading-9 text-lg md:text-xl prose-h1:!text-foreground prose-h2:!text-foreground prose-h2:mt-12 prose-h2:mb-6 prose-h3:!text-foreground prose-h3:mt-8 prose-h3:mb-4 prose-h4:!text-foreground prose-strong:!text-foreground prose-strong:!font-bold prose-em:!text-foreground prose-li:!text-foreground/85 prose-td:!text-foreground/85 prose-th:!text-foreground/85 prose-a:!text-blue-500 leading-relaxed tracking-normal',
       },
       handlePaste: (view, event) => {
         const items = Array.from(event.clipboardData?.items || []);
@@ -311,12 +311,12 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
   }
 
   return (
-    <div className="rich-text-editor flex flex-col bg-muted/30 h-full overflow-hidden">
-      <div className="hidden md:block shadow-sm z-10">
+    <div className="rich-text-editor flex flex-col bg-transparent h-full">
+      <div className="hidden md:block z-10">
         <EditorToolbar editor={editor} userId={userId} />
       </div>
 
-      <div className="flex-1 relative overflow-y-auto custom-scrollbar bg-muted/5">
+      <div className="flex-1 relative">
         {editor && (
           <BubbleMenu
             editor={editor}
@@ -370,7 +370,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
         </div>
       </div>
 
-      <div className="block md:hidden border-t border-border bg-background pb-[env(safe-area-inset-bottom)] z-10 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+      <div className="block md:hidden border-t border-border bg-background pb-[env(safe-area-inset-bottom)] z-10">
         <EditorToolbar editor={editor} userId={userId} />
       </div>
     </div>

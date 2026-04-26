@@ -4,9 +4,6 @@ import React from "react"
 import { useFormContext } from "react-hook-form"
 import { 
   Type, 
-  Wand2, 
-  Loader2, 
-  Sparkles, 
   ImagePlus, 
   Upload, 
   FileText, 
@@ -37,18 +34,6 @@ interface EditorSettingsProps {
   watchedContent: string
   watchedSummary: string | undefined
   watchedTags: string[] | undefined
-  aiSuggestion: {
-    type: "summary" | "tags" | "titles"
-    content: string | string[]
-  } | null
-  setAiSuggestion: (suggestion: any) => void
-  isTitleGenerating: boolean
-  handleGenerateTitles: () => Promise<void>
-  isGeneratingSummary: boolean
-  handleGenerateSummary: () => Promise<void>
-  isTagGenerating: boolean
-  handleGenerateTags: () => Promise<void>
-  applyAiSuggestion: () => Promise<void>
   imagePreview: string | null
   handleImageUpload: (event: React.ChangeEvent<HTMLInputElement>) => void
   setImageFile: (file: File | null) => void
@@ -66,15 +51,6 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({
   watchedContent,
   watchedSummary,
   watchedTags,
-  aiSuggestion,
-  setAiSuggestion,
-  isTitleGenerating,
-  handleGenerateTitles,
-  isGeneratingSummary,
-  handleGenerateSummary,
-  isTagGenerating,
-  handleGenerateTags,
-  applyAiSuggestion,
   imagePreview,
   handleImageUpload,
   setImageFile,
@@ -91,177 +67,6 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({
 
   return (
     <div className="space-y-10">
-      {/* タイトル提案 */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-            <Type className="h-4 w-4" />
-            タイトル提案
-          </h4>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleGenerateTitles}
-            disabled={!watchedContent}
-            loading={isTitleGenerating}
-            loadingText="提案中..."
-            className="h-7 text-[10px] font-bold hover:bg-primary/10 hover:text-primary"
-          >
-            {!isTitleGenerating && <Wand2 className="h-3 w-3 mr-1" />}
-            AI提案
-          </Button>
-        </div>
-
-        {aiSuggestion?.type === "titles" && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3"
-          >
-            <p className="text-xs text-primary font-bold flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              タイトル案:
-            </p>
-            <div className="space-y-2">
-              {(aiSuggestion.content as string[]).map((title, i) => (
-                <div key={i} className="flex items-center justify-between group/title">
-                  <p className="text-xs font-medium leading-tight pr-2">{title}</p>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className="h-6 px-2 text-[9px] font-bold shrink-0 opacity-0 group-hover/title:opacity-100 transition-opacity"
-                    onClick={() => {
-                      setValue("title", title, { shouldValidate: true })
-                      toast.success("タイトルを適用しました")
-                      setAiSuggestion(null)
-                    }}
-                  >
-                    適用
-                  </Button>
-                </div>
-              ))}
-            </div>
-            <Button size="sm" variant="ghost" className="h-6 w-full text-[9px] font-bold mt-2" onClick={() => setAiSuggestion(null)}>
-              閉じる
-            </Button>
-          </motion.div>
-        )}
-        <p className="text-[10px] text-muted-foreground italic px-1">本文の内容に基づいて魅力的なタイトルを提案します。</p>
-      </section>
-
-      {/* カバー画像設定 */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-            <ImagePlus className="h-4 w-4" />
-            カバー画像
-          </h4>
-        </div>
-
-        <Tabs defaultValue="upload" className="w-full">
-          <TabsList className="grid grid-cols-2 w-full mb-4">
-            <TabsTrigger value="upload" className="text-[10px] font-bold">
-              <Upload className="h-3 w-3 mr-1" /> アップロード
-            </TabsTrigger>
-            <TabsTrigger value="url" className="text-[10px] font-bold">
-              <Globe className="h-3 w-3 mr-1" /> URL指定
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="upload" className="space-y-4">
-            <div className="group relative aspect-video rounded-xl overflow-hidden border-2 border-dashed border-muted hover:border-primary/50 transition-all cursor-pointer bg-muted/20">
-              {imagePreview ? (
-                <>
-                  <Image src={imagePreview} alt="Cover" fill className="object-cover" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => document.getElementById('sidebar-image-upload')?.click()}>
-                      <Upload className="h-3 w-3 mr-1" />
-                      変更
-                    </Button>
-                    <Button size="sm" variant="secondary" onClick={() => setIsLibraryOpen(true)}>
-                      <Library className="h-3 w-3 mr-1" />
-                      ライブラリ
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => { setImageFile(null); setImagePreview(null); setIsDirty(true); }}>
-                      削除
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 space-y-2">
-                  <label htmlFor="sidebar-image-upload" className="flex flex-col items-center cursor-pointer group/label">
-                    <Upload className="h-8 w-8 text-muted-foreground mb-2 group-hover/label:text-primary transition-colors" />
-                    <p className="text-xs font-bold text-muted-foreground group-hover/label:text-primary transition-colors">画像をアップロード</p>
-                  </label>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-7 text-[10px] font-bold text-muted-foreground hover:text-primary"
-                    onClick={() => setIsLibraryOpen(true)}
-                  >
-                    <Library className="h-3.5 w-3.5 mr-1" />
-                    ライブラリから選択
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground/60">2MB以内の JPG, PNG, WebP</p>
-                </div>
-              )}
-              <input id="sidebar-image-upload" type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="url" className="space-y-4">
-            <div className="space-y-2">
-              <div className="relative">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input 
-                  placeholder="画像のURLを入力..." 
-                  className="pl-9 text-xs h-10 rounded-lg bg-muted/20 border-border"
-                  onBlur={(e) => {
-                    const url = e.target.value;
-                    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
-                      setImagePreview(url);
-                      setImageFile(null);
-                      setIsDirty(true);
-                      toast.success("URLから画像を読み込みました");
-                    } else if (url) {
-                      toast.error("有効なURL（http:// または https://）を入力してください");
-                    }
-                  }}
-                  defaultValue={imagePreview && imagePreview.startsWith('http') ? imagePreview : ''}
-                />
-              </div>
-              <p className="text-[10px] text-muted-foreground px-1 italic">
-                外部の画像URLを直接指定できます。
-              </p>
-            </div>
-
-            {imagePreview && imagePreview.startsWith('http') && (
-              <div className="relative aspect-video rounded-xl overflow-hidden border border-border">
-                <Image src={imagePreview} alt="URL Preview" fill className="object-cover" />
-                <Button 
-                  size="icon" 
-                  variant="destructive" 
-                  className="absolute top-2 right-2 h-6 w-6 rounded-full"
-                  onClick={() => { setImagePreview(null); setIsDirty(true); }}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-
-        <ImageLibraryDialog
-          userId={userId}
-          isOpen={isLibraryOpen}
-          onClose={() => setIsLibraryOpen(false)}
-          onSelect={(url: string | null) => {
-            setImagePreview(url);
-            setImageFile(null); // ファイルアップロードをリセット
-            setIsDirty(true);
-          }}
-        />
-      </section>
 
       {/* 要約設定 */}
       <section className="space-y-4">
@@ -270,41 +75,7 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({
             <FileText className="h-4 w-4" />
             要約 (Summary)
           </h4>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleGenerateSummary}
-            disabled={!watchedContent}
-            loading={isGeneratingSummary}
-            loadingText="生成中..."
-            className="h-7 text-[10px] font-bold hover:bg-primary/10 hover:text-primary"
-          >
-            {!isGeneratingSummary && <Wand2 className="h-3 w-3 mr-1" />}
-            AI生成
-          </Button>
         </div>
-
-        {aiSuggestion?.type === "summary" && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3"
-          >
-            <p className="text-xs text-primary font-bold flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              AIによる要約案:
-            </p>
-            <p className="text-xs leading-relaxed">{aiSuggestion.content as string}</p>
-            <div className="flex gap-2">
-              <Button size="sm" className="h-7 text-[10px] font-bold" onClick={applyAiSuggestion}>
-                適用する
-              </Button>
-              <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold" onClick={() => setAiSuggestion(null)}>
-                破棄
-              </Button>
-            </div>
-          </motion.div>
-        )}
 
         <Textarea 
           value={watchedSummary || ""}
@@ -371,47 +142,7 @@ const EditorSettings: React.FC<EditorSettingsProps> = ({
             <Tag className="h-4 w-4" />
             タグ
           </h4>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleGenerateTags}
-            disabled={!watchedContent}
-            loading={isTagGenerating}
-            loadingText="提案中..."
-            className="h-7 text-[10px] font-bold hover:bg-primary/10 hover:text-primary"
-          >
-            {!isTagGenerating && <Wand2 className="h-3 w-3 mr-1" />}
-            AI提案
-          </Button>
         </div>
-
-        {aiSuggestion?.type === "tags" && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3"
-          >
-            <p className="text-xs text-primary font-bold flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              おすすめのタグ:
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {(aiSuggestion.content as string[]).map((tag, i) => (
-                <span key={i} className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full border border-primary/20">
-                  #{tag}
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" className="h-7 text-[10px] font-bold" onClick={applyAiSuggestion}>
-                全て追加
-              </Button>
-              <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold" onClick={() => setAiSuggestion(null)}>
-                破棄
-              </Button>
-            </div>
-          </motion.div>
-        )}
 
         <TagInput 
           value={watchedTags || []}
