@@ -179,7 +179,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
     onBlur,
     editorProps: {
       attributes: {
-        class: 'prose prose-lg max-w-3xl mx-auto focus:outline-none min-h-[1056px] pt-4 pb-32 px-0 bg-transparent !text-foreground/90 prose-p:!text-foreground/85 prose-p:leading-9 text-lg md:text-xl prose-h1:!text-foreground prose-h2:!text-foreground prose-h2:mt-12 prose-h2:mb-6 prose-h3:!text-foreground prose-h3:mt-8 prose-h3:mb-4 prose-h4:!text-foreground prose-strong:!text-foreground prose-strong:!font-bold prose-em:!text-foreground prose-li:!text-foreground/85 prose-td:!text-foreground/85 prose-th:!text-foreground/85 prose-a:!text-blue-500 leading-relaxed tracking-normal',
+        class: 'prose max-w-3xl mx-auto focus:outline-none min-h-[1056px] pt-4 pb-32 px-0 bg-transparent !text-foreground prose-p:!text-foreground prose-p:leading-relaxed text-base md:text-lg prose-h1:!text-foreground prose-h2:!text-foreground prose-h2:mt-12 prose-h2:mb-6 prose-h3:!text-foreground prose-h3:mt-8 prose-h3:mb-4 prose-h4:!text-foreground prose-strong:!text-foreground prose-strong:!font-bold prose-em:!text-foreground prose-li:!text-foreground prose-td:!text-foreground prose-th:!text-foreground prose-a:!text-blue-500 leading-relaxed tracking-normal',
       },
       handlePaste: (view, event) => {
         const items = Array.from(event.clipboardData?.items || []);

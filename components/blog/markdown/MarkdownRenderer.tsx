@@ -56,12 +56,6 @@ const CodeBlock: React.FC<{
   code: string
 }> = ({ language, code }) => {
   const [isCopied, setIsCopied] = useState(false)
-  const { resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const handleCopy = async () => {
     try {
@@ -74,46 +68,46 @@ const CodeBlock: React.FC<{
   }
 
   return (
-    <div className="relative group my-6 rounded-xl border border-border/60 overflow-hidden bg-muted/20 shadow-sm transition-all duration-300 hover:shadow-md hover:border-border">
-      <div className="flex items-center justify-between px-4 py-2.5 bg-muted/80 backdrop-blur-sm border-b border-border/60">
+    <div className="relative group my-4 rounded-xl border border-border/10 overflow-hidden bg-[#0d1117] shadow-lg transition-all duration-300">
+      <div className="flex items-center justify-between px-4 py-2 bg-black/20 border-b border-white/5">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5 mr-2">
-            <div className="w-3 h-3 rounded-full bg-red-400/80 shadow-[inset_0_0_2px_rgba(0,0,0,0.1)]" />
-            <div className="w-3 h-3 rounded-full bg-yellow-400/80 shadow-[inset_0_0_2px_rgba(0,0,0,0.1)]" />
-            <div className="w-3 h-3 rounded-full bg-green-400/80 shadow-[inset_0_0_2px_rgba(0,0,0,0.1)]" />
+            <div className="w-3 h-3 rounded-full bg-red-400/60" />
+            <div className="w-3 h-3 rounded-full bg-yellow-400/60" />
+            <div className="w-3 h-3 rounded-full bg-green-400/60" />
           </div>
           {language && (
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] px-2 py-0.5 rounded-md bg-background/50 border border-border/40">
+            <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.15em]">
               {language}
             </span>
           )}
         </div>
         <button
           onClick={handleCopy}
-          className="flex items-center space-x-1.5 px-3 py-1 text-[11px] font-bold rounded-lg hover:bg-primary hover:text-primary-foreground transition-all duration-200 active:scale-95"
+          className="flex items-center space-x-1.5 px-3 py-1 text-[11px] font-bold text-white/40 hover:text-white transition-all duration-200 active:scale-95"
         >
-          {isCopied ? <Check size={12} className="text-green-500 group-hover:text-primary-foreground" /> : <Clipboard size={12} />}
+          {isCopied ? <Check size={12} className="text-green-500" /> : <Clipboard size={12} />}
           <span>{isCopied ? "COPIED" : "COPY"}</span>
         </button>
       </div>
-      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40">
+      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-white/20">
         <SyntaxHighlighter
-          style={mounted && resolvedTheme === 'dark' ? oneDark : oneLight}
+          style={oneDark}
           language={language || 'text'}
           PreTag="div"
           showLineNumbers
           lineNumberStyle={{
             minWidth: '2.5em',
             paddingRight: '1em',
-            color: 'rgba(120, 120, 120, 0.4)',
+            color: 'rgba(255, 255, 255, 0.2)',
             textAlign: 'right',
             userSelect: 'none',
           }}
           customStyle={{
             margin: 0,
-            padding: '1.25rem 1rem',
+            padding: '1rem',
             fontSize: '13.5px',
-            lineHeight: '1.7',
+            lineHeight: '1.6',
             background: 'transparent',
             fontFamily: 'var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
           }}
@@ -241,7 +235,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             }
             
             return (
-              <code className="bg-muted px-1.5 py-0.5 rounded-md font-mono text-[0.9em] border border-border/50" {...props}>
+              <code className="bg-muted/80 text-foreground px-1.5 py-0.5 rounded font-mono text-[0.85em] border border-border/40 font-medium mx-0.5" {...props}>
                 {children}
               </code>
             )

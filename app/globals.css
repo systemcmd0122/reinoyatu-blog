@@ -98,22 +98,22 @@
 /* Typography and Markdown refinements */
 .prose {
   max-width: none;
-  line-height: 2.2;
-  letter-spacing: 0.02em;
-  @apply text-[18px] md:text-[19.5px];
+  line-height: 2;
+  letter-spacing: 0.01em;
+  @apply text-[17px] md:text-[18px];
 }
 
 .prose h1, .prose h2, .prose h3, .prose h4 {
-  @apply font-black tracking-tight text-foreground mt-20 mb-10;
+  @apply font-black tracking-tight text-foreground mt-16 mb-8;
   scroll-margin-top: 6rem;
 }
 
 .prose h1 {
-  @apply text-4xl md:text-5xl border-b-4 border-primary/5 pb-8 mb-14;
+  @apply text-3xl md:text-4xl border-b-4 border-primary/5 pb-6 mb-12;
 }
 
 .prose h2 {
-  @apply text-3xl md:text-4xl border-b-2 border-primary/5 pb-6 mb-12;
+  @apply text-2xl md:text-3xl border-b-2 border-primary/5 pb-4 mb-10;
 }
 
 .prose h3 {
@@ -121,7 +121,7 @@
 }
 
 .prose p {
-  @apply leading-[2.2] mb-10 text-foreground/90;
+  @apply leading-[2.0] mb-8 text-foreground/90;
 }
 
 .prose a {
@@ -129,27 +129,35 @@
 }
 
 .prose blockquote {
-  @apply border-l-4 border-primary/30 bg-muted/20 px-6 py-4 italic rounded-r-lg my-8 text-muted-foreground font-medium;
+  @apply border-l-4 border-primary/40 bg-muted/30 px-6 py-4 italic rounded-r-xl my-10 text-muted-foreground font-medium shadow-sm;
+}
+
+.prose ul, .prose ol {
+  @apply my-8 pl-6 space-y-3;
+}
+
+.prose li {
+  @apply leading-relaxed;
 }
 
 .prose code {
-  @apply bg-muted px-1.5 py-0.5 rounded-md font-mono text-[0.9em] border border-border/50 before:content-none after:content-none;
+  @apply bg-muted/80 text-foreground px-1.5 py-0.5 rounded font-mono text-[0.85em] border border-border/40 font-medium mx-0.5 before:content-none after:content-none;
 }
 
 .prose pre {
-  @apply rounded-lg border border-border bg-[#0d1117] p-0 overflow-x-auto my-8 shadow-md;
+  @apply rounded-xl border border-border/10 bg-[#0d1117] p-0 overflow-x-auto my-6 shadow-lg;
 }
 
 .prose pre code {
-  @apply bg-transparent p-6 border-none text-[14px] leading-relaxed block;
+  @apply bg-transparent p-4 border-none text-[13.5px] leading-relaxed block;
 }
 
 .prose img {
-  @apply rounded-lg border border-border shadow-md my-10 mx-auto;
+  @apply rounded-xl border border-border/40 shadow-premium my-12 mx-auto;
 }
 
 .prose table {
-  @apply border-collapse w-full my-10 overflow-hidden rounded-xl border border-border;
+  @apply border-collapse w-full my-12 overflow-hidden rounded-xl border border-border;
 }
 
 .prose thead {

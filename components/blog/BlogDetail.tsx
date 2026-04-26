@@ -396,7 +396,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 title={blogData.title}
               />
 
-              <div className="max-w-3xl mx-auto space-y-20">
+              <div className="max-w-3xl mx-auto space-y-16">
                 {/* 2. TagSection */}
                 <TagSection tags={blogData.tags} />
 
@@ -408,7 +408,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
-                  className="relative overflow-hidden py-4"
+                  className="relative overflow-hidden pt-4 pb-12"
                 >
                   <ArticleContent content={blogData.content} />
                 </motion.div>
