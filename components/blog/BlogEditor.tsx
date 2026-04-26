@@ -959,6 +959,12 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
             setIsDirty(true)
             toast.success("画像をトリミングしました")
           }}
+          onSkipCrop={(dataUrl, file) => {
+            setImageFile(file)
+            setImagePreview(dataUrl)
+            setIsDirty(true)
+            toast.success("画像を読み込みました")
+          }}
         />
       </Form>
     </TooltipProvider>

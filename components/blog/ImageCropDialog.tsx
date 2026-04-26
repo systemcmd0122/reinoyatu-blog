@@ -62,6 +62,8 @@ interface ImageCropDialogProps {
   maxOutputWidth?: number
   /** クロップ完了コールバック */
   onCrop: (croppedDataUrl: string, file: File) => void
+  /** トリミングせずそのまま使うコールバック（省略可） */
+  onSkipCrop?: (dataUrl: string, file: File) => void
 }
 
 // ─── 定数 ──────────────────────────────────────────────────────────────────
@@ -97,6 +99,7 @@ export const ImageCropDialog: React.FC<ImageCropDialogProps> = ({
   aspectRatio = 16 / 9,
   maxOutputWidth = 1920,
   onCrop,
+  onSkipCrop,
 }) => {
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -191,39 +194,46 @@ export const ImageCropDialog: React.FC<ImageCropDialogProps> = ({
     if (!canvas || !img) return
 
     const ctx = canvas.getContext("2d")!
+    const { x: cx, y: cy, w: cw, h: ch } = cropRect
+
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    // 画像描画
-    ctx.save()
+    // ── Step1: 画像全体を描画 ──────────────────────────────────────────
     ctx.drawImage(img, offset.x, offset.y, img.width * scale, img.height * scale)
+
+    // ── Step2: クロップ範囲の外側だけ暗幕をかける（evenodd で穴を開ける）─
+    ctx.save()
+    ctx.fillStyle = "rgba(0, 0, 0, 0.55)"
+    ctx.beginPath()
+    // 外枠（時計回り）
+    ctx.rect(0, 0, canvas.width, canvas.height)
+    // クロップ穴（反時計回り → evenodd で切り抜き）
+    ctx.rect(cx, cy, cw, ch)
+    ctx.fill("evenodd")
     ctx.restore()
 
-    // 暗幕オーバーレイ（クロップ外）
+    // ── Step3: クロップ枠線 ────────────────────────────────────────────
     ctx.save()
-    ctx.fillStyle = "rgba(0, 0, 0, 0.5)"
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.clearRect(cropRect.x, cropRect.y, cropRect.w, cropRect.h)
-
-    // クロップ範囲の画像（そのまま描画済みなので上書きは不要）
-    // 枠線
-    ctx.strokeStyle = "rgba(255,255,255,0.9)"
+    ctx.strokeStyle = "rgba(255,255,255,0.95)"
     ctx.lineWidth   = 1.5
-    ctx.strokeRect(cropRect.x, cropRect.y, cropRect.w, cropRect.h)
+    ctx.strokeRect(cx, cy, cw, ch)
 
-    // グリッド（三分割線）
-    ctx.strokeStyle = "rgba(255,255,255,0.25)"
+    // ── Step4: 三分割グリッド ──────────────────────────────────────────
+    ctx.strokeStyle = "rgba(255,255,255,0.3)"
     ctx.lineWidth   = 0.8
     for (let i = 1; i < 3; i++) {
-      const gx = cropRect.x + (cropRect.w / 3) * i
-      const gy = cropRect.y + (cropRect.h / 3) * i
-      ctx.beginPath(); ctx.moveTo(gx, cropRect.y); ctx.lineTo(gx, cropRect.y + cropRect.h); ctx.stroke()
-      ctx.beginPath(); ctx.moveTo(cropRect.x, gy); ctx.lineTo(cropRect.x + cropRect.w, gy); ctx.stroke()
+      const gx = cx + (cw / 3) * i
+      const gy = cy + (ch / 3) * i
+      ctx.beginPath(); ctx.moveTo(gx, cy); ctx.lineTo(gx, cy + ch); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(cx, gy); ctx.lineTo(cx + cw, gy); ctx.stroke()
     }
+    ctx.restore()
 
-    // コーナーハンドル
+    // ── Step5: コーナー＆エッジ ハンドル ─────────────────────────────
     const handles = getHandlePositions(cropRect)
+    ctx.save()
     ctx.fillStyle   = "#ffffff"
-    ctx.strokeStyle = "rgba(0,0,0,0.3)"
+    ctx.strokeStyle = "rgba(0,0,0,0.35)"
     ctx.lineWidth   = 1
     handles.forEach(({ x, y }) => {
       ctx.beginPath()
@@ -504,6 +514,22 @@ export const ImageCropDialog: React.FC<ImageCropDialogProps> = ({
             >
               キャンセル
             </Button>
+            {onSkipCrop && imageSrc && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!isReady || isProcessing}
+                className="rounded-xl"
+                onClick={() => {
+                  const file = dataUrlToFile(imageSrc, "original.jpg")
+                  onSkipCrop(imageSrc, file)
+                  onOpenChange(false)
+                }}
+              >
+                そのまま使う
+              </Button>
+            )}
             <Button
               type="button"
               size="sm"
