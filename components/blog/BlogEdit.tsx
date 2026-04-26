@@ -14,8 +14,8 @@ interface BlogEditProps {
 
 const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
   useAuth()
-  
-  const handleSubmit = async (values: z.infer<typeof BlogSchema> & { base64Image?: string, imageUrl?: string | null }) => {
+
+  const handleSubmit = async (values: z.infer<typeof BlogSchema> & { base64Image?: string, imageUrl?: string | null | undefined }) => {
     return await editBlog({
       ...values,
       blogId: blog.id,
@@ -36,9 +36,9 @@ const BlogEdit: React.FC<BlogEditProps> = ({ blog }) => {
   }
 
   return (
-    <BlogEditor 
-      mode="edit" 
-      userId={blog.user_id} 
+    <BlogEditor
+      mode="edit"
+      userId={blog.user_id}
       initialData={blog}
       onSubmit={handleSubmit}
       onDelete={handleDelete}

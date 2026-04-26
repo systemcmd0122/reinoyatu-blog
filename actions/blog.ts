@@ -12,7 +12,7 @@ import { validateUser } from "@/utils/image-helpers"
 // タグをDBに保存し、IDを返すヘルパー関数
 const upsertTags = async (tagNames: string[]) => {
   const supabase = createClient()
-  
+
   // 空白除去と重複削除
   const cleanedTagNames = [...new Set(
     tagNames
@@ -116,6 +116,8 @@ export const newBlog = async (values: newBlogProps): Promise<ActionResponse> => 
         image_url: image_url || null,
         user_id: values.userId,
         is_published: values.is_published,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .select("id")
       .single()
@@ -178,7 +180,7 @@ export const newBlog = async (values: newBlogProps): Promise<ActionResponse> => 
 
 interface editBlogProps extends z.infer<typeof BlogSchema> {
   blogId: string
-  imageUrl: string | null
+  imageUrl: string | null | undefined
   base64Image?: string
   userId: string
   tags?: string[]
@@ -221,6 +223,7 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
     }
 
     let image_url = values.imageUrl
+    let shouldUpdateImage = false
 
     // 画像更新処理
     if (values.base64Image) {
@@ -229,19 +232,31 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
         return { success: false, error: result.error }
       }
       image_url = result.data.public_url
+      shouldUpdateImage = true
+    } else if (image_url !== null && image_url !== undefined) {
+      // 既存のURLが明示的に指定された場合のみ更新
+      // (新規画像がなく、URLが指定されている = 画像URLを変更)
+      shouldUpdateImage = true
+    }
+    // undefined の場合は、既存の画像を保持するため、更新しない
+
+    // ブログ更新 - 画像が変更されていない場合は image_url フィールドを除外
+    const updateData: any = {
+      title: values.title,
+      content: values.content,
+      content_json: values.content_json || null,
+      summary: values.summary || null,
+      is_published: values.is_published,
+      updated_at: new Date().toISOString(), // 明示的にタイムスタンプを設定（Supabaseの自動更新を上書き）
     }
 
-    // ブログ更新
+    if (shouldUpdateImage) {
+      updateData.image_url = image_url
+    }
+
     const { error: updateError } = await supabase
       .from("blogs")
-      .update({
-        title: values.title,
-        content: values.content,
-        content_json: values.content_json || null,
-        summary: values.summary || null,
-        image_url,
-        is_published: values.is_published,
-      })
+      .update(updateData)
       .eq("id", values.blogId)
 
     if (updateError) {
@@ -254,7 +269,7 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
       .from("article_authors")
       .select("user_id, role")
       .eq("article_id", values.blogId)
-    
+
     const currentAuthorIds = currentAuthors?.map(a => a.user_id) || []
     const uniqueCoAuthorIds = [...new Set(values.coauthors || [])].filter(id => id !== values.userId)
     const allNewAuthorIds = [values.userId, ...uniqueCoAuthorIds]
@@ -277,7 +292,7 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
         user_id: id,
         role: (id === values.userId ? 'owner' : 'editor') as 'owner' | 'editor'
       }))
-    
+
     if (authorsToInsert.length > 0) {
       await supabase
         .from("article_authors")
@@ -289,14 +304,14 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
 
     // タグの処理（差分更新）
     const tagIds = await upsertTags(values.tags || [])
-    
+
     const { data: currentBlogTags } = await supabase
       .from("blog_tags")
       .select("tag_id")
       .eq("blog_id", values.blogId)
-    
+
     const currentTagIds = currentBlogTags?.map(t => t.tag_id) || []
-    
+
     const tagsToDelete = currentTagIds.filter(id => !tagIds.includes(id))
     const tagsToInsert = tagIds.filter(id => !currentTagIds.includes(id))
 
@@ -380,7 +395,7 @@ export const deleteBlog = async ({
       .from("article_images")
       .select("image_id")
       .eq("article_id", blogId)
-    
+
     const imageIds = articleImages?.map(ai => ai.image_id) || []
 
     // ブログ削除（CASCADE制約により関連データも削除される）
@@ -438,19 +453,19 @@ export const generateTagsFromContent = async (title: string, content: string) =>
 }
 
 // AIによる要約生成と保存アクション
-export const generateAndSaveSummary = async ({ 
-  blogId, 
-  title, 
-  content 
-}: { 
+export const generateAndSaveSummary = async ({
+  blogId,
+  title,
+  content
+}: {
   blogId: string
   title: string
-  content: string 
+  content: string
 }) => {
   const supabase = createClient()
 
   const { summary, error: summaryError } = await generateSummaryFromContent(title, content)
-  
+
   if (summaryError) {
     console.error("要約生成エラー:", summaryError)
     return { error: summaryError }
@@ -608,7 +623,7 @@ export const chatWithAI = async (messages: { role: 'user' | 'model', content: st
   try {
     // サーバーサイドでGEMINI_API_KEYを取得（NEXT_PUBLIC_を使わない）
     const apiKey = process.env.GEMINI_API_KEY;
-    
+
     if (!apiKey) {
       console.error("GEMINI_API_KEY環境変数が設定されていません");
       return { content: null, error: "APIキーが設定されていません。管理者に連絡してください。" }
@@ -642,15 +657,15 @@ export const chatWithAI = async (messages: { role: 'user' | 'model', content: st
     return { content: response.text, error: null };
   } catch (error: any) {
     console.error("AIチャットエラー:", error);
-    
+
     if (error.status === 429) {
       return { content: null, error: "AIの利用制限（リクエスト過多）に達しました。少し時間をおいてから再度お試しください。" };
     }
-    
+
     if (error.status === 404) {
       return { content: null, error: "指定されたAIモデルが見つかりませんでした。管理者にお問い合わせください。" };
     }
-    
+
     if (error.status === 401 || error.status === 403) {
       return { content: null, error: "APIキーが無効です。環境変数を確認してください。" };
     }

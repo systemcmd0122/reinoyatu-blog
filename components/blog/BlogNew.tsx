@@ -14,20 +14,21 @@ interface BlogNewProps {
 const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   useAuth()
   const [createdBlogId, setCreatedBlogId] = React.useState<string | null>(null)
-  
-  const handleSubmit = async (values: z.infer<typeof BlogSchema> & { base64Image?: string, imageUrl?: string | null }) => {
+
+  const handleSubmit = async (values: z.infer<typeof BlogSchema> & { base64Image?: string, imageUrl?: string | null | undefined }) => {
     if (createdBlogId) {
       return await editBlog({
         ...values,
         blogId: createdBlogId,
         userId,
-        imageUrl: values.imageUrl !== undefined ? values.imageUrl : null,
+        imageUrl: values.imageUrl || null,
       })
     }
 
     const res = await newBlog({
       ...values,
       userId,
+      imageUrl: values.imageUrl || null,
     })
 
     if (res.success && res.id) {
@@ -48,9 +49,9 @@ const BlogNew: React.FC<BlogNewProps> = ({ userId }) => {
   }
 
   return (
-    <BlogEditor 
-      mode="new" 
-      userId={userId} 
+    <BlogEditor
+      mode="new"
+      userId={userId}
       onSubmit={handleSubmit}
       onDelete={handleDelete as any}
     />

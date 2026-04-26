@@ -17,17 +17,17 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { 
-  Loader2, 
-  ImagePlus, 
-  X, 
-  Upload, 
-  Eye, 
-  Tag, 
-  FileText, 
-  ChevronLeft, 
-  Save, 
-  CheckCircle2, 
+import {
+  Loader2,
+  ImagePlus,
+  X,
+  Upload,
+  Eye,
+  Tag,
+  FileText,
+  ChevronLeft,
+  Save,
+  CheckCircle2,
   AlertCircle,
   Layout,
   Columns,
@@ -42,7 +42,9 @@ import {
   Layers,
   Lock,
   Clock,
-  FileUp
+  FileUp,
+  Library,
+  Link
 } from "lucide-react"
 import { BlogSchema } from "@/schemas"
 import { useRouter } from "next/navigation"
@@ -51,7 +53,7 @@ import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -83,11 +85,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { 
-  Tooltip, 
-  TooltipContent, 
-  TooltipProvider, 
-  TooltipTrigger 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
 } from "@/components/ui/tooltip"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
@@ -105,6 +107,9 @@ import EditorSettings from "./editor/EditorSettings"
 import { usePresence } from "@/hooks/use-realtime"
 import { LoadingState } from "@/components/ui/loading-state"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { ImageLibraryDialog } from "./ImageLibraryDialog"
+import { ImageURLDialog } from "./ImageURLDialog"
+import { ImageCropDialog } from "./ImageCropDialog"
 
 
 interface BlogEditorProps {
@@ -117,10 +122,18 @@ interface BlogEditorProps {
 
 type EditorStatus = "idle" | "saving-draft" | "publishing" | "deleting" | "uploading-image" | "saved" | "unsaved" | "error"
 
-const BlogEditor: React.FC<BlogEditorProps> = ({ 
-  initialData, 
-  mode, 
-  userId, 
+// 許可するファイル形式（GIF・SVG・AVIF 含む全形式）
+const ALLOWED_TYPES_UPLOAD = [
+  'image/jpeg', 'image/jpg', 'image/png',
+  'image/gif',  'image/webp', 'image/svg+xml',
+  'image/avif', 'image/bmp',
+]
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB（GIF は大きくなりやすいため余裕を持たせる）
+
+const BlogEditor: React.FC<BlogEditorProps> = ({
+  initialData,
+  mode,
+  userId,
   onSubmit,
   onDelete
 }) => {
@@ -143,6 +156,11 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [userCollections, setUserCollections] = useState<CollectionType[]>([])
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
   const [userProfile, setUserProfile] = useState<{ name: string; avatar_url: string | null } | null>(null)
+  const [isLibraryDialogOpen, setIsLibraryDialogOpen] = useState(false)
+  const [isURLDialogOpen, setIsURLDialogOpen] = useState(false)
+  // クロップダイアログ用 state
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false)
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -194,7 +212,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       fetchBlogCollections()
     }
   }, [userId, initialData?.id])
-  
+
   const form = useForm<z.infer<typeof BlogSchema>>({
     resolver: zodResolver(BlogSchema),
     defaultValues: {
@@ -252,7 +270,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
 
   const handleAction = async (isPublished: boolean, silent: boolean = false) => {
     if (isSaving.current) return
-    
+
     setError("")
     setStatus(isPublished ? "publishing" : "saving-draft")
     isSaving.current = true
@@ -277,18 +295,32 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       form.setValue("is_published", isPublished)
       const values = form.getValues()
 
-      // imagePreviewがbase64でなく（＝既存のURL）、かつnullでない場合はそれを現在のURLとして渡す
-      // imagePreviewがnullの場合は画像が削除されたことを意味する
-      const currentImageUrl = (imagePreview && !imagePreview.startsWith('data:')) ? imagePreview : null;
+      // 画像URL の計算ロジック：
+      // 1. 新しい画像をアップロード中 → null (base64Image が処理される)
+      // 2. 新しい画像をアップロードしていない → undefined (既存の画像を保持)
+      // 3. 画像を削除 → null (imagePreview === null)
+      let currentImageUrl: string | null | undefined = undefined
+
+      if (imageFile) {
+        // 新しい画像がアップロードされている場合
+        currentImageUrl = null  // base64Image がサーバーで処理される
+      } else if (imagePreview && !imagePreview.startsWith('data:')) {
+        // 既存のURL がある場合（新規作成時の base64 は除外）
+        currentImageUrl = imagePreview
+      } else if (imagePreview === null) {
+        // 画像を削除した場合
+        currentImageUrl = null
+      }
+      // undefined の場合は、サーバーで image_url を更新しない
 
       const res = await onSubmit({ ...values, base64Image, imageUrl: currentImageUrl })
 
       if (res?.error) {
         // フィールドエラーがある場合はセットする（Zodバリデーション結果の反映など）
         if (typeof res.error === 'string' && res.error.includes('タイトル')) {
-           form.setError("title", { message: res.error });
+          form.setError("title", { message: res.error });
         } else if (typeof res.error === 'string' && res.error.includes('内容')) {
-           form.setError("content", { message: res.error });
+          form.setError("content", { message: res.error });
         }
 
         setError(`送信に失敗しました: ${res.error}`)
@@ -301,7 +333,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       if (res.id || currentBlogId) {
         const blogId = res.id || currentBlogId!
         const initialCollections = initialData?.id ? (await getBlogCollections(initialData.id)).map(c => c.id) : []
-        
+
         const toAdd = selectedCollections.filter(id => !initialCollections.includes(id))
         const toRemove = initialCollections.filter(id => !selectedCollections.includes(id))
 
@@ -318,11 +350,17 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       setLastSaved(new Date())
       setStatus("saved")
 
-      // 新規作成から編集モードへの内部状態移行
-      if (internalMode === "new" && res.id) {
-        setInternalMode("edit")
-        setCurrentBlogId(res.id)
-        // URLを静かに更新（履歴を置き換え）
+      // 保存成功後、アップロードされた画像をクリア
+      // base64Image がある場合、サーバーで処理されているので、次回以降のために状態をリセット
+      if (base64Image) {
+        setImageFile(null)
+        // base64 プレビューをクリア（後ほど、必要があれば、ブログデータを再取得して URL を設定）
+        // ただし、新規作成の場合はまだ既存の画像URL がないので base64 を保持
+        if (internalMode === "edit") {
+          // 編集モードの場合は、既存の画像URLで更新されているはず（サーバーから返される）
+          // 現在のコードではサーバーが image_url を返していないので、既存の imagePreview を保持
+          // （initialData から再取得する必要があるかもしれない）
+        }
         window.history.replaceState(null, "", `/blog/${res.id}/edit`)
       }
 
@@ -345,38 +383,58 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
-      const maxFileSize = 2 * 1024 * 1024
-      if (file.size > maxFileSize) {
-        setError("画像サイズは2MB以下にしてください")
-        toast.error("画像サイズが大きすぎます（最大2MB）")
-        return
-      }
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']
-      if (!allowedTypes.includes(file.type)) {
-        setError("JPG, PNG, WebP形式のみ対応しています")
-        toast.error("対応していないファイル形式です")
-        return
-      }
+    if (!file) return
 
-      setStatus("uploading-image")
-      
-      try {
-        setImageFile(file)
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          setImagePreview(reader.result as string)
+    // ファイルサイズチェック
+    if (file.size > MAX_FILE_SIZE) {
+      setError("画像サイズは10MB以下にしてください")
+      toast.error("画像サイズが大きすぎます（最大10MB）")
+      event.target.value = ""
+      return
+    }
+
+    // MIME タイプチェック（GIF・SVG・AVIF 含む全形式を許可）
+    if (!ALLOWED_TYPES_UPLOAD.includes(file.type)) {
+      setError("対応していないファイル形式です（JPEG / PNG / GIF / WebP / SVG / AVIF / BMP）")
+      toast.error("対応していないファイル形式です")
+      event.target.value = ""
+      return
+    }
+
+    setStatus("uploading-image")
+    setError("")
+
+    try {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string
+
+        if (file.type === 'image/gif') {
+          // GIF はクロップせずそのまま使用（アニメーションを保持するため）
+          setImageFile(file)
+          setImagePreview(dataUrl)
           setStatus("idle")
-          toast.success("画像を読み込みました")
+          setIsDirty(true)
+          toast.success("GIF画像を読み込みました（アニメーション保持）")
+        } else {
+          // GIF 以外はクロップダイアログを開く
+          setRawImageSrc(dataUrl)
+          setIsCropDialogOpen(true)
+          setStatus("idle")
         }
-        reader.readAsDataURL(file)
-        setError("")
-        setIsDirty(true)
-      } catch (err) {
+      }
+      reader.onerror = () => {
         setStatus("error")
         toast.error("画像の読み込みに失敗しました")
       }
+      reader.readAsDataURL(file)
+    } catch (err) {
+      setStatus("error")
+      toast.error("画像の読み込みに失敗しました")
     }
+
+    // input をリセット（同じファイルを再選択できるよう）
+    event.target.value = ""
   }
 
   const handleMarkdownImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -454,146 +512,146 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   return (
     <TooltipProvider>
       <Form {...form}>
-      <div className="h-screen bg-background flex flex-col overflow-hidden">
-        {/* スリムで洗練されたヘッダー */}
-        <header className={cn(
-          "border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-2 md:px-4 z-[var(--z-nav)] shrink-0 transition-all duration-300",
-          (isEditorFocused && isMobile) ? "h-0 opacity-0 -translate-y-full overflow-hidden" : "h-14 md:h-16 opacity-100 translate-y-0"
-        )}>
-          <div className="flex items-center space-x-2 md:space-x-4">
-            <Button variant="ghost" size="icon" onClick={handleBack} className="h-9 w-9" aria-label="戻る">
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Separator orientation="vertical" className="h-6" />
-            <div className="flex flex-col">
-              <div className="hidden sm:flex items-center gap-2 mb-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none">
-                  {internalMode === "new" ? "New Story" : "Edit Story"}
-                </span>
-                {internalMode === "edit" && (
-                  <Badge variant="outline" className={cn(
-                    "text-[8px] h-3.5 px-1 font-bold border-none uppercase tracking-tighter",
-                    watchedIsPublished ? "bg-green-500/10 text-green-500" : "bg-amber-500/10 text-amber-500"
-                  )}>
-                    {watchedIsPublished ? "Published" : "Draft"}
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold truncate max-w-[80px] sm:max-w-[200px] md:max-w-[400px]">
-                  {watchedTitle || "無題"}
-                </span>
-                <SaveStatus status={getSaveStatus() as any} />
-                
-                {/* 他の編集者を表示 */}
-                {otherEditors.length > 0 && (
-                  <div className="flex -space-x-2 ml-2">
-                    {otherEditors.map((p: any, idx) => (
-                      <Tooltip key={idx}>
-                        <TooltipTrigger asChild>
-                          <div className="w-6 h-6 rounded-full border-2 border-background bg-primary/10 flex items-center justify-center text-[8px] font-bold overflow-hidden ring-2 ring-primary/20">
-                             {idx + 1}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>他のユーザーが編集中です</TooltipContent>
-                      </Tooltip>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center gap-2">
-              <input
-                type="file"
-                id="markdown-import"
-                className="hidden"
-                accept=".md,.markdown"
-                onChange={handleMarkdownImport}
-              />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="font-bold hidden md:flex h-9"
-                    onClick={() => document.getElementById('markdown-import')?.click()}
-                  >
-                    <FileUp className="h-4 w-4 mr-2" />
-                    読み込む
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Markdownファイルをインポート</TooltipContent>
-              </Tooltip>
-
-              <Button 
-                variant="ghost"
-                size="sm" 
-                className="font-bold hidden sm:flex"
-                onClick={() => handleAction(false)}
-                disabled={!watchedTitle || !watchedContent}
-                loading={status === "saving-draft"}
-                loadingText="保存中..."
-              >
-                {!status.includes("saving") && <Save className="h-4 w-4 mr-2" />}
-                下書き保存
+        <div className="h-screen bg-background flex flex-col overflow-hidden">
+          {/* スリムで洗練されたヘッダー */}
+          <header className={cn(
+            "border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-2 md:px-4 z-[var(--z-nav)] shrink-0 transition-all duration-300",
+            (isEditorFocused && isMobile) ? "h-0 opacity-0 -translate-y-full overflow-hidden" : "h-14 md:h-16 opacity-100 translate-y-0"
+          )}>
+            <div className="flex items-center space-x-2 md:space-x-4">
+              <Button variant="ghost" size="icon" onClick={handleBack} className="h-9 w-9" aria-label="戻る">
+                <ChevronLeft className="h-5 w-5" />
               </Button>
-
-              <Button
-                size="sm"
-                disabled={!watchedTitle || !watchedContent}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-full px-6"
-                onClick={() => setIsSidebarOpen(true)}
-              >
-                公開設定
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="メニューを開く">
-                    <MoreVertical className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>アクション</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => setViewMode(viewMode === "preview" ? "edit" : "preview")}>
-                    {viewMode === "preview" ? <Type className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-                    {viewMode === "preview" ? "エディタに戻る" : "プレビューを表示"}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {internalMode === "edit" && onDelete && (
-                    <DropdownMenuItem 
-                      className="text-destructive focus:text-destructive"
-                      onClick={async () => {
-                        if (confirm("本当に削除しますか？")) {
-                          setStatus("deleting")
-                          const res = await onDelete(currentBlogId)
-                          if (res.success) {
-                            toast.success("記事を削除しました")
-                            router.push("/")
-                            router.refresh()
-                          } else {
-                            setStatus("idle")
-                            toast.error(res.error || "削除に失敗しました")
-                          }
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" /> 記事を削除
-                    </DropdownMenuItem>
+              <Separator orientation="vertical" className="h-6" />
+              <div className="flex flex-col">
+                <div className="hidden sm:flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none">
+                    {internalMode === "new" ? "New Story" : "Edit Story"}
+                  </span>
+                  {internalMode === "edit" && (
+                    <Badge variant="outline" className={cn(
+                      "text-[8px] h-3.5 px-1 font-bold border-none uppercase tracking-tighter",
+                      watchedIsPublished ? "bg-green-500/10 text-green-500" : "bg-amber-500/10 text-amber-500"
+                    )}>
+                      {watchedIsPublished ? "Published" : "Draft"}
+                    </Badge>
                   )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold truncate max-w-[80px] sm:max-w-[200px] md:max-w-[400px]">
+                    {watchedTitle || "無題"}
+                  </span>
+                  <SaveStatus status={getSaveStatus() as any} />
 
+                  {/* 他の編集者を表示 */}
+                  {otherEditors.length > 0 && (
+                    <div className="flex -space-x-2 ml-2">
+                      {otherEditors.map((p: any, idx) => (
+                        <Tooltip key={idx}>
+                          <TooltipTrigger asChild>
+                            <div className="w-6 h-6 rounded-full border-2 border-background bg-primary/10 flex items-center justify-center text-[8px] font-bold overflow-hidden ring-2 ring-primary/20">
+                              {idx + 1}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>他のユーザーが編集中です</TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </header>
 
-        {/* メインコンテンツエリア */}
-        <div className="flex-1 flex overflow-hidden bg-background">
-          <main className="flex-1 overflow-y-auto relative custom-scrollbar">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  id="markdown-import"
+                  className="hidden"
+                  accept=".md,.markdown"
+                  onChange={handleMarkdownImport}
+                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="font-bold hidden md:flex h-9"
+                      onClick={() => document.getElementById('markdown-import')?.click()}
+                    >
+                      <FileUp className="h-4 w-4 mr-2" />
+                      読み込む
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Markdownファイルをインポート</TooltipContent>
+                </Tooltip>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="font-bold hidden sm:flex"
+                  onClick={() => handleAction(false)}
+                  disabled={!watchedTitle || !watchedContent}
+                  loading={status === "saving-draft"}
+                  loadingText="保存中..."
+                >
+                  {!status.includes("saving") && <Save className="h-4 w-4 mr-2" />}
+                  下書き保存
+                </Button>
+
+                <Button
+                  size="sm"
+                  disabled={!watchedTitle || !watchedContent}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-full px-6"
+                  onClick={() => setIsSidebarOpen(true)}
+                >
+                  公開設定
+                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="メニューを開く">
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>アクション</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setViewMode(viewMode === "preview" ? "edit" : "preview")}>
+                      {viewMode === "preview" ? <Type className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                      {viewMode === "preview" ? "エディタに戻る" : "プレビューを表示"}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {internalMode === "edit" && onDelete && (
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={async () => {
+                          if (confirm("本当に削除しますか？")) {
+                            setStatus("deleting")
+                            const res = await onDelete(currentBlogId)
+                            if (res.success) {
+                              toast.success("記事を削除しました")
+                              router.push("/")
+                              router.refresh()
+                            } else {
+                              setStatus("idle")
+                              toast.error(res.error || "削除に失敗しました")
+                            }
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" /> 記事を削除
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+              </div>
+            </div>
+          </header>
+
+          {/* メインコンテンツエリア */}
+          <div className="flex-1 flex overflow-hidden bg-background">
+            <main className="flex-1 overflow-y-auto relative custom-scrollbar">
               <div className={cn(
                 "mx-auto transition-all duration-300 ease-in-out pt-0 pb-32 px-4 md:px-6 max-w-3xl",
               )}>
@@ -605,7 +663,13 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                       <div className="group relative aspect-[21/9] w-full rounded-xl overflow-hidden border-2 border-dashed border-muted hover:border-primary/50 transition-all cursor-pointer bg-muted/10 mb-8">
                         {imagePreview ? (
                           <>
-                            <Image src={imagePreview} alt="Cover" fill className="object-cover" />
+                            {/* GIF はアニメーションを保持するため <img> を使用、それ以外は Next.js Image */}
+                            {imagePreview.startsWith('data:image/gif') || (imagePreview.startsWith('http') && imagePreview.toLowerCase().includes('.gif')) ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={imagePreview} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+                            ) : (
+                              <Image src={imagePreview} alt="Cover" fill className="object-cover" />
+                            )}
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                               <Button size="sm" variant="secondary" onClick={() => document.getElementById('main-image-upload')?.click()}>
                                 <Upload className="h-3 w-3 mr-1" />
@@ -618,14 +682,50 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                           </>
                         ) : (
                           <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-                            <label htmlFor="main-image-upload" className="flex flex-col items-center cursor-pointer group/label">
-                              <ImagePlus className="h-10 w-10 text-muted-foreground mb-2 group-hover/label:text-primary transition-colors" />
-                              <p className="text-sm font-bold text-muted-foreground group-hover/label:text-primary transition-colors">見出し画像を追加</p>
-                            </label>
-                            <p className="text-[10px] text-muted-foreground/60 mt-2">推奨サイズ: 1280 × 670px</p>
+                            <div className="flex flex-col items-center gap-4 w-full">
+                              <div className="flex flex-col items-center">
+                                <ImagePlus className="h-10 w-10 text-muted-foreground mb-2 group-hover:text-primary transition-colors" />
+                                <p className="text-sm font-bold text-muted-foreground group-hover:text-primary transition-colors">見出し画像を追加</p>
+                                <p className="text-[10px] text-muted-foreground/60 mt-1">推奨サイズ: 1280 × 670px</p>
+                              </div>
+
+                              {/* 選択肢ボタン */}
+                              <div className="flex flex-col sm:flex-row gap-2 w-full max-w-xs">
+                                <button
+                                  type="button"
+                                  onClick={() => document.getElementById('main-image-upload')?.click()}
+                                  className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors"
+                                >
+                                  <Upload className="h-3 w-3" />
+                                  新規アップロード
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsLibraryDialogOpen(true)}
+                                  className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors"
+                                >
+                                  <Library className="h-3 w-3" />
+                                  ライブラリから選択
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsURLDialogOpen(true)}
+                                  className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors"
+                                >
+                                  <Link className="h-3 w-3" />
+                                  URLで指定
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         )}
-                        <input id="main-image-upload" type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                        <input
+                          id="main-image-upload"
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                        />
                       </div>
 
                       {/* タイトル入力 */}
@@ -635,7 +735,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                         render={({ field }) => (
                           <FormItem className="space-y-0">
                             <FormControl>
-                              <Input 
+                              <Input
                                 placeholder="タイトル"
                                 className="h-auto py-2 text-4xl md:text-5xl font-bold border-none bg-transparent focus-visible:ring-0 px-0 shadow-none placeholder:text-muted-foreground/20 tracking-tight"
                                 {...field}
@@ -684,13 +784,18 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                       {/* Cover Image (Synced with BlogDetail) */}
                       {imagePreview && (
                         <div className="mb-10 relative aspect-video rounded-xl overflow-hidden border border-border">
-                          <Image
-                            src={imagePreview}
-                            alt="Cover"
-                            fill
-                            className="object-cover"
-                            priority
-                          />
+                          {imagePreview.startsWith('data:image/gif') || (imagePreview.startsWith('http') && imagePreview.toLowerCase().includes('.gif')) ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={imagePreview} alt="Cover" className="w-full h-full object-cover" />
+                          ) : (
+                            <Image
+                              src={imagePreview}
+                              alt="Cover"
+                              fill
+                              className="object-cover"
+                              priority
+                            />
+                          )}
                         </div>
                       )}
 
@@ -749,76 +854,112 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   )}
                 </div>
               </div>
-          </main>
+            </main>
 
-          {/* 公開設定パネル (note風) */}
-          <Sheet open={isMounted && isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-            <SheetContent side="right" className="p-0 w-full sm:max-w-md border-l border-border flex flex-col">
-              <SheetHeader className="p-6 border-b border-border shrink-0">
-                <SheetTitle className="text-xl font-bold">公開設定</SheetTitle>
-              </SheetHeader>
-              <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <div className="p-6 space-y-10">
-                  <EditorSettings
-                    userId={userId}
-                    watchedContent={watchedContent}
-                    watchedSummary={watchedSummary}
-                    watchedTags={watchedTags}
-                    imagePreview={imagePreview}
-                    handleImageUpload={handleImageUpload}
-                    setImageFile={setImageFile}
-                    setImagePreview={setImagePreview}
-                    userCollections={userCollections}
-                    setUserCollections={setUserCollections}
-                    selectedCollections={selectedCollections}
-                    setSelectedCollections={setSelectedCollections}
-                    setIsDirty={setIsDirty}
-                    initialCoAuthors={initialData?.article_authors?.filter(aa => aa?.role === 'editor' && aa?.profiles).map(aa => ({
-                      id: aa.profiles!.id,
-                      name: aa.profiles!.name,
-                      avatar_url: aa.profiles!.avatar_url
-                    }))}
-                  />
+            {/* 公開設定パネル (note風) */}
+            <Sheet open={isMounted && isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+              <SheetContent side="right" className="p-0 w-full sm:max-w-md border-l border-border flex flex-col">
+                <SheetHeader className="p-6 border-b border-border shrink-0">
+                  <SheetTitle className="text-xl font-bold">公開設定</SheetTitle>
+                </SheetHeader>
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  <div className="p-6 space-y-10">
+                    <EditorSettings
+                      userId={userId}
+                      watchedContent={watchedContent}
+                      watchedSummary={watchedSummary}
+                      watchedTags={watchedTags}
+                      imagePreview={imagePreview}
+                      handleImageUpload={handleImageUpload}
+                      setImageFile={setImageFile}
+                      setImagePreview={setImagePreview}
+                      userCollections={userCollections}
+                      setUserCollections={setUserCollections}
+                      selectedCollections={selectedCollections}
+                      setSelectedCollections={setSelectedCollections}
+                      setIsDirty={setIsDirty}
+                      initialCoAuthors={initialData?.article_authors?.filter(aa => aa?.role === 'editor' && aa?.profiles).map(aa => ({
+                        id: aa.profiles!.id,
+                        name: aa.profiles!.name,
+                        avatar_url: aa.profiles!.avatar_url
+                      }))}
+                    />
 
-                  <Separator />
+                    <Separator />
 
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-bold">公開の確認</h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      {watchedIsPublished
-                        ? "記事を更新すると、変更内容が即座に反映されます。"
-                        : "「投稿する」ボタンを押すと、記事が公開されます。公開後もいつでも編集可能です。"}
-                    </p>
-                    <Button
-                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold h-12 rounded-full text-base"
-                      onClick={() => handleAction(true)}
-                      loading={status === "publishing"}
-                    >
-                      {watchedIsPublished ? "更新する" : "投稿する"}
-                    </Button>
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-bold">公開の確認</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {watchedIsPublished
+                          ? "記事を更新すると、変更内容が即座に反映されます。"
+                          : "「投稿する」ボタンを押すと、記事が公開されます。公開後もいつでも編集可能です。"}
+                      </p>
+                      <Button
+                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold h-12 rounded-full text-base"
+                        onClick={() => handleAction(true)}
+                        loading={status === "publishing"}
+                      >
+                        {watchedIsPublished ? "更新する" : "投稿する"}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+
+          {/* 全面ローディング (削除中など) */}
+          {status === "deleting" && (
+            <LoadingState
+              message="Deleting article..."
+              description="サーバーから記事を完全に削除しています"
+            />
+          )}
+
+          {status === "uploading-image" && (
+            <LoadingState
+              message="Processing Image..."
+              description="画像を最適化してプレビューを生成しています"
+            />
+          )}
         </div>
 
-        
-        {/* 全面ローディング (削除中など) */}
-        {status === "deleting" && (
-          <LoadingState 
-            message="Deleting article..." 
-            description="サーバーから記事を完全に削除しています"
-          />
-        )}
+        {/* 画像ライブラリダイアログ */}
+        <ImageLibraryDialog
+          open={isLibraryDialogOpen}
+          onOpenChange={setIsLibraryDialogOpen}
+          onSelect={(imageUrl) => {
+            setImagePreview(imageUrl)
+            setImageFile(null)
+            setIsDirty(true)
+          }}
+        />
 
-        {status === "uploading-image" && (
-          <LoadingState 
-            message="Processing Image..." 
-            description="画像を最適化してプレビューを生成しています"
-          />
-        )}
-      </div>
+        {/* 画像URL指定ダイアログ */}
+        <ImageURLDialog
+          open={isURLDialogOpen}
+          onOpenChange={setIsURLDialogOpen}
+          onSelect={(imageUrl) => {
+            setImagePreview(imageUrl)
+            setImageFile(null)
+            setIsDirty(true)
+          }}
+        />
+
+        {/* 画像クロップダイアログ */}
+        <ImageCropDialog
+          open={isCropDialogOpen}
+          onOpenChange={setIsCropDialogOpen}
+          imageSrc={rawImageSrc}
+          aspectRatio={16 / 9}
+          onCrop={(croppedDataUrl, croppedFile) => {
+            setImageFile(croppedFile)
+            setImagePreview(croppedDataUrl)
+            setIsDirty(true)
+            toast.success("画像をトリミングしました")
+          }}
+        />
       </Form>
     </TooltipProvider>
   )

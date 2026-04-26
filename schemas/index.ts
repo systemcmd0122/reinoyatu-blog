@@ -95,7 +95,7 @@ export const BlogSchema = z.object({
   tags: z.array(z.string()).optional(),
   is_published: z.boolean().optional(),
   coauthors: z.array(z.string()).optional(),
-  imageUrl: urlSchema.nullable(),
+  // imageUrl はサーバー側で個別に処理するため、スキーマから除外
 });
 
 export const SocialLinksSchema = z.object({
