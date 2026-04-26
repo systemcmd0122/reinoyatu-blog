@@ -300,7 +300,7 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
     }
 
     // 画像の関連付けを同期
-    await syncArticleImages(values.blogId, values.content_json || "", image_url)
+    await syncArticleImages(values.blogId, values.content_json || "", image_url ?? null)
 
     // タグの処理（差分更新）
     const tagIds = await upsertTags(values.tags || [])
