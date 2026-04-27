@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { LlmInference, FilesetResolver } from "@mediapipe/tasks-genai"
 
-// モデルのURL。public/models/ フォルダに配置したパスを指定します。
-const MODEL_URL = "/models/gemma-2b-it-gpu-int4.bin"
+// モデルのURL。Hugging Faceの公開URLを指定します。
+const MODEL_URL = "https://huggingface.co/datasets/dev-bot/my-models/resolve/main/gemma-2b-it-gpu-int4.bin"
 
 export interface UseGemmaReturn {
   isLoading: boolean
