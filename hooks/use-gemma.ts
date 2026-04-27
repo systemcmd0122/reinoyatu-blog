@@ -3,10 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { LlmInference, FilesetResolver } from "@mediapipe/tasks-genai"
 
-// モデルのURL。Gemma 2 2bのURLを指定。
-// 実際にはユーザーが適切なURLを提供するか、パブリックなURL（Hugging Faceなど）を使用します。
-// ここでは、MediaPipeのドキュメントや例でよく使われる形式を想定。
-const MODEL_URL = "https://storage.googleapis.com/mediapipe-models/llm_inference/gemma2-2b-it-gpu-int4.bin"
+// モデルのURL。public/models/ フォルダに配置したパスを指定します。
+const MODEL_URL = "/models/gemma-2b-it-gpu-int4.bin"
 
 export interface UseGemmaReturn {
   isLoading: boolean
@@ -29,8 +27,9 @@ export const useGemma = (): UseGemmaReturn => {
 
     const initLlm = async () => {
       try {
+        // WASMファイルの読み込み先を指定。末尾にスラッシュが必要です。
         const genai = await FilesetResolver.forGenAiTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai/wasm"
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai@0.10.27/wasm/"
         )
 
         inference = await LlmInference.createFromOptions(genai, {
