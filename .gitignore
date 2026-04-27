@@ -48,3 +48,7 @@ public/fallback-*.js
 public/fallback-*.js.map
 public/swe-worker-*.js
 public/swe-worker-*.js.map
+
+# Large AI models
+public/models/*.bin
+public/models/*.task
