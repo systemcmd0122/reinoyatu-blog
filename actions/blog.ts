@@ -5,9 +5,7 @@ import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { v4 as uuidv4 } from "uuid"
-import { generateSummaryFromContent } from "@/utils/gemini"
 import { uploadImage, syncArticleImages, cleanupUnusedImages } from "./image"
-import { GoogleGenAI } from "@google/genai"
 import { validateUser } from "@/utils/image-helpers"
 
 // タグをDBに保存し、IDを返すヘルパー関数
@@ -439,68 +437,6 @@ export const deleteBlog = async ({
   }
 }
 
-// AIによるタグ生成アクション
-export const generateTitleSuggestionsFromContent = async (content: string) => {
-  if (!content) {
-    return { titles: null, error: "内容は必須です。" }
-  }
-
-  try {
-    const { generateTitleSuggestions } = await import("@/utils/gemini")
-    const result = await generateTitleSuggestions(content)
-    return result
-  } catch (error) {
-    console.error("タイトル生成エラー:", error)
-    return { titles: null, error: "サーバーでタイトルの提案中にエラーが発生しました。" }
-  }
-}
-
-export const generateTagsFromContent = async (title: string, content: string) => {
-  if (!title || !content) {
-    return { tags: null, error: "タイトルと内容は必須です。" }
-  }
-
-  try {
-    const { generateTags } = await import("@/utils/gemini")
-    const result = await generateTags(title, content)
-    return result
-  } catch (error) {
-    console.error("タグ生成エラー:", error)
-    return { tags: null, error: "サーバーでタグの生成中にエラーが発生しました。" }
-  }
-}
-
-// AIによる要約生成と保存アクション
-export const generateAndSaveSummary = async ({
-  blogId,
-  title,
-  content
-}: {
-  blogId: string
-  title: string
-  content: string
-}) => {
-  const supabase = createClient()
-
-  const { summary, error: summaryError } = await generateSummaryFromContent(title, content)
-
-  if (summaryError) {
-    console.error("要約生成エラー:", summaryError)
-    return { error: summaryError }
-  }
-
-  const { error: updateError } = await supabase
-    .from("blogs")
-    .update({ summary: summary || null })
-    .eq("id", blogId)
-
-  if (updateError) {
-    console.error("要約保存エラー:", updateError)
-    return { error: updateError.message }
-  }
-
-  return { summary, error: null }
-}
 
 // すべてのタグを取得
 export const getAllTags = async () => {
@@ -633,65 +569,5 @@ export const getDrafts = async (userId: string) => {
   } catch (err) {
     console.error("下書き取得エラー:", err)
     return { drafts: [], error: "エラーが発生しました" }
-  }
-}
-
-// AIとのチャット（@google/genai使用版）
-export const chatWithAI = async (messages: { role: 'user' | 'model', content: string }[]) => {
-  try {
-    // サーバーサイドでGEMINI_API_KEYを取得（NEXT_PUBLIC_を使わない）
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    if (!apiKey) {
-      console.error("GEMINI_API_KEY環境変数が設定されていません");
-      return { content: null, error: "APIキーが設定されていません。管理者に連絡してください。" }
-    }
-
-    const ai = new GoogleGenAI({ apiKey });
-
-    // 履歴を準備（最後のメッセージは除く）
-    const history = messages.slice(0, -1).map(m => ({
-      role: m.role,
-      parts: [{ text: m.content }]
-    }));
-
-    // チャットセッションを作成
-    const chat = ai.chats.create({
-      model: "gemini-2.5-flash-lite",
-      history: history,
-      config: {
-        tools: [{ googleSearchRetrieval: {} } as any],
-      }
-    });
-
-    // 最後のメッセージを送信
-    const lastMessage = messages[messages.length - 1].content;
-    const response = await chat.sendMessage({ message: lastMessage });
-
-    if (!response.text) {
-      return { content: null, error: "AIからの応答が空でした。" };
-    }
-
-    return { content: response.text, error: null };
-  } catch (error: any) {
-    console.error("AIチャットエラー:", error);
-
-    if (error.status === 429) {
-      return { content: null, error: "AIの利用制限（リクエスト過多）に達しました。少し時間をおいてから再度お試しください。" };
-    }
-
-    if (error.status === 404) {
-      return { content: null, error: "指定されたAIモデルが見つかりませんでした。管理者にお問い合わせください。" };
-    }
-
-    if (error.status === 401 || error.status === 403) {
-      return { content: null, error: "APIキーが無効です。環境変数を確認してください。" };
-    }
-
-    if (error.message?.includes("API key")) {
-      return { content: null, error: "APIキーの設定に問題があります。管理者に連絡してください。" };
-    }
-
-    return { content: null, error: "AIとの通信中にエラーが発生しました。" };
   }
 }

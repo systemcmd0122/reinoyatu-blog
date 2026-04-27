@@ -110,6 +110,8 @@ import { useMediaQuery } from "@/hooks/use-media-query"
 import { ImageLibraryDialog } from "./ImageLibraryDialog"
 import { ImageURLDialog } from "./ImageURLDialog"
 import { ImageCropDialog } from "./ImageCropDialog"
+import { AIEditorActions } from "./editor/AIEditorActions"
+import { useGemma } from "@/hooks/use-gemma"
 
 
 interface BlogEditorProps {
@@ -158,6 +160,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [userCollections, setUserCollections] = useState<CollectionType[]>([])
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
   const [userProfile, setUserProfile] = useState<{ name: string; avatar_url: string | null } | null>(null)
+  const gemma = useGemma()
   const [isLibraryDialogOpen, setIsLibraryDialogOpen] = useState(false)
   const [isURLDialogOpen, setIsURLDialogOpen] = useState(false)
   // クロップダイアログ用 state
@@ -904,6 +907,23 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                 </SheetHeader>
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                   <div className="p-6 space-y-10">
+                    <AIEditorActions
+                      gemma={gemma}
+                      title={watchedTitle}
+                      content={watchedContent}
+                      onUpdateTitle={(val) => form.setValue("title", val, { shouldDirty: true })}
+                      onUpdateContent={(val) => {
+                        form.setValue("content", val, { shouldDirty: true });
+                        if (editorRef.current) {
+                          editorRef.current.getEditor()?.commands.setContent(val);
+                        }
+                      }}
+                      onUpdateTags={(val) => form.setValue("tags", val, { shouldDirty: true })}
+                      onUpdateSummary={(val) => form.setValue("summary", val, { shouldDirty: true })}
+                    />
+
+                    <Separator />
+
                     <EditorSettings
                       userId={userId}
                       watchedContent={watchedContent}
