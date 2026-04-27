@@ -263,23 +263,6 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     }
   }, [userId, initialData?.id])
 
-  // 自動保存
-  useEffect(() => {
-    if (!isDirty || status === "saving-draft" || status === "publishing" || viewMode === "preview") {
-      return
-    }
-
-    const timer = setTimeout(() => {
-      if (watchedTitle && watchedContent) {
-        // 自動保存時は現在の is_published 状態を維持する（公開状態を変えない）
-        handleAction(!!watchedIsPublished, true)
-      }
-    }, 3000)
-
-    return () => clearTimeout(timer)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDirty, watchedTitle, watchedContent, status, viewMode])
-  // ↑ watchedIsPublished を依存に含めると公開状態変更のたびに自動保存タイマーがリセットされるため意図的に除外
 
   /**
    * 画像URLを計算するヘルパー
@@ -307,7 +290,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     return null
   }
 
-  const handleAction = async (isPublished: boolean, silent: boolean = false) => {
+  const handleAction = async (isPublished: boolean) => {
     if (isSaving.current) return
 
     setError("")
@@ -374,9 +357,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
       }
 
       // 6. 保存成功後の状態更新
-      if (!silent) {
-        toast.success(isPublished ? "記事を公開しました" : "下書きを保存しました")
-      }
+      toast.success(isPublished ? (watchedIsPublished ? "記事を更新しました" : "記事を公開しました") : "下書きを保存しました")
+
       setIsDirty(false)
       setLastSaved(new Date())
       setStatus("saved")
@@ -398,8 +380,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
         window.history.replaceState(null, "", `/blog/${res.id}/edit`)
       }
 
-      // 8. 明示的な公開アクション（silentでない）の場合のみ遷移
-      if (isPublished && !silent) {
+      // 8. 明示的な公開アクションの場合のみ遷移
+      if (isPublished) {
         setIsSidebarOpen(false)
         setTimeout(() => {
           router.push("/")
@@ -621,18 +603,20 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   <TooltipContent>Markdownファイルをインポート</TooltipContent>
                 </Tooltip>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="font-bold hidden sm:flex"
-                  onClick={() => handleAction(false)}
-                  disabled={!watchedTitle || !watchedContent}
-                  loading={status === "saving-draft"}
-                  loadingText="保存中..."
-                >
-                  {!status.includes("saving") && <Save className="h-4 w-4 mr-2" />}
-                  下書き保存
-                </Button>
+                {!watchedIsPublished && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="font-bold hidden sm:flex"
+                    onClick={() => handleAction(false)}
+                    disabled={!watchedTitle || !watchedContent}
+                    loading={status === "saving-draft"}
+                    loadingText="保存中..."
+                  >
+                    {!status.includes("saving") && <Save className="h-4 w-4 mr-2" />}
+                    下書き保存
+                  </Button>
+                )}
 
                 <Button
                   size="sm"
@@ -959,8 +943,19 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                         onClick={() => handleAction(true)}
                         loading={status === "publishing"}
                       >
-                        {watchedIsPublished ? "更新する" : "投稿する"}
+                        {watchedIsPublished ? "更新して公開" : "今すぐ投稿する"}
                       </Button>
+
+                      {watchedIsPublished && (
+                        <Button
+                          variant="outline"
+                          className="w-full font-bold h-12 rounded-full text-base"
+                          onClick={() => handleAction(false)}
+                          loading={status === "saving-draft"}
+                        >
+                          下書きに戻す
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
