@@ -27,9 +27,9 @@ export const useGemma = (): UseGemmaReturn => {
 
     const initLlm = async () => {
       try {
-        // WASMファイルの読み込み先を指定。末尾にスラッシュが必要です。
+        // WASMファイルの読み込み先を指定
         const genai = await FilesetResolver.forGenAiTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai@0.10.27/wasm/"
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai@0.10.27/wasm"
         )
 
         inference = await LlmInference.createFromOptions(genai, {
