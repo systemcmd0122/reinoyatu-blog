@@ -541,7 +541,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
               </Button>
               <Separator orientation="vertical" className="h-6" />
               <div className="flex flex-col">
-                <div className="hidden sm:flex items-center gap-2 mb-1">
+                <div className={cn("items-center gap-2 mb-1", isMounted ? "hidden sm:flex" : "hidden")}>
                   <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none">
                     {internalMode === "new" ? "New Story" : "Edit Story"}
                   </span>
@@ -555,7 +555,10 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold truncate max-w-[80px] sm:max-w-[200px] md:max-w-[400px]">
+                  <span className={cn(
+                    "text-sm font-bold truncate",
+                    isMounted ? "max-w-[80px] sm:max-w-[200px] md:max-w-[400px]" : "max-w-[80px]"
+                  )}>
                     {watchedTitle || "無題"}
                   </span>
                   <SaveStatus status={getSaveStatus() as any} />
@@ -764,7 +767,10 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                             <FormControl>
                               <Input
                                 placeholder="タイトル"
-                                className="h-auto py-2 text-4xl md:text-5xl font-bold border-none bg-transparent focus-visible:ring-0 px-0 shadow-none placeholder:text-muted-foreground/20 tracking-tight"
+                                className={cn(
+                                  "h-auto py-2 font-bold border-none bg-transparent focus-visible:ring-0 px-0 shadow-none placeholder:text-muted-foreground/20 tracking-tight transition-all duration-300",
+                                  isMounted ? "text-4xl md:text-5xl" : "text-4xl"
+                                )}
                                 {...field}
                               />
                             </FormControl>
@@ -845,7 +851,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                             <span className="mx-1">•</span>
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {Math.ceil((watchedContent?.length || 0) / 400) || 1}分で読めます
+                              {isMounted ? (Math.ceil((watchedContent?.length || 0) / 400) || 1) : 1}分で読めます
                             </span>
                           </div>
                         </div>

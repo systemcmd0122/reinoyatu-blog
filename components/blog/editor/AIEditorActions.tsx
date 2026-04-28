@@ -74,10 +74,12 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
     if (!content) return
 
     const prompt = `
-以下のブログ記事の内容を、より読みやすく、魅力的な文章に改善してください。
-出力は改善後のMarkdown本文のみにしてください。
+あなたはプロの編集者です。以下のブログ記事を、読者の興味を惹きつける、洗練された自然な日本語の文章にブラッシュアップしてください。
+構成は維持しつつ、表現をより豊かに、専門用語は分かりやすく説明を加えてください。
 
-${searchResults ? `以下の最新情報を参考にしてください:\n${searchResults}\n\n` : ""}
+出力は改善後のMarkdown形式の本文のみとし、前置きや解説は一切不要です。
+
+${searchResults ? `以下の最新情報を内容に取り入れてください:\n${searchResults}\n\n` : ""}
 
 記事タイトル: ${title}
 記事内容:
@@ -96,8 +98,10 @@ ${content}
     if (!content) return
 
     const prompt = `
-以下の記事内容に基づき、読者の目を引く魅力的なタイトルを5つ日本語で提案してください。
-1行に1つずつ出力してください。
+以下の記事の内容に最もふさわしい、読者がクリックしたくなるような魅力的なタイトルを日本語で5つ提案してください。
+キャッチーなもの、実用的なもの、問いかけるものなど、バリエーションを持たせてください。
+
+1行に1つずつタイトルのみを出力してください。番号や「提案1：」などの接頭辞は不要です。
 
 記事内容:
 ${content.substring(0, 2000)}
@@ -107,7 +111,9 @@ ${content.substring(0, 2000)}
       const titles = suggestions.split("\n").filter(t => t.trim().length > 0).slice(0, 5)
       // 最初の提案をとりあえず反映
       if (titles.length > 0) {
-        onUpdateTitle(titles[0].replace(/^\d+\.\s*/, ""))
+        // 番号や記号が含まれている場合を考慮してクリーンアップ
+        const cleanTitle = titles[0].replace(/^[0-9一二三四五].?[\s.．:：、]/, "").trim()
+        onUpdateTitle(cleanTitle)
         toast.success("タイトルを提案し、反映しました。")
       }
     } catch (err) {
