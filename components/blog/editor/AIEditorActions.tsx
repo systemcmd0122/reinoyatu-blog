@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { UseGemmaReturn } from "@/hooks/use-gemma"
 import { searchWeb } from "@/actions/search"
@@ -16,7 +16,9 @@ import {
   FileText,
   AlertCircle,
   Plus,
-  ArrowRight
+  ArrowRight,
+  Wand2,
+  X,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -60,6 +62,7 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
   const [isEditingSearch, setIsEditingSearch] = useState(false)
   const [activeAction, setActiveAction] = useState<"improve" | "title" | "tags" | "summary" | null>(null)
   const [aiSettings, setAiSettings] = useState<{ persona?: string, instructions?: string, writingStyle?: string }>({})
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -75,15 +78,21 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
     fetchSettings()
   }, [])
 
-  // 提案用ステート
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([])
   const [suggestedTags, setSuggestedTags] = useState<string[]>([])
 
+  // ── 検索 ──────────────────────────────────────
+
   const handleSearch = async () => {
-    if (!searchQuery) return
+    const q = searchQuery.trim()
+    if (!q) {
+      toast.error("検索キーワードを入力してください。")
+      searchInputRef.current?.focus()
+      return
+    }
     setIsSearching(true)
     try {
-      const result = await searchWeb(searchQuery)
+      const result = await searchWeb(q)
       if (result.error) {
         toast.error(result.error)
       } else {
@@ -91,16 +100,23 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
         toast.success("最新情報を取得しました。AIのアクションに反映されます。")
       }
     } catch (err) {
-      toast.error("検索に失敗しました。")
+      toast.error("検索中に予期しないエラーが発生しました。")
     } finally {
       setIsSearching(false)
     }
   }
 
+  const handleFillQueryFromTitle = () => {
+    if (!title) return
+    setSearchQuery(title)
+    searchInputRef.current?.focus()
+  }
+
+  // ── AI アクション ────────────────────────────
+
   const handleImproveContent = async () => {
     if (!content) return
     setActiveAction("improve")
-
     const prompt = `
 ${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : "あなたはプロの編集者です。"}
 以下のブログ記事を、読者の興味を惹きつける、洗練された自然な日本語の文章にブラッシュアップしてください。
@@ -122,8 +138,11 @@ ${content}
 `
     try {
       const improved = await generateResponse(prompt)
-      // AIがたまにMarkdownのコードブロックで囲んでくるのを防ぐ
-      const cleanImproved = improved.replace(/^```markdown\n/, "").replace(/^```\n?/, "").replace(/\n```$/, "").trim()
+      const cleanImproved = improved
+        .replace(/^```markdown\n/, "")
+        .replace(/^```\n?/, "")
+        .replace(/\n```$/, "")
+        .trim()
       onUpdateContent(cleanImproved)
       toast.success("記事を改善しました。")
     } catch (err) {
@@ -136,11 +155,9 @@ ${content}
   const handleSuggestTitle = async () => {
     if (!content) return
     setActiveAction("title")
-
     const prompt = `
 ${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : ""}
 以下の記事の内容に最もふさわしい、読者がクリックしたくなるような魅力的なタイトルを日本語で5つ提案してください。
-キャッチーなもの、実用的なもの、問いかけるものなど、バリエーションを持たせてください。
 
 ${aiSettings.instructions ? `追加の指示:\n${aiSettings.instructions}\n` : ""}
 ${aiSettings.writingStyle ? `文章スタイル: ${aiSettings.writingStyle}` : ""}
@@ -148,7 +165,6 @@ ${aiSettings.writingStyle ? `文章スタイル: ${aiSettings.writingStyle}` : "
 重要:
 - 1行に1つずつタイトルのみを出力してください。
 - 「*」や「提案1：」などの記号・接頭辞、番号、Markdown装飾は一切不要です。
-- 検索結果がある場合は、最新のトレンドを反映したタイトルも含めてください。
 
 ${searchResults ? `検索文脈:\n${searchResults}\n\n` : ""}
 
@@ -162,7 +178,6 @@ ${content.substring(0, 2000)}
         .map(t => t.replace(/^[0-9一二三四五].?[\s.．:：、]/, "").replace(/[*#]/g, "").trim())
         .filter(t => t.length > 0)
         .slice(0, 5)
-
       setSuggestedTitles(titles)
       toast.success("タイトル候補を生成しました。")
     } catch (err) {
@@ -175,7 +190,6 @@ ${content.substring(0, 2000)}
   const handleGenerateTags = async () => {
     if (!content) return
     setActiveAction("tags")
-
     const prompt = `
 ${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : ""}
 以下の記事に関連する、検索されやすい重要なキーワード（タグ）を5つから8つ程度抽出してください。
@@ -186,7 +200,6 @@ ${aiSettings.instructions ? `追加の指示:\n${aiSettings.instructions}\n` : "
 - カンマ区切りで「単語」のみを出力してください。
 - 文章や説明、Markdown装飾（*など）は一切不要です。
 - 1つ1つのタグは短く、適切な固有名詞や一般名詞にしてください。
-- 検索結果がある場合は、そこに含まれる重要な専門用語もタグとして検討してください。
 
 ${searchResults ? `検索文脈:\n${searchResults}\n\n` : ""}
 
@@ -201,7 +214,6 @@ ${content.substring(0, 1500)}
         .map(t => t.replace(/[*#]/g, "").trim())
         .filter(t => t.length > 0 && t.length < 20)
         .slice(0, 10)
-
       setSuggestedTags(newTags)
       toast.success("タグ候補を生成しました。")
     } catch (err) {
@@ -217,15 +229,13 @@ ${content.substring(0, 1500)}
     const prompt = `
 ${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : ""}
 以下のブログ記事を、300文字程度の丁寧な日本語で要約してください。
-記事の主旨、重要なポイント、結論が明確に伝わるようにしてください。
 
 ${aiSettings.instructions ? `追加の指示:\n${aiSettings.instructions}\n` : ""}
 ${aiSettings.writingStyle ? `文章スタイル: ${aiSettings.writingStyle}` : ""}
 
 重要:
-- 「要約：」などの接頭辞や、Markdown装飾（*や-など）は一切不要です。
-- 文章として自然な形式で出力してください。
-- 検索結果がある場合は、その文脈も含めて要約してください。
+- 要約のテキストのみを出力してください。「要約:」などの接頭辞は不要です。
+- Markdown装飾（*、#など）は使用しないでください。
 
 ${searchResults ? `検索文脈:\n${searchResults}\n\n` : ""}
 
@@ -243,6 +253,19 @@ ${content}
       setActiveAction(null)
     }
   }
+
+  const handleAddAllTags = () => {
+    const newOnes = suggestedTags.filter(t => !tags.includes(t))
+    if (newOnes.length === 0) {
+      toast.info("追加できる新しいタグはありません。")
+      return
+    }
+    onUpdateTags([...tags, ...newOnes])
+    setSuggestedTags([])
+    toast.success(`${newOnes.length}件のタグを追加しました。`)
+  }
+
+  // ── ローディング / エラー状態 ─────────────────
 
   if (isLoading) {
     return (
@@ -273,7 +296,7 @@ ${content}
   if (error) {
     return (
       <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-lg flex gap-2">
-        <AlertCircle className="h-4 w-4 shrink-0" />
+        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <p className="font-bold">AIの初期化に失敗しました</p>
           <p className="text-xs opacity-80">{error}</p>
@@ -281,6 +304,8 @@ ${content}
       </div>
     )
   }
+
+  // ── メインUI ────────────────────────────────
 
   return (
     <div className="space-y-6">
@@ -294,31 +319,67 @@ ${content}
             ブラウザ上で動作する高性能AIが執筆をサポートします。
           </CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-4">
+
           {/* 検索セクション */}
           <div className="space-y-2">
             <div className="flex gap-2">
               <Input
+                ref={searchInputRef}
                 placeholder="最新情報を検索してAIに学習させる..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="text-xs h-9"
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                onKeyDown={(e) => e.key === "Enter" && !isSearching && handleSearch()}
               />
-              <Button size="sm" onClick={handleSearch} disabled={isSearching} className="h-9">
-                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              <Button
+                size="sm"
+                onClick={handleSearch}
+                disabled={isSearching}
+                className="h-9 shrink-0"
+              >
+                {isSearching
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <Search className="h-4 w-4" />}
               </Button>
             </div>
 
+            {/* タイトルから検索クエリを補完するショートカット */}
+            {title && !searchQuery && (
+              <button
+                onClick={handleFillQueryFromTitle}
+                className="text-[10px] text-primary/70 hover:text-primary flex items-center gap-1 transition-colors"
+              >
+                <Wand2 className="h-2.5 w-2.5" />
+                記事タイトルで検索する
+              </button>
+            )}
+
+            {/* 検索結果表示 */}
             {searchResults && (
               <div className="p-3 bg-background/50 rounded-lg text-[10px] border border-border space-y-2">
                 <div className="font-bold flex items-center justify-between border-b border-border pb-1">
-                  <span className="flex items-center gap-1"><Search className="h-3 w-3" /> 取得済みの最新情報</span>
+                  <span className="flex items-center gap-1">
+                    <Search className="h-3 w-3" /> 取得済みの最新情報
+                  </span>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={() => setIsEditingSearch(!isEditingSearch)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 px-1.5 text-[10px]"
+                      onClick={() => setIsEditingSearch(!isEditingSearch)}
+                    >
                       {isEditingSearch ? "確定" : "編集"}
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={() => { setSearchResults(null); setIsEditingSearch(false); }}>破棄</Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 px-1.5 text-[10px]"
+                      onClick={() => { setSearchResults(null); setIsEditingSearch(false) }}
+                    >
+                      <X className="h-2.5 w-2.5 mr-0.5" />破棄
+                    </Button>
                   </div>
                 </div>
                 {isEditingSearch ? (
@@ -332,7 +393,9 @@ ${content}
                     {searchResults}
                   </div>
                 )}
-                <p className="text-[9px] italic text-primary/70">※これらの情報は次のAIアクションで自動的に活用されます</p>
+                <p className="text-[9px] italic text-primary/70">
+                  ※これらの情報は次のAIアクションで自動的に活用されます
+                </p>
               </div>
             )}
           </div>
@@ -346,7 +409,9 @@ ${content}
               onClick={handleImproveContent}
               disabled={isGenerating || !content}
             >
-              {activeAction === "improve" ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              {activeAction === "improve"
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <RefreshCw className="h-3 w-3" />}
               内容を改善
             </Button>
             <Button
@@ -356,7 +421,9 @@ ${content}
               onClick={handleSuggestTitle}
               disabled={isGenerating || !content}
             >
-              {activeAction === "title" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Type className="h-3 w-3" />}
+              {activeAction === "title"
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <Type className="h-3 w-3" />}
               タイトル提案
             </Button>
             <Button
@@ -366,7 +433,9 @@ ${content}
               onClick={handleGenerateTags}
               disabled={isGenerating || !content}
             >
-              {activeAction === "tags" ? <Loader2 className="h-3 w-3 animate-spin" /> : <TagIcon className="h-3 w-3" />}
+              {activeAction === "tags"
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <TagIcon className="h-3 w-3" />}
               タグ生成
             </Button>
             <Button
@@ -376,10 +445,18 @@ ${content}
               onClick={handleGenerateSummary}
               disabled={isGenerating || !content}
             >
-              {activeAction === "summary" ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileText className="h-3 w-3" />}
+              {activeAction === "summary"
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <FileText className="h-3 w-3" />}
               要約作成
             </Button>
           </div>
+
+          {!content && (
+            <p className="text-[10px] text-muted-foreground text-center italic">
+              記事を入力するとAI機能が使えます
+            </p>
+          )}
 
           {/* タイトル提案結果 */}
           {suggestedTitles.length > 0 && (
@@ -388,7 +465,14 @@ ${content}
                 <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
                   <Type className="h-3 w-3" /> タイトル案を選択
                 </span>
-                <Button variant="ghost" size="sm" className="h-5 text-[10px]" onClick={() => setSuggestedTitles([])}>閉じる</Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 text-[10px]"
+                  onClick={() => setSuggestedTitles([])}
+                >
+                  閉じる
+                </Button>
               </div>
               <div className="space-y-2">
                 {suggestedTitles.map((t, i) => (
@@ -402,7 +486,7 @@ ${content}
                     className="w-full text-left p-2.5 text-xs bg-background hover:bg-primary/5 border border-border hover:border-primary/30 rounded-lg transition-all group flex items-center justify-between"
                   >
                     <span className="flex-1">{t}</span>
-                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary shrink-0 ml-2" />
                   </button>
                 ))}
               </div>
@@ -416,7 +500,24 @@ ${content}
                 <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
                   <TagIcon className="h-3 w-3" /> タグを追加
                 </span>
-                <Button variant="ghost" size="sm" className="h-5 text-[10px]" onClick={() => setSuggestedTags([])}>閉じる</Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 text-[10px] text-primary"
+                    onClick={handleAddAllTags}
+                  >
+                    すべて追加
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 text-[10px]"
+                    onClick={() => setSuggestedTags([])}
+                  >
+                    閉じる
+                  </Button>
+                </div>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {suggestedTags.map((tag, i) => {
@@ -436,13 +537,17 @@ ${content}
                         }
                       }}
                     >
-                      {isExisting ? <Check className="h-2 w-2 mr-1" /> : <Plus className="h-2 w-2 mr-1" />}
+                      {isExisting
+                        ? <Check className="h-2 w-2 mr-1" />
+                        : <Plus className="h-2 w-2 mr-1" />}
                       {tag}
                     </Badge>
                   )
                 })}
               </div>
-              <p className="text-[9px] text-muted-foreground italic">※クリックで既存のタグに追加されます</p>
+              <p className="text-[9px] text-muted-foreground italic">
+                ※クリックで個別追加、「すべて追加」で一括追加できます
+              </p>
             </div>
           )}
         </CardContent>
