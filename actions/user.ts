@@ -266,3 +266,49 @@ export const unlinkProvider = async (provider: string) => {
     return { success: false, error: "エラーが発生しました" }
   }
 }
+
+// AI設定の取得
+export const getAiSettings = async (): Promise<ActionResponse> => {
+  try {
+    const user = await validateUser()
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("ai_settings")
+      .eq("id", user.id)
+      .single()
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, data: data.ai_settings || {} }
+  } catch (err: any) {
+    return { success: false, error: err.message || "AI設定の取得に失敗しました" }
+  }
+}
+
+// AI設定の更新
+export const updateAiSettings = async (settings: any): Promise<ActionResponse> => {
+  try {
+    const user = await validateUser()
+    const supabase = createClient()
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        ai_settings: settings,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", user.id)
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message || "AI設定の更新に失敗しました" }
+  }
+}

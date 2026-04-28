@@ -1,9 +1,10 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { UseGemmaReturn } from "@/hooks/use-gemma"
 import { searchWeb } from "@/actions/search"
+import { getAiSettings } from "@/actions/user"
 import {
   Sparkles,
   Search,
@@ -57,6 +58,22 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<string | null>(null)
   const [isEditingSearch, setIsEditingSearch] = useState(false)
+  const [activeAction, setActiveAction] = useState<"improve" | "title" | "tags" | "summary" | null>(null)
+  const [aiSettings, setAiSettings] = useState<{ persona?: string, instructions?: string, writingStyle?: string }>({})
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await getAiSettings()
+        if (res.success) {
+          setAiSettings(res.data)
+        }
+      } catch (err) {
+        console.error("Failed to fetch AI settings:", err)
+      }
+    }
+    fetchSettings()
+  }, [])
 
   // 提案用ステート
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([])
@@ -82,10 +99,15 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
 
   const handleImproveContent = async () => {
     if (!content) return
+    setActiveAction("improve")
 
     const prompt = `
-あなたはプロの編集者です。以下のブログ記事を、読者の興味を惹きつける、洗練された自然な日本語の文章にブラッシュアップしてください。
+${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : "あなたはプロの編集者です。"}
+以下のブログ記事を、読者の興味を惹きつける、洗練された自然な日本語の文章にブラッシュアップしてください。
 構成は維持しつつ、表現をより豊かに、専門用語は分かりやすく説明を加えてください。
+
+${aiSettings.instructions ? `追加の指示:\n${aiSettings.instructions}\n` : ""}
+${aiSettings.writingStyle ? `文章スタイル: ${aiSettings.writingStyle}` : ""}
 
 重要:
 - 出力は改善後のMarkdown形式の本文のみとし、前置きや解説は一切不要です。
@@ -106,15 +128,22 @@ ${content}
       toast.success("記事を改善しました。")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "AIによる改善に失敗しました。")
+    } finally {
+      setActiveAction(null)
     }
   }
 
   const handleSuggestTitle = async () => {
     if (!content) return
+    setActiveAction("title")
 
     const prompt = `
+${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : ""}
 以下の記事の内容に最もふさわしい、読者がクリックしたくなるような魅力的なタイトルを日本語で5つ提案してください。
 キャッチーなもの、実用的なもの、問いかけるものなど、バリエーションを持たせてください。
+
+${aiSettings.instructions ? `追加の指示:\n${aiSettings.instructions}\n` : ""}
+${aiSettings.writingStyle ? `文章スタイル: ${aiSettings.writingStyle}` : ""}
 
 重要:
 - 1行に1つずつタイトルのみを出力してください。
@@ -138,14 +167,20 @@ ${content.substring(0, 2000)}
       toast.success("タイトル候補を生成しました。")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "タイトル提案に失敗しました。")
+    } finally {
+      setActiveAction(null)
     }
   }
 
   const handleGenerateTags = async () => {
     if (!content) return
+    setActiveAction("tags")
 
     const prompt = `
+${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : ""}
 以下の記事に関連する、検索されやすい重要なキーワード（タグ）を5つから8つ程度抽出してください。
+
+${aiSettings.instructions ? `追加の指示:\n${aiSettings.instructions}\n` : ""}
 
 重要:
 - カンマ区切りで「単語」のみを出力してください。
@@ -171,14 +206,21 @@ ${content.substring(0, 1500)}
       toast.success("タグ候補を生成しました。")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "タグ生成に失敗しました。")
+    } finally {
+      setActiveAction(null)
     }
   }
 
   const handleGenerateSummary = async () => {
     if (!content) return
+    setActiveAction("summary")
     const prompt = `
+${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : ""}
 以下のブログ記事を、300文字程度の丁寧な日本語で要約してください。
 記事の主旨、重要なポイント、結論が明確に伝わるようにしてください。
+
+${aiSettings.instructions ? `追加の指示:\n${aiSettings.instructions}\n` : ""}
+${aiSettings.writingStyle ? `文章スタイル: ${aiSettings.writingStyle}` : ""}
 
 重要:
 - 「要約：」などの接頭辞や、Markdown装飾（*や-など）は一切不要です。
@@ -197,6 +239,8 @@ ${content}
       toast.success("要約を生成しました。")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "要約作成に失敗しました。")
+    } finally {
+      setActiveAction(null)
     }
   }
 
@@ -302,7 +346,7 @@ ${content}
               onClick={handleImproveContent}
               disabled={isGenerating || !content}
             >
-              {isGenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              {activeAction === "improve" ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
               内容を改善
             </Button>
             <Button
@@ -312,7 +356,7 @@ ${content}
               onClick={handleSuggestTitle}
               disabled={isGenerating || !content}
             >
-              <Type className="h-3 w-3" />
+              {activeAction === "title" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Type className="h-3 w-3" />}
               タイトル提案
             </Button>
             <Button
@@ -322,7 +366,7 @@ ${content}
               onClick={handleGenerateTags}
               disabled={isGenerating || !content}
             >
-              <TagIcon className="h-3 w-3" />
+              {activeAction === "tags" ? <Loader2 className="h-3 w-3 animate-spin" /> : <TagIcon className="h-3 w-3" />}
               タグ生成
             </Button>
             <Button
@@ -332,7 +376,7 @@ ${content}
               onClick={handleGenerateSummary}
               disabled={isGenerating || !content}
             >
-              <FileText className="h-3 w-3" />
+              {activeAction === "summary" ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileText className="h-3 w-3" />}
               要約作成
             </Button>
           </div>

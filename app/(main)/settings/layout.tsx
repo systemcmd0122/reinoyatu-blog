@@ -11,7 +11,8 @@ import {
   Bell,
   ShieldCheck,
   UserCircle,
-  FileText
+  FileText,
+  Sparkles
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -48,6 +49,12 @@ const navigation = [
         icon: ShieldCheck,
         href: "/settings/data",
         description: "作成したデータの確認と削除"
+      },
+      {
+        name: "AIを育てる",
+        icon: Sparkles,
+        href: "/settings/ai",
+        description: "AIのカスタマイズとキャッシュ管理"
       },
     ]
   },

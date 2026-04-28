@@ -10,44 +10,94 @@ import axios from "axios"
 export const searchWeb = async (query: string): Promise<{ content: string; error: string | null }> => {
   if (!query) return { content: "", error: "クエリが空です。" }
 
-  try {
-    // DuckDuckGoのHTML版をスクレイピングする例（もっともシンプルで制限が少ない）
-    // 注意: 本来はSERP APIなどを使うのが望ましいが、「APIを使わない」という制約を考慮
-    const response = await axios.get(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+  const userAgents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0'
+  ]
+
+  const getRandomUA = () => userAgents[Math.floor(Math.random() * userAgents.length)]
+
+  // 複数のエンドポイントを試す
+  const endpoints = [
+    `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
+    `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(query)}`
+  ]
+
+  for (const url of endpoints) {
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': getRandomUA(),
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+          'Accept-Language': 'ja,en-US;q=0.7,en;q=0.3',
+          'DNT': '1',
+          'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
+          'Cache-Control': 'max-age=0'
+        },
+        timeout: 10000
+      })
+
+      const html = response.data
+
+      // ボット検知（anomaly）のチェック
+      if (html.includes('anomaly') || html.includes('Unfortunately, bots use DuckDuckGo too')) {
+        console.warn(`DuckDuckGo blocked request at ${url}. Trying next endpoint...`)
+        continue
       }
-    })
 
-    const html = response.data
+      const results: string[] = []
 
-    // 簡易的なパース（正規表現を使用）
-    const results: string[] = []
-    // DuckDuckGo HTML版のクラス名に基づいた正規表現
-    // class="result__a" がタイトルとリンク、class="result__snippet" が概要
-    const resultRegex = /<a class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<a class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g
+      // より堅牢な正規表現
+      // 1. result__title または result__a を探す
+      // 2. その後の snippet を探す
+      const resultBlocks = html.split(/class="[^"]*result[^"]*"/).slice(1)
 
-    let match
-    let count = 0
-    while ((match = resultRegex.exec(html)) !== null && count < 5) {
-      const [_, url, title, snippet] = match
-      // HTMLタグを除去し、実体参照をデコード（簡易）
-      const cleanTitle = title.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').trim()
-      const cleanSnippet = snippet.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').trim()
-      results.push(`タイトル: ${cleanTitle}\nURL: ${url}\n内容: ${cleanSnippet}\n---`)
-      count++
+      for (const block of resultBlocks.slice(0, 5)) {
+        // タイトルとURL
+        const titleMatch = block.match(/<a[^>]*class="[^"]*result__a[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/)
+        // 概要 (aタグの場合とdivタグの場合がある)
+        const snippetMatch = block.match(/<(?:a|div)[^>]*class="[^"]*result__snippet[^"]*"[^>]*>([\s\S]*?)<\/(?:a|div)>/)
+
+        if (titleMatch) {
+          const rawUrl = titleMatch[1]
+          // DDGのURLリダイレクトを解除 ( /l/?uddg=... )
+          let cleanUrl = rawUrl
+          if (rawUrl.includes('uddg=')) {
+            try {
+              const urlParams = new URLSearchParams(rawUrl.split('?')[1])
+              cleanUrl = urlParams.get('uddg') || rawUrl
+            } catch (e) {}
+          }
+
+          const cleanTitle = titleMatch[2].replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim()
+          const cleanSnippet = snippetMatch ? snippetMatch[1].replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim() : "概要なし"
+
+          if (cleanTitle) {
+            results.push(`タイトル: ${cleanTitle}\nURL: ${cleanUrl}\n内容: ${cleanSnippet}\n---`)
+          }
+        }
+      }
+
+      if (results.length > 0) {
+        return {
+          content: `最新の検索結果 (${query}):\n\n${results.join("\n")}`,
+          error: null
+        }
+      }
+    } catch (error: any) {
+      console.error(`Search error at ${url}:`, error.message)
+      // 次のエンドポイントへ
     }
+  }
 
-    if (results.length === 0) {
-      return { content: "検索結果が見つかりませんでした。", error: null }
-    }
-
-    return {
-      content: `最新の検索結果 (${query}):\n\n${results.join("\n")}`,
-      error: null
-    }
-  } catch (error: any) {
-    console.error("Web search error:", error)
-    return { content: "", error: "ウェブ検索中にエラーが発生しました。" }
+  return {
+    content: "",
+    error: "ウェブ検索の結果を取得できませんでした。時間をおいて再度お試しいただくか、別のキーワードでお試しください。"
   }
 }
