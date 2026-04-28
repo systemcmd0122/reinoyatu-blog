@@ -214,6 +214,14 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
                             お問い合わせ
                           </Link>
                         </li>
+                        <li>
+                          <Link
+                            href="/debug/gemma"
+                            className="hover:text-primary transition-colors"
+                          >
+                            AIデバッグ
+                          </Link>
+                        </li>
                       </ul>
                     </div>
 

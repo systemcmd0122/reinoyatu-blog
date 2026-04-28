@@ -12,7 +12,9 @@ import {
   RefreshCw,
   Type,
   Tag as TagIcon,
-  FileText
+  FileText,
+  Download,
+  AlertCircle
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -24,6 +26,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 
 interface AIEditorActionsProps {
   gemma: UseGemmaReturn
@@ -44,7 +47,7 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
   onUpdateTags,
   onUpdateSummary
 }) => {
-  const { isLoading, error, generateResponse, isGenerating } = gemma
+  const { isLoading, error, generateResponse, isGenerating, downloadProgress, initialized } = gemma
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<string | null>(null)
@@ -85,7 +88,7 @@ ${content}
       onUpdateContent(improved)
       toast.success("記事を改善しました。")
     } catch (err) {
-      toast.error("AIによる改善に失敗しました。")
+      toast.error(err instanceof Error ? err.message : "AIによる改善に失敗しました。")
     }
   }
 
@@ -108,7 +111,7 @@ ${content.substring(0, 2000)}
         toast.success("タイトルを提案し、反映しました。")
       }
     } catch (err) {
-      toast.error("タイトル提案に失敗しました。")
+      toast.error(err instanceof Error ? err.message : "タイトル提案に失敗しました。")
     }
   }
 
@@ -129,23 +132,44 @@ ${content.substring(0, 1000)}
       onUpdateTags(tags)
       toast.success("タグを生成しました。")
     } catch (err) {
-      toast.error("タグ生成に失敗しました。")
+      toast.error(err instanceof Error ? err.message : "タグ生成に失敗しました。")
     }
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground bg-muted/30 rounded-lg">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        AIモデルをロード中... (数分かかる場合があります)
-      </div>
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center gap-3 text-sm font-bold text-primary">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            AIモデルを準備中...
+          </div>
+          {downloadProgress ? (
+            <div className="space-y-2">
+              <div className="flex justify-between text-[10px] font-mono">
+                <span>Downloading model data</span>
+                <span>{downloadProgress.percentage}%</span>
+              </div>
+              <Progress value={downloadProgress.percentage} className="h-1" />
+            </div>
+          ) : (
+            <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+              初回のみ約1.3GBのロードが必要です。
+            </p>
+          )}
+        </CardContent>
+      </Card>
     )
   }
 
   if (error) {
     return (
-      <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-lg">
-        {error}
+      <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-lg flex gap-2">
+        <AlertCircle className="h-4 w-4 shrink-0" />
+        <div className="space-y-1">
+          <p className="font-bold">AIの初期化に失敗しました</p>
+          <p className="text-xs opacity-80">{error}</p>
+        </div>
       </div>
     )
   }
@@ -222,10 +246,14 @@ ${content.substring(0, 1000)}
               size="sm"
               className="text-xs gap-1"
               onClick={async () => {
-                const prompt = `以下の記事の要約を150文字程度で作成してください。\n\n${content}`
-                const summary = await generateResponse(prompt)
-                onUpdateSummary(summary)
-                toast.success("要約を生成しました。")
+                try {
+                  const prompt = `以下の記事の要約を150文字程度で作成してください。\n\n${content}`
+                  const summary = await generateResponse(prompt)
+                  onUpdateSummary(summary)
+                  toast.success("要約を生成しました。")
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "要約作成に失敗しました。")
+                }
               }}
               disabled={isGenerating || !content}
             >
