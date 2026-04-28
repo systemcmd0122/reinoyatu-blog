@@ -98,7 +98,7 @@ export const useGemma = (): UseGemmaReturn => {
           baseOptions: {
             modelAssetBuffer: modelData,
           },
-          maxTokens: 1024,
+          maxTokens: 3072, // 1024から拡張（メモリ使用量に注意）
           topK: 40,
           temperature: 0.7,
           randomSeed: Math.floor(Math.random() * 1000),
@@ -140,13 +140,25 @@ export const useGemma = (): UseGemmaReturn => {
     let fullResponse = ""
 
     try {
+      // トークン制限（3072）を考慮して入力を切り詰める
+      // 厳密なトークナイザーがないため、安全のために文字数で概算（1トークン≒2〜4文字）
+      // 3072トークンを上限とし、出力分を確保するために文字数制限を設ける
+      const maxChars = 5000
+      const safePrompt = prompt.length > maxChars
+        ? prompt.substring(0, maxChars) + "\n...(入力が長すぎるため一部省略されました)"
+        : prompt
+
+      // 日本語での回答を強制するためのシステムプロンプト的な指示を付与
+      // Gemma-2b-it のフォーマットに合わせて調整
+      const finalPrompt = `<start_of_turn>user\n必ず日本語で回答してください。\n${safePrompt}<end_of_turn>\n<start_of_turn>model\n`
+
       if (onProgress) {
-        await llmInference.generateResponse(prompt, (partialText, done) => {
+        await llmInference.generateResponse(finalPrompt, (partialText, done) => {
           fullResponse += partialText
           onProgress(fullResponse)
         })
       } else {
-        fullResponse = await llmInference.generateResponse(prompt)
+        fullResponse = await llmInference.generateResponse(finalPrompt)
       }
 
       return fullResponse
