@@ -5,6 +5,7 @@ import { LlmInference, FilesetResolver } from "@mediapipe/tasks-genai"
 
 // モデルのURL。
 const MODEL_URL = "https://huggingface.co/datasets/dev-bot/my-models/resolve/main/gemma-2b-it-gpu-int4.bin"
+const CACHE_NAME = "gemma-model-cache-v1"
 
 export interface DownloadProgress {
   total: number
@@ -33,6 +34,20 @@ export const useGemma = (): UseGemmaReturn => {
   const modelBufferRef = useRef<Uint8Array | null>(null)
 
   const downloadModel = async (url: string): Promise<Uint8Array> => {
+    // キャッシュの確認
+    try {
+      const cache = await caches.open(CACHE_NAME)
+      const cachedResponse = await cache.match(url)
+      if (cachedResponse) {
+        console.log("Gemma model found in cache. Loading...")
+        const blob = await cachedResponse.blob()
+        const arrayBuffer = await blob.arrayBuffer()
+        return new Uint8Array(arrayBuffer)
+      }
+    } catch (e) {
+      console.warn("Cache API not available or error:", e)
+    }
+
     const response = await fetch(url)
     if (!response.ok) throw new Error(`Failed to download model: ${response.statusText}`)
 
@@ -66,6 +81,15 @@ export const useGemma = (): UseGemmaReturn => {
     for (const chunk of chunks) {
       allChunks.set(chunk, offset)
       offset += chunk.length
+    }
+
+    // ダウンロード完了後にキャッシュに保存
+    try {
+      const cache = await caches.open(CACHE_NAME)
+      await cache.put(url, new Response(allChunks))
+      console.log("Gemma model saved to cache.")
+    } catch (e) {
+      console.warn("Failed to save model to cache:", e)
     }
 
     return allChunks

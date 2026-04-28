@@ -901,6 +901,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                       gemma={gemma}
                       title={watchedTitle}
                       content={watchedContent}
+                      tags={watchedTags || []}
                       onUpdateTitle={(val) => form.setValue("title", val, { shouldDirty: true })}
                       onUpdateContent={(val) => {
                         form.setValue("content", val, { shouldDirty: true });

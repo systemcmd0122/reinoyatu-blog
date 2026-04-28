@@ -13,8 +13,9 @@ import {
   Type,
   Tag as TagIcon,
   FileText,
-  Download,
-  AlertCircle
+  AlertCircle,
+  Plus,
+  ArrowRight
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -25,13 +26,16 @@ import {
   CardTitle
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { cn } from "@/lib/utils"
 
 interface AIEditorActionsProps {
   gemma: UseGemmaReturn
   title: string
   content: string
+  tags: string[]
   onUpdateTitle: (title: string) => void
   onUpdateContent: (content: string) => void
   onUpdateTags: (tags: string[]) => void
@@ -42,15 +46,21 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
   gemma,
   title,
   content,
+  tags,
   onUpdateTitle,
   onUpdateContent,
   onUpdateTags,
   onUpdateSummary
 }) => {
-  const { isLoading, error, generateResponse, isGenerating, downloadProgress, initialized } = gemma
+  const { isLoading, error, generateResponse, isGenerating, downloadProgress } = gemma
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<string | null>(null)
+  const [isEditingSearch, setIsEditingSearch] = useState(false)
+
+  // 提案用ステート
+  const [suggestedTitles, setSuggestedTitles] = useState<string[]>([])
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([])
 
   const handleSearch = async () => {
     if (!searchQuery) return
@@ -61,7 +71,7 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
         toast.error(result.error)
       } else {
         setSearchResults(result.content)
-        toast.success("最新情報を取得しました。AIのプロンプトに使用できます。")
+        toast.success("最新情報を取得しました。AIのアクションに反映されます。")
       }
     } catch (err) {
       toast.error("検索に失敗しました。")
@@ -77,7 +87,10 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
 あなたはプロの編集者です。以下のブログ記事を、読者の興味を惹きつける、洗練された自然な日本語の文章にブラッシュアップしてください。
 構成は維持しつつ、表現をより豊かに、専門用語は分かりやすく説明を加えてください。
 
-出力は改善後のMarkdown形式の本文のみとし、前置きや解説は一切不要です。
+重要:
+- 出力は改善後のMarkdown形式の本文のみとし、前置きや解説は一切不要です。
+- 「*」や「#」などの装飾を過剰に使わず、読みやすさを最優先してください。
+- 検索結果が提供されている場合は、その事実を自然に本文に組み込んでください。
 
 ${searchResults ? `以下の最新情報を内容に取り入れてください:\n${searchResults}\n\n` : ""}
 
@@ -87,7 +100,9 @@ ${content}
 `
     try {
       const improved = await generateResponse(prompt)
-      onUpdateContent(improved)
+      // AIがたまにMarkdownのコードブロックで囲んでくるのを防ぐ
+      const cleanImproved = improved.replace(/^```markdown\n/, "").replace(/^```\n?/, "").replace(/\n```$/, "").trim()
+      onUpdateContent(cleanImproved)
       toast.success("記事を改善しました。")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "AIによる改善に失敗しました。")
@@ -101,21 +116,26 @@ ${content}
 以下の記事の内容に最もふさわしい、読者がクリックしたくなるような魅力的なタイトルを日本語で5つ提案してください。
 キャッチーなもの、実用的なもの、問いかけるものなど、バリエーションを持たせてください。
 
-1行に1つずつタイトルのみを出力してください。番号や「提案1：」などの接頭辞は不要です。
+重要:
+- 1行に1つずつタイトルのみを出力してください。
+- 「*」や「提案1：」などの記号・接頭辞、番号、Markdown装飾は一切不要です。
+- 検索結果がある場合は、最新のトレンドを反映したタイトルも含めてください。
+
+${searchResults ? `検索文脈:\n${searchResults}\n\n` : ""}
 
 記事内容:
 ${content.substring(0, 2000)}
 `
     try {
       const suggestions = await generateResponse(prompt)
-      const titles = suggestions.split("\n").filter(t => t.trim().length > 0).slice(0, 5)
-      // 最初の提案をとりあえず反映
-      if (titles.length > 0) {
-        // 番号や記号が含まれている場合を考慮してクリーンアップ
-        const cleanTitle = titles[0].replace(/^[0-9一二三四五].?[\s.．:：、]/, "").trim()
-        onUpdateTitle(cleanTitle)
-        toast.success("タイトルを提案し、反映しました。")
-      }
+      const titles = suggestions
+        .split("\n")
+        .map(t => t.replace(/^[0-9一二三四五].?[\s.．:：、]/, "").replace(/[*#]/g, "").trim())
+        .filter(t => t.length > 0)
+        .slice(0, 5)
+
+      setSuggestedTitles(titles)
+      toast.success("タイトル候補を生成しました。")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "タイトル提案に失敗しました。")
     }
@@ -125,20 +145,58 @@ ${content.substring(0, 2000)}
     if (!content) return
 
     const prompt = `
-以下の記事に関連するタグを3〜5個、カンマ区切りで日本語で出力してください。
-タグ以外の説明は不要です。
+以下の記事に関連する、検索されやすい重要なキーワード（タグ）を5つから8つ程度抽出してください。
+
+重要:
+- カンマ区切りで「単語」のみを出力してください。
+- 文章や説明、Markdown装飾（*など）は一切不要です。
+- 1つ1つのタグは短く、適切な固有名詞や一般名詞にしてください。
+- 検索結果がある場合は、そこに含まれる重要な専門用語もタグとして検討してください。
+
+${searchResults ? `検索文脈:\n${searchResults}\n\n` : ""}
 
 タイトル: ${title}
 記事内容:
-${content.substring(0, 1000)}
+${content.substring(0, 1500)}
 `
     try {
       const tagsText = await generateResponse(prompt)
-      const tags = tagsText.split(/[,、]/).map(t => t.trim()).filter(t => t.length > 0)
-      onUpdateTags(tags)
-      toast.success("タグを生成しました。")
+      const newTags = tagsText
+        .split(/[,、\n]/)
+        .map(t => t.replace(/[*#]/g, "").trim())
+        .filter(t => t.length > 0 && t.length < 20)
+        .slice(0, 10)
+
+      setSuggestedTags(newTags)
+      toast.success("タグ候補を生成しました。")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "タグ生成に失敗しました。")
+    }
+  }
+
+  const handleGenerateSummary = async () => {
+    if (!content) return
+    const prompt = `
+以下のブログ記事を、300文字程度の丁寧な日本語で要約してください。
+記事の主旨、重要なポイント、結論が明確に伝わるようにしてください。
+
+重要:
+- 「要約：」などの接頭辞や、Markdown装飾（*や-など）は一切不要です。
+- 文章として自然な形式で出力してください。
+- 検索結果がある場合は、その文脈も含めて要約してください。
+
+${searchResults ? `検索文脈:\n${searchResults}\n\n` : ""}
+
+記事内容:
+${content}
+`
+    try {
+      const summary = await generateResponse(prompt)
+      const cleanSummary = summary.replace(/^要約[：:]\s*/, "").replace(/[*#]/g, "").trim()
+      onUpdateSummary(cleanSummary)
+      toast.success("要約を生成しました。")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "要約作成に失敗しました。")
     }
   }
 
@@ -153,7 +211,7 @@ ${content.substring(0, 1000)}
           {downloadProgress ? (
             <div className="space-y-2">
               <div className="flex justify-between text-[10px] font-mono">
-                <span>Downloading model data</span>
+                <span>Model Data Loading</span>
                 <span>{downloadProgress.percentage}%</span>
               </div>
               <Progress value={downloadProgress.percentage} className="h-1" />
@@ -189,48 +247,68 @@ ${content.substring(0, 1000)}
             AI アシスタント (Gemma 2)
           </CardTitle>
           <CardDescription className="text-xs">
-            ブラウザ上で動作するため、プライバシーが守られ、無制限に利用可能です。
+            ブラウザ上で動作する高性能AIが執筆をサポートします。
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="最新情報を検索..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="text-xs h-9"
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            />
-            <Button size="sm" onClick={handleSearch} disabled={isSearching} className="h-9">
-              {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-            </Button>
+          {/* 検索セクション */}
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Input
+                placeholder="最新情報を検索してAIに学習させる..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="text-xs h-9"
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
+              <Button size="sm" onClick={handleSearch} disabled={isSearching} className="h-9">
+                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              </Button>
+            </div>
+
+            {searchResults && (
+              <div className="p-3 bg-background/50 rounded-lg text-[10px] border border-border space-y-2">
+                <div className="font-bold flex items-center justify-between border-b border-border pb-1">
+                  <span className="flex items-center gap-1"><Search className="h-3 w-3" /> 取得済みの最新情報</span>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={() => setIsEditingSearch(!isEditingSearch)}>
+                      {isEditingSearch ? "確定" : "編集"}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={() => { setSearchResults(null); setIsEditingSearch(false); }}>破棄</Button>
+                  </div>
+                </div>
+                {isEditingSearch ? (
+                  <Textarea
+                    value={searchResults}
+                    onChange={(e) => setSearchResults(e.target.value)}
+                    className="text-[10px] min-h-[100px] bg-background/80"
+                  />
+                ) : (
+                  <div className="max-h-32 overflow-y-auto pr-1 leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                    {searchResults}
+                  </div>
+                )}
+                <p className="text-[9px] italic text-primary/70">※これらの情報は次のAIアクションで自動的に活用されます</p>
+              </div>
+            )}
           </div>
 
-          {searchResults && (
-            <div className="p-2 bg-background/50 rounded text-[10px] max-h-24 overflow-y-auto border border-border">
-              <div className="font-bold mb-1 flex items-center justify-between">
-                <span>検索結果取得済み</span>
-                <Button variant="ghost" size="sm" className="h-4 px-1" onClick={() => setSearchResults(null)}>クリア</Button>
-              </div>
-              {searchResults.substring(0, 200)}...
-            </div>
-          )}
-
+          {/* メインアクション */}
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="text-xs gap-1"
+              className="text-xs gap-2 font-bold h-10"
               onClick={handleImproveContent}
               disabled={isGenerating || !content}
             >
               {isGenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-              記事を改善
+              内容を改善
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="text-xs gap-1"
+              className="text-xs gap-2 font-bold h-10"
               onClick={handleSuggestTitle}
               disabled={isGenerating || !content}
             >
@@ -240,7 +318,7 @@ ${content.substring(0, 1000)}
             <Button
               variant="outline"
               size="sm"
-              className="text-xs gap-1"
+              className="text-xs gap-2 font-bold h-10"
               onClick={handleGenerateTags}
               disabled={isGenerating || !content}
             >
@@ -250,23 +328,79 @@ ${content.substring(0, 1000)}
             <Button
               variant="outline"
               size="sm"
-              className="text-xs gap-1"
-              onClick={async () => {
-                try {
-                  const prompt = `以下の記事の要約を150文字程度で作成してください。\n\n${content}`
-                  const summary = await generateResponse(prompt)
-                  onUpdateSummary(summary)
-                  toast.success("要約を生成しました。")
-                } catch (err) {
-                  toast.error(err instanceof Error ? err.message : "要約作成に失敗しました。")
-                }
-              }}
+              className="text-xs gap-2 font-bold h-10"
+              onClick={handleGenerateSummary}
               disabled={isGenerating || !content}
             >
               <FileText className="h-3 w-3" />
               要約作成
             </Button>
           </div>
+
+          {/* タイトル提案結果 */}
+          {suggestedTitles.length > 0 && (
+            <div className="pt-2 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                  <Type className="h-3 w-3" /> タイトル案を選択
+                </span>
+                <Button variant="ghost" size="sm" className="h-5 text-[10px]" onClick={() => setSuggestedTitles([])}>閉じる</Button>
+              </div>
+              <div className="space-y-2">
+                {suggestedTitles.map((t, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      onUpdateTitle(t)
+                      setSuggestedTitles([])
+                      toast.success("タイトルを反映しました")
+                    }}
+                    className="w-full text-left p-2.5 text-xs bg-background hover:bg-primary/5 border border-border hover:border-primary/30 rounded-lg transition-all group flex items-center justify-between"
+                  >
+                    <span className="flex-1">{t}</span>
+                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* タグ提案結果 */}
+          {suggestedTags.length > 0 && (
+            <div className="pt-2 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                  <TagIcon className="h-3 w-3" /> タグを追加
+                </span>
+                <Button variant="ghost" size="sm" className="h-5 text-[10px]" onClick={() => setSuggestedTags([])}>閉じる</Button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {suggestedTags.map((tag, i) => {
+                  const isExisting = tags.includes(tag)
+                  return (
+                    <Badge
+                      key={i}
+                      variant={isExisting ? "secondary" : "outline"}
+                      className={cn(
+                        "cursor-pointer px-2 py-1 text-[10px] font-medium transition-all",
+                        !isExisting && "hover:bg-primary/10 hover:border-primary/50"
+                      )}
+                      onClick={() => {
+                        if (!isExisting) {
+                          onUpdateTags([...tags, tag])
+                          toast.success(`#${tag} を追加しました`)
+                        }
+                      }}
+                    >
+                      {isExisting ? <Check className="h-2 w-2 mr-1" /> : <Plus className="h-2 w-2 mr-1" />}
+                      {tag}
+                    </Badge>
+                  )
+                })}
+              </div>
+              <p className="text-[9px] text-muted-foreground italic">※クリックで既存のタグに追加されます</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
