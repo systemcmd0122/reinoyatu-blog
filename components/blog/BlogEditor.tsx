@@ -245,6 +245,25 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const isMobileEffective = isMounted ? isMobile : false;
 
+  // AI対話からの引き継ぎ
+  useEffect(() => {
+    if (isMounted && mode === "new") {
+      const savedData = sessionStorage.getItem("ai_created_blog")
+      if (savedData) {
+        try {
+          const { title, content } = JSON.parse(savedData)
+          if (title) form.setValue("title", title)
+          if (content) form.setValue("content", content)
+          sessionStorage.removeItem("ai_created_blog")
+          toast.success("AIが作成した内容を読み込みました")
+          setIsDirty(true)
+        } catch (e) {
+          console.error("Failed to parse AI saved data", e)
+        }
+      }
+    }
+  }, [isMounted, mode, form])
+
   // マウント後の処理
   useEffect(() => {
     setIsMounted(true)

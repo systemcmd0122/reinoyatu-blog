@@ -20,6 +20,7 @@ import {
   Download,
   Share,
   Mail,
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
@@ -132,7 +133,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   ]
 
   // エディターページではナビゲーションを非表示にする
-  const isEditorPage = pathname === "/blog/new" || /^\/blog\/[^/]+\/edit$/.test(pathname || "")
+  const isEditorPage = pathname === "/blog/new" || pathname === "/blog/ai-new" || /^\/blog\/[^/]+\/edit$/.test(pathname || "")
 
   if (isEditorPage) return null
 
@@ -175,12 +176,20 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
 
             {user ? (
               <div className="flex items-center gap-3">
-                <Button variant="default" size="sm" asChild className="hidden sm:flex gap-2 rounded-xl px-5 font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
-                  <Link href="/blog/new">
-                    <PenSquare className="h-4 w-4" />
-                    <span>投稿する</span>
-                  </Link>
-                </Button>
+                <div className="hidden sm:flex items-center bg-muted rounded-2xl p-1 gap-1">
+                  <Button variant="ghost" size="sm" asChild className="rounded-xl px-4 font-bold transition-all hover:bg-background">
+                    <Link href="/blog/ai-new" className="flex items-center gap-2">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      <span>AIで作成</span>
+                    </Link>
+                  </Button>
+                  <Button variant="default" size="sm" asChild className="gap-2 rounded-xl px-5 font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                    <Link href="/blog/new">
+                      <PenSquare className="h-4 w-4" />
+                      <span>投稿する</span>
+                    </Link>
+                  </Button>
+                </div>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
