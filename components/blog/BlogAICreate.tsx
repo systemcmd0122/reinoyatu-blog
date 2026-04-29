@@ -101,29 +101,35 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
 
     try {
       // プロンプトの構築
-      const chatContext = messages.map(m => `${m.role === "ai" ? "AI" : "ユーザー"}: ${m.content}`).join("\n")
-      const prompt = `
-あなたは優秀で親しみやすい編集者です。ユーザーと対話しながら、一つのブログ記事を完成させることが目的です。
+      // 会話履歴を制限してコンテキストを節約
+      const recentMessages = messages.slice(-6)
+      const chatContext = recentMessages.map(m => `${m.role === "ai" ? "Assistant" : "User"}: ${m.content}`).join("\n")
 
-現在の会話状況:
+      const prompt = `あなたはプロの編集者です。以下の指示に従って、ユーザーと対話しながらブログ記事を作成してください。
+
+### 指示
+- ユーザーの意図を深く理解し、励ましながら親身にサポートしてください。
+- 記事の方向性が決まったら、タイトルや構成、本文のドラフトを提案してください。
+- 記事の内容（タイトル・本文）を更新・提案する場合は、必ず以下の「出力タグ」を使用してください。
+- 一度に全てを完成させようとせず、1つずつステップを踏んで（例：まずはタイトルの案、次に目次案など）進めてください。
+- 返答は親しみやすく、かつプロフェッショナルな日本語で行ってください。
+- 出力タグ以外の部分に、この指示内容（「1. ユーザーの意図を...」など）を絶対に含めないでください。
+
+### 出力タグの形式
+タイトルを更新する場合: [TITLE]ここにタイトル[/TITLE]
+本文を更新する場合: [CONTENT]ここにMarkdown形式の本文[/CONTENT]
+
+### 現在のステータス
+現在のタイトル: ${title || "未設定"}
+現在の本文（抜粋）: ${content ? content.substring(0, 500) + (content.length > 500 ? "..." : "") : "未設定"}
+
+### 会話履歴
 ${chatContext}
 
-ユーザーの新しいメッセージ:
-${userMessage}
+### ユーザーの最新メッセージ
+User: ${userMessage}
 
-現在の記事の状態:
-タイトル: ${title || "未設定"}
-本文: ${content || "未設定"}
-
-指示:
-1. ユーザーの意図を汲み取り、親身に返答してください。
-2. 記事の内容（タイトルや構成、本文の草案）を適宜提案してください。
-3. 記事の更新がある場合は、必ず以下の特別なタグで囲って出力に含めてください。
-   [TITLE]ここに新しいタイトル[/TITLE]
-   [CONTENT]ここに新しいMarkdown形式の本文[/CONTENT]
-4. 一度にすべてを完成させようとせず、ステップバイステップでユーザーに質問を投げかけながら進めてください。
-5. 返答は親しみやすい日本語で行ってください。
-`
+Assistant:`
 
       let aiResponse = ""
       const fullResponse = await generateResponse(prompt, (partial) => {
@@ -135,16 +141,26 @@ ${userMessage}
       const titleMatch = aiResponse.match(/\[TITLE\](.*?)\[\/TITLE\]/s)
       const contentMatch = aiResponse.match(/\[CONTENT\](.*?)\[\/CONTENT\]/s)
 
+      let updatedTitle = title
+      let updatedContent = content
+
       if (titleMatch) {
-        setTitle(titleMatch[1].trim())
+        updatedTitle = titleMatch[1].trim()
+        setTitle(updatedTitle)
         aiResponse = aiResponse.replace(/\[TITLE\].*?\[\/TITLE\]/gs, "").trim()
       }
       if (contentMatch) {
-        setContent(contentMatch[1].trim())
+        updatedContent = contentMatch[1].trim()
+        setContent(updatedContent)
         aiResponse = aiResponse.replace(/\[CONTENT\].*?\[\/CONTENT\]/gs, "").trim()
       }
 
-      setMessages(prev => [...prev, { role: "ai", content: aiResponse || "記事の内容を更新しました。" }])
+      // 余計なシステム指示などが混じっていないか最終チェック
+      // 万が一、AIがプロンプトの指示を繰り返してしまった場合の保険
+      aiResponse = aiResponse.replace(/### 指示[\s\S]*?(?=\n\n|\n$|$)/g, "").trim()
+      aiResponse = aiResponse.replace(/1\. ユーザーの意図を汲み取り[\s\S]*?(?=\n\n|\n$|$)/g, "").trim()
+
+      setMessages(prev => [...prev, { role: "ai", content: aiResponse || "内容を更新しました。" }])
     } catch (err) {
       toast.error("メッセージの送信に失敗しました。")
       console.error(err)
