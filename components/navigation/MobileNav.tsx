@@ -64,7 +64,8 @@ const MobileNav: React.FC<MobileNavProps> = ({ userId, unreadCount = 0 }) => {
 
   const isEditorPage = pathname === "/blog/new" || pathname === "/blog/ai-new" || /^\/blog\/[^/]+\/edit$/.test(pathname || "")
 
-  if (isEditorPage) return null
+  // ログインしていない場合やエディターページでは表示しない
+  if (!userId || isEditorPage) return null
 
   // Only show on mobile
   return (
