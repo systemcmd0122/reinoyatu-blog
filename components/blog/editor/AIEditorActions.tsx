@@ -22,6 +22,16 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Card,
   CardContent,
   CardDescription,
@@ -61,6 +71,8 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
   const [searchResults, setSearchResults] = useState<string | null>(null)
   const [isEditingSearch, setIsEditingSearch] = useState(false)
   const [activeAction, setActiveAction] = useState<"improve" | "title" | "tags" | "summary" | null>(null)
+  const [showWarning, setShowWarning] = useState(false)
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
   const [aiSettings, setAiSettings] = useState<{ persona?: string, instructions?: string, writingStyle?: string }>({})
   const searchInputRef = useRef<HTMLInputElement>(null)
 
@@ -110,6 +122,28 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
     if (!title) return
     setSearchQuery(title)
     searchInputRef.current?.focus()
+  }
+
+  // ── 警告チェック ──
+  const withAiWarning = (action: () => void) => {
+    if (typeof window !== "undefined") {
+      const ackAi = localStorage.getItem("ack_ai_demo_v1")
+      if (!ackAi) {
+        setPendingAction(() => action)
+        setShowWarning(true)
+        return
+      }
+    }
+    action()
+  }
+
+  const handleAcceptAiWarning = () => {
+    localStorage.setItem("ack_ai_demo_v1", "true")
+    setShowWarning(false)
+    if (pendingAction) {
+      pendingAction()
+      setPendingAction(null)
+    }
   }
 
   // ── AI アクション ────────────────────────────
@@ -309,6 +343,35 @@ ${content}
 
   return (
     <div className="space-y-6">
+      <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              AI機能（デモ版）利用に関するご確認
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2 text-sm">
+              <p>
+                現在提供しているAI機能は<b>デモ版</b>です。以下の点をご了承いただいた上でご利用ください。
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-xs">
+                <li>動作が不安定だったり、エラーが発生する場合があります。</li>
+                <li>不正確な情報や不適切な内容を生成する可能性があります。</li>
+              </ul>
+              <p className="font-bold text-foreground">
+                AIが生成した内容は必ずご自身で確認・修正した上で、自己責任でご利用ください。
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingAction(null)}>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAcceptAiWarning}>
+              承諾して利用する
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2">
@@ -406,7 +469,7 @@ ${content}
               variant="outline"
               size="sm"
               className="text-xs gap-2 font-bold h-10"
-              onClick={handleImproveContent}
+              onClick={() => withAiWarning(handleImproveContent)}
               disabled={isGenerating || !content}
             >
               {activeAction === "improve"
@@ -418,7 +481,7 @@ ${content}
               variant="outline"
               size="sm"
               className="text-xs gap-2 font-bold h-10"
-              onClick={handleSuggestTitle}
+              onClick={() => withAiWarning(handleSuggestTitle)}
               disabled={isGenerating || !content}
             >
               {activeAction === "title"
@@ -430,7 +493,7 @@ ${content}
               variant="outline"
               size="sm"
               className="text-xs gap-2 font-bold h-10"
-              onClick={handleGenerateTags}
+              onClick={() => withAiWarning(handleGenerateTags)}
               disabled={isGenerating || !content}
             >
               {activeAction === "tags"
@@ -442,7 +505,7 @@ ${content}
               variant="outline"
               size="sm"
               className="text-xs gap-2 font-bold h-10"
-              onClick={handleGenerateSummary}
+              onClick={() => withAiWarning(handleGenerateSummary)}
               disabled={isGenerating || !content}
             >
               {activeAction === "summary"
