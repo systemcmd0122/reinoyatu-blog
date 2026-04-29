@@ -16,11 +16,11 @@ import {
   User as UserIcon,
   FileText,
   Search,
+  Sparkles,
   Loader2,
   Download,
   Share,
   Mail,
-  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
@@ -141,7 +141,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
     <>
       <header className="border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 sticky top-0 z-[var(--z-nav)] w-full transition-all duration-300">
         <div className="max-w-screen-xl mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-4 flex-1">
+          <div className="flex items-center gap-4 lg:gap-8 flex-1">
             <Link
               href="/"
               className="flex items-center space-x-3 hover:opacity-80 transition-all flex-shrink-0 group"
@@ -154,8 +154,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
               </span>
             </Link>
 
-
-            <div className="hidden md:flex flex-1 justify-center max-w-sm ml-8">
+            <div className="flex-1 max-w-xl mx-auto hidden md:block">
               <CommandMenu user={user} />
             </div>
           </div>

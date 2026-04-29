@@ -516,7 +516,7 @@ export const searchBlogs = async (query: string, userId?: string) => {
 
     let q = supabase
       .from("blogs")
-      .select("id, title, user_id, is_published")
+      .select("id, title, user_id, is_published, image_url, updated_at")
 
     if (userId) {
       // 指定されたuserIdの記事を検索する場合、本人の場合のみ下書きも含める
