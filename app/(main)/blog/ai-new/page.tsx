@@ -14,8 +14,7 @@ const BlogAINewPage = async () => {
   const user = userData?.user
 
   if (!user) {
-    // redirect("/login?next=/blog/ai-new")
-    return <BlogAICreate userId="test-user" />
+    redirect("/login?next=/blog/ai-new")
   }
 
   return <BlogAICreate userId={user.id} />
