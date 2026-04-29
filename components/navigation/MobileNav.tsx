@@ -9,7 +9,8 @@ import {
   PlusSquare,
   Bell,
   User,
-  Bookmark
+  Bookmark,
+  Sparkles
 } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -34,9 +35,9 @@ const MobileNav: React.FC<MobileNavProps> = ({ userId, unreadCount = 0 }) => {
       badge: unreadCount > 0
     },
     {
-      label: "投稿",
-      icon: PlusSquare,
-      href: "/blog/new",
+      label: "AI作成",
+      icon: Sparkles,
+      href: "/blog/ai-new",
       primary: true,
     },
     {
@@ -51,7 +52,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ userId, unreadCount = 0 }) => {
     },
   ]
 
-  const isEditorPage = pathname === "/blog/new" || /^\/blog\/[^/]+\/edit$/.test(pathname || "")
+  const isEditorPage = pathname === "/blog/new" || pathname === "/blog/ai-new" || /^\/blog\/[^/]+\/edit$/.test(pathname || "")
 
   if (isEditorPage) return null
 

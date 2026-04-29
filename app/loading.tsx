@@ -1,92 +1,102 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Loader2 } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 
 /**
- * ブログサイトに特化した、タイポグラフィ重視の洗練されたローディング画面
- * 画像を使用せずCSS/SVGのみで構成し、ダークモードにも完全対応
+ * サイト全体のルートローディング画面
+ * 没入感のある、シンプルかつプレミアムな体験を提供
  */
-const Loading = () => {
-  const words = ["Drafting...", "Polishing...", "Formatting...", "Publishing...", "Loading Content..."]
-  
+export default function Loading() {
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-background z-[var(--z-overlay)]">
-      <div className="relative flex flex-col items-center">
-        {/* ミニマルなプログレスリング */}
-        <div className="relative mb-8">
-          <motion.div
-            className="w-20 h-20 rounded-full border-2 border-primary/10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          />
-          <motion.div
-            className="absolute top-0 left-0 w-20 h-20 rounded-full border-t-2 border-primary"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="h-6 w-6 text-primary animate-pulse" />
-          </div>
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-background z-[var(--z-overlay)] overflow-hidden">
+      {/* 背景の装飾: 柔らかなグラデーション光 */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="relative flex flex-col items-center space-y-8">
+        {/* メインのローディングアニメーション */}
+        <div className="relative">
+          <LoadingSpinner size="xl" />
+
+          {/* 装飾的な浮遊粒子 */}
+          {[0, 120, 240].map((deg, i) => (
+            <motion.div
+              key={i}
+              className="absolute h-1 w-1 bg-primary/40 rounded-full"
+              style={{
+                top: '50%',
+                left: '50%',
+              }}
+              animate={{
+                x: [0, Math.cos(deg * Math.PI / 180) * 60, 0],
+                y: [0, Math.sin(deg * Math.PI / 180) * 60, 0],
+                opacity: [0, 0.8, 0],
+                scale: [0, 1.5, 0]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                delay: i * 0.5,
+                ease: "easeInOut"
+              }}
+            />
+          ))}
         </div>
 
-        {/* テキストアニメーション: 執筆プロセスの言葉が入れ替わる */}
-        <div className="h-10 flex flex-col items-center overflow-hidden">
+        {/* ブランドロゴまたはテキスト */}
+        <div className="flex flex-col items-center gap-2">
           <motion.div
-            animate={{
-              y: [0, -40, -80, -120, -160],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut",
-              times: [0, 0.25, 0.5, 0.75, 1],
-            }}
-            className="flex flex-col items-center gap-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-primary text-primary-foreground px-4 py-1.5 rounded-xl font-black text-xl leading-none shadow-lg shadow-primary/20"
           >
-            {words.map((word, i) => (
-              <span
+            RY
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center gap-1.5"
+          >
+            {["L", "o", "a", "d", "i", "n", "g"].map((char, i) => (
+              <motion.span
                 key={i}
-                className="text-2xl font-black tracking-tighter uppercase italic text-foreground"
+                className="text-xs font-bold tracking-widest text-muted-foreground/80 uppercase"
+                animate={{
+                  opacity: [0.3, 1, 0.3],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  delay: i * 0.1
+                }}
               >
-                {word}
-              </span>
+                {char}
+              </motion.span>
             ))}
           </motion.div>
         </div>
 
-        {/* サブテキスト */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="mt-4 text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/60"
-        >
-          Gathering your insights
-        </motion.p>
+        {/* インジケーターバー */}
+        <div className="w-32 h-0.5 bg-muted rounded-full overflow-hidden relative">
+          <motion.div
+            className="absolute inset-0 bg-primary/40"
+            animate={{
+              x: ["-100%", "100%"]
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+        </div>
       </div>
 
-      {/* 背景の装飾的な要素 (SVGグリッド) */}
-      <div className="absolute inset-0 -z-10 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
-        <svg width="100%" height="100%">
-          <pattern
-            id="grid"
-            width="40"
-            height="40"
-            patternUnits="userSpaceOnUse"
-          >
-            <path
-              d="M 40 0 L 0 0 0 40"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-            />
-          </pattern>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
-      </div>
+      {/* ドットパターンの背景装飾 */}
+      <div className="absolute inset-0 -z-10 opacity-[0.15] dark:opacity-[0.1] pointer-events-none"
+           style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
     </div>
   )
 }
-
-export default Loading
