@@ -37,9 +37,9 @@ const BookmarksList = async ({ userId }: { userId: string }) => {
 
   // ブックマーク一覧表示
   return (
-    <div className="min-h-screen bg-muted/30 dark:bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen md:bg-muted/30 dark:md:bg-background bg-background">
+      <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
+        <div className="hidden md:flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-foreground">ブックマーク</h1>
             <p className="text-muted-foreground mt-1">保存した記事の一覧です</p>

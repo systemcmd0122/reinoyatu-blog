@@ -38,9 +38,14 @@ export function PWAInstallBanner() {
   }, [])
 
   useEffect(() => {
-    if (!isInstalled && !dismissed && (isInstallable || isIOS)) {
-      setShowBanner(true)
-    }
+    // コンポーネントマウント直後ではなく、少し遅らせて表示することで
+    // 最初の読み込み時のUXを改善し、他のUIとの衝突を避ける
+    const timer = setTimeout(() => {
+      if (!isInstalled && !dismissed && (isInstallable || isIOS)) {
+        setShowBanner(true)
+      }
+    }, 2000)
+    return () => clearTimeout(timer)
   }, [isInstallable, isInstalled, isIOS, dismissed])
 
   const handleInstall = async () => {
@@ -69,7 +74,7 @@ export function PWAInstallBanner() {
   if (isMobile) {
     return (
       <Sheet open={showBanner} onOpenChange={(open) => !open && handleDismiss()}>
-        <SheetContent side="bottom" className="rounded-t-[20px] p-6 pb-10">
+        <SheetContent side="bottom" className="rounded-t-[20px] p-6 pb-10 z-[100]">
           <SheetHeader className="text-left mb-6">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-primary text-primary-foreground rounded-2xl shadow-lg shadow-primary/20">

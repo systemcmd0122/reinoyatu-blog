@@ -158,11 +158,11 @@ export default function GemmaDebugPage() {
   }
 
   return (
-    <div className="container max-w-none py-10 space-y-8 animate-in fade-in duration-700 px-4 md:px-8">
+    <div className="container max-w-none py-6 md:py-10 space-y-6 md:space-y-8 animate-in fade-in duration-700 px-4 md:px-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <h1 className="text-4xl font-black tracking-tight">Gemma 性能デバッグ</h1>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight">Gemma 性能デバッグ</h1>
             <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest px-2 py-0">v2.0 Beta</Badge>
           </div>
           <p className="text-muted-foreground max-w-2xl font-medium">
@@ -181,7 +181,7 @@ export default function GemmaDebugPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <Card className="shadow-premium border-none bg-muted/30">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">

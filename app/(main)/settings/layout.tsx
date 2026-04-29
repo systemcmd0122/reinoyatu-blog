@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   UserCircle,
   FileText,
-  Sparkles
+  Sparkles,
+  ChevronRight
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -136,31 +137,68 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
   )
 
   return (
-    <div className="container mx-auto px-4 py-8 lg:py-12 max-w-6xl">
+    <div className="container mx-auto px-4 py-6 lg:py-12 max-w-6xl">
       <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
-        {/* Mobile Navigation */}
-        <div className="md:hidden">
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="w-full justify-between font-bold rounded-md h-12 shadow-sm">
-                <div className="flex items-center">
-                  <Menu className="h-5 w-5 mr-2" />
-                  設定メニュー
+        {/* Mobile Navigation - native list style */}
+        <div className="md:hidden space-y-6">
+          {pathname === "/settings" || pathname === "/settings/" ? (
+            <div className="space-y-6 animate-in">
+              {navigation.map((group, groupIdx) => (
+                <div key={groupIdx} className="space-y-2">
+                  <h3 className="px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground/70">
+                    {group.title}
+                  </h3>
+                  <div className="bg-card border border-border rounded-2xl overflow-hidden divide-y divide-border">
+                    {group.items.map((item, itemIdx) => (
+                      <Link
+                        key={itemIdx}
+                        href={item.href}
+                        className="flex items-center justify-between p-4 active:bg-muted transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center mr-4 text-primary">
+                            <item.icon className="w-5 h-5" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-sm leading-tight">{item.name}</span>
+                            <span className="text-[11px] text-muted-foreground mt-0.5">
+                              {item.description}
+                            </span>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-                <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md">開く</span>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center mb-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl font-bold h-9 px-4 border-dashed"
+                onClick={() => setIsOpen(true)}
+              >
+                <Menu className="h-4 w-4 mr-2" />
+                他の設定
               </Button>
-            </SheetTrigger>
+            </div>
+          )}
+
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetContent
-              side="left"
-              className="w-[300px] bg-card text-card-foreground border-r p-0"
+              side="bottom"
+              className="rounded-t-[2rem] p-0 overflow-hidden bg-background/95 backdrop-blur-xl"
             >
               <VisuallyHidden>
                 <SheetTitle>設定メニュー</SheetTitle>
               </VisuallyHidden>
-              <div className="p-6 pt-12">
-                <div className="flex items-center space-x-2 mb-8 px-2 border-b pb-4">
+              <div className="p-6 max-h-[80vh] overflow-y-auto">
+                <div className="flex items-center space-x-2 mb-6 px-2 border-b pb-4">
                   <UserCircle className="w-6 h-6 text-primary" />
-                  <span className="font-bold text-lg">設定</span>
+                  <span className="font-bold text-lg">設定メニュー</span>
                 </div>
                 <NavContent />
               </div>

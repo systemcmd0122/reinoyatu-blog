@@ -49,14 +49,14 @@ const About = () => {
     return (
         <div className="min-h-screen bg-background">
             {/* ヘッダーセクション */}
-            <section className="pt-20 pb-12 px-4 sm:px-6 lg:px-8">
+            <section className="pt-10 md:pt-20 pb-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-4xl mx-auto text-center space-y-6">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8 }}
                     >
-                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-foreground mb-6">
+                        <h1 className="text-3xl md:text-6xl font-black text-foreground mb-4 md:mb-6 leading-tight">
                             例のヤツ｜ブログについて
                         </h1>
                         <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
@@ -101,15 +101,15 @@ const About = () => {
             </section>
 
             {/* バリュー（価値観）セクション */}
-            <section className="py-16 px-4 sm:px-6 lg:px-8">
+            <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-6xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="text-center mb-16"
+                        className="text-center mb-10 md:mb-16"
                     >
-                        <h2 className="text-4xl font-bold text-foreground mb-4">私たちの価値観</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">私たちの価値観</h2>
                         <p className="text-muted-foreground text-lg">6つのコア・バリューで、サービスを支えています。</p>
                     </motion.div>
 

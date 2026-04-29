@@ -119,22 +119,22 @@ const Signup = () => {
 
   return (
     <div className="relative w-full max-w-md">
-      {/* Decorative background elements */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+      {/* Decorative background elements - hide on mobile */}
+      <div className="hidden md:block absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+      <div className="hidden md:block absolute -bottom-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
 
-      <Card className="relative w-full shadow-xl border-border/50 bg-background/80 backdrop-blur-sm overflow-hidden">
+      <Card className="relative w-full shadow-xl border-border/50 md:bg-background/80 md:backdrop-blur-sm overflow-hidden bg-background border-none md:border">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/20 via-primary to-primary/20" />
 
-        <CardHeader className="text-center pt-10 pb-6">
-          <CardTitle className="text-2xl font-black tracking-tight mb-2">
+        <CardHeader className="text-center pt-8 md:pt-10 pb-6">
+          <CardTitle className="text-xl md:text-2xl font-black tracking-tight mb-2">
             自由な表現、ここから。
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className="text-sm md:text-base">
             新しいアカウントを作成して、世界と繋がりましょう。
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-10 pt-4">
+        <CardContent className="px-6 md:p-10 pt-4">
         <div className="space-y-4">
           <Button
             type="button"
@@ -164,7 +164,7 @@ const Signup = () => {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-7">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-7">
             <FormField
               control={form.control}
               name="name"

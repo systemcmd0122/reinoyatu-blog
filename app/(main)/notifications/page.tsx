@@ -17,8 +17,8 @@ const NotificationsPage = async () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
-      <div className="flex items-center gap-4 mb-10">
+    <div className="max-w-2xl mx-auto py-6 md:py-10 px-4">
+      <div className="hidden md:flex items-center gap-4 mb-10">
         <div className="p-3 bg-primary/10 rounded-2xl">
           <Bell className="h-6 w-6 text-primary" />
         </div>

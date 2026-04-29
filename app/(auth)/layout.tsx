@@ -4,7 +4,9 @@ interface AuthLayoutProps {
 
 const AuthLayout = async ({ children }: AuthLayoutProps) => {
   return (
-    <div className="flex items-center justify-center py-32">{children}</div>
+    <div className="min-h-[100dvh] flex items-center justify-center py-10 px-4 md:py-32">
+      <div className="w-full flex justify-center">{children}</div>
+    </div>
   )
 }
 
