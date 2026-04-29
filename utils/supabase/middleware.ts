@@ -43,8 +43,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/bookmarks") ||
     pathname.startsWith("/settings") ||
     pathname.startsWith("/notifications") ||
-    pathname.startsWith("/collections") ||
-    pathname.startsWith("/profile")
+    pathname.startsWith("/collections")
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()

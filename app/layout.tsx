@@ -12,6 +12,7 @@ import { RealtimeProvider } from "@/components/providers/RealtimeProvider"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
 import { PWAInstallBanner } from "@/components/pwa/PWAInstallBanner"
+import { cn } from "@/lib/utils"
 
 const mPlus1 = M_PLUS_1({
   weight: ["400", "700", "900"],
@@ -126,7 +127,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
   } = await supabase.auth.getUser()
 
   return (
-    <html lang="ja" suppressHydrationWarning>
+    <html lang="ja" suppressHydrationWarning className="overflow-x-hidden">
       <head>
         <Script
           async
@@ -145,7 +146,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
           <RealtimeProvider>
             <ToasterProvider />
 
-            <div className="flex min-h-screen flex-col">
+            <div className="flex min-h-screen flex-col overflow-x-hidden">
               <Navigation user={user} />
 
               <main className="flex-1 pb-24 md:pb-0">{children}</main>
@@ -153,7 +154,10 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
               <SpeedInsights />
               <Analytics />
 
-              <footer className="border-t py-12 bg-muted/30">
+              <footer className={cn(
+                "border-t py-12 bg-muted/30",
+                "hidden md:block" // モバイルではフッターを非表示にする（ボトムナビがあるため）
+              )}>
                 <div className="container mx-auto px-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                     <div className="space-y-4">

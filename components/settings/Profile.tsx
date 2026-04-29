@@ -239,15 +239,15 @@ const Profile = ({ profile }: ProfileProps) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">プロフィール</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl md:text-2xl font-bold tracking-tight">プロフィール</h2>
+          <p className="hidden md:block text-muted-foreground">
             あなたの公開プロフィールをカスタマイズして、読者に自分を伝えましょう。
           </p>
         </div>
         <SaveStatus status={isSaving ? "saving" : isDirty ? "unsaved" : "saved"} />
       </div>
 
-      <Card>
+      <Card className="border-none md:border shadow-none md:shadow-sm bg-transparent md:bg-card">
         <CardHeader>
           <CardTitle>プロフィール情報</CardTitle>
           <CardDescription>
@@ -556,19 +556,20 @@ const Profile = ({ profile }: ProfileProps) => {
 
               <FormError message={error} />
 
-              <div className="flex items-center justify-end gap-4 pt-6 border-t">
+              <div className="flex flex-col-reverse md:flex-row items-center justify-end gap-3 pt-6 border-t">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={handleCancel}
                   disabled={isSaving}
+                  className="w-full md:w-auto h-12 md:h-10 font-bold"
                 >
                   キャンセル
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSaving || (!isDirty && !imageUpload[0]?.dataURL?.startsWith("data:image"))}
-                  className="min-w-[120px] bg-primary text-primary-foreground"
+                  className="w-full md:w-auto min-w-[120px] h-12 md:h-10 bg-primary text-primary-foreground font-bold"
                 >
                   {isSaving ? (
                     <>
@@ -576,7 +577,7 @@ const Profile = ({ profile }: ProfileProps) => {
                       保存中...
                     </>
                   ) : (
-                    "プロフィールを保存"
+                    "変更を保存"
                   )}
                 </Button>
               </div>

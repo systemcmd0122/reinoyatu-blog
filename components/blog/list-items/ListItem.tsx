@@ -117,11 +117,11 @@ const ListItem: React.FC<ListItemProps> = ({ blog, priority, currentUserId }) =>
           </div>
         </div>
 
-        {/* Thumbnail (md+) */}
+        {/* Thumbnail (always visible, responsive size) */}
         {data.imageUrl && (
           <Link
             href={`/blog/${data.id}`}
-            className="hidden md:block flex-shrink-0 relative h-24 w-36 rounded-lg overflow-hidden border group-hover:opacity-90 transition-all"
+            className="flex-shrink-0 relative h-16 w-16 sm:h-20 sm:w-28 md:h-24 md:w-36 rounded-lg overflow-hidden border group-hover:opacity-90 transition-all"
           >
             <Image
               src={data.imageUrl}

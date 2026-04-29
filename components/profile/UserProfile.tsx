@@ -235,10 +235,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
           </div>
         </div>
 
-        <div className="px-6 md:px-12 -mt-16 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-              <div className="relative h-32 w-32 rounded-xl overflow-hidden border-4 border-background bg-background shadow-sm">
+        <div className="px-4 md:px-12 -mt-12 md:-mt-16 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-4 md:gap-6">
+              <div className="relative h-24 w-24 md:h-32 md:w-32 rounded-xl overflow-hidden border-4 border-background bg-background shadow-sm">
                 {profile.avatar_url ? (
                   <Image
                     src={profile.avatar_url}
@@ -253,9 +253,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                 )}
               </div>
 
-              <div className="text-center md:text-left space-y-1 pb-2">
-                <div className="flex items-center justify-center md:justify-start gap-3">
-                  <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+              <div className="text-center md:text-left space-y-1.5 pb-2">
+                <div className="flex items-center justify-center md:justify-start gap-2 md:gap-3">
+                  <h1 className="text-xl md:text-3xl font-bold text-foreground tracking-tight">
                     {profile.name}
                   </h1>
                   {isOwnProfile && (
@@ -278,7 +278,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-3 pb-2">
+            <div className="flex items-center justify-center gap-3 pb-2 w-full md:w-auto">
               {isOwnProfile ? (
                 <ProfileEditDialog profile={profile} />
               ) : (
@@ -385,23 +385,23 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
             onValueChange={(v) => setActiveTab(v as any)}
             className="w-full"
           >
-            <div className="flex items-center justify-between mb-6 bg-muted/30 p-1 rounded-xl border border-border">
-              <TabsList className="bg-transparent h-auto p-0 gap-1 overflow-x-auto no-scrollbar">
+            <div className="flex items-center justify-between mb-6 bg-muted/30 p-1 rounded-xl border border-border overflow-hidden">
+              <TabsList className="bg-transparent h-auto p-0 gap-0.5 w-full">
                 <TabsTrigger
                   value="posts"
-                  className="rounded-md px-8 py-2 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  className="flex-1 rounded-md py-2 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm md:text-base"
                 >
                   記事
                 </TabsTrigger>
                 <TabsTrigger
                   value="series"
-                  className="rounded-md px-8 py-2 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  className="flex-1 rounded-md py-2 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm md:text-base"
                 >
                   シリーズ
                 </TabsTrigger>
                 <TabsTrigger
                   value="about"
-                  className="rounded-md px-8 py-2 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  className="flex-1 rounded-md py-2 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm md:text-base"
                 >
                   履歴
                 </TabsTrigger>

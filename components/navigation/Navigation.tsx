@@ -30,6 +30,7 @@ import { CommandMenu } from "./CommandMenu"
 import { useNotifications } from "@/hooks/use-notifications"
 import { usePWAInstall } from "@/hooks/usePWAInstall"
 import MobileNav from "./MobileNav"
+import { MobileHeader } from "./MobileHeader"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -134,12 +135,39 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
 
   // エディターページではナビゲーションを非表示にする
   const isEditorPage = pathname === "/blog/new" || pathname === "/blog/ai-new" || /^\/blog\/[^/]+\/edit$/.test(pathname || "")
+  // 認証ページ、記事詳細ページ、プロフィールページ、各種設定ページではモバイル時にヘッダーを非表示にする
+  const isHeaderHiddenOnMobile = isEditorPage ||
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname?.startsWith("/blog/") ||
+    (pathname?.startsWith("/profile/") && pathname !== "/profile") ||
+    pathname?.startsWith("/settings/") ||
+    pathname === "/notifications" ||
+    pathname === "/bookmarks"
+
+  // ページタイトルを取得
+  const getPageTitle = () => {
+    if (pathname === "/notifications") return "通知"
+    if (pathname === "/bookmarks") return "ブックマーク"
+    if (pathname?.startsWith("/settings/")) return "設定"
+    if (pathname?.startsWith("/profile/")) return "プロフィール"
+    if (pathname?.startsWith("/blog/")) return "記事"
+    if (pathname === "/login") return "ログイン"
+    if (pathname === "/signup") return "新規登録"
+    return ""
+  }
 
   if (isEditorPage) return null
 
   return (
     <>
-      <header className="border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 sticky top-0 z-[var(--z-nav)] w-full transition-all duration-300">
+      {isHeaderHiddenOnMobile && (
+        <MobileHeader title={getPageTitle()} />
+      )}
+      <header className={cn(
+        "border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 sticky top-0 z-[var(--z-nav)] w-full transition-all duration-300",
+        isHeaderHiddenOnMobile && "hidden md:block"
+      )}>
         <div className="max-w-screen-xl mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-4 lg:gap-8 flex-1">
             <Link
