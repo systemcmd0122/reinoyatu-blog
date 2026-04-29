@@ -1,14 +1,12 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useGemma } from "@/hooks/use-gemma"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
 import {
   Send,
   Sparkles,
@@ -18,10 +16,13 @@ import {
   Eye,
   MessageSquare,
   Wand2,
-  CheckCircle2,
-  ChevronRight,
+  Rocket,
+  ChevronDown,
   RefreshCw,
-  Rocket
+  Copy,
+  Check,
+  FileText,
+  Zap,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -29,7 +30,11 @@ import MarkdownRenderer from "./markdown/MarkdownRenderer"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 
+// ────────────────────────────────────────────
+// 型定義
+// ────────────────────────────────────────────
 interface Message {
+  id: string
   role: "user" | "ai"
   content: string
 }
@@ -38,21 +43,163 @@ interface BlogAICreateProps {
   userId: string
 }
 
+// ────────────────────────────────────────────
+// プロンプト構築
+// ────────────────────────────────────────────
+const buildPrompt = (
+  userMessage: string,
+  conversationHistory: Message[],
+  currentTitle: string,
+  currentContent: string
+): string => {
+  const recentHistory = conversationHistory.slice(-6)
+  const historyText = recentHistory
+    .map((m) => `${m.role === "ai" ? "AI" : "User"}: ${m.content}`)
+    .join("\n")
+
+  const titleStatus = currentTitle
+    ? `現在のタイトル: 「${currentTitle}」`
+    : "タイトル: 未設定"
+  const contentStatus = currentContent
+    ? `本文の冒頭（参考）:\n${currentContent.substring(0, 300)}${currentContent.length > 300 ? "..." : ""}`
+    : "本文: 未作成"
+
+  return `<start_of_turn>user
+必ず日本語で回答してください。あなたはプロのブログ編集者です。
+
+【現在の記事の状況】
+${titleStatus}
+${contentStatus}
+
+【これまでの会話】
+${historyText}
+
+【ユーザーの新しいメッセージ】
+${userMessage}
+
+以下のルールに従って回答してください：
+- 必ず日本語で親しみやすく回答する
+- 記事のタイトルを提案・更新する場合は「タイトル案：」に続けてタイトルを書く
+- 記事の本文を提案・更新する場合は「本文案：」に続けてMarkdown形式で本文を書く
+- 一度に全部完成させようとせず、ステップごとに進める
+- 回答の最初に「指示：」などのシステム的な内容を絶対に含めない
+- 自然な会話として回答する
+<end_of_turn>
+<start_of_turn>model
+`
+}
+
+// ────────────────────────────────────────────
+// AIレスポンスのパーサー
+// ────────────────────────────────────────────
+interface ParsedResponse {
+  chatMessage: string
+  newTitle: string | null
+  newContent: string | null
+}
+
+const parseAIResponse = (raw: string): ParsedResponse => {
+  let text = raw.trim()
+  let newTitle: string | null = null
+  let newContent: string | null = null
+
+  // タイトルの抽出（複数パターン対応）
+  const titlePatterns = [
+    /タイトル案[：:]\s*「?(.+?)」?\s*(?:\n|$)/,
+    /タイトル[：:]\s*「?(.+?)」?\s*(?:\n|$)/,
+    /提案タイトル[：:]\s*「?(.+?)」?\s*(?:\n|$)/,
+    /\[TITLE\]([\s\S]+?)\[\/TITLE\]/,
+  ]
+  for (const pattern of titlePatterns) {
+    const match = text.match(pattern)
+    if (match) {
+      const candidate = match[1].trim()
+      if (candidate.length > 0 && candidate.length <= 100) {
+        newTitle = candidate
+        text = text.replace(match[0], "").trim()
+        break
+      }
+    }
+  }
+
+  // 本文の抽出
+  const contentPatterns = [
+    /本文案[：:]\s*([\s\S]+?)(?=\n\n(?:タイトル|まず|次に|では|以上)|$)/,
+    /本文[：:]\s*([\s\S]+?)(?=\n\n(?:タイトル|まず|次に|では|以上)|$)/,
+    /記事の本文[：:]\s*([\s\S]+?)(?=\n\n(?:タイトル|まず|次に|では|以上)|$)/,
+    /\[CONTENT\]([\s\S]+?)\[\/CONTENT\]/,
+  ]
+  for (const pattern of contentPatterns) {
+    const match = text.match(pattern)
+    if (match) {
+      const candidate = match[1].trim()
+      if (candidate.length >= 50) {
+        newContent = candidate
+        text = text.replace(match[0], "").trim()
+        break
+      }
+    }
+  }
+
+  // システムプロンプトの残滓を除去
+  const junkPatterns = [
+    /^(指示|ルール|注意|システム)[：:].+$/gm,
+    /<start_of_turn>[\s\S]*?<end_of_turn>/g,
+    /^(User|AI|Assistant)[：:].+$/gm,
+  ]
+  for (const pattern of junkPatterns) {
+    text = text.replace(pattern, "")
+  }
+
+  const chatMessage = text.replace(/\n{3,}/g, "\n\n").trim()
+  return { chatMessage, newTitle, newContent }
+}
+
+// ────────────────────────────────────────────
+// クイックアクション
+// ────────────────────────────────────────────
+const QUICK_ACTIONS = [
+  { label: "タイトルを考えて", icon: FileText },
+  { label: "構成を提案して", icon: Layout },
+  { label: "導入文を書いて", icon: Zap },
+  { label: "もっと詳しく", icon: RefreshCw },
+]
+
+// ────────────────────────────────────────────
+// メインコンポーネント
+// ────────────────────────────────────────────
 const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
   const router = useRouter()
-  const gemma = useGemma()
-  const { generateResponse, isGenerating, isLoading, downloadProgress, initialized } = gemma
+  const {
+    generateResponse,
+    isGenerating,
+    isLoading,
+    downloadProgress,
+    initialized,
+    error: gemmaError,
+  } = useGemma()
 
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
+  const [streamingText, setStreamingText] = useState("")
   const [viewMode, setViewMode] = useState<"chat" | "preview" | "split">("split")
-  const [isFinishing, setIsFinishing] = useState(false)
+  const [copiedTitle, setCopiedTitle] = useState(false)
+  const [userProfile, setUserProfile] = useState<{
+    name: string
+    avatar_url: string | null
+  } | null>(null)
+  const [isAtBottom, setIsAtBottom] = useState(true)
 
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const [userProfile, setUserProfile] = useState<{ name: string; avatar_url: string | null } | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const idCounter = useRef(0)
 
+  const newId = () => `msg-${++idCounter.current}`
+
+  // ── プロフィール取得 ──
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -63,9 +210,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
           .select("name, avatar_url")
           .eq("id", userId)
           .single()
-        if (data) {
-          setUserProfile(data)
-        }
+        if (data) setUserProfile(data)
       } catch (err) {
         console.error("Failed to fetch profile:", err)
       }
@@ -73,317 +218,557 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     fetchProfile()
   }, [userId])
 
-  // 初期メッセージ
+  // ── 初期ウェルカムメッセージ ──
   useEffect(() => {
     if (initialized && messages.length === 0) {
       setMessages([
         {
+          id: newId(),
           role: "ai",
-          content: "こんにちは！あなたの執筆パートナーです。今日はどんな記事を書きたいですか？テーマや書きたいことを教えていただければ、一緒に対話しながら作り上げていきましょう！"
-        }
+          content:
+            "こんにちは！あなたの執筆パートナーです ✨\n\n今日はどんな記事を書きたいですか？テーマや書きたいことを教えていただければ、一緒に対話しながら作り上げていきましょう！\n\nたとえば「Android Studioの入門記事」「Reactの基礎を分かりやすく解説する記事」など、気軽に教えてください。",
+        },
       ])
     }
-  }, [initialized, messages.length])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialized])
 
-  // メッセージ追加時にスクロール
+  // ── スクロール制御 ──
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [])
+
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [messages, isGenerating])
+    if (isAtBottom) scrollToBottom()
+  }, [messages, streamingText, isAtBottom, scrollToBottom])
 
-  const handleSend = async () => {
-    if (!input.trim() || isGenerating) return
+  const handleScroll = useCallback(() => {
+    const el = chatContainerRef.current
+    if (!el) return
+    setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 80)
+  }, [])
 
+  // ── テキストエリア高さ自動調整 ──
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = "auto"
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`
+  }, [input])
+
+  // ── メッセージ送信 ──
+  const handleSend = useCallback(async () => {
     const userMessage = input.trim()
+    if (!userMessage || isGenerating) return
+
     setInput("")
-    setMessages(prev => [...prev, { role: "user", content: userMessage }])
+    const userMsgId = newId()
+    const aiMsgId = newId()
+
+    setMessages((prev) => [
+      ...prev,
+      { id: userMsgId, role: "user", content: userMessage },
+    ])
+    setStreamingText("")
 
     try {
-      // プロンプトの構築
-      // 会話履歴を制限してコンテキストを節約
-      const recentMessages = messages.slice(-6)
-      const chatContext = recentMessages.map(m => `${m.role === "ai" ? "Assistant" : "User"}: ${m.content}`).join("\n")
+      const prompt = buildPrompt(userMessage, messages, title, content)
+      let accumulatedText = ""
 
-      const prompt = `あなたはプロの編集者です。以下の指示に従って、ユーザーと対話しながらブログ記事を作成してください。
-
-### 指示
-- ユーザーの意図を深く理解し、励ましながら親身にサポートしてください。
-- 記事の方向性が決まったら、タイトルや構成、本文のドラフトを提案してください。
-- 記事の内容（タイトル・本文）を更新・提案する場合は、必ず以下の「出力タグ」を使用してください。
-- 一度に全てを完成させようとせず、1つずつステップを踏んで（例：まずはタイトルの案、次に目次案など）進めてください。
-- 返答は親しみやすく、かつプロフェッショナルな日本語で行ってください。
-- 出力タグ以外の部分に、この指示内容（「1. ユーザーの意図を...」など）を絶対に含めないでください。
-
-### 出力タグの形式
-タイトルを更新する場合: [TITLE]ここにタイトル[/TITLE]
-本文を更新する場合: [CONTENT]ここにMarkdown形式の本文[/CONTENT]
-
-### 現在のステータス
-現在のタイトル: ${title || "未設定"}
-現在の本文（抜粋）: ${content ? content.substring(0, 500) + (content.length > 500 ? "..." : "") : "未設定"}
-
-### 会話履歴
-${chatContext}
-
-### ユーザーの最新メッセージ
-User: ${userMessage}
-
-Assistant:`
-
-      let aiResponse = ""
       const fullResponse = await generateResponse(prompt, (partial) => {
-        // ストリーミング中の表示（オプション）
+        accumulatedText = partial
+        setStreamingText(partial)
       })
-      aiResponse = fullResponse
 
-      // [TITLE] と [CONTENT] を抽出
-      const titleMatch = aiResponse.match(/\[TITLE\](.*?)\[\/TITLE\]/s)
-      const contentMatch = aiResponse.match(/\[CONTENT\](.*?)\[\/CONTENT\]/s)
+      const finalText = fullResponse || accumulatedText
+      setStreamingText("")
 
-      let updatedTitle = title
-      let updatedContent = content
+      const { chatMessage, newTitle, newContent } = parseAIResponse(finalText)
 
-      if (titleMatch) {
-        updatedTitle = titleMatch[1].trim()
-        setTitle(updatedTitle)
-        aiResponse = aiResponse.replace(/\[TITLE\].*?\[\/TITLE\]/gs, "").trim()
+      if (newTitle) {
+        setTitle(newTitle)
+        toast.success(`タイトルを更新: 「${newTitle}」`)
       }
-      if (contentMatch) {
-        updatedContent = contentMatch[1].trim()
-        setContent(updatedContent)
-        aiResponse = aiResponse.replace(/\[CONTENT\].*?\[\/CONTENT\]/gs, "").trim()
+      if (newContent) {
+        setContent(newContent)
+        toast.success("本文を更新しました")
       }
 
-      // 余計なシステム指示などが混じっていないか最終チェック
-      // 万が一、AIがプロンプトの指示を繰り返してしまった場合の保険
-      aiResponse = aiResponse.replace(/### 指示[\s\S]*?(?=\n\n|\n$|$)/g, "").trim()
-      aiResponse = aiResponse.replace(/1\. ユーザーの意図を汲み取り[\s\S]*?(?=\n\n|\n$|$)/g, "").trim()
+      const displayMessage =
+        chatMessage ||
+        (newTitle || newContent
+          ? "内容を更新しました！プレビューで確認してみてください。"
+          : "...")
 
-      setMessages(prev => [...prev, { role: "ai", content: aiResponse || "内容を更新しました。" }])
-    } catch (err) {
-      toast.error("メッセージの送信に失敗しました。")
-      console.error(err)
+      setMessages((prev) => [
+        ...prev,
+        { id: aiMsgId, role: "ai", content: displayMessage },
+      ])
+    } catch (err: any) {
+      setStreamingText("")
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: aiMsgId,
+          role: "ai",
+          content: `申し訳ありません、エラーが発生しました。\n\n${err?.message || "不明なエラー"}\n\nしばらく待ってから再度お試しください。`,
+        },
+      ])
+      toast.error("送信に失敗しました")
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input, isGenerating, messages, title, content, generateResponse])
 
-  const handleFinish = () => {
-    setIsFinishing(true)
-    // セッションストレージに一時保存してエディタに渡す
+  // ── Enter送信 / Shift+Enter改行 ──
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault()
+        handleSend()
+      }
+    },
+    [handleSend]
+  )
+
+  // ── クイックアクション ──
+  const handleQuickAction = useCallback((label: string) => {
+    setInput(label)
+    textareaRef.current?.focus()
+  }, [])
+
+  // ── 完成させてエディタへ ──
+  const handleFinish = useCallback(() => {
+    if (!title && !content) {
+      toast.error("タイトルまたは本文がありません")
+      return
+    }
     sessionStorage.setItem("ai_created_blog", JSON.stringify({ title, content }))
     router.push("/blog/new?from=ai")
-  }
+  }, [title, content, router])
 
+  // ── タイトルをコピー ──
+  const handleCopyTitle = useCallback(async () => {
+    if (!title) return
+    await navigator.clipboard.writeText(title)
+    setCopiedTitle(true)
+    setTimeout(() => setCopiedTitle(false), 2000)
+  }, [title])
+
+  // ────────────────────────────────────────────
+  // ローディング画面
+  // ────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center p-6 space-y-6">
-        <div className="relative">
-          <div className="h-24 w-24 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-          <Sparkles className="absolute inset-0 m-auto h-8 w-8 text-primary animate-pulse" />
+      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center p-6 space-y-8 bg-background">
+        <div className="relative w-28 h-28 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full border-4 border-primary/10" />
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin" />
+          <motion.div
+            animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Sparkles className="h-10 w-10 text-primary" />
+          </motion.div>
         </div>
+
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold">AI執筆パートナーを準備中...</h2>
-          <p className="text-sm text-muted-foreground">初回のみ、モデルデータのロードに時間がかかる場合があります。</p>
+          <h2 className="text-xl font-bold tracking-tight">
+            {downloadProgress
+              ? "AIモデルをダウンロード中..."
+              : "AI執筆パートナーを準備中..."}
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-xs">
+            {downloadProgress
+              ? "初回のみ必要です。Wi-Fiでのご利用を推奨します。"
+              : "AIモデルを初期化しています。少々お待ちください。"}
+          </p>
         </div>
+
         {downloadProgress && (
-          <div className="w-full max-w-md space-y-2">
-            <Progress value={downloadProgress.percentage} className="h-2" />
-            <div className="flex justify-between text-[10px] font-mono text-muted-foreground">
-              <span>DOWNLOADING MODEL DATA</span>
-              <span>{downloadProgress.percentage}%</span>
+          <div className="w-full max-w-sm space-y-2">
+            <Progress value={downloadProgress.percentage} className="h-2 rounded-full" />
+            <div className="flex justify-between text-xs text-muted-foreground font-mono">
+              <span className="text-primary font-bold animate-pulse">DOWNLOADING</span>
+              <span>
+                {(downloadProgress.loaded / 1024 / 1024).toFixed(0)} MB /{" "}
+                {(downloadProgress.total / 1024 / 1024).toFixed(0)} MB
+              </span>
+              <span className="text-primary font-bold">
+                {downloadProgress.percentage}%
+              </span>
             </div>
+          </div>
+        )}
+
+        {gemmaError && (
+          <div className="max-w-sm p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive text-center">
+            <p className="font-bold mb-1">初期化に失敗しました</p>
+            <p className="text-xs opacity-80">{gemmaError}</p>
           </div>
         )}
       </div>
     )
   }
 
+  // ────────────────────────────────────────────
+  // メイン UI
+  // ────────────────────────────────────────────
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden bg-background">
-      {/* ヘッダー */}
-      <div className="border-b px-4 py-3 flex items-center justify-between bg-background/95 backdrop-blur shrink-0">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-9 w-9">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <div className="bg-primary/10 p-1.5 rounded-lg">
-              <Sparkles className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-sm font-bold leading-none">AI対話型エディタ</h1>
-              <p className="text-[10px] text-muted-foreground mt-1">Gemma 2 が執筆をサポートします</p>
-            </div>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <div className="hidden sm:flex bg-muted rounded-lg p-1">
-            <Button
-              variant={viewMode === "chat" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("chat")}
-              className="h-7 px-3 text-xs gap-1.5"
-            >
-              <MessageSquare className="h-3.5 w-3.5" />
-              チャット
-            </Button>
-            <Button
-              variant={viewMode === "split" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("split")}
-              className="h-7 px-3 text-xs gap-1.5"
-            >
-              <Layout className="h-3.5 w-3.5" />
-              分割
-            </Button>
-            <Button
-              variant={viewMode === "preview" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("preview")}
-              className="h-7 px-3 text-xs gap-1.5"
-            >
-              <Eye className="h-3.5 w-3.5" />
-              プレビュー
-            </Button>
-          </div>
-
+      {/* ─── ヘッダー ─── */}
+      <header className="shrink-0 border-b bg-background/95 backdrop-blur-sm px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2 z-10">
+        <div className="flex items-center gap-2 min-w-0">
           <Button
-            size="sm"
-            className="rounded-full px-4 gap-2 font-bold shadow-lg shadow-primary/20"
-            onClick={handleFinish}
-            disabled={!title && !content}
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            className="h-8 w-8 shrink-0"
           >
-            <Rocket className="h-4 w-4" />
-            完成させる
+            <ArrowLeft className="h-4 w-4" />
           </Button>
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="bg-primary/10 p-1 rounded-md shrink-0">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <div className="hidden sm:block min-w-0">
+              <div className="text-xs font-bold leading-none">AI対話型エディタ</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                Gemma 2 稼働中
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* チャットエリア */}
+        {/* ビュー切替（デスクトップ） */}
+        <div className="hidden sm:flex bg-muted rounded-lg p-0.5 gap-0.5">
+          {(["chat", "split", "preview"] as const).map((mode) => {
+            const icons = { chat: MessageSquare, split: Layout, preview: Eye }
+            const labels = { chat: "チャット", split: "分割", preview: "プレビュー" }
+            const Icon = icons[mode]
+            return (
+              <Button
+                key={mode}
+                variant={viewMode === mode ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode(mode)}
+                className="h-7 px-2.5 text-xs gap-1.5"
+              >
+                <Icon className="h-3 w-3" />
+                <span className="hidden md:inline">{labels[mode]}</span>
+              </Button>
+            )
+          })}
+        </div>
+
+        <Button
+          size="sm"
+          onClick={handleFinish}
+          disabled={!title && !content}
+          className="h-8 rounded-full px-3 sm:px-4 gap-1.5 font-bold text-xs shadow-sm shadow-primary/20 shrink-0"
+        >
+          <Rocket className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">完成させる</span>
+          <span className="sm:hidden">完成</span>
+        </Button>
+      </header>
+
+      {/* ─── メインエリア ─── */}
+      <div className="flex-1 flex overflow-hidden relative">
+
+        {/* ─── チャットエリア ─── */}
         {(viewMode === "chat" || viewMode === "split") && (
-          <div className={cn(
-            "flex flex-col border-r bg-muted/5 transition-all duration-300",
-            viewMode === "chat" ? "w-full" : "w-1/2"
-          )}>
-            <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-              <div className="space-y-6 max-w-2xl mx-auto py-4">
-                <AnimatePresence initial={false}>
-                  {messages.map((m, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
+          <div
+            className={cn(
+              "flex flex-col border-r overflow-hidden",
+              viewMode === "split" ? "w-full sm:w-1/2" : "w-full"
+            )}
+          >
+            {/* メッセージ一覧 */}
+            <div
+              ref={chatContainerRef}
+              onScroll={handleScroll}
+              className="flex-1 overflow-y-auto overscroll-contain px-3 sm:px-4 py-4 space-y-4"
+            >
+              <AnimatePresence initial={false}>
+                {messages.map((m) => (
+                  <motion.div
+                    key={m.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className={cn(
+                      "flex gap-2.5",
+                      m.role === "user" ? "flex-row-reverse" : "flex-row"
+                    )}
+                  >
+                    {/* アバター */}
+                    <Avatar
                       className={cn(
-                        "flex gap-3",
-                        m.role === "user" ? "flex-row-reverse" : "flex-row"
+                        "h-7 w-7 shrink-0 mt-0.5",
+                        m.role === "ai"
+                          ? "border border-primary/20 bg-primary/5"
+                          : "border border-border"
                       )}
                     >
-                      <Avatar className={cn(
-                        "h-8 w-8 shrink-0",
-                        m.role === "ai" ? "border border-primary/20 bg-primary/5" : "border border-border"
-                      )}>
-                        {m.role === "ai" ? (
-                          <div className="flex items-center justify-center h-full w-full bg-primary/10">
-                            <Sparkles className="h-4 w-4 text-primary" />
-                          </div>
-                        ) : (
-                          <AvatarImage src={userProfile?.avatar_url || ""} />
-                        )}
-                        <AvatarFallback>{m.role === "ai" ? "AI" : "U"}</AvatarFallback>
-                      </Avatar>
-                      <div className={cn(
-                        "max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm",
-                        m.role === "ai"
-                          ? "bg-background border border-border rounded-tl-none"
-                          : "bg-primary text-primary-foreground rounded-tr-none"
-                      )}>
-                        {m.content}
-                      </div>
-                    </motion.div>
-                  ))}
-                  {isGenerating && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex gap-3"
-                    >
-                      <Avatar className="h-8 w-8 border border-primary/20 bg-primary/5">
-                        <div className="flex items-center justify-center h-full w-full bg-primary/10">
-                          <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                      {m.role === "ai" ? (
+                        <div className="flex items-center justify-center h-full w-full">
+                          <Sparkles className="h-3.5 w-3.5 text-primary" />
                         </div>
-                      </Avatar>
-                      <div className="bg-background border border-border rounded-2xl rounded-tl-none p-4 shadow-sm flex items-center gap-2">
-                        <span className="flex gap-1">
-                          <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                          <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                          <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" />
-                        </span>
-                        <span className="text-xs text-muted-foreground font-medium italic">思考中...</span>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </ScrollArea>
+                      ) : (
+                        <>
+                          <AvatarImage src={userProfile?.avatar_url || ""} />
+                          <AvatarFallback className="text-[10px] font-bold">
+                            {userProfile?.name?.[0]?.toUpperCase() || "U"}
+                          </AvatarFallback>
+                        </>
+                      )}
+                    </Avatar>
 
-            {/* 入力エリア */}
-            <div className="p-4 bg-background border-t">
-              <div className="max-w-2xl mx-auto relative">
-                <Input
-                  placeholder="メッセージを入力..."
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  disabled={isGenerating}
-                  className="pr-12 h-12 rounded-xl border-border bg-muted/20 focus-visible:ring-primary shadow-none"
-                />
+                    {/* バブル */}
+                    <div
+                      className={cn(
+                        "max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
+                        m.role === "ai"
+                          ? "bg-background border border-border rounded-tl-sm"
+                          : "bg-primary text-primary-foreground rounded-tr-sm"
+                      )}
+                    >
+                      {m.role === "ai" ? (
+                        <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                          <MarkdownRenderer content={m.content} />
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+
+                {/* ストリーミング中 */}
+                {isGenerating && (
+                  <motion.div
+                    key="streaming"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex gap-2.5"
+                  >
+                    <Avatar className="h-7 w-7 shrink-0 mt-0.5 border border-primary/20">
+                      <div className="flex items-center justify-center h-full w-full bg-primary/5">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Loader2 className="h-3.5 w-3.5 text-primary" />
+                        </motion.div>
+                      </div>
+                    </Avatar>
+                    <div className="max-w-[82%] rounded-2xl rounded-tl-sm bg-background border border-border px-4 py-3 shadow-sm">
+                      {streamingText ? (
+                        <div className="text-sm leading-relaxed">
+                          <p className="whitespace-pre-wrap break-words text-foreground/90">
+                            {streamingText}
+                          </p>
+                          <span className="inline-block w-0.5 h-4 bg-primary animate-pulse ml-0.5 align-text-bottom" />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 py-0.5">
+                          {[0, 1, 2].map((i) => (
+                            <motion.span
+                              key={i}
+                              className="w-2 h-2 rounded-full bg-primary/40"
+                              animate={{
+                                scale: [1, 1.4, 1],
+                                opacity: [0.4, 1, 0.4],
+                              }}
+                              transition={{
+                                duration: 0.8,
+                                repeat: Infinity,
+                                delay: i * 0.15,
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* スクロールダウンボタン */}
+            <AnimatePresence>
+              {!isAtBottom && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  className="absolute bottom-28 left-1/4 -translate-x-1/2 z-10"
+                >
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    onClick={scrollToBottom}
+                    className="h-8 w-8 rounded-full shadow-lg"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* ─── 入力エリア ─── */}
+            <div className="shrink-0 border-t bg-background px-3 sm:px-4 pt-3 pb-4 space-y-2.5">
+              {/* クイックアクション */}
+              {messages.length <= 1 && !isGenerating && (
+                <div className="flex flex-wrap gap-1.5">
+                  {QUICK_ACTIONS.map(({ label, icon: Icon }) => (
+                    <button
+                      key={label}
+                      onClick={() => handleQuickAction(label)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full border border-border bg-muted/40 hover:bg-muted hover:border-primary/30 transition-colors text-muted-foreground hover:text-foreground"
+                    >
+                      <Icon className="h-3 w-3" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-end gap-2">
+                <div className="flex-1 relative">
+                  <Textarea
+                    ref={textareaRef}
+                    placeholder="メッセージを入力...（Enterで送信、Shift+Enterで改行）"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    disabled={isGenerating}
+                    rows={1}
+                    className="min-h-[44px] max-h-[120px] resize-none rounded-xl border-border bg-muted/20 focus-visible:ring-primary shadow-none py-3 pr-3 text-sm leading-relaxed placeholder:text-muted-foreground/50"
+                  />
+                </div>
                 <Button
                   size="icon"
-                  className="absolute right-1 top-1 h-10 w-10 rounded-lg shadow-lg hover:scale-105 active:scale-95 transition-all"
                   onClick={handleSend}
                   disabled={isGenerating || !input.trim()}
+                  className="h-11 w-11 rounded-xl shrink-0 shadow-sm hover:scale-105 active:scale-95 transition-transform"
                 >
-                  {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  {isGenerating ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
-              <p className="text-[10px] text-center text-muted-foreground mt-3 italic">
-                AIは間違った情報を生成することがあります。内容を確認して使用してください。
+
+              <p className="text-[10px] text-center text-muted-foreground/60">
+                AIは誤った情報を生成する場合があります。内容を確認してご使用ください。
               </p>
             </div>
           </div>
         )}
 
-        {/* プレビューエリア */}
+        {/* ─── プレビューエリア ─── */}
         {(viewMode === "preview" || viewMode === "split") && (
-          <div className={cn(
-            "flex flex-col overflow-y-auto custom-scrollbar bg-background transition-all duration-300",
-            viewMode === "preview" ? "w-full" : "w-1/2"
-          )}>
-            <div className="max-w-3xl mx-auto w-full p-8 md:p-12">
+          <div
+            className={cn(
+              "flex flex-col overflow-hidden bg-background",
+              viewMode === "preview" ? "w-full" : "hidden sm:flex w-1/2"
+            )}
+          >
+            {/* プレビューヘッダー */}
+            <div className="shrink-0 border-b px-4 py-2 flex items-center justify-between bg-muted/10">
+              <div className="flex items-center gap-2">
+                <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                  プレビュー
+                </span>
+              </div>
+              {title && (
+                <button
+                  onClick={handleCopyTitle}
+                  className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {copiedTitle ? (
+                    <>
+                      <Check className="h-3 w-3 text-green-500" />
+                      コピー済
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3" />
+                      タイトルをコピー
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* プレビュー本体 */}
+            <div className="flex-1 overflow-y-auto overscroll-contain px-6 md:px-10 py-8">
               {!title && !content ? (
-                <div className="h-full flex flex-col items-center justify-center text-center space-y-4 py-20">
-                  <div className="p-4 rounded-2xl bg-muted/30">
-                    <Wand2 className="h-12 w-12 text-muted-foreground/30" />
+                <div className="h-full flex flex-col items-center justify-center text-center gap-4 py-20">
+                  <div className="p-5 rounded-2xl bg-muted/30">
+                    <Wand2 className="h-12 w-12 text-muted-foreground/20" />
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-muted-foreground">記事のプレビューがここに表示されます</p>
-                    <p className="text-xs text-muted-foreground/60 mt-1">チャットを始めて、記事を一緒に作りましょう</p>
+                  <div className="space-y-1.5">
+                    <p className="text-sm font-bold text-muted-foreground">
+                      プレビューがここに表示されます
+                    </p>
+                    <p className="text-xs text-muted-foreground/50">
+                      チャットで記事を作成すると自動的に反映されます
+                    </p>
                   </div>
                 </div>
               ) : (
-                <article className="space-y-8">
+                <article className="max-w-2xl mx-auto space-y-6">
                   {title && (
-                    <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">
+                    <motion.h1
+                      key={title}
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight"
+                    >
                       {title}
-                    </h1>
+                    </motion.h1>
                   )}
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {title && (
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] h-5 px-2 text-green-600 border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800"
+                      >
+                        ✓ タイトル設定済み
+                      </Badge>
+                    )}
+                    {content && (
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] h-5 px-2 text-blue-600 border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800"
+                      >
+                        ✓ 本文あり
+                      </Badge>
+                    )}
+                  </div>
+
                   {content ? (
-                    <MarkdownRenderer content={content} />
+                    <motion.div
+                      key={content.slice(0, 50)}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.1 }}
+                      className="prose prose-sm sm:prose-base prose-neutral dark:prose-invert max-w-none"
+                    >
+                      <MarkdownRenderer content={content} />
+                    </motion.div>
                   ) : (
-                    <div className="p-12 border-2 border-dashed border-muted rounded-2xl flex flex-col items-center justify-center text-muted-foreground/40">
-                      <p className="text-sm italic font-medium">本文の案を生成中...</p>
+                    <div className="p-10 border-2 border-dashed border-muted rounded-2xl flex flex-col items-center justify-center text-muted-foreground/40">
+                      <p className="text-sm italic">本文をAIと一緒に作成しましょう</p>
                     </div>
                   )}
                 </article>
@@ -393,16 +778,26 @@ Assistant:`
         )}
       </div>
 
-      {/* モバイル表示切替（画面幅が小さい時のみ表示） */}
-      <div className="sm:hidden fixed bottom-20 right-4 flex flex-col gap-2 z-50">
-        <Button
-          size="icon"
-          variant="secondary"
-          className="h-12 w-12 rounded-full shadow-2xl"
-          onClick={() => setViewMode(viewMode === "chat" ? "preview" : "chat")}
-        >
-          {viewMode === "chat" ? <Eye className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
-        </Button>
+      {/* ─── モバイル：ビュー切替 ─── */}
+      <div className="sm:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex gap-1 bg-background/90 backdrop-blur border border-border rounded-full p-1 shadow-lg">
+        {(["chat", "split", "preview"] as const).map((mode) => {
+          const icons = { chat: MessageSquare, split: Layout, preview: Eye }
+          const Icon = icons[mode]
+          return (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              className={cn(
+                "h-8 w-8 rounded-full flex items-center justify-center transition-all",
+                viewMode === mode
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="h-4 w-4" />
+            </button>
+          )
+        })}
       </div>
     </div>
   )
