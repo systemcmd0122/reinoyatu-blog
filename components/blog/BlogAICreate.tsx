@@ -23,12 +23,23 @@ import {
   Check,
   FileText,
   Zap,
+  Smartphone,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import MarkdownRenderer from "./markdown/MarkdownRenderer"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 // ────────────────────────────────────────────
 // 型定義
@@ -191,6 +202,8 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     avatar_url: string | null
   } | null>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
+  const [showWarning, setShowWarning] = useState(false)
+  const [showMobileWarning, setShowMobileWarning] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -217,6 +230,32 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     }
     fetchProfile()
   }, [userId])
+
+  // ── 警告ダイアログの初期チェック ──
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const ackAi = localStorage.getItem("ack_ai_demo_v1")
+      if (!ackAi) {
+        setShowWarning(true)
+      }
+
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      const ackMobile = localStorage.getItem("ack_mobile_editor_v1")
+      if (isMobileDevice && !ackMobile) {
+        setShowMobileWarning(true)
+      }
+    }
+  }, [])
+
+  const handleAcceptAiWarning = () => {
+    localStorage.setItem("ack_ai_demo_v1", "true")
+    setShowWarning(false)
+  }
+
+  const handleAcceptMobileWarning = () => {
+    localStorage.setItem("ack_mobile_editor_v1", "true")
+    setShowMobileWarning(false)
+  }
 
   // ── 初期ウェルカムメッセージ ──
   useEffect(() => {
@@ -415,6 +454,61 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
   // ────────────────────────────────────────────
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden bg-background">
+      {/* AIデモ警告ダイアログ */}
+      <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              AI機能（デモ版）利用に関するご確認
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <p>
+                現在提供しているAI機能は<b>デモ版</b>です。以下の点をご了承いただいた上でご利用ください。
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-xs">
+                <li>動作が不安定だったり、エラーが発生する場合があります。</li>
+                <li>不正確な情報や不適切な内容を生成する可能性があります。</li>
+                <li>使い勝手が悪かったり、意図しない挙動をする場合があります。</li>
+              </ul>
+              <p className="font-bold text-foreground">
+                AIが生成した内容は必ずご自身で確認・修正した上で、自己責任でご利用ください。
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => router.back()}>戻る</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAcceptAiWarning}>
+              承諾して利用する
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* モバイル環境警告ダイアログ */}
+      <AlertDialog open={!showWarning && showMobileWarning} onOpenChange={setShowMobileWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5 text-primary" />
+              モバイル環境でのご利用について
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <p>
+                現在、スマートフォンからの執筆・編集操作は<b>最適化の途中</b>であり、画面崩れや操作のしにくさが発生する場合があります。
+              </p>
+              <p>
+                より快適な執筆体験のためには、PC環境でのご利用を強く推奨しております。
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleAcceptMobileWarning}>
+              了解しました
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ─── ヘッダー ─── */}
       <header className="shrink-0 border-b bg-background/95 backdrop-blur-sm px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2 z-10">

@@ -160,6 +160,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [userCollections, setUserCollections] = useState<CollectionType[]>([])
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
   const [userProfile, setUserProfile] = useState<{ name: string; avatar_url: string | null } | null>(null)
+  const [showMobileWarning, setShowMobileWarning] = useState(false)
   const gemma = useGemma()
   const [isLibraryDialogOpen, setIsLibraryDialogOpen] = useState(false)
   const [isURLDialogOpen, setIsURLDialogOpen] = useState(false)
@@ -267,6 +268,16 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   // マウント後の処理
   useEffect(() => {
     setIsMounted(true)
+
+    // モバイル警告チェック
+    if (typeof window !== "undefined") {
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      const ackMobile = localStorage.getItem("ack_mobile_editor_v1")
+      if (isMobileDevice && !ackMobile) {
+        setShowMobileWarning(true)
+      }
+    }
+
     const fetchCollections = async () => {
       const collections = await getCollections(userId)
       setUserCollections(collections)
@@ -549,6 +560,34 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     <TooltipProvider>
       <Form {...form}>
         <div className="h-screen bg-background flex flex-col overflow-hidden">
+          {/* モバイル環境警告ダイアログ */}
+          <AlertDialog open={showMobileWarning} onOpenChange={setShowMobileWarning}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <Smartphone className="h-5 w-5 text-primary" />
+                  モバイル環境でのご利用について
+                </AlertDialogTitle>
+                <AlertDialogDescription className="space-y-3 pt-2 text-sm">
+                  <p>
+                    現在、スマートフォンからの執筆・編集操作は<b>最適化の途中</b>であり、画面崩れや操作のしにくさが発生する場合があります。
+                  </p>
+                  <p>
+                    より快適な執筆体験のためには、PC環境でのご利用を強く推奨しております。
+                  </p>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction onClick={() => {
+                  localStorage.setItem("ack_mobile_editor_v1", "true")
+                  setShowMobileWarning(false)
+                }}>
+                  了解しました
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
           {/* スリムで洗練されたヘッダー */}
           <header className={cn(
             "border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-2 md:px-4 z-[var(--z-nav)] shrink-0 transition-all duration-300",
