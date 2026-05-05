@@ -64,7 +64,7 @@ export default function Loading() {
         </div>
 
         {/* Content Skeleton */}
-        <div className="space-y-10">
+        <div className="space-y-12">
           {[1, 2].map((section) => (
             <div key={section} className="space-y-6">
               <Skeleton className="h-8 w-48 rounded-xl" />

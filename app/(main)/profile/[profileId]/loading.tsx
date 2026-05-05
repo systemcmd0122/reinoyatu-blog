@@ -46,7 +46,7 @@ export default function Loading() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 px-4 md:px-0">
         {/* Sidebar Skeleton */}
-        <aside className="lg:col-span-4 space-y-10">
+        <aside className="lg:col-span-4 space-y-12">
           {/* Stats Card */}
           <div className="bg-card/40 rounded-[2.5rem] border border-border/50 shadow-sm overflow-hidden p-8 grid grid-cols-2 gap-8">
             {[1, 2, 3, 4].map((i) => (
