@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState, useEffect, useRef, useCallback } from "react"
-import { useAI } from "@/hooks/use-ai"
+import { useAI, AIMessage } from "@/hooks/use-ai"
+import { searchWeb } from "@/actions/search"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -25,6 +26,8 @@ import {
   Zap,
   Smartphone,
   Square,
+  Search,
+  X,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -58,17 +61,13 @@ interface BlogAICreateProps {
 // ────────────────────────────────────────────
 // プロンプト構築
 // ────────────────────────────────────────────
-const buildPrompt = (
+const buildMessages = (
   userMessage: string,
   conversationHistory: Message[],
   currentTitle: string,
-  currentContent: string
-): string => {
-  const recentHistory = (conversationHistory || []).slice(-6)
-  const historyText = recentHistory
-    .map((m) => `${m.role === "ai" ? "AI" : "User"}: ${m.content}`)
-    .join("\n")
-
+  currentContent: string,
+  searchResults: string | null
+): AIMessage[] => {
   const titleStatus = (currentTitle || "").trim()
     ? `現在のタイトル: 「${currentTitle}」`
     : "タイトル: 未設定"
@@ -76,18 +75,14 @@ const buildPrompt = (
     ? `本文の冒頭（参考）:\n${(currentContent || "").substring(0, 300)}${(currentContent || "").length > 300 ? "..." : ""}`
     : "本文: 未作成"
 
-  return `<start_of_turn>user
-必ず日本語で回答してください。あなたは親しみやすく優秀なプロのブログ編集者です。
+  const systemPrompt = `あなたは親しみやすく優秀なプロのブログ編集者です。
+必ず日本語で回答してください。
 
 【現在の記事の状況】
 ${titleStatus}
 ${contentStatus}
 
-【これまでの会話】
-${historyText}
-
-【ユーザーの新しいメッセージ】
-${userMessage}
+${searchResults ? `【ウェブ検索結果（参考）】\n${searchResults}\n` : ""}
 
 【回答のルール】
 1. 必ず日本語で回答してください。
@@ -96,11 +91,25 @@ ${userMessage}
 4. 本文案を提示する際は、適切な見出し（# や ##）を使用してください。
 5. 一度にすべてを完成させようとせず、ユーザーのペースに合わせて対話を重視してください。
 6. 回答の冒頭に「指示：」や「了解しました」といったシステム的な応答を含めず、自然な会話から始めてください。
-7. 会話の内容に応じて、現在の記事（プレビュー）を適宜更新してください。
+7. 会話の内容に応じて、現在の記事（プレビュー）を適宜更新してください。`
 
-<end_of_turn>
-<start_of_turn>model
-`
+  const messages: AIMessage[] = [
+    { role: "system", content: systemPrompt }
+  ]
+
+  // 会話履歴を追加
+  const recentHistory = (conversationHistory || []).slice(-10)
+  recentHistory.forEach(m => {
+    messages.push({
+      role: m.role === "ai" ? "assistant" : "user",
+      content: m.content
+    })
+  })
+
+  // 最新のユーザーメッセージを追加
+  messages.push({ role: "user", content: userMessage })
+
+  return messages
 }
 
 // ────────────────────────────────────────────
@@ -198,6 +207,9 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
   const [input, setInput] = useState("")
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchResults, setSearchResults] = useState<string | null>(null)
   const [streamingText, setStreamingText] = useState("")
   const [viewMode, setViewMode] = useState<"chat" | "preview" | "split">("split")
   const [copiedTitle, setCopiedTitle] = useState(false)
@@ -208,8 +220,13 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
   const [isAtBottom, setIsAtBottom] = useState(true)
   const [showWarning, setShowWarning] = useState(false)
   const [showMobileWarning, setShowMobileWarning] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const idCounter = useRef(0)
@@ -311,6 +328,30 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`
   }, [input])
 
+  // ── ウェブ検索 ──
+  const handleSearch = async () => {
+    const q = searchQuery.trim()
+    if (!q) {
+      toast.error("検索キーワードを入力してください")
+      return
+    }
+    setIsSearching(true)
+    try {
+      const result = await searchWeb(q)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        setSearchResults(result.content)
+        toast.success("最新情報を取得しました。AIとの会話に反映されます。")
+        setSearchQuery("")
+      }
+    } catch (err) {
+      toast.error("検索中にエラーが発生しました")
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
   // ── メッセージ送信 ──
   const handleSend = useCallback(async () => {
     const userMessage = input.trim()
@@ -330,10 +371,10 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     setTimeout(() => scrollToBottom("smooth"), 100)
 
     try {
-      const prompt = buildPrompt(userMessage, messages, title, content)
+      const msgs = buildMessages(userMessage, messages, title, content, searchResults)
       let accumulatedText = ""
 
-      const fullResponse = await generateResponse(prompt, (partial) => {
+      const fullResponse = await generateResponse(msgs, (partial) => {
         accumulatedText = partial
         setStreamingText(partial)
       })
@@ -386,6 +427,17 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
       }
     },
     [handleSend]
+  )
+
+  const handleSearchKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault()
+        handleSearch()
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searchQuery]
   )
 
   // ── クイックアクション ──
@@ -453,6 +505,14 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
   // ────────────────────────────────────────────
   // メイン UI
   // ────────────────────────────────────────────
+  if (!isMounted) {
+    return (
+      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary/20" />
+      </div>
+    )
+  }
+
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden bg-background">
       {/* AIデモ警告ダイアログ */}
@@ -718,21 +778,69 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
 
             {/* ─── 入力エリア ─── */}
             <div className="shrink-0 border-t bg-background px-3 sm:px-4 pt-3 pb-4 space-y-2.5">
-              {/* クイックアクション */}
-              {(messages || []).length <= 1 && !isGenerating && (
-                <div className="flex flex-wrap gap-1.5">
-                  {QUICK_ACTIONS.map(({ label, icon: Icon }) => (
-                    <button
-                      key={label}
-                      onClick={() => handleQuickAction(label)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full border border-border bg-muted/40 hover:bg-muted hover:border-primary/30 transition-colors text-muted-foreground hover:text-foreground"
-                    >
-                      <Icon className="h-3 w-3" />
-                      {label}
-                    </button>
-                  ))}
+              {/* 検索・履歴・クイックアクション */}
+              <div className="flex flex-col gap-2.5">
+                {/* 検索バー */}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="最新情報を検索してAIに学習させる..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={handleSearchKeyDown}
+                      disabled={isSearching}
+                      className="w-full h-8 pl-8 pr-3 text-[11px] bg-muted/30 border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all placeholder:text-muted-foreground/50"
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSearch}
+                    disabled={isSearching || !searchQuery.trim()}
+                    className="h-8 px-3 text-[11px] font-bold shrink-0 border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary"
+                  >
+                    {isSearching ? <Loader2 className="h-3 w-3 animate-spin" /> : "検索"}
+                  </Button>
                 </div>
-              )}
+
+                {/* 検索結果バッジ */}
+                {searchResults && (
+                  <div className="flex items-center justify-between p-2 bg-primary/5 border border-primary/10 rounded-lg">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="bg-primary/10 p-1 rounded">
+                        <Search className="h-2.5 w-2.5 text-primary" />
+                      </div>
+                      <span className="text-[10px] font-bold text-primary truncate">
+                        最新情報を取得済み（会話に反映されます）
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setSearchResults(null)}
+                      className="p-1 hover:bg-primary/10 rounded-md transition-colors"
+                    >
+                      <X className="h-3 w-3 text-primary" />
+                    </button>
+                  </div>
+                )}
+
+                {/* クイックアクション */}
+                {(messages || []).length <= 1 && !isGenerating && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {QUICK_ACTIONS.map(({ label, icon: Icon }) => (
+                      <button
+                        key={label}
+                        onClick={() => handleQuickAction(label)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full border border-border bg-muted/40 hover:bg-muted hover:border-primary/30 transition-colors text-muted-foreground hover:text-foreground"
+                      >
+                        <Icon className="h-3 w-3" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div className="flex items-end gap-2">
                 <div className="flex-1 relative">
