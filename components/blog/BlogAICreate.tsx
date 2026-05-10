@@ -215,6 +215,8 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     isLoading,
     downloadProgress,
     initialized,
+    isSignedIn,
+    signIn,
     error: aiError,
     stop: stopGeneration,
   } = useAI()
@@ -778,6 +780,27 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
               </AnimatePresence>
 
               <div ref={messagesEndRef} />
+
+              {/* 認証が必要な場合のオーバーレイまたはメッセージ */}
+              {!isSignedIn && initialized && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-background/80 backdrop-blur-sm text-center space-y-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Sparkles className="h-8 w-8 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-bold">Puterアカウントでログイン</h3>
+                    <p className="text-sm text-muted-foreground max-w-[280px]">
+                      AI機能を利用するにはPuterプラットフォームへのログインが必要です。
+                    </p>
+                  </div>
+                  <Button onClick={signIn} className="px-8 font-bold">
+                    Puterでログイン
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground italic">
+                    ※ログインはポップアップで行われます。
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* スクロールダウンボタン */}

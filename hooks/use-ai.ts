@@ -32,6 +32,8 @@ export interface UseAIReturn {
   isGenerating: boolean
   downloadProgress: DownloadProgress | null // Puter.jsでは常にnull
   initialized: boolean
+  isSignedIn: boolean
+  signIn: () => Promise<void>
   retry: () => void
   stop: () => void
 }
@@ -43,20 +45,39 @@ export const useAI = (): UseAIReturn => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
+  const [isSignedIn, setIsSignedIn] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [abortController, setAbortController] = useState<AbortController | null>(null)
 
-  // Puter.js の初期化チェック（実際には自動で初期化されるが、
-  // 以前のGemmaとの互換性のために一応管理）
+  // Puter.js の初期化 & 認証チェック
   useEffect(() => {
-    // Puterはブラウザ環境で動作する
     if (typeof window !== "undefined") {
-      // ローディング画面がすぐ消えすぎないように少し待機
-      const timer = setTimeout(() => {
-        setInitialized(true)
-        setIsLoading(false)
-      }, 800)
+      const checkStatus = async () => {
+        try {
+          const authenticated = await puter.auth.isSignedIn()
+          setIsSignedIn(authenticated)
+        } catch (err) {
+          console.error("[AI] Error checking Puter auth status:", err)
+        } finally {
+          setInitialized(true)
+          setIsLoading(false)
+        }
+      }
+
+      // 少し遅延させて初期化（UI演出のため）
+      const timer = setTimeout(checkStatus, 800)
       return () => clearTimeout(timer)
+    }
+  }, [])
+
+  const signIn = useCallback(async () => {
+    try {
+      await puter.auth.signIn()
+      const authenticated = await puter.auth.isSignedIn()
+      setIsSignedIn(authenticated)
+    } catch (err) {
+      console.error("[AI] Puter sign-in error:", err)
+      throw err
     }
   }, [])
 
@@ -81,6 +102,13 @@ export const useAI = (): UseAIReturn => {
 
       console.log(`[AI] Starting generation with model: ${DEFAULT_MODEL}`)
       try {
+        // 認証チェック
+        const authenticated = await puter.auth.isSignedIn()
+        if (!authenticated) {
+          console.log("[AI] User not signed in to Puter, triggering sign-in...")
+          await signIn()
+        }
+
         // Puter.js API を呼び出し
         // 文字列またはメッセージ配列の両方に対応
         const options: any = {
@@ -175,6 +203,8 @@ export const useAI = (): UseAIReturn => {
     isGenerating,
     downloadProgress: null,
     initialized,
+    isSignedIn,
+    signIn,
     retry,
     stop,
   }
