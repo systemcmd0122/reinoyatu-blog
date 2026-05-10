@@ -105,14 +105,15 @@ ${searchResults ? `【ウェブ検索結果（参考）】\n${searchResults}\n` 
 
 【回答のルール】
 1. 必ず日本語で回答してください。
-2. 記事のタイトルを提案・更新する場合は、必ず [TITLE]タイトル内容[/TITLE] という形式で含めてください。
-3. 記事の本文を提案・更新する場合は、必ず [CONTENT]本文内容[/CONTENT] という形式でMarkdown形式で記述してください。
-4. 本文案を提示する際は、適切な見出し（# や ##）を使用してください。
-5. 改善点は即座に [TITLE] や [CONTENT] タグを使ってプレビューに反映させてください。
-6. 一度にすべてを完成させようとせず、ユーザーのペースに合わせて対話を重視してください。
-7. 回答の冒頭に「指示：」や「了解しました」といったシステム的な応答を含めず、自然な会話から始めてください。
-8. 会話の内容に応じて、現在の記事（プレビュー）を適宜更新してください。
-9. 記事が長い場合は、一度に書き切るように努めてください。途中で止めないでください。`
+2. 回答の冒頭で必ず [THOUGHT]何をするか、どう考えているか[/THOUGHT] という形式で、これから行う作業の内容や計画を簡潔に述べてください。
+3. 記事のタイトルを提案・更新する場合は、必ず [TITLE]タイトル内容[/TITLE] という形式で含めてください。タイトルには Markdown の装飾（太字など）を含めないでください。
+4. 記事の本文を提案・更新する場合は、必ず [CONTENT]本文内容[/CONTENT] という形式でMarkdown形式で記述してください。
+5. 本文案を提示する際は、適切な見出し（# や ##）を使用してください。
+6. 改善点は即座に [TITLE] や [CONTENT] タグを使ってプレビューに反映させてください。
+7. 一度にすべてを完成させようとせず、ユーザーのペースに合わせて対話を重視してください。
+8. 回答の冒頭に「指示：」や「了解しました」といったシステム的な応答を含めず、自然な会話から始めてください。
+9. 会話の内容に応じて、現在の記事（プレビュー）を適宜更新してください。
+10. 記事が長い場合は、一度に書き切るように努めてください。途中で止めないでください。`
 
   const messages: AIMessage[] = [
     { role: "system", content: systemPrompt }
@@ -140,27 +141,36 @@ interface ParsedResponse {
   chatMessage: string
   newTitle: string | null
   newContent: string | null
+  thought: string | null
 }
 
 const parseAIResponse = (raw: string): ParsedResponse => {
   let text = raw.trim()
   let newTitle: string | null = null
   let newContent: string | null = null
+  let thought: string | null = null
 
-  // 1. 明示的なタグ [TITLE] / [CONTENT] を優先的に抽出
+  // 1. [THOUGHT] タグの抽出
+  const thoughtMatch = text.match(/\[THOUGHT\]([\s\S]*?)(?:\[\/THOUGHT\]|$)/i)
+  if (thoughtMatch) {
+    thought = thoughtMatch[1].trim()
+  }
+
+  // 2. 明示的なタグ [TITLE] / [CONTENT] を優先的に抽出
   const titleTagMatch = text.match(/\[TITLE\]([\s\S]*?)(?:\[\/TITLE\]|$)/i)
   if (titleTagMatch) {
-    newTitle = titleTagMatch[1].trim().replace(/^「(.+)」$/, "$1")
-    text = text.replace(titleTagMatch[0], "").trim()
+    newTitle = titleTagMatch[1].trim()
+      .replace(/^「(.+)」$/, "$1")
+      .replace(/^"(.+)"$/, "$1")
+      .replace(/\*\*|__/g, "")
   }
 
   const contentTagMatch = text.match(/\[CONTENT\]([\s\S]*?)(?:\[\/CONTENT\]|$)/i)
   if (contentTagMatch) {
     newContent = contentTagMatch[1].trim()
-    text = text.replace(contentTagMatch[0], "").trim()
   }
 
-  // 2. 以前の形式（タイトル案：など）もフォールバックとして維持
+  // 3. 以前の形式（タイトル案：など）もフォールバックとして維持
   if (!newTitle) {
     const titlePatterns = [
       /^[ \t]*タイトル案[：:]\s*「?(.+?)」?\s*(?:\n|$)/m,
@@ -173,7 +183,6 @@ const parseAIResponse = (raw: string): ParsedResponse => {
         const candidate = match[1].trim().replace(/^「(.+)」$/, "$1")
         if (candidate.length > 0 && candidate.length <= 150) {
           newTitle = candidate
-          text = text.replace(match[0], "").trim()
           break
         }
       }
@@ -181,7 +190,6 @@ const parseAIResponse = (raw: string): ParsedResponse => {
   }
 
   if (!newContent) {
-    // 以前の形式の本文抽出（lookaheadを削除して最後までキャプチャするように改善）
     const contentPatterns = [
       /^[ \t]*本文案[：:]\s*\n?([\s\S]+)$/m,
       /^[ \t]*本文[：:]\s*\n?([\s\S]+)$/m,
@@ -193,12 +201,17 @@ const parseAIResponse = (raw: string): ParsedResponse => {
         const candidate = match[1].trim()
         if (candidate.length >= 20) {
           newContent = candidate
-          text = text.replace(match[0], "").trim()
           break
         }
       }
     }
   }
+
+  // チャットメッセージの抽出（タグとその中身をすべて除去）
+  let chatMessage = text
+    .replace(/\[THOUGHT\][\s\S]*?(?:\[\/THOUGHT\]|$)/gi, "")
+    .replace(/\[TITLE\][\s\S]*?(?:\[\/TITLE\]|$)/gi, "")
+    .replace(/\[CONTENT\][\s\S]*?(?:\[\/CONTENT\]|$)/gi, "")
 
   // システムプロンプトの残滓を除去
   const junkPatterns = [
@@ -207,11 +220,11 @@ const parseAIResponse = (raw: string): ParsedResponse => {
     /^(User|AI|Assistant)[：:].+$/gm,
   ]
   for (const pattern of junkPatterns) {
-    text = text.replace(pattern, "")
+    chatMessage = chatMessage.replace(pattern, "")
   }
 
-  const chatMessage = text.replace(/\n{3,}/g, "\n\n").trim()
-  return { chatMessage, newTitle, newContent }
+  chatMessage = chatMessage.replace(/\n{3,}/g, "\n\n").trim()
+  return { chatMessage, newTitle, newContent, thought }
 }
 
 // ────────────────────────────────────────────
@@ -254,7 +267,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     query: string;
   } | null>(null)
   const [isSearchSheetOpen, setIsSearchSheetOpen] = useState(false)
-  const [generationStatus, setGenerationStatus] = useState<"searching" | "thinking" | "writing" | null>(null)
+  const [generationStatus, setGenerationStatus] = useState<string | null>(null)
   const [streamingText, setStreamingText] = useState("")
   const [viewMode, setViewMode] = useState<"chat" | "preview" | "split">("split")
   const [copiedTitle, setCopiedTitle] = useState(false)
@@ -457,12 +470,23 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
       let accumulatedText = ""
 
       const fullResponse = await generateResponse(msgs, (partial) => {
-        setGenerationStatus("writing")
         accumulatedText = partial
-        setStreamingText(partial)
 
         // リアルタイムパース：ストリーミング中にプレビューを更新
         const parsed = parseAIResponse(partial)
+        setStreamingText(parsed.chatMessage)
+
+        // ステータスの更新
+        if (parsed.thought) {
+          setGenerationStatus(parsed.thought)
+        } else if (partial.includes("[TITLE]")) {
+          setGenerationStatus("タイトルを案出中...")
+        } else if (partial.includes("[CONTENT]")) {
+          setGenerationStatus("本文を執筆中...")
+        } else {
+          setGenerationStatus("回答を構成中...")
+        }
+
         if (parsed.newTitle && parsed.newTitle !== title) {
           setTitle(parsed.newTitle)
         }
@@ -839,31 +863,19 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
                     <div className="max-w-[82%] rounded-2xl rounded-tl-sm bg-background border border-border px-4 py-3 shadow-sm min-h-[44px] flex flex-col justify-center gap-1">
                       {generationStatus && (
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary mb-0.5">
-                          {generationStatus === "searching" && (
-                            <>
-                              <Search className="h-3 w-3 animate-pulse" />
-                              <span>最新情報を検索中...</span>
-                            </>
+                          {generationStatus.includes("検索") ? (
+                            <Search className="h-3 w-3 animate-pulse" />
+                          ) : (generationStatus.includes("執筆") || generationStatus.includes("案出")) ? (
+                            <Wand2 className="h-3 w-3 animate-pulse" />
+                          ) : (
+                            <Sparkles className="h-3 w-3 animate-pulse" />
                           )}
-                          {generationStatus === "thinking" && (
-                            <>
-                              <Sparkles className="h-3 w-3 animate-pulse" />
-                              <span>回答を構成中...</span>
-                            </>
-                          )}
-                          {generationStatus === "writing" && (
-                            <>
-                              <Wand2 className="h-3 w-3 animate-pulse" />
-                              <span>執筆中...</span>
-                            </>
-                          )}
+                          <span className="truncate max-w-[200px]">{generationStatus}</span>
                         </div>
                       )}
                       {streamingText ? (
-                        <div className="text-sm leading-relaxed w-full">
-                          <p className="whitespace-pre-wrap break-words text-foreground/90">
-                            {streamingText}
-                          </p>
+                        <div className="text-sm leading-relaxed w-full prose prose-sm dark:prose-invert max-w-none">
+                          <MarkdownRenderer content={streamingText} />
                           <span className="inline-block w-0.5 h-4 bg-primary animate-pulse ml-0.5 align-text-bottom" />
                         </div>
                       ) : (
