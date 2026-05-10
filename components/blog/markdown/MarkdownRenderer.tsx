@@ -187,13 +187,14 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   // YouTube埋め込みの抽出
   const extractYouTubeEmbeds = (markdownContent: string) => {
     const matches: YouTubeMatch[] = []
+    if (!markdownContent) return { content: "", matches }
     const processed = markdownContent.replace(
       /\{\{youtube:([^:}]+)(?::showDetails=(true|false))?\}\}/g,
       (_, videoId, showDetailsStr) => {
         const index = matches.length
         matches.push({
           index,
-          videoId: videoId.trim(),
+          videoId: (videoId || "").trim(),
           showDetails: showDetailsStr !== "false",
         })
         return `YOUTUBE_EMBED_${index}_PLACEHOLDER`
@@ -205,11 +206,12 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   // iframe埋め込みの抽出
   const extractIframeEmbeds = (markdownContent: string) => {
     const matches: IframeMatch[] = []
+    if (!markdownContent) return { content: "", matches }
     const processed = markdownContent.replace(
       /\{\{iframe:([^}]+)\}\}/g,
       (_, src) => {
         const index = matches.length
-        matches.push({ index, src: src.trim() })
+        matches.push({ index, src: (src || "").trim() })
         return `IFRAME_EMBED_${index}_PLACEHOLDER`
       }
     )
@@ -318,6 +320,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           // ─── 段落（埋め込み対応）────────────────────
           p({ children }) {
             const processChildren = (nodes: React.ReactNode): React.ReactNode => {
+              if (!nodes) return null
               if (typeof nodes === "string") {
                 return processTextWithEmbeds(nodes)
               }
