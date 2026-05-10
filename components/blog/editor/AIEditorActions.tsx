@@ -65,7 +65,7 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
   onUpdateTags,
   onUpdateSummary
 }) => {
-  const { isLoading, error, generateResponse, isGenerating, downloadProgress } = ai
+  const { isLoading, error, generateResponse, isGenerating, downloadProgress, isSignedIn, signIn, initialized } = ai
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<string | null>(null)
@@ -346,6 +346,25 @@ ${content}`
               初回のみ約1.3GBのロードが必要です。
             </p>
           )}
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!isSignedIn && initialized) {
+    return (
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-6 space-y-4 text-center">
+          <div className="flex flex-col items-center gap-2">
+            <Sparkles className="h-8 w-8 text-primary" />
+            <p className="text-sm font-bold">Puterでログインが必要です</p>
+            <p className="text-[10px] text-muted-foreground">
+              AIアシスタントを利用するにはPuterプラットフォームへのログインが必要です。
+            </p>
+          </div>
+          <Button onClick={signIn} size="sm" className="w-full font-bold">
+            Puterでログイン
+          </Button>
         </CardContent>
       </Card>
     )

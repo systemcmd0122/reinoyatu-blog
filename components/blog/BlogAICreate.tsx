@@ -86,12 +86,13 @@ ${searchResults ? `【ウェブ検索結果（参考）】\n${searchResults}\n` 
 
 【回答のルール】
 1. 必ず日本語で回答してください。
-2. 記事のタイトルを提案・更新する場合は、必ず行の先頭に「タイトル案：」と書き、続けてタイトルを記述してください。
-3. 記事の本文を提案・更新する場合は、必ず行の先頭に「本文案：」と書き、続けてMarkdown形式で本文を記述してください。
+2. 記事のタイトルを提案・更新する場合は、必ず [TITLE]タイトル内容[/TITLE] という形式で含めてください。
+3. 記事の本文を提案・更新する場合は、必ず [CONTENT]本文内容[/CONTENT] という形式でMarkdown形式で記述してください。
 4. 本文案を提示する際は、適切な見出し（# や ##）を使用してください。
 5. 一度にすべてを完成させようとせず、ユーザーのペースに合わせて対話を重視してください。
 6. 回答の冒頭に「指示：」や「了解しました」といったシステム的な応答を含めず、自然な会話から始めてください。
-7. 会話の内容に応じて、現在の記事（プレビュー）を適宜更新してください。`
+7. 会話の内容に応じて、現在の記事（プレビュー）を適宜更新してください。
+8. 記事が長い場合は、一度に書き切るように努めてください。途中で止めないでください。`
 
   const messages: AIMessage[] = [
     { role: "system", content: systemPrompt }
@@ -126,40 +127,55 @@ const parseAIResponse = (raw: string): ParsedResponse => {
   let newTitle: string | null = null
   let newContent: string | null = null
 
-  // タイトルの抽出（複数パターン対応）
-  const titlePatterns = [
-    /^[ \t]*タイトル案[：:]\s*「?(.+?)」?\s*(?:\n|$)/m,
-    /^[ \t]*タイトル[：:]\s*「?(.+?)」?\s*(?:\n|$)/m,
-    /^[ \t]*提案タイトル[：:]\s*「?(.+?)」?\s*(?:\n|$)/m,
-    /\[TITLE\]([\s\S]+?)\[\/TITLE\]/,
-  ]
-  for (const pattern of titlePatterns) {
-    const match = text.match(pattern)
-    if (match) {
-      const candidate = match[1].trim().replace(/^「(.+)」$/, "$1")
-      if (candidate.length > 0 && candidate.length <= 100) {
-        newTitle = candidate
-        text = text.replace(match[0], "").trim()
-        break
+  // 1. 明示的なタグ [TITLE] / [CONTENT] を優先的に抽出
+  const titleTagMatch = text.match(/\[TITLE\]([\s\S]*?)(?:\[\/TITLE\]|$)/i)
+  if (titleTagMatch) {
+    newTitle = titleTagMatch[1].trim().replace(/^「(.+)」$/, "$1")
+    text = text.replace(titleTagMatch[0], "").trim()
+  }
+
+  const contentTagMatch = text.match(/\[CONTENT\]([\s\S]*?)(?:\[\/CONTENT\]|$)/i)
+  if (contentTagMatch) {
+    newContent = contentTagMatch[1].trim()
+    text = text.replace(contentTagMatch[0], "").trim()
+  }
+
+  // 2. 以前の形式（タイトル案：など）もフォールバックとして維持
+  if (!newTitle) {
+    const titlePatterns = [
+      /^[ \t]*タイトル案[：:]\s*「?(.+?)」?\s*(?:\n|$)/m,
+      /^[ \t]*タイトル[：:]\s*「?(.+?)」?\s*(?:\n|$)/m,
+      /^[ \t]*提案タイトル[：:]\s*「?(.+?)」?\s*(?:\n|$)/m,
+    ]
+    for (const pattern of titlePatterns) {
+      const match = text.match(pattern)
+      if (match) {
+        const candidate = match[1].trim().replace(/^「(.+)」$/, "$1")
+        if (candidate.length > 0 && candidate.length <= 150) {
+          newTitle = candidate
+          text = text.replace(match[0], "").trim()
+          break
+        }
       }
     }
   }
 
-  // 本文の抽出
-  const contentPatterns = [
-    /^[ \t]*本文案[：:]\s*\n?([\s\S]+?)(?=\n\n[ \t]*(?:タイトル|まず|次に|では|以上)|$)/m,
-    /^[ \t]*本文[：:]\s*\n?([\s\S]+?)(?=\n\n[ \t]*(?:タイトル|まず|次に|では|以上)|$)/m,
-    /^[ \t]*記事の本文[：:]\s*\n?([\s\S]+?)(?=\n\n[ \t]*(?:タイトル|まず|次に|では|以上)|$)/m,
-    /\[CONTENT\]([\s\S]+?)\[\/CONTENT\]/,
-  ]
-  for (const pattern of contentPatterns) {
-    const match = text.match(pattern)
-    if (match) {
-      const candidate = match[1].trim()
-      if (candidate.length >= 50) {
-        newContent = candidate
-        text = text.replace(match[0], "").trim()
-        break
+  if (!newContent) {
+    // 以前の形式の本文抽出（lookaheadを削除して最後までキャプチャするように改善）
+    const contentPatterns = [
+      /^[ \t]*本文案[：:]\s*\n?([\s\S]+)$/m,
+      /^[ \t]*本文[：:]\s*\n?([\s\S]+)$/m,
+      /^[ \t]*記事の本文[：:]\s*\n?([\s\S]+)$/m,
+    ]
+    for (const pattern of contentPatterns) {
+      const match = text.match(pattern)
+      if (match) {
+        const candidate = match[1].trim()
+        if (candidate.length >= 20) {
+          newContent = candidate
+          text = text.replace(match[0], "").trim()
+          break
+        }
       }
     }
   }
@@ -199,6 +215,8 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     isLoading,
     downloadProgress,
     initialized,
+    isSignedIn,
+    signIn,
     error: aiError,
     stop: stopGeneration,
   } = useAI()
@@ -377,6 +395,15 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
       const fullResponse = await generateResponse(msgs, (partial) => {
         accumulatedText = partial
         setStreamingText(partial)
+
+        // リアルタイムパース：ストリーミング中にプレビューを更新
+        const parsed = parseAIResponse(partial)
+        if (parsed.newTitle && parsed.newTitle !== title) {
+          setTitle(parsed.newTitle)
+        }
+        if (parsed.newContent && parsed.newContent !== content) {
+          setContent(parsed.newContent)
+        }
       })
 
       const finalText = fullResponse || accumulatedText
@@ -753,6 +780,27 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
               </AnimatePresence>
 
               <div ref={messagesEndRef} />
+
+              {/* 認証が必要な場合のオーバーレイまたはメッセージ */}
+              {!isSignedIn && initialized && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-background/80 backdrop-blur-sm text-center space-y-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Sparkles className="h-8 w-8 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-bold">Puterアカウントでログイン</h3>
+                    <p className="text-sm text-muted-foreground max-w-[280px]">
+                      AI機能を利用するにはPuterプラットフォームへのログインが必要です。
+                    </p>
+                  </div>
+                  <Button onClick={signIn} className="px-8 font-bold">
+                    Puterでログイン
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground italic">
+                    ※ログインはポップアップで行われます。
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* スクロールダウンボタン */}
