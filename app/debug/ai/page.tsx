@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import { useGemma } from "@/hooks/use-gemma"
+import { useAI } from "@/hooks/use-ai"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -33,8 +33,8 @@ interface LogEntry {
   message: string
 }
 
-export default function GemmaDebugPage() {
-  const { isLoading, error, generateResponse, isGenerating, downloadProgress, initialized } = useGemma()
+export default function AIStatsPage() {
+  const { isLoading, error, generateResponse, isGenerating, initialized } = useAI()
   const [prompt, setPrompt] = useState("")
   const [response, setResponse] = useState("")
   const [metrics, setMetrics] = useState<{
@@ -162,11 +162,11 @@ export default function GemmaDebugPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl md:text-4xl font-black tracking-tight">Gemma 性能デバッグ</h1>
-            <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest px-2 py-0">v2.0 Beta</Badge>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight">AI (Qwen 3.6) 性能デバッグ</h1>
+            <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest px-2 py-0">v2.1 API</Badge>
           </div>
           <p className="text-muted-foreground max-w-2xl font-medium">
-            ブラウザ上で動作する Gemma-2b-it-gpu-int4 の初期化プロセス、ダウンロード状況、および推論パフォーマンスをリアルタイムで監視・解析します。
+            Puter.js 経由で提供される Qwen 3.6 Plus モデルの推論パフォーマンスをリアルタイムで監視・解析します。
           </p>
         </div>
         <div className="flex gap-2">
@@ -261,37 +261,21 @@ export default function GemmaDebugPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <Download className="w-4 h-4" />
-              ダウンロード
+              接続状況
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-1">
               <div className="text-xl font-bold">
-                {downloadProgress ? `${downloadProgress.percentage}%` : initialized ? "100%" : "0%"}
+                {initialized ? "Connected" : "Disconnected"}
               </div>
               <div className="text-[10px] font-mono text-muted-foreground truncate">
-                {downloadProgress ? `${formatBytes(downloadProgress.loaded)} / ${formatBytes(downloadProgress.total)}` : initialized ? "Cached in memory" : "Waiting for start..."}
+                API Base: Puter.js Cloud
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {downloadProgress && downloadProgress.percentage < 100 && (
-        <div className="space-y-2 p-6 bg-primary/5 border border-primary/10 rounded-2xl shadow-premium">
-          <div className="flex justify-between items-end text-sm font-bold">
-            <div className="flex items-center gap-2">
-              <Download className="w-4 h-4 animate-bounce text-primary" />
-              <span>モデルデータをダウンロード中...</span>
-            </div>
-            <span className="font-mono">{downloadProgress.percentage}%</span>
-          </div>
-          <Progress value={downloadProgress.percentage} className="h-3 bg-primary/10" />
-          <p className="text-[10px] text-muted-foreground text-center font-mono">
-            約 1.3GB のモデルファイルをフェッチしています。完了するまでページを閉じないでください。
-          </p>
-        </div>
-      )}
 
       {error && (
         <Card className="border-destructive/30 bg-destructive/5 shadow-premium overflow-hidden">
@@ -325,7 +309,7 @@ export default function GemmaDebugPage() {
 
           <div className="relative group">
             <Input
-              placeholder="Gemma への命令を入力してください..."
+              placeholder="AI への命令を入力してください..."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
@@ -424,12 +408,11 @@ export default function GemmaDebugPage() {
           <span className="font-bold text-foreground">Debugging Information</span>
         </div>
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 list-inside list-disc font-medium">
-          <li>Gemma 2b IT モデル（int4 量子化）を使用しています。</li>
-          <li>初回ロード時は約 1.3GB のデータがメモリにキャッシュされます。</li>
-          <li>WebGPU が利用可能な場合、GPU アクセラレーションによる高速推論が行われます。</li>
+          <li>最新の Qwen 3.6 Plus モデルを API 経由で使用しています。</li>
+          <li>Puter.js クラウドインフラにより、ローカルのリソース消費を最小限に抑えています。</li>
+          <li>API 呼び出しは完全に無料で提供されています（Puter.js）。</li>
           <li>トークン数は文字数（2文字=1トークン）による簡易推定値です。</li>
-          <li>生成エラーが発生した場合は、ハードウェアメモリ（VRAM）不足の可能性があります。</li>
-          <li>MediaPipe GenAI WASM ランタイム v0.10.27 を使用して動作しています。</li>
+          <li>推論速度（tok/s）はネットワーク遅延の影響を受ける場合があります。</li>
         </ul>
       </div>
     </div>

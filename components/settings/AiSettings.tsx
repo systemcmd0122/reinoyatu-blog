@@ -40,47 +40,9 @@ interface AiSettingsProps {
   }
 }
 
-const CACHE_NAME = "gemma-model-cache-v1"
-
 export default function AiSettings({ initialSettings }: AiSettingsProps) {
   const [settings, setSettings] = useState(initialSettings)
   const [isSaving, setIsSaving] = useState(false)
-  const [cacheSize, setCacheSize] = useState<string>("計算中...")
-  const [isClearingCache, setIsClearingCache] = useState(false)
-
-  useEffect(() => {
-    calculateCacheSize()
-  }, [])
-
-  const calculateCacheSize = async () => {
-    try {
-      if (!('caches' in window)) {
-        setCacheSize("非対応")
-        return
-      }
-
-      const cache = await caches.open(CACHE_NAME)
-      const keys = await cache.keys()
-      let totalSize = 0
-
-      for (const request of keys) {
-        const response = await cache.match(request)
-        if (response) {
-          const blob = await response.blob()
-          totalSize += blob.size
-        }
-      }
-
-      if (totalSize === 0) {
-        setCacheSize("0 MB")
-      } else {
-        setCacheSize(`${(totalSize / (1024 * 1024)).toFixed(1)} MB`)
-      }
-    } catch (error) {
-      console.error("Failed to calculate cache size:", error)
-      setCacheSize("エラー")
-    }
-  }
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -95,23 +57,6 @@ export default function AiSettings({ initialSettings }: AiSettingsProps) {
       toast.error("エラーが発生しました")
     } finally {
       setIsSaving(false)
-    }
-  }
-
-  const handleClearCache = async () => {
-    setIsClearingCache(true)
-    try {
-      const deleted = await caches.delete(CACHE_NAME)
-      if (deleted) {
-        setCacheSize("0 MB")
-        toast.success("モデルキャッシュを削除しました。次回利用時に再ダウンロードが必要になります。")
-      } else {
-        toast.error("キャッシュの削除に失敗しました")
-      }
-    } catch (error) {
-      toast.error("エラーが発生しました")
-    } finally {
-      setIsClearingCache(false)
     }
   }
 
@@ -194,60 +139,13 @@ export default function AiSettings({ initialSettings }: AiSettingsProps) {
         </Card>
 
         <section className="space-y-4">
-          <h3 className="text-xl font-black uppercase tracking-tighter flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            リソース管理
-          </h3>
-
           <Card className="border-border/50 bg-muted/20 rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-base">モデルキャッシュ</CardTitle>
-              <CardDescription>
-                AIの実行に必要なモデルデータ（Gemma 2）はブラウザにキャッシュされています。
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between p-4 bg-background border border-border/50 rounded-xl mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Database className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold">現在のキャッシュ容量</div>
-                    <div className="text-2xl font-black">{cacheSize}</div>
-                  </div>
-                </div>
-
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 border-destructive/20 rounded-lg">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      キャッシュを消去
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>モデルキャッシュを削除しますか？</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        AIモデルのデータ（約1.3GB）を削除します。削除後、次にAI機能を利用する際に再度ダウンロードが必要になります。
-                        ストレージ容量を空けたい場合にのみ実行してください。
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleClearCache} disabled={isClearingCache} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                        {isClearingCache ? "削除中..." : "削除する"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-
+            <CardContent className="pt-6">
               <div className="flex items-start gap-2 text-xs text-muted-foreground p-3 bg-primary/5 rounded-lg border border-primary/10">
                 <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <p>
-                  このサイトのAIはあなたのブラウザ上で直接動作するため、入力した内容がサーバーに送信されて学習に使われることはありません。
-                  プライバシーを保ったまま、安心してAIをカスタマイズできます。
+                  このサイトのAIは最新の Qwen 3.6 モデルを利用しています。
+                  入力した内容はあなたの執筆体験を向上させるためにのみ使用され、AIのキャラクター設定などはあなた専用にカスタマイズされます。
                 </p>
               </div>
             </CardContent>

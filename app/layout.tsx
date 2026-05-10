@@ -220,7 +220,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
                         </li>
                         <li>
                           <Link
-                            href="/debug/gemma"
+                            href="/debug/ai"
                             className="hover:text-primary transition-colors"
                           >
                             AIデバッグ

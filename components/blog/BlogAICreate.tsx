@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useRef, useCallback } from "react"
-import { useGemma } from "@/hooks/use-gemma"
+import { useAI } from "@/hooks/use-ai"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -187,8 +187,8 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     isLoading,
     downloadProgress,
     initialized,
-    error: gemmaError,
-  } = useGemma()
+    error: aiError,
+  } = useAI()
 
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
@@ -412,37 +412,17 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
 
         <div className="text-center space-y-2">
           <h2 className="text-xl font-bold tracking-tight">
-            {downloadProgress
-              ? "AIモデルをダウンロード中..."
-              : "AI執筆パートナーを準備中..."}
+            AI執筆パートナーを準備中...
           </h2>
           <p className="text-sm text-muted-foreground max-w-xs">
-            {downloadProgress
-              ? "初回のみ必要です。Wi-Fiでのご利用を推奨します。"
-              : "AIモデルを初期化しています。少々お待ちください。"}
+            最新のAIモデルを初期化しています。少々お待ちください。
           </p>
         </div>
 
-        {downloadProgress && (
-          <div className="w-full max-w-sm space-y-2">
-            <Progress value={downloadProgress.percentage} className="h-2 rounded-full" />
-            <div className="flex justify-between text-xs text-muted-foreground font-mono">
-              <span className="text-primary font-bold animate-pulse">DOWNLOADING</span>
-              <span>
-                {(downloadProgress.loaded / 1024 / 1024).toFixed(0)} MB /{" "}
-                {(downloadProgress.total / 1024 / 1024).toFixed(0)} MB
-              </span>
-              <span className="text-primary font-bold">
-                {downloadProgress.percentage}%
-              </span>
-            </div>
-          </div>
-        )}
-
-        {gemmaError && (
+        {aiError && (
           <div className="max-w-sm p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive text-center">
             <p className="font-bold mb-1">初期化に失敗しました</p>
-            <p className="text-xs opacity-80">{gemmaError}</p>
+            <p className="text-xs opacity-80">{aiError}</p>
           </div>
         )}
       </div>
@@ -529,7 +509,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
               <div className="text-xs font-bold leading-none">AI対話型エディタ</div>
               <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                Gemma 2 稼働中
+                Qwen 3.6 稼働中
               </div>
             </div>
           </div>

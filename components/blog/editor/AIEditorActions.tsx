@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { UseGemmaReturn } from "@/hooks/use-gemma"
+import { UseAIReturn } from "@/hooks/use-ai"
 import { searchWeb } from "@/actions/search"
 import { getAiSettings } from "@/actions/user"
 import {
@@ -45,7 +45,7 @@ import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 
 interface AIEditorActionsProps {
-  gemma: UseGemmaReturn
+  ai: UseAIReturn
   title: string
   content: string
   tags: string[]
@@ -56,7 +56,7 @@ interface AIEditorActionsProps {
 }
 
 export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
-  gemma,
+  ai,
   title,
   content,
   tags,
@@ -65,7 +65,7 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
   onUpdateTags,
   onUpdateSummary
 }) => {
-  const { isLoading, error, generateResponse, isGenerating, downloadProgress } = gemma
+  const { isLoading, error, generateResponse, isGenerating, downloadProgress } = ai
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<string | null>(null)
@@ -376,10 +376,10 @@ ${content}
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            AI アシスタント (Gemma 2)
+          AI アシスタント (Qwen 3.6)
           </CardTitle>
           <CardDescription className="text-xs">
-            ブラウザ上で動作する高性能AIが執筆をサポートします。
+          最新の高性能AIが執筆をサポートします。
           </CardDescription>
         </CardHeader>
 

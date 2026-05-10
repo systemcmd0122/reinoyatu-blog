@@ -111,7 +111,7 @@ import { ImageLibraryDialog } from "./ImageLibraryDialog"
 import { ImageURLDialog } from "./ImageURLDialog"
 import { ImageCropDialog } from "./ImageCropDialog"
 import { AIEditorActions } from "./editor/AIEditorActions"
-import { useGemma } from "@/hooks/use-gemma"
+import { useAI } from "@/hooks/use-ai"
 
 
 interface BlogEditorProps {
@@ -161,7 +161,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
   const [userProfile, setUserProfile] = useState<{ name: string; avatar_url: string | null } | null>(null)
   const [showMobileWarning, setShowMobileWarning] = useState(false)
-  const gemma = useGemma()
+  const ai = useAI()
   const [isLibraryDialogOpen, setIsLibraryDialogOpen] = useState(false)
   const [isURLDialogOpen, setIsURLDialogOpen] = useState(false)
   // クロップダイアログ用 state
@@ -956,7 +956,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                   <div className="p-6 space-y-10">
                     <AIEditorActions
-                      gemma={gemma}
+                      ai={ai}
                       title={watchedTitle}
                       content={watchedContent}
                       tags={watchedTags || []}
