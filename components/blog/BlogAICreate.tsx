@@ -24,6 +24,7 @@ import {
   FileText,
   Zap,
   Smartphone,
+  Square,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -63,20 +64,20 @@ const buildPrompt = (
   currentTitle: string,
   currentContent: string
 ): string => {
-  const recentHistory = conversationHistory.slice(-6)
+  const recentHistory = (conversationHistory || []).slice(-6)
   const historyText = recentHistory
     .map((m) => `${m.role === "ai" ? "AI" : "User"}: ${m.content}`)
     .join("\n")
 
-  const titleStatus = currentTitle
+  const titleStatus = (currentTitle || "").trim()
     ? `現在のタイトル: 「${currentTitle}」`
     : "タイトル: 未設定"
-  const contentStatus = currentContent
-    ? `本文の冒頭（参考）:\n${currentContent.substring(0, 300)}${currentContent.length > 300 ? "..." : ""}`
+  const contentStatus = (currentContent || "").trim()
+    ? `本文の冒頭（参考）:\n${(currentContent || "").substring(0, 300)}${(currentContent || "").length > 300 ? "..." : ""}`
     : "本文: 未作成"
 
   return `<start_of_turn>user
-必ず日本語で回答してください。あなたはプロのブログ編集者です。
+必ず日本語で回答してください。あなたは親しみやすく優秀なプロのブログ編集者です。
 
 【現在の記事の状況】
 ${titleStatus}
@@ -88,13 +89,15 @@ ${historyText}
 【ユーザーの新しいメッセージ】
 ${userMessage}
 
-以下のルールに従って回答してください：
-- 必ず日本語で親しみやすく回答する
-- 記事のタイトルを提案・更新する場合は「タイトル案：」に続けてタイトルを書く
-- 記事の本文を提案・更新する場合は「本文案：」に続けてMarkdown形式で本文を書く
-- 一度に全部完成させようとせず、ステップごとに進める
-- 回答の最初に「指示：」などのシステム的な内容を絶対に含めない
-- 自然な会話として回答する
+【回答のルール】
+1. 必ず日本語で回答してください。
+2. 記事のタイトルを提案・更新する場合は、必ず行の先頭に「タイトル案：」と書き、続けてタイトルを記述してください。
+3. 記事の本文を提案・更新する場合は、必ず行の先頭に「本文案：」と書き、続けてMarkdown形式で本文を記述してください。
+4. 本文案を提示する際は、適切な見出し（# や ##）を使用してください。
+5. 一度にすべてを完成させようとせず、ユーザーのペースに合わせて対話を重視してください。
+6. 回答の冒頭に「指示：」や「了解しました」といったシステム的な応答を含めず、自然な会話から始めてください。
+7. 会話の内容に応じて、現在の記事（プレビュー）を適宜更新してください。
+
 <end_of_turn>
 <start_of_turn>model
 `
@@ -116,15 +119,15 @@ const parseAIResponse = (raw: string): ParsedResponse => {
 
   // タイトルの抽出（複数パターン対応）
   const titlePatterns = [
-    /タイトル案[：:]\s*「?(.+?)」?\s*(?:\n|$)/,
-    /タイトル[：:]\s*「?(.+?)」?\s*(?:\n|$)/,
-    /提案タイトル[：:]\s*「?(.+?)」?\s*(?:\n|$)/,
+    /^[ \t]*タイトル案[：:]\s*「?(.+?)」?\s*(?:\n|$)/m,
+    /^[ \t]*タイトル[：:]\s*「?(.+?)」?\s*(?:\n|$)/m,
+    /^[ \t]*提案タイトル[：:]\s*「?(.+?)」?\s*(?:\n|$)/m,
     /\[TITLE\]([\s\S]+?)\[\/TITLE\]/,
   ]
   for (const pattern of titlePatterns) {
     const match = text.match(pattern)
     if (match) {
-      const candidate = match[1].trim()
+      const candidate = match[1].trim().replace(/^「(.+)」$/, "$1")
       if (candidate.length > 0 && candidate.length <= 100) {
         newTitle = candidate
         text = text.replace(match[0], "").trim()
@@ -135,9 +138,9 @@ const parseAIResponse = (raw: string): ParsedResponse => {
 
   // 本文の抽出
   const contentPatterns = [
-    /本文案[：:]\s*([\s\S]+?)(?=\n\n(?:タイトル|まず|次に|では|以上)|$)/,
-    /本文[：:]\s*([\s\S]+?)(?=\n\n(?:タイトル|まず|次に|では|以上)|$)/,
-    /記事の本文[：:]\s*([\s\S]+?)(?=\n\n(?:タイトル|まず|次に|では|以上)|$)/,
+    /^[ \t]*本文案[：:]\s*\n?([\s\S]+?)(?=\n\n[ \t]*(?:タイトル|まず|次に|では|以上)|$)/m,
+    /^[ \t]*本文[：:]\s*\n?([\s\S]+?)(?=\n\n[ \t]*(?:タイトル|まず|次に|では|以上)|$)/m,
+    /^[ \t]*記事の本文[：:]\s*\n?([\s\S]+?)(?=\n\n[ \t]*(?:タイトル|まず|次に|では|以上)|$)/m,
     /\[CONTENT\]([\s\S]+?)\[\/CONTENT\]/,
   ]
   for (const pattern of contentPatterns) {
@@ -188,6 +191,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     downloadProgress,
     initialized,
     error: aiError,
+    stop: stopGeneration,
   } = useAI()
 
   const [messages, setMessages] = useState<Message[]>([])
@@ -214,6 +218,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
 
   // ── プロフィール取得 ──
   useEffect(() => {
+    if (!userId || userId === "test-user") return
     const fetchProfile = async () => {
       try {
         const { createClient } = await import("@/utils/supabase/client")
@@ -259,7 +264,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
 
   // ── 初期ウェルカムメッセージ ──
   useEffect(() => {
-    if (initialized && messages.length === 0) {
+    if (initialized && (messages || []).length === 0) {
       setMessages([
         {
           id: newId(),
@@ -273,18 +278,29 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
   }, [initialized])
 
   // ── スクロール制御 ──
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    // scrollIntoView はページ全体を動かすことがあるため、コンテナの scrollTo を使用
+    const el = chatContainerRef.current
+    if (!el) return
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior
+    })
   }, [])
 
   useEffect(() => {
-    if (isAtBottom) scrollToBottom()
+    if (isAtBottom) {
+      // ストリーミング中はガタつきを抑えるため instant (auto) でスクロール
+      const behavior = streamingText ? "auto" : "smooth"
+      scrollToBottom(behavior)
+    }
   }, [messages, streamingText, isAtBottom, scrollToBottom])
 
   const handleScroll = useCallback(() => {
     const el = chatContainerRef.current
     if (!el) return
-    setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 80)
+    // しきい値を下げてより正確に判定
+    setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 20)
   }, [])
 
   // ── テキストエリア高さ自動調整 ──
@@ -309,6 +325,9 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
       { id: userMsgId, role: "user", content: userMessage },
     ])
     setStreamingText("")
+
+    // ユーザーの送信直後にスムーズスクロール
+    setTimeout(() => scrollToBottom("smooth"), 100)
 
     try {
       const prompt = buildPrompt(userMessage, messages, title, content)
@@ -373,7 +392,9 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
   const handleQuickAction = useCallback((label: string) => {
     setInput(label)
     textareaRef.current?.focus()
-  }, [])
+    // クイックアクション時も念のため下へ
+    setTimeout(() => scrollToBottom("smooth"), 100)
+  }, [scrollToBottom])
 
   // ── 完成させてエディタへ ──
   const handleFinish = useCallback(() => {
@@ -555,7 +576,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
         {(viewMode === "chat" || viewMode === "split") && (
           <div
             className={cn(
-              "flex flex-col border-r overflow-hidden",
+              "flex flex-col border-r overflow-hidden relative",
               viewMode === "split" ? "w-full sm:w-1/2" : "w-full"
             )}
           >
@@ -638,28 +659,29 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
                         </motion.div>
                       </div>
                     </Avatar>
-                    <div className="max-w-[82%] rounded-2xl rounded-tl-sm bg-background border border-border px-4 py-3 shadow-sm">
+                    <div className="max-w-[82%] rounded-2xl rounded-tl-sm bg-background border border-border px-4 py-3 shadow-sm min-h-[44px] flex items-center">
                       {streamingText ? (
-                        <div className="text-sm leading-relaxed">
+                        <div className="text-sm leading-relaxed w-full">
                           <p className="whitespace-pre-wrap break-words text-foreground/90">
                             {streamingText}
                           </p>
                           <span className="inline-block w-0.5 h-4 bg-primary animate-pulse ml-0.5 align-text-bottom" />
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 py-0.5">
+                        <div className="flex items-center gap-1.5 px-1">
                           {[0, 1, 2].map((i) => (
                             <motion.span
                               key={i}
-                              className="w-2 h-2 rounded-full bg-primary/40"
+                              className="w-2 h-2 rounded-full bg-primary"
                               animate={{
-                                scale: [1, 1.4, 1],
+                                y: [0, -6, 0],
                                 opacity: [0.4, 1, 0.4],
                               }}
                               transition={{
-                                duration: 0.8,
+                                duration: 0.6,
                                 repeat: Infinity,
                                 delay: i * 0.15,
+                                ease: "easeInOut",
                               }}
                             />
                           ))}
@@ -680,12 +702,12 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
-                  className="absolute bottom-28 left-1/4 -translate-x-1/2 z-10"
+                  className="absolute bottom-28 left-1/2 -translate-x-1/2 z-10"
                 >
                   <Button
                     size="icon"
                     variant="secondary"
-                    onClick={scrollToBottom}
+                    onClick={() => scrollToBottom("smooth")}
                     className="h-8 w-8 rounded-full shadow-lg"
                   >
                     <ChevronDown className="h-4 w-4" />
@@ -697,7 +719,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
             {/* ─── 入力エリア ─── */}
             <div className="shrink-0 border-t bg-background px-3 sm:px-4 pt-3 pb-4 space-y-2.5">
               {/* クイックアクション */}
-              {messages.length <= 1 && !isGenerating && (
+              {(messages || []).length <= 1 && !isGenerating && (
                 <div className="flex flex-wrap gap-1.5">
                   {QUICK_ACTIONS.map(({ label, icon: Icon }) => (
                     <button
@@ -725,18 +747,25 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
                     className="min-h-[44px] max-h-[120px] resize-none rounded-xl border-border bg-muted/20 focus-visible:ring-primary shadow-none py-3 pr-3 text-sm leading-relaxed placeholder:text-muted-foreground/50"
                   />
                 </div>
-                <Button
-                  size="icon"
-                  onClick={handleSend}
-                  disabled={isGenerating || !input.trim()}
-                  className="h-11 w-11 rounded-xl shrink-0 shadow-sm hover:scale-105 active:scale-95 transition-transform"
-                >
-                  {isGenerating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
+                {isGenerating ? (
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={stopGeneration}
+                    className="h-11 w-11 rounded-xl shrink-0 shadow-sm hover:scale-105 active:scale-95 transition-transform"
+                  >
+                    <Square className="h-4 w-4 fill-current" />
+                  </Button>
+                ) : (
+                  <Button
+                    size="icon"
+                    onClick={handleSend}
+                    disabled={!input.trim()}
+                    className="h-11 w-11 rounded-xl shrink-0 shadow-sm hover:scale-105 active:scale-95 transition-transform"
+                  >
                     <Send className="h-4 w-4" />
-                  )}
-                </Button>
+                  </Button>
+                )}
               </div>
 
               <p className="text-[10px] text-center text-muted-foreground/60">
@@ -832,7 +861,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
 
                   {content ? (
                     <motion.div
-                      key={content.slice(0, 50)}
+                      key={(content || "").slice(0, 50)}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.1 }}
