@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils"
 const mPlus1 = M_PLUS_1({
   weight: ["400", "700", "900"],
   subsets: ["latin"],
+  display: "swap",
+  preload: false,
 })
 
 const siteConfig = {
@@ -128,15 +130,17 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
 
   return (
     <html lang="ja" suppressHydrationWarning className="overflow-x-hidden">
-      <head>
+      <body className={mPlus1.className}>
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5931540016126544"
           crossOrigin="anonymous"
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
+          onError={(e) => {
+            // Silently handle AdSense load failures (often blocked by client)
+            console.warn("AdSense failed to load (possibly blocked):", e);
+          }}
         />
-      </head>
-      <body className={mPlus1.className}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

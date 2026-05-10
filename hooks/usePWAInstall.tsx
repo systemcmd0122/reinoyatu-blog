@@ -27,13 +27,18 @@ export function usePWAInstall() {
 
     // Listen for the beforeinstallprompt event (Android/Chrome)
     const handleBeforeInstallPrompt = (e: Event) => {
-      // インストールバナーを自前で制御する場合、preventDefault()を呼び出して
-      // ブラウザ標準のバナー（ミニインフォバー等）を抑制します。
-      e.preventDefault()
-      const promptEvent = e as BeforeInstallPromptEvent
-      setDeferredPrompt(promptEvent)
-      setIsInstallable(true)
-      console.log("PWA: beforeinstallprompt event captured")
+      // ユーザーがバナーを閉じていない場合のみ、ブラウザ標準のバナーを抑制して自前のバナーを表示する準備をする
+      const isDismissed = localStorage.getItem("pwa-banner-dismissed") === "true"
+
+      if (!isDismissed) {
+        // インストールバナーを自前で制御する場合、preventDefault()を呼び出して
+        // ブラウザ標準のバナー（ミニインフォバー等）を抑制します。
+        e.preventDefault()
+        const promptEvent = e as BeforeInstallPromptEvent
+        setDeferredPrompt(promptEvent)
+        setIsInstallable(true)
+        console.log("PWA: beforeinstallprompt event captured")
+      }
     }
 
     // Listen for the appinstalled event
