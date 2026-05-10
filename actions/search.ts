@@ -17,7 +17,7 @@ import axios from "axios"
 // 型定義
 // ──────────────────────────────────────────────
 
-interface SearchResult {
+export interface SearchResult {
   title: string
   url: string
   snippet: string
@@ -205,9 +205,9 @@ const searchWikipedia = async (query: string): Promise<SearchResult[]> => {
  */
 export const searchWeb = async (
   query: string
-): Promise<{ content: string; error: string | null }> => {
+): Promise<{ content: string; results: SearchResult[]; error: string | null }> => {
   if (!query || query.trim().length === 0) {
-    return { content: "", error: "クエリが空です。" }
+    return { content: "", results: [], error: "クエリが空です。" }
   }
 
   const trimmedQuery = query.trim()
@@ -248,6 +248,7 @@ export const searchWeb = async (
     const errorDetail = errors.length > 0 ? `\n詳細: ${errors.join(", ")}` : ""
     return {
       content: "",
+      results: [],
       error: `「${trimmedQuery}」の検索結果が見つかりませんでした。別のキーワードでお試しください。${errorDetail}`,
     }
   }
@@ -255,18 +256,27 @@ export const searchWeb = async (
   // 上位5件のみ使用
   const topResults = allResults.slice(0, 5)
 
-  const formattedLines = topResults.map((r, i) => {
+  const content = await formatSearchResults(topResults, trimmedQuery)
+
+  return { content, results: topResults, error: null }
+}
+
+/**
+ * 検索結果の配列をAIに渡すためのテキスト形式に変換する
+ */
+export const formatSearchResults = async (results: SearchResult[], query: string): Promise<string> => {
+  if (results.length === 0) return ""
+
+  const formattedLines = results.map((r, i) => {
     const lines = [`[${i + 1}] ${r.title}`]
     if (r.url) lines.push(`URL: ${r.url}`)
     lines.push(`内容: ${r.snippet}`)
     return lines.join("\n")
   })
 
-  const content = [
-    `「${trimmedQuery}」の検索結果 (${topResults.length}件):`,
+  return [
+    `「${query}」の検索結果 (${results.length}件):`,
     "",
     ...formattedLines,
   ].join("\n")
-
-  return { content, error: null }
 }

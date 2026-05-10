@@ -83,10 +83,16 @@ export const useAI = (): UseAIReturn => {
     } catch (err: any) {
       console.error("[AI] Puter sign-in error:", err)
       // ポップアップブロックなどで失敗した場合の対処
-      const isPopupError = err?.message?.includes("popup") || err?.message?.includes("closed") || !err?.message;
+      const isPopupError =
+        err?.message?.includes("popup") ||
+        err?.message?.includes("closed") ||
+        err?.message?.includes("blocked") ||
+        !err?.message ||
+        err === null;
+
       const message = isPopupError
-        ? "ポップアップがブロックされたか、サインインがキャンセルされました。ブラウザの設定でポップアップを許可してください。"
-        : (err.message || "サインインに失敗しました。");
+        ? "ポップアップがブロックされたか、サインインがキャンセルされました。広告ブロッカー（AdBlockなど）をオフにし、ブラウザの設定でポップアップを許可してください。"
+        : (err?.message || "サインインに失敗しました。");
 
       setError(message);
       throw new Error(message);
