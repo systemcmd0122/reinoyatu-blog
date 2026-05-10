@@ -12,6 +12,7 @@ import { RealtimeProvider } from "@/components/providers/RealtimeProvider"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
 import { PWAInstallBanner } from "@/components/pwa/PWAInstallBanner"
+import { AdSense } from "@/components/providers/AdSense"
 import { cn } from "@/lib/utils"
 
 const mPlus1 = M_PLUS_1({
@@ -131,16 +132,7 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
   return (
     <html lang="ja" suppressHydrationWarning className="overflow-x-hidden">
       <body className={mPlus1.className}>
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5931540016126544"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-          onError={(e) => {
-            // Silently handle AdSense load failures (often blocked by client)
-            console.warn("AdSense failed to load (possibly blocked):", e);
-          }}
-        />
+        <AdSense />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
