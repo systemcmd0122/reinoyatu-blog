@@ -375,6 +375,17 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     const userMessage = input.trim()
     if (!userMessage || isGenerating) return
 
+    // サインイン状態のチェック（念のため）
+    if (!isSignedIn && initialized) {
+      toast.error("AI機能を利用するにはログインが必要です。")
+      try {
+        await signIn()
+      } catch (err: any) {
+        // エラーはsignIn内で処理・表示される
+        return
+      }
+    }
+
     setInput("")
     const userMsgId = newId()
     const aiMsgId = newId()
@@ -432,15 +443,23 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
       ])
     } catch (err: any) {
       setStreamingText("")
+      const errorMessage = err?.message || "不明なエラー"
+
       setMessages((prev) => [
         ...prev,
         {
           id: aiMsgId,
           role: "ai",
-          content: `申し訳ありません、エラーが発生しました。\n\n${err?.message || "不明なエラー"}\n\nしばらく待ってから再度お試しください。`,
+          content: `申し訳ありません、エラーが発生しました。\n\n${errorMessage}\n\nしばらく待ってから再度お試しください。`,
         },
       ])
-      toast.error("送信に失敗しました")
+
+      // ポップアップエラー等の特定のメッセージはトーストでも表示
+      if (errorMessage.includes("ポップアップ") || errorMessage.includes("サインイン")) {
+        toast.error(errorMessage, { duration: 5000 })
+      } else {
+        toast.error("送信に失敗しました")
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, isGenerating, messages, title, content, generateResponse])

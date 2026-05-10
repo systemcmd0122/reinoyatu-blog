@@ -71,13 +71,25 @@ export const useAI = (): UseAIReturn => {
   }, [])
 
   const signIn = useCallback(async () => {
+    if (typeof window === "undefined") return;
     try {
+      // Puter.js の signIn はポップアップを使用するため、
+      // ユーザーの直接の操作（クリックイベント等）の中で呼び出される必要がある
+      console.log("[AI] Attempting Puter sign-in...");
       await puter.auth.signIn()
       const authenticated = await puter.auth.isSignedIn()
       setIsSignedIn(authenticated)
-    } catch (err) {
+      console.log("[AI] Puter sign-in status:", authenticated);
+    } catch (err: any) {
       console.error("[AI] Puter sign-in error:", err)
-      throw err
+      // ポップアップブロックなどで失敗した場合の対処
+      const isPopupError = err?.message?.includes("popup") || err?.message?.includes("closed") || !err?.message;
+      const message = isPopupError
+        ? "ポップアップがブロックされたか、サインインがキャンセルされました。ブラウザの設定でポップアップを許可してください。"
+        : (err.message || "サインインに失敗しました。");
+
+      setError(message);
+      throw new Error(message);
     }
   }, [])
 
@@ -102,11 +114,27 @@ export const useAI = (): UseAIReturn => {
 
       console.log(`[AI] Starting generation with model: ${DEFAULT_MODEL}`)
       try {
+        // ブラウザ環境チェック
+        if (typeof window === "undefined") {
+          throw new Error("クライアントサイドでのみ実行可能です。")
+        }
+
         // 認証チェック
-        const authenticated = await puter.auth.isSignedIn()
+        let authenticated = false;
+        try {
+          authenticated = await puter.auth.isSignedIn()
+        } catch (authCheckErr) {
+          console.warn("[AI] Auth check failed, assuming not signed in:", authCheckErr)
+        }
+
         if (!authenticated) {
           console.log("[AI] User not signed in to Puter, triggering sign-in...")
-          await signIn()
+          try {
+            await signIn()
+          } catch (signInErr: any) {
+            // signIn内でもエラーハンドリングしているが、ここでもキャッチして生成を中断する
+            throw new Error(signInErr.message || "サインインが必要です。")
+          }
         }
 
         // Puter.js API を呼び出し
