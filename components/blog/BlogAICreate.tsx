@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useAI, AIMessage } from "@/hooks/use-ai"
-import { searchWeb } from "@/actions/search"
+import { useBlockerDetection } from "@/hooks/use-blocker-detection"
+import { searchWeb, formatSearchResults, SearchResult } from "@/actions/search"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -28,6 +29,9 @@ import {
   Square,
   Search,
   X,
+  AlertTriangle,
+  ExternalLink,
+  Trash2,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -44,6 +48,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 // ────────────────────────────────────────────
 // 型定義
@@ -78,6 +95,8 @@ const buildMessages = (
   const systemPrompt = `あなたは親しみやすく優秀なプロのブログ編集者です。
 必ず日本語で回答してください。
 
+あなたは受動的な助手ではなく、能動的に記事を最高のものにする編集者です。ユーザーの指示を待つだけでなく、構成の改善や情報の深掘りを積極的に提案・実行してください。
+
 【現在の記事の状況】
 ${titleStatus}
 ${contentStatus}
@@ -89,10 +108,11 @@ ${searchResults ? `【ウェブ検索結果（参考）】\n${searchResults}\n` 
 2. 記事のタイトルを提案・更新する場合は、必ず [TITLE]タイトル内容[/TITLE] という形式で含めてください。
 3. 記事の本文を提案・更新する場合は、必ず [CONTENT]本文内容[/CONTENT] という形式でMarkdown形式で記述してください。
 4. 本文案を提示する際は、適切な見出し（# や ##）を使用してください。
-5. 一度にすべてを完成させようとせず、ユーザーのペースに合わせて対話を重視してください。
-6. 回答の冒頭に「指示：」や「了解しました」といったシステム的な応答を含めず、自然な会話から始めてください。
-7. 会話の内容に応じて、現在の記事（プレビュー）を適宜更新してください。
-8. 記事が長い場合は、一度に書き切るように努めてください。途中で止めないでください。`
+5. 改善点は即座に [TITLE] や [CONTENT] タグを使ってプレビューに反映させてください。
+6. 一度にすべてを完成させようとせず、ユーザーのペースに合わせて対話を重視してください。
+7. 回答の冒頭に「指示：」や「了解しました」といったシステム的な応答を含めず、自然な会話から始めてください。
+8. 会話の内容に応じて、現在の記事（プレビュー）を適宜更新してください。
+9. 記事が長い場合は、一度に書き切るように努めてください。途中で止めないでください。`
 
   const messages: AIMessage[] = [
     { role: "system", content: systemPrompt }
@@ -209,6 +229,7 @@ const QUICK_ACTIONS = [
 // ────────────────────────────────────────────
 const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
   const router = useRouter()
+  const isBlockerDetected = useBlockerDetection()
   const {
     generateResponse,
     isGenerating,
@@ -227,7 +248,13 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
   const [content, setContent] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
-  const [searchResults, setSearchResults] = useState<string | null>(null)
+  const [searchResults, setSearchResults] = useState<{
+    content: string;
+    results: SearchResult[];
+    query: string;
+  } | null>(null)
+  const [isSearchSheetOpen, setIsSearchSheetOpen] = useState(false)
+  const [generationStatus, setGenerationStatus] = useState<"searching" | "thinking" | "writing" | null>(null)
   const [streamingText, setStreamingText] = useState("")
   const [viewMode, setViewMode] = useState<"chat" | "preview" | "split">("split")
   const [copiedTitle, setCopiedTitle] = useState(false)
@@ -354,12 +381,17 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
       return
     }
     setIsSearching(true)
+    setGenerationStatus("searching")
     try {
       const result = await searchWeb(q)
       if (result.error) {
         toast.error(result.error)
       } else {
-        setSearchResults(result.content)
+        setSearchResults({
+          content: result.content,
+          results: result.results,
+          query: q,
+        })
         toast.success("最新情報を取得しました。AIとの会話に反映されます。")
         setSearchQuery("")
       }
@@ -367,7 +399,27 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
       toast.error("検索中にエラーが発生しました")
     } finally {
       setIsSearching(false)
+      setGenerationStatus(null)
     }
+  }
+
+  const handleRemoveSearchResult = async (index: number) => {
+    if (!searchResults) return
+    const newResults = [...searchResults.results]
+    newResults.splice(index, 1)
+
+    if (newResults.length === 0) {
+      setSearchResults(null)
+      setIsSearchSheetOpen(false)
+      return
+    }
+
+    const newContent = await formatSearchResults(newResults, searchResults.query)
+    setSearchResults({
+      ...searchResults,
+      results: newResults,
+      content: newContent,
+    })
   }
 
   // ── メッセージ送信 ──
@@ -399,11 +451,13 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     // ユーザーの送信直後にスムーズスクロール
     setTimeout(() => scrollToBottom("smooth"), 100)
 
+    setGenerationStatus("thinking")
     try {
-      const msgs = buildMessages(userMessage, messages, title, content, searchResults)
+      const msgs = buildMessages(userMessage, messages, title, content, searchResults?.content || null)
       let accumulatedText = ""
 
       const fullResponse = await generateResponse(msgs, (partial) => {
+        setGenerationStatus("writing")
         accumulatedText = partial
         setStreamingText(partial)
 
@@ -424,11 +478,9 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
 
       if (newTitle) {
         setTitle(newTitle)
-        toast.success(`タイトルを更新: 「${newTitle}」`)
       }
       if (newContent) {
         setContent(newContent)
-        toast.success("本文を更新しました")
       }
 
       const displayMessage =
@@ -460,6 +512,8 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
       } else {
         toast.error("送信に失敗しました")
       }
+    } finally {
+      setGenerationStatus(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, isGenerating, messages, title, content, generateResponse])
@@ -692,6 +746,23 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
               onScroll={handleScroll}
               className="flex-1 overflow-y-auto overscroll-contain px-3 sm:px-4 py-4 space-y-4"
             >
+              {isBlockerDetected && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4"
+                >
+                  <Alert variant="destructive" className="bg-destructive/5 border-destructive/20">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle className="text-xs font-bold">広告ブロッカーを検知しました</AlertTitle>
+                    <AlertDescription className="text-[11px] leading-relaxed opacity-90">
+                      AdBlockなどの拡張機能が有効な場合、AI機能が正常に動作しない（サインインできない等）可能性があります。
+                      快適な利用のために、このサイトでのブロッカーをオフにすることを推奨します。
+                    </AlertDescription>
+                  </Alert>
+                </motion.div>
+              )}
+
               <AnimatePresence initial={false}>
                 {messages.map((m) => (
                   <motion.div
@@ -765,7 +836,29 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
                         </motion.div>
                       </div>
                     </Avatar>
-                    <div className="max-w-[82%] rounded-2xl rounded-tl-sm bg-background border border-border px-4 py-3 shadow-sm min-h-[44px] flex items-center">
+                    <div className="max-w-[82%] rounded-2xl rounded-tl-sm bg-background border border-border px-4 py-3 shadow-sm min-h-[44px] flex flex-col justify-center gap-1">
+                      {generationStatus && (
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary mb-0.5">
+                          {generationStatus === "searching" && (
+                            <>
+                              <Search className="h-3 w-3 animate-pulse" />
+                              <span>最新情報を検索中...</span>
+                            </>
+                          )}
+                          {generationStatus === "thinking" && (
+                            <>
+                              <Sparkles className="h-3 w-3 animate-pulse" />
+                              <span>回答を構成中...</span>
+                            </>
+                          )}
+                          {generationStatus === "writing" && (
+                            <>
+                              <Wand2 className="h-3 w-3 animate-pulse" />
+                              <span>執筆中...</span>
+                            </>
+                          )}
+                        </div>
+                      )}
                       {streamingText ? (
                         <div className="text-sm leading-relaxed w-full">
                           <p className="whitespace-pre-wrap break-words text-foreground/90">
@@ -774,7 +867,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
                           <span className="inline-block w-0.5 h-4 bg-primary animate-pulse ml-0.5 align-text-bottom" />
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1.5 px-1">
+                        <div className="flex items-center gap-1.5 px-1 py-1">
                           {[0, 1, 2].map((i) => (
                             <motion.span
                               key={i}
@@ -875,19 +968,28 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
                 {/* 検索結果バッジ */}
                 {searchResults && (
                   <div className="flex items-center justify-between p-2 bg-primary/5 border border-primary/10 rounded-lg">
-                    <div className="flex items-center gap-2 min-w-0">
+                    <button
+                      onClick={() => setIsSearchSheetOpen(true)}
+                      className="flex items-center gap-2 min-w-0 hover:bg-primary/5 p-1 rounded transition-colors flex-1 text-left"
+                    >
                       <div className="bg-primary/10 p-1 rounded">
                         <Search className="h-2.5 w-2.5 text-primary" />
                       </div>
-                      <span className="text-[10px] font-bold text-primary truncate">
-                        最新情報を取得済み（会話に反映されます）
-                      </span>
-                    </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[10px] font-bold text-primary truncate">
+                          最新情報を取得済み（{searchResults.results.length}件）
+                        </span>
+                        <span className="text-[9px] text-primary/60 truncate italic">
+                          クリックで詳細を確認・管理
+                        </span>
+                      </div>
+                    </button>
                     <button
                       onClick={() => setSearchResults(null)}
-                      className="p-1 hover:bg-primary/10 rounded-md transition-colors"
+                      className="p-1.5 hover:bg-destructive/10 rounded-md transition-colors text-primary hover:text-destructive"
+                      title="検索結果をクリア"
                     >
-                      <X className="h-3 w-3 text-primary" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 )}
@@ -1005,14 +1107,23 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
               ) : (
                 <article className="max-w-2xl mx-auto space-y-6">
                   {title && (
-                    <motion.h1
+                    <motion.div
                       key={title}
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight"
+                      initial={{ backgroundColor: "transparent" }}
+                      animate={{
+                        backgroundColor: ["rgba(0,0,0,0)", "rgba(59,130,246,0.1)", "rgba(0,0,0,0)"],
+                      }}
+                      transition={{ duration: 1 }}
+                      className="rounded-lg -mx-2 px-2"
                     >
-                      {title}
-                    </motion.h1>
+                      <motion.h1
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight"
+                      >
+                        {title}
+                      </motion.h1>
+                    </motion.div>
                   )}
 
                   <div className="flex items-center gap-2 flex-wrap">
@@ -1036,11 +1147,14 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
 
                   {content ? (
                     <motion.div
-                      key={(content || "").slice(0, 50)}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.1 }}
-                      className="prose prose-sm sm:prose-base prose-neutral dark:prose-invert max-w-none"
+                      key={(content || "").slice(0, 100)}
+                      initial={{ opacity: 0, backgroundColor: "transparent" }}
+                      animate={{
+                        opacity: 1,
+                        backgroundColor: ["rgba(0,0,0,0)", "rgba(59,130,246,0.05)", "rgba(0,0,0,0)"],
+                      }}
+                      transition={{ duration: 1.5 }}
+                      className="prose prose-sm sm:prose-base prose-neutral dark:prose-invert max-w-none rounded-lg -mx-2 px-2"
                     >
                       <MarkdownRenderer content={content} />
                     </motion.div>
@@ -1055,6 +1169,62 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
           </div>
         )}
       </div>
+
+      {/* ─── 検索結果詳細シート ─── */}
+      <Sheet open={isSearchSheetOpen} onOpenChange={setIsSearchSheetOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col gap-0">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle className="flex items-center gap-2 text-sm">
+              <Search className="h-4 w-4 text-primary" />
+              ウェブ検索の学習データ
+            </SheetTitle>
+            <SheetDescription className="text-xs text-left">
+              AIが参照している最新情報の詳細です。不要な情報は削除できます。
+            </SheetDescription>
+          </SheetHeader>
+
+          <ScrollArea className="flex-1">
+            <div className="p-4 space-y-4">
+              {searchResults?.results.map((result, i) => (
+                <div key={i} className="group relative p-3 bg-muted/30 rounded-xl border border-border/50 hover:border-primary/30 transition-all">
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <h4 className="text-xs font-bold leading-tight group-hover:text-primary transition-colors">
+                      {result.title}
+                    </h4>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {result.url && (
+                        <a
+                          href={result.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1 hover:bg-background rounded-md transition-colors"
+                        >
+                          <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                        </a>
+                      )}
+                      <button
+                        onClick={() => handleRemoveSearchResult(i)}
+                        className="p-1 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    {result.snippet}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+
+          <div className="p-4 border-t bg-muted/10 text-center">
+            <p className="text-[10px] text-muted-foreground italic">
+              ※これらの情報はAIの回答生成時に自動的にコンテキストとして提供されます。
+            </p>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* ─── モバイル：ビュー切替 ─── */}
       <div className="sm:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex gap-1 bg-background/90 backdrop-blur border border-border rounded-full p-1 shadow-lg">
