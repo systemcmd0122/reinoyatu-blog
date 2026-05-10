@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { UseAIReturn } from "@/hooks/use-ai"
+import { UseAIReturn, AIMessage } from "@/hooks/use-ai"
 import { searchWeb } from "@/actions/search"
 import { getAiSettings } from "@/actions/user"
 import {
@@ -151,7 +151,7 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
   const handleImproveContent = async () => {
     if (!content) return
     setActiveAction("improve")
-    const prompt = `
+    const systemPrompt = `
 ${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : "あなたはプロの編集者です。"}
 以下のブログ記事を、読者の興味を惹きつける、洗練された自然な日本語の文章にブラッシュアップしてください。
 構成は維持しつつ、表現をより豊かに、専門用語は分かりやすく説明を加えてください。
@@ -162,16 +162,22 @@ ${aiSettings.writingStyle ? `文章スタイル: ${aiSettings.writingStyle}` : "
 重要:
 - 出力は改善後のMarkdown形式の本文のみとし、前置きや解説は一切不要です。
 - 「*」や「#」などの装飾を過剰に使わず、読みやすさを最優先してください。
-- 検索結果が提供されている場合は、その事実を自然に本文に組み込んでください。
+- 検索結果が提供されている場合は、その事実を自然に本文に組み込んでください。`
 
+    const userPrompt = `
 ${searchResults ? `以下の最新情報を内容に取り入れてください:\n${searchResults}\n\n` : ""}
 
 記事タイトル: ${title}
 記事内容:
-${content}
-`
+${content}`
+
+    const messages: AIMessage[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ]
+
     try {
-      const improved = await generateResponse(prompt)
+      const improved = await generateResponse(messages)
       const cleanImproved = improved
         .replace(/^```markdown\n/, "")
         .replace(/^```\n?/, "")
@@ -189,7 +195,7 @@ ${content}
   const handleSuggestTitle = async () => {
     if (!content) return
     setActiveAction("title")
-    const prompt = `
+    const systemPrompt = `
 ${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : ""}
 以下の記事の内容に最もふさわしい、読者がクリックしたくなるような魅力的なタイトルを日本語で5つ提案してください。
 
@@ -198,15 +204,21 @@ ${aiSettings.writingStyle ? `文章スタイル: ${aiSettings.writingStyle}` : "
 
 重要:
 - 1行に1つずつタイトルのみを出力してください。
-- 「*」や「提案1：」などの記号・接頭辞、番号、Markdown装飾は一切不要です。
+- 「*」や「提案1：」などの記号・接頭辞、番号、Markdown装飾は一切不要です。`
 
+    const userPrompt = `
 ${searchResults ? `検索文脈:\n${searchResults}\n\n` : ""}
 
 記事内容:
-${content.substring(0, 2000)}
-`
+${content.substring(0, 2000)}`
+
+    const messages: AIMessage[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ]
+
     try {
-      const suggestions = await generateResponse(prompt)
+      const suggestions = await generateResponse(messages)
       const titles = suggestions
         .split("\n")
         .map(t => t.replace(/^[0-9一二三四五].?[\s.．:：、]/, "").replace(/[*#]/g, "").trim())
@@ -224,7 +236,7 @@ ${content.substring(0, 2000)}
   const handleGenerateTags = async () => {
     if (!content) return
     setActiveAction("tags")
-    const prompt = `
+    const systemPrompt = `
 ${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : ""}
 以下の記事に関連する、検索されやすい重要なキーワード（タグ）を5つから8つ程度抽出してください。
 
@@ -233,16 +245,22 @@ ${aiSettings.instructions ? `追加の指示:\n${aiSettings.instructions}\n` : "
 重要:
 - カンマ区切りで「単語」のみを出力してください。
 - 文章や説明、Markdown装飾（*など）は一切不要です。
-- 1つ1つのタグは短く、適切な固有名詞や一般名詞にしてください。
+- 1つ1つのタグは短く、適切な固有名詞や一般名詞にしてください。`
 
+    const userPrompt = `
 ${searchResults ? `検索文脈:\n${searchResults}\n\n` : ""}
 
 タイトル: ${title}
 記事内容:
-${content.substring(0, 1500)}
-`
+${content.substring(0, 1500)}`
+
+    const messages: AIMessage[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ]
+
     try {
-      const tagsText = await generateResponse(prompt)
+      const tagsText = await generateResponse(messages)
       const newTags = tagsText
         .split(/[,、\n]/)
         .map(t => t.replace(/[*#]/g, "").trim())
@@ -260,7 +278,7 @@ ${content.substring(0, 1500)}
   const handleGenerateSummary = async () => {
     if (!content) return
     setActiveAction("summary")
-    const prompt = `
+    const systemPrompt = `
 ${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : ""}
 以下のブログ記事を、300文字程度の丁寧な日本語で要約してください。
 
@@ -269,15 +287,21 @@ ${aiSettings.writingStyle ? `文章スタイル: ${aiSettings.writingStyle}` : "
 
 重要:
 - 要約のテキストのみを出力してください。「要約:」などの接頭辞は不要です。
-- Markdown装飾（*、#など）は使用しないでください。
+- Markdown装飾（*、#など）は使用しないでください。`
 
+    const userPrompt = `
 ${searchResults ? `検索文脈:\n${searchResults}\n\n` : ""}
 
 記事内容:
-${content}
-`
+${content}`
+
+    const messages: AIMessage[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ]
+
     try {
-      const summary = await generateResponse(prompt)
+      const summary = await generateResponse(messages)
       const cleanSummary = summary.replace(/^要約[：:]\s*/, "").replace(/[*#]/g, "").trim()
       onUpdateSummary(cleanSummary)
       toast.success("要約を生成しました。")
