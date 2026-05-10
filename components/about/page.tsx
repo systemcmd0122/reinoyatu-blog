@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Sparkles, Zap, Users, Heart, Target, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 const About = () => {
     const values = [
@@ -182,6 +183,63 @@ const About = () => {
                                     読者とのダイレクトな交流を通じて、ブロガーのモチベーション向上と、
                                     コンテンツの質的向上をサポートしています。
                                 </p>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* AI テクノロジーセクション (Puter.js) */}
+            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background">
+                <div className="max-w-4xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="space-y-10"
+                    >
+                        <div className="text-center space-y-4">
+                            <h2 className="text-4xl font-bold text-foreground">AI Technology</h2>
+                            <p className="text-lg text-muted-foreground">次世代のAI体験を支える技術「Puter.js」</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                            <div className="space-y-6">
+                                <h3 className="text-2xl font-bold text-foreground">
+                                    バックエンド不要の<br />
+                                    フルスタックAI体験
+                                </h3>
+                                <p className="text-muted-foreground leading-relaxed">
+                                    「例のヤツ｜ブログ」のAIアシスタント機能は、画期的なクラウドプラットフォーム<strong>「Puter.js」</strong>によって支えられています。
+                                    通常、AI機能を実装するには複雑なバックエンドサーバーや高額なAPI料金が必要ですが、Puter.jsを採用することで、ブラウザから直接、安全かつ高速にAIモデル（Qwen 3.6 Plus等）を呼び出すことが可能になりました。
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    <Badge variant="secondary" className="px-3 py-1">Serverless AI</Badge>
+                                    <Badge variant="secondary" className="px-3 py-1">Privacy First</Badge>
+                                    <Badge variant="secondary" className="px-3 py-1">Zero Latency</Badge>
+                                </div>
+                            </div>
+                            <div className="bg-muted/30 rounded-3xl p-8 border border-border space-y-4 shadow-inner">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="bg-primary/10 p-2 rounded-xl">
+                                        <Sparkles className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <span className="font-bold">Puter.jsのメリット</span>
+                                </div>
+                                <ul className="space-y-3 text-sm">
+                                    <li className="flex items-start gap-2">
+                                        <Zap className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                                        <span><strong>タイムアウトなし:</strong> 生成AI特有の長い待機時間でも、Vercel等の制限を受けずにスムーズな生成が可能です。</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <Zap className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                                        <span><strong>プライバシー保護:</strong> ユーザー認証とデータ管理がPuter側でセキュアに処理されるため、機密情報を安全に扱えます。</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <Zap className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                                        <span><strong>最新モデルの活用:</strong> Qwen 3.6 Plusなどの高性能なモデルを、ブラウザから直接フル活用できます。</span>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </motion.div>

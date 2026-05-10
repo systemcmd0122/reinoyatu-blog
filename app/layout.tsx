@@ -12,11 +12,14 @@ import { RealtimeProvider } from "@/components/providers/RealtimeProvider"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
 import { PWAInstallBanner } from "@/components/pwa/PWAInstallBanner"
+import { AdSense } from "@/components/providers/AdSense"
 import { cn } from "@/lib/utils"
 
 const mPlus1 = M_PLUS_1({
   weight: ["400", "700", "900"],
   subsets: ["latin"],
+  display: "swap",
+  preload: false,
 })
 
 const siteConfig = {
@@ -128,15 +131,8 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
 
   return (
     <html lang="ja" suppressHydrationWarning className="overflow-x-hidden">
-      <head>
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5931540016126544"
-          crossOrigin="anonymous"
-          strategy="beforeInteractive"
-        />
-      </head>
       <body className={mPlus1.className}>
+        <AdSense />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
