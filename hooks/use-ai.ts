@@ -72,10 +72,10 @@ export const useAI = (): UseAIReturn => {
       const controller = new AbortController()
       setAbortController(controller)
 
-      // タイムアウト監視（90秒間応答がない、または全体の生成時間が長すぎる場合）
+      // タイムアウト監視（300秒間：長文生成に対応するため延長）
       const timeoutId = setTimeout(() => {
         controller.abort()
-      }, 120000)
+      }, 300000)
 
       let fullResponse = ""
 
