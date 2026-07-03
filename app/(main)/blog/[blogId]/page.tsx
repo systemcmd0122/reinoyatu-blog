@@ -168,8 +168,9 @@ const BlogDetailPage = async ({ params, searchParams }: BlogDetailPageProps) => 
       { blog_uuid: blogId }
     )
 
-    // ログインユーザーがブログ作成者かどうか
-    const isMyBlog = user?.id === blogData.user_id
+    // ログインユーザーがブログ作成者または共同編集者かどうか
+    const isMyBlog = user?.id === blogData.user_id ||
+      blogData.article_authors?.some((aa: any) => aa.user_id === user?.id)
 
     // データの正規化
     const normalizedBlog: NormalizedArticle = {

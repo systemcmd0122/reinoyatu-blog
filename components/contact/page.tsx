@@ -1,12 +1,12 @@
-// components/contact/page.tsx
 "use client"
 
-import { Mail, MessageSquare, Twitter, MessageCircle } from "lucide-react"
+import { Mail, MessageSquare, Twitter, MessageCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
+import { submitContact } from "@/actions/contact"
 
 const Contact = () => {
     const [isLoading, setIsLoading] = useState(false)
@@ -27,11 +27,13 @@ const Contact = () => {
         setIsLoading(true)
 
         try {
-            // お問い合わせフォームの送信ロジック
-            // 実装例：メール送信またはデータベース保存
-            console.log("Form submitted:", formData)
+            const res = await submitContact(formData)
 
-            // ここではダミーの成功メッセージを表示
+            if (!res.success) {
+                toast.error(res.error || "送信に失敗しました。もう一度お試しください。")
+                return
+            }
+
             toast.success("メッセージを送信しました。ご連絡ありがとうございます。")
 
             setFormData({
@@ -185,7 +187,7 @@ const Contact = () => {
                             disabled={isLoading}
                             className="w-full h-12 rounded-lg font-bold text-base"
                         >
-                            {isLoading ? "送信中..." : "送信する"}
+                            {isLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> 送信中...</> : "送信する"}
                         </Button>
                     </form>
 

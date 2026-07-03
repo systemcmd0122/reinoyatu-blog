@@ -219,11 +219,11 @@ const LikeButton: React.FC<LikeButtonProps> = ({
         "flex items-center"
       )}
       onClick={handleToggleLike}
-      disabled={!userId}
-      loading={isPending}
-      loadingText={showLabel ? "反映中..." : ""}
+      disabled={!userId || isPending}
     >
-      {!isPending && buttonContent}
+      {isPending ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : buttonContent}
     </Button>
   )
 

@@ -247,7 +247,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                   <PaginationContent>
                     {page > 1 && (
                       <PaginationItem>
-                        <PaginationPrevious href={{ query: { ...resolvedSearchParams, page: page - 1 } }} />
+                        <PaginationPrevious href={{ pathname: "/", query: { ...resolvedSearchParams, page: page - 1 } }} />
                       </PaginationItem>
                     )}
                     {getPagination(page, totalPages).map((item, index) => (
@@ -256,7 +256,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                           <PaginationEllipsis />
                         ) : (
                           <PaginationLink
-                            href={{ query: { ...resolvedSearchParams, page: item } }}
+                            href={{ pathname: "/", query: { ...resolvedSearchParams, page: item } }}
                             isActive={page === item}
                           >
                             {item}
@@ -266,7 +266,7 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
                     ))}
                     {page < totalPages && (
                       <PaginationItem>
-                        <PaginationNext href={{ query: { ...resolvedSearchParams, page: page + 1 } }} />
+                        <PaginationNext href={{ pathname: "/", query: { ...resolvedSearchParams, page: page + 1 } }} />
                       </PaginationItem>
                     )}
                   </PaginationContent>

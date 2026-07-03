@@ -65,7 +65,7 @@ const Signup = () => {
     setError("")
 
     // privacyPolicyフィールドを除外
-    const {...signupValues } = values;
+    const { privacyPolicy: _, ...signupValues } = values;
 
     startTransition(async () => {
       try {

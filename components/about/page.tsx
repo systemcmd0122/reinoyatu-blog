@@ -189,7 +189,7 @@ const About = () => {
                 </div>
             </section>
 
-            {/* AI テクノロジーセクション (Puter.js) */}
+            {/* AI テクノロジーセクション */}
             <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background">
                 <div className="max-w-4xl mx-auto">
                     <motion.div
@@ -200,23 +200,23 @@ const About = () => {
                     >
                         <div className="text-center space-y-4">
                             <h2 className="text-4xl font-bold text-foreground">AI Technology</h2>
-                            <p className="text-lg text-muted-foreground">次世代のAI体験を支える技術「Puter.js」</p>
+                            <p className="text-lg text-muted-foreground">進化したAI執筆体験を支える「Google Gemini」</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                             <div className="space-y-6">
                                 <h3 className="text-2xl font-bold text-foreground">
-                                    バックエンド不要の<br />
-                                    フルスタックAI体験
+                                    サーバーサイドで<br />
+                                    安全に動作するAI
                                 </h3>
                                 <p className="text-muted-foreground leading-relaxed">
-                                    「例のヤツ｜ブログ」のAIアシスタント機能は、画期的なクラウドプラットフォーム<strong>「Puter.js」</strong>によって支えられています。
-                                    通常、AI機能を実装するには複雑なバックエンドサーバーや高額なAPI料金が必要ですが、Puter.jsを採用することで、ブラウザから直接、安全かつ高速にAIモデル（Qwen 3.6 Plus等）を呼び出すことが可能になりました。
+                                    「例のヤツ｜ブログ」のAIアシスタント機能は、Googleの最先端AIモデル<strong>「Gemini 3.5 Flash」</strong>を搭載しています。
+                                    サーバーサイドで安全に処理されるため、面倒なサインインやポップアップブロックの心配は一切不要。ブラウザさえあれば、誰でもすぐにAI執筆支援を利用できます。
                                 </p>
                                 <div className="flex flex-wrap gap-2">
-                                    <Badge variant="secondary" className="px-3 py-1">Serverless AI</Badge>
-                                    <Badge variant="secondary" className="px-3 py-1">Privacy First</Badge>
-                                    <Badge variant="secondary" className="px-3 py-1">Zero Latency</Badge>
+                                    <Badge variant="secondary" className="px-3 py-1">Google Gemini</Badge>
+                                    <Badge variant="secondary" className="px-3 py-1">No Sign-in Required</Badge>
+                                    <Badge variant="secondary" className="px-3 py-1">Streaming Support</Badge>
                                 </div>
                             </div>
                             <div className="bg-muted/30 rounded-3xl p-8 border border-border space-y-4 shadow-inner">
@@ -224,20 +224,20 @@ const About = () => {
                                     <div className="bg-primary/10 p-2 rounded-xl">
                                         <Sparkles className="w-5 h-5 text-primary" />
                                     </div>
-                                    <span className="font-bold">Puter.jsのメリット</span>
+                                    <span className="font-bold">Geminiのメリット</span>
                                 </div>
                                 <ul className="space-y-3 text-sm">
                                     <li className="flex items-start gap-2">
                                         <Zap className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                                        <span><strong>タイムアウトなし:</strong> 生成AI特有の長い待機時間でも、Vercel等の制限を受けずにスムーズな生成が可能です。</span>
+                                        <span><strong>高速ストリーミング:</strong> 生成されたテキストがリアルタイムで表示され、待ち時間を最小限に抑えます。</span>
                                     </li>
                                     <li className="flex items-start gap-2">
                                         <Zap className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                                        <span><strong>プライバシー保護:</strong> ユーザー認証とデータ管理がPuter側でセキュアに処理されるため、機密情報を安全に扱えます。</span>
+                                        <span><strong>ポップアップ不要:</strong> サーバーサイドでAPIを直接呼び出すため、サインインや広告ブロッカーの影響を受けません。</span>
                                     </li>
                                     <li className="flex items-start gap-2">
                                         <Zap className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                                        <span><strong>最新モデルの活用:</strong> Qwen 3.6 Plusなどの高性能なモデルを、ブラウザから直接フル活用できます。</span>
+                                        <span><strong>世界最高峰の推論性能:</strong> Gemini 3.5 Flash はベンチマークで最高スコアを記録した、高速かつ高性能なモデルです。</span>
                                     </li>
                                 </ul>
                             </div>

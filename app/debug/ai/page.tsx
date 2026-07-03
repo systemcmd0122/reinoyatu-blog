@@ -162,11 +162,11 @@ export default function AIStatsPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl md:text-4xl font-black tracking-tight">AI (Qwen 3.6) 性能デバッグ</h1>
-            <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest px-2 py-0">v2.1 API</Badge>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight">AI (Gemini 3.5 Flash) 性能デバッグ</h1>
+            <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest px-2 py-0">v3 API</Badge>
           </div>
           <p className="text-muted-foreground max-w-2xl font-medium">
-            Puter.js 経由で提供される Qwen 3.6 Plus モデルの推論パフォーマンスをリアルタイムで監視・解析します。
+            Google Gemini 3.5 Flash モデルの推論パフォーマンスをリアルタイムで監視・解析します。
           </p>
         </div>
         <div className="flex gap-2">
@@ -270,7 +270,7 @@ export default function AIStatsPage() {
                 {initialized ? "Connected" : "Disconnected"}
               </div>
               <div className="text-[10px] font-mono text-muted-foreground truncate">
-                API Base: Puter.js Cloud
+                API Base: Google Gemini API
               </div>
             </div>
           </CardContent>
@@ -408,9 +408,9 @@ export default function AIStatsPage() {
           <span className="font-bold text-foreground">Debugging Information</span>
         </div>
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 list-inside list-disc font-medium">
-          <li>最新の Qwen 3.6 Plus モデルを API 経由で使用しています。</li>
-          <li>Puter.js クラウドインフラにより、ローカルのリソース消費を最小限に抑えています。</li>
-          <li>API 呼び出しは完全に無料で提供されています（Puter.js）。</li>
+          <li>最新の Gemini 3.5 Flash モデルを API 経由で使用しています。</li>
+          <li>Google Cloud インフラにより、高速で安定した推論を提供します。</li>
+          <li>API 呼び出しはサーバーサイドで処理され、安全に実行されます。</li>
           <li>トークン数は文字数（2文字=1トークン）による簡易推定値です。</li>
           <li>推論速度（tok/s）はネットワーク遅延の影響を受ける場合があります。</li>
         </ul>

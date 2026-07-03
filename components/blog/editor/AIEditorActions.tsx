@@ -41,7 +41,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+
 import { cn } from "@/lib/utils"
 
 interface AIEditorActionsProps {
@@ -65,7 +65,7 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
   onUpdateTags,
   onUpdateSummary
 }) => {
-  const { isLoading, error, generateResponse, isGenerating, downloadProgress, isSignedIn, signIn, initialized } = ai
+  const { isLoading, error, generateResponse, isGenerating, isSignedIn, signIn, initialized } = ai
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<string | null>(null)
@@ -333,38 +333,9 @@ ${content}`
             <Loader2 className="h-4 w-4 animate-spin" />
             AIモデルを準備中...
           </div>
-          {downloadProgress ? (
-            <div className="space-y-2">
-              <div className="flex justify-between text-[10px] font-mono">
-                <span>Model Data Loading</span>
-                <span>{downloadProgress.percentage}%</span>
-              </div>
-              <Progress value={downloadProgress.percentage} className="h-1" />
-            </div>
-          ) : (
-            <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-              初回のみ約1.3GBのロードが必要です。
+          <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+              AIモデルを準備中...
             </p>
-          )}
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (!isSignedIn && initialized) {
-    return (
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-6 space-y-4 text-center">
-          <div className="flex flex-col items-center gap-2">
-            <Sparkles className="h-8 w-8 text-primary" />
-            <p className="text-sm font-bold">Puterでログインが必要です</p>
-            <p className="text-[10px] text-muted-foreground">
-              AIアシスタントを利用するにはPuterプラットフォームへのログインが必要です。
-            </p>
-          </div>
-          <Button onClick={signIn} size="sm" className="w-full font-bold">
-            Puterでログイン
-          </Button>
         </CardContent>
       </Card>
     )

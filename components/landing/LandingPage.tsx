@@ -10,7 +10,7 @@ import { LandingFeatures } from "./LandingFeatures"
 const LandingPage = async () => {
   const supabase = createClient()
 
-  // 最新のブログ記事を3件取得
+  // 最新の公開ブログ記事を3件取得
   const { data: blogsData } = await supabase
     .from("blogs")
     .select(
@@ -23,6 +23,7 @@ const LandingPage = async () => {
       )
     `
     )
+    .eq("is_published", true)
     .order("created_at", { ascending: false })
     .limit(3)
 

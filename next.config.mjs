@@ -104,6 +104,7 @@ const withPWA = withPWAInit({
 });
 
 export default withPWA({
+  turbopack: {},
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb",

@@ -2,12 +2,10 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useAI, AIMessage } from "@/hooks/use-ai"
-import { useBlockerDetection } from "@/hooks/use-blocker-detection"
 import { searchWeb, formatSearchResults, SearchResult } from "@/actions/search"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import {
   Send,
@@ -25,11 +23,9 @@ import {
   Check,
   FileText,
   Zap,
-  Smartphone,
   Square,
   Search,
   X,
-  AlertTriangle,
   ExternalLink,
   Trash2,
 } from "lucide-react"
@@ -38,21 +34,6 @@ import { toast } from "sonner"
 import MarkdownRenderer from "./markdown/MarkdownRenderer"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert"
 import {
   Sheet,
   SheetContent,
@@ -242,15 +223,10 @@ const QUICK_ACTIONS = [
 // ────────────────────────────────────────────
 const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
   const router = useRouter()
-  const isBlockerDetected = useBlockerDetection()
   const {
     generateResponse,
     isGenerating,
-    isLoading,
-    downloadProgress,
     initialized,
-    isSignedIn,
-    signIn,
     error: aiError,
     stop: stopGeneration,
   } = useAI()
@@ -276,15 +252,9 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     avatar_url: string | null
   } | null>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
-  const [showWarning, setShowWarning] = useState(false)
-  const [showMobileWarning, setShowMobileWarning] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const idCounter = useRef(0)
@@ -310,32 +280,6 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     }
     fetchProfile()
   }, [userId])
-
-  // ── 警告ダイアログの初期チェック ──
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const ackAi = localStorage.getItem("ack_ai_demo_v1")
-      if (!ackAi) {
-        setShowWarning(true)
-      }
-
-      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-      const ackMobile = localStorage.getItem("ack_mobile_editor_v1")
-      if (isMobileDevice && !ackMobile) {
-        setShowMobileWarning(true)
-      }
-    }
-  }, [])
-
-  const handleAcceptAiWarning = () => {
-    localStorage.setItem("ack_ai_demo_v1", "true")
-    setShowWarning(false)
-  }
-
-  const handleAcceptMobileWarning = () => {
-    localStorage.setItem("ack_mobile_editor_v1", "true")
-    setShowMobileWarning(false)
-  }
 
   // ── 初期ウェルカムメッセージ ──
   useEffect(() => {
@@ -440,17 +384,6 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     const userMessage = input.trim()
     if (!userMessage || isGenerating) return
 
-    // サインイン状態のチェック（念のため）
-    if (!isSignedIn && initialized) {
-      toast.error("AI機能を利用するにはログインが必要です。")
-      try {
-        await signIn()
-      } catch (err: any) {
-        // エラーはsignIn内で処理・表示される
-        return
-      }
-    }
-
     setInput("")
     const userMsgId = newId()
     const aiMsgId = newId()
@@ -530,12 +463,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
         },
       ])
 
-      // ポップアップエラー等の特定のメッセージはトーストでも表示
-      if (errorMessage.includes("ポップアップ") || errorMessage.includes("サインイン")) {
-        toast.error(errorMessage, { duration: 5000 })
-      } else {
-        toast.error("送信に失敗しました")
-      }
+      toast.error("送信に失敗しました")
     } finally {
       setGenerationStatus(null)
     }
@@ -590,111 +518,8 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
     setTimeout(() => setCopiedTitle(false), 2000)
   }, [title])
 
-  // ────────────────────────────────────────────
-  // ローディング画面
-  // ────────────────────────────────────────────
-  if (isLoading) {
-    return (
-      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center p-6 space-y-8 bg-background">
-        <div className="relative w-28 h-28 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full border-4 border-primary/10" />
-          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin" />
-          <motion.div
-            animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <Sparkles className="h-10 w-10 text-primary" />
-          </motion.div>
-        </div>
-
-        <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold tracking-tight">
-            AI執筆パートナーを準備中...
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-xs">
-            最新のAIモデルを初期化しています。少々お待ちください。
-          </p>
-        </div>
-
-        {aiError && (
-          <div className="max-w-sm p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive text-center">
-            <p className="font-bold mb-1">初期化に失敗しました</p>
-            <p className="text-xs opacity-80">{aiError}</p>
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // ────────────────────────────────────────────
-  // メイン UI
-  // ────────────────────────────────────────────
-  if (!isMounted) {
-    return (
-      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary/20" />
-      </div>
-    )
-  }
-
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden bg-background">
-      {/* AIデモ警告ダイアログ */}
-      <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              AI機能（デモ版）利用に関するご確認
-            </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3 pt-2">
-              <p>
-                現在提供しているAI機能は<b>デモ版</b>です。以下の点をご了承いただいた上でご利用ください。
-              </p>
-              <ul className="list-disc list-inside space-y-1 text-xs">
-                <li>動作が不安定だったり、エラーが発生する場合があります。</li>
-                <li>不正確な情報や不適切な内容を生成する可能性があります。</li>
-                <li>使い勝手が悪かったり、意図しない挙動をする場合があります。</li>
-              </ul>
-              <p className="font-bold text-foreground">
-                AIが生成した内容は必ずご自身で確認・修正した上で、自己責任でご利用ください。
-              </p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => router.back()}>戻る</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAcceptAiWarning}>
-              承諾して利用する
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* モバイル環境警告ダイアログ */}
-      <AlertDialog open={!showWarning && showMobileWarning} onOpenChange={setShowMobileWarning}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Smartphone className="h-5 w-5 text-primary" />
-              モバイル環境でのご利用について
-            </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3 pt-2">
-              <p>
-                現在、スマートフォンからの執筆・編集操作は<b>最適化の途中</b>であり、画面崩れや操作のしにくさが発生する場合があります。
-              </p>
-              <p>
-                より快適な執筆体験のためには、PC環境でのご利用を強く推奨しております。
-              </p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={handleAcceptMobileWarning}>
-              了解しました
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       {/* ─── ヘッダー ─── */}
       <header className="shrink-0 border-b bg-background/95 backdrop-blur-sm px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2 z-10">
         <div className="flex items-center gap-2 min-w-0">
@@ -714,7 +539,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
               <div className="text-xs font-bold leading-none">AI対話型エディタ</div>
               <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                Qwen 3.6 稼働中
+                Gemini 3.5 Flash 稼働中
               </div>
             </div>
           </div>
@@ -770,23 +595,6 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
               onScroll={handleScroll}
               className="flex-1 overflow-y-auto overscroll-contain px-3 sm:px-4 py-4 space-y-4"
             >
-              {isBlockerDetected && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-4"
-                >
-                  <Alert variant="destructive" className="bg-destructive/5 border-destructive/20">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle className="text-xs font-bold">広告ブロッカーを検知しました</AlertTitle>
-                    <AlertDescription className="text-[11px] leading-relaxed opacity-90">
-                      AdBlockなどの拡張機能が有効な場合、AI機能が正常に動作しない（サインインできない等）可能性があります。
-                      快適な利用のために、このサイトでのブロッカーをオフにすることを推奨します。
-                    </AlertDescription>
-                  </Alert>
-                </motion.div>
-              )}
-
               <AnimatePresence initial={false}>
                 {messages.map((m) => (
                   <motion.div
@@ -904,27 +712,6 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
               </AnimatePresence>
 
               <div ref={messagesEndRef} />
-
-              {/* 認証が必要な場合のオーバーレイまたはメッセージ */}
-              {!isSignedIn && initialized && (
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-background/80 backdrop-blur-sm text-center space-y-4">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Sparkles className="h-8 w-8 text-primary" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-bold">Puterアカウントでログイン</h3>
-                    <p className="text-sm text-muted-foreground max-w-[280px]">
-                      AI機能を利用するにはPuterプラットフォームへのログインが必要です。
-                    </p>
-                  </div>
-                  <Button onClick={signIn} className="px-8 font-bold">
-                    Puterでログイン
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground italic">
-                    ※ログインはポップアップで行われます。
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* スクロールダウンボタン */}

@@ -7,7 +7,6 @@ import {
   List,
   Trash2,
   Download,
-  ArrowRight,
   Twitter,
   Globe,
   Share2,
@@ -202,7 +201,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   // ── 関連記事取得 ───────────────────────────
   useEffect(() => {
     if (!blog.tags?.length) return
-    getRelatedBlogs(blog.id, blog.tags).then(({ blogs }) => setRelatedBlogs(blogs || []))
+    getRelatedBlogs(blog.id, blog.tags).then(({ blogs }) => setRelatedBlogs(blogs || [])).catch(() => {})
   }, [blog.id, blog.tags])
 
   // ── ハンドラ ───────────────────────────────
