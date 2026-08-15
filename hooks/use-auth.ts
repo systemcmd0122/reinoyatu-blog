@@ -2,12 +2,15 @@ import { createClient } from '@/utils/supabase/client'
 import { useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 
+// モジュールレベルでクライアントを共有（フック内で毎レンダー生成するのを防ぐ）
+const browserClient = createClient()
+
 interface AuthHook {
   user: User | null
 }
 
 export function useAuth(): AuthHook {
-  const supabase = createClient()
+  const supabase = browserClient
   const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {

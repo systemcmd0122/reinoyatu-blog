@@ -29,10 +29,22 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // 認証の判定を行い、保護されたルートへのアクセスを制限する
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // ── 認証の判定 ──────────────────────────────────────────
+  // セッションCookieが無いユーザー（未ログイン）は getUser() をスキップする。
+  // getUser() は Supabase 認証サーバーへのネットワーク往復を伴うため、
+  // 公開ページの初回読み込みを高速化する。ログイン済みユーザーは
+  // トークンの検証・更新（セッションリフレッシュ）のために毎回実行する。
+  const hasSessionCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.endsWith("-auth-token"))
+
+  let user: { id: string } | null = null
+  if (hasSessionCookie) {
+    const {
+      data: { user: sessionUser },
+    } = await supabase.auth.getUser()
+    user = sessionUser
+  }
 
   const pathname = request.nextUrl.pathname
 

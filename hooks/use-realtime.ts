@@ -6,6 +6,11 @@ import {
   RealtimePresenceState
 } from '@supabase/supabase-js'
 
+// ブラウザ用 Supabase クライアントをモジュールレベルで共有する。
+// フック内で毎レンダー createClient() すると、コンポーネントの再描画のたびに
+// 新しいクライアント（＝新しい接続オブジェクト）が生成されて無駄になる。
+const browserClient = createClient()
+
 /**
  * Supabase Postgres Changesを購読するための汎用フック
  */
@@ -17,7 +22,7 @@ export function useRealtime<T extends { id: string; updated_at?: string }>(
     filter?: string
   } = {}
 ) {
-  const supabase = createClient()
+  const supabase = browserClient
   const [lastEvent, setLastEvent] = useState<RealtimePostgresChangesPayload<T> | null>(null)
   
   // 最後に処理したイベントのタイムスタンプ（重複排除用）
@@ -64,7 +69,7 @@ export function usePresence<T extends { [key: string]: any } = any>(
   channelName: string,
   userStatus: T
 ) {
-  const supabase = createClient()
+  const supabase = browserClient
   const [presenceState, setPresenceState] = useState<RealtimePresenceState>({})
   const channelRef = useRef<RealtimeChannel | null>(null)
 
@@ -103,7 +108,7 @@ export function useBroadcast<T = any>(
   channelName: string,
   onMessage: (payload: T) => void
 ) {
-  const supabase = createClient()
+  const supabase = browserClient
   const channelRef = useRef<RealtimeChannel | null>(null)
 
   useEffect(() => {

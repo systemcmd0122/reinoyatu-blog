@@ -214,6 +214,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
               src={profile.header_image_url}
               alt={`${profile.name}'s cover`}
               fill
+              sizes="(max-width: 1152px) 100vw, 1152px"
               className="object-cover"
               unoptimized
             />
@@ -244,6 +245,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                     src={profile.avatar_url}
                     alt={profile.name || "User"}
                     fill
+                    sizes="128px"
                     className="object-cover"
                   />
                 ) : (

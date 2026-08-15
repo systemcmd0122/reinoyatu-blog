@@ -287,7 +287,7 @@ export default function DataManagement({
             {images.length > 0 ? (
               images.map(img => (
                 <div key={img.id} className="group relative aspect-square rounded-xl overflow-hidden border border-border/50 bg-muted/20">
-                  <Image src={img.public_url} alt="Library" fill className="object-cover transition-transform group-hover:scale-110" />
+                  <Image src={img.public_url} alt="Library" fill sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw" className="object-cover transition-transform group-hover:scale-110" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                     <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full" asChild>
                       <a href={img.public_url} target="_blank" rel="noopener noreferrer">

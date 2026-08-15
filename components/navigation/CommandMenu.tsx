@@ -132,7 +132,7 @@ export function CommandMenu({ user }: CommandMenuProps) {
                   <div className="flex items-center gap-3 w-full">
                     <div className="relative h-10 w-16 shrink-0 rounded-md overflow-hidden border bg-muted">
                       {blog.image_url ? (
-                        <Image src={blog.image_url} alt="" fill className="object-cover" />
+                        <Image src={blog.image_url} alt="" fill sizes="64px" className="object-cover" />
                       ) : (
                         <div className="flex items-center justify-center h-full w-full">
                           <FileText className="h-4 w-4 text-muted-foreground/40" />

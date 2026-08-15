@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { UseAIReturn, AIMessage } from "@/hooks/use-ai"
+import { useWebLLM, WEBLLM_MODEL_INFO } from "@/hooks/use-webllm"
+import type { ChatCompletionMessageParam } from "@mlc-ai/web-llm"
 import { searchWeb } from "@/actions/search"
 import { getAiSettings } from "@/actions/user"
+import { Progress } from "@/components/ui/progress"
 import {
   Sparkles,
   Search,
@@ -19,6 +21,8 @@ import {
   ArrowRight,
   Wand2,
   X,
+  Cpu,
+  Download,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -41,11 +45,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { AILiveStatus } from "@/components/blog/ai/AILiveStatus"
+import { GPUInfoLine } from "@/components/blog/ai/GPUInfoLine"
 
 import { cn } from "@/lib/utils"
 
 interface AIEditorActionsProps {
-  ai: UseAIReturn
   title: string
   content: string
   tags: string[]
@@ -56,7 +61,6 @@ interface AIEditorActionsProps {
 }
 
 export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
-  ai,
   title,
   content,
   tags,
@@ -65,7 +69,8 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
   onUpdateTags,
   onUpdateSummary
 }) => {
-  const { isLoading, error, generateResponse, isGenerating, isSignedIn, signIn, initialized } = ai
+  const webllm = useWebLLM()
+  const isGenerating = webllm.status === "generating"
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<string | null>(null)
@@ -89,6 +94,14 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
     }
     fetchSettings()
   }, [])
+
+  // WebGPU 対応端末ではマウント時にモデルをバックグラウンドでロード
+  useEffect(() => {
+    if (webllm.webgpuSupport !== "supported") return
+    if (webllm.status !== "idle") return
+    webllm.loadModel().catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webllm.webgpuSupport])
 
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([])
   const [suggestedTags, setSuggestedTags] = useState<string[]>([])
@@ -148,9 +161,28 @@ export const AIEditorActions: React.FC<AIEditorActionsProps> = ({
 
   // ── AI アクション ────────────────────────────
 
+  const runGenerate = async (
+    action: "improve" | "title" | "tags" | "summary",
+    system: string,
+    user: string,
+    maxTokens: number
+  ): Promise<string> => {
+    setActiveAction(action)
+    const messages: ChatCompletionMessageParam[] = [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ]
+    try {
+      return await webllm.generate(messages, { temperature: 0.7, maxTokens })
+    } catch (err) {
+      throw err
+    } finally {
+      setActiveAction(null)
+    }
+  }
+
   const handleImproveContent = async () => {
     if (!content) return
-    setActiveAction("improve")
     const systemPrompt = `
 ${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : "あなたはプロの編集者です。"}
 以下のブログ記事を、読者の興味を惹きつける、洗練された自然な日本語の文章にブラッシュアップしてください。
@@ -171,13 +203,8 @@ ${searchResults ? `以下の最新情報を内容に取り入れてください:
 記事内容:
 ${content}`
 
-    const messages: AIMessage[] = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
-    ]
-
     try {
-      const improved = await generateResponse(messages)
+      const improved = await runGenerate("improve", systemPrompt, userPrompt, 1024)
       const cleanImproved = improved
         .replace(/^```markdown\n/, "")
         .replace(/^```\n?/, "")
@@ -187,14 +214,11 @@ ${content}`
       toast.success("記事を改善しました。")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "AIによる改善に失敗しました。")
-    } finally {
-      setActiveAction(null)
     }
   }
 
   const handleSuggestTitle = async () => {
     if (!content) return
-    setActiveAction("title")
     const systemPrompt = `
 ${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : ""}
 以下の記事の内容に最もふさわしい、読者がクリックしたくなるような魅力的なタイトルを日本語で5つ提案してください。
@@ -212,13 +236,8 @@ ${searchResults ? `検索文脈:\n${searchResults}\n\n` : ""}
 記事内容:
 ${content.substring(0, 2000)}`
 
-    const messages: AIMessage[] = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
-    ]
-
     try {
-      const suggestions = await generateResponse(messages)
+      const suggestions = await runGenerate("title", systemPrompt, userPrompt, 512)
       const titles = suggestions
         .split("\n")
         .map(t => t.replace(/^[0-9一二三四五].?[\s.．:：、]/, "").replace(/[*#]/g, "").trim())
@@ -228,14 +247,11 @@ ${content.substring(0, 2000)}`
       toast.success("タイトル候補を生成しました。")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "タイトル提案に失敗しました。")
-    } finally {
-      setActiveAction(null)
     }
   }
 
   const handleGenerateTags = async () => {
     if (!content) return
-    setActiveAction("tags")
     const systemPrompt = `
 ${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : ""}
 以下の記事に関連する、検索されやすい重要なキーワード（タグ）を5つから8つ程度抽出してください。
@@ -254,13 +270,8 @@ ${searchResults ? `検索文脈:\n${searchResults}\n\n` : ""}
 記事内容:
 ${content.substring(0, 1500)}`
 
-    const messages: AIMessage[] = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
-    ]
-
     try {
-      const tagsText = await generateResponse(messages)
+      const tagsText = await runGenerate("tags", systemPrompt, userPrompt, 256)
       const newTags = tagsText
         .split(/[,、\n]/)
         .map(t => t.replace(/[*#]/g, "").trim())
@@ -270,14 +281,11 @@ ${content.substring(0, 1500)}`
       toast.success("タグ候補を生成しました。")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "タグ生成に失敗しました。")
-    } finally {
-      setActiveAction(null)
     }
   }
 
   const handleGenerateSummary = async () => {
     if (!content) return
-    setActiveAction("summary")
     const systemPrompt = `
 ${aiSettings.persona ? `あなたの役割: ${aiSettings.persona}` : ""}
 以下のブログ記事を、300文字程度の丁寧な日本語で要約してください。
@@ -295,20 +303,13 @@ ${searchResults ? `検索文脈:\n${searchResults}\n\n` : ""}
 記事内容:
 ${content}`
 
-    const messages: AIMessage[] = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
-    ]
-
     try {
-      const summary = await generateResponse(messages)
+      const summary = await runGenerate("summary", systemPrompt, userPrompt, 512)
       const cleanSummary = summary.replace(/^要約[：:]\s*/, "").replace(/[*#]/g, "").trim()
       onUpdateSummary(cleanSummary)
       toast.success("要約を生成しました。")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "要約作成に失敗しました。")
-    } finally {
-      setActiveAction(null)
     }
   }
 
@@ -325,31 +326,75 @@ ${content}`
 
   // ── ローディング / エラー状態 ─────────────────
 
-  if (isLoading) {
+  if (webllm.webgpuSupport === "checking") {
     return (
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="pt-6 space-y-4">
           <div className="flex items-center gap-3 text-sm font-bold text-primary">
             <Loader2 className="h-4 w-4 animate-spin" />
-            AIモデルを準備中...
+            WebGPU の対応状況を確認中...
           </div>
           <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-              AIモデルを準備中...
-            </p>
+            ブラウザの機能を確認しています。
+          </p>
         </CardContent>
       </Card>
     )
   }
 
-  if (error) {
+  if (webllm.webgpuSupport === "unsupported") {
     return (
-      <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-lg flex gap-2">
-        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <p className="font-bold">AIの初期化に失敗しました</p>
-          <p className="text-xs opacity-80">{error}</p>
-        </div>
-      </div>
+      <Card className="border-amber-500/30 bg-amber-500/5">
+        <CardContent className="pt-6 space-y-3">
+          <div className="flex items-center gap-3 text-sm font-bold text-amber-600">
+            <Cpu className="h-4 w-4" />
+            この端末は WebGPU 非対応です
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Chrome / Edge / その他 Chromium 系ブラウザの最新版でご利用ください。
+            このブラウザでは AI アシスタントを利用できません。
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (webllm.status === "error") {
+    return (
+      <Card className="border-destructive/30 bg-destructive/5">
+        <CardContent className="pt-6 space-y-3">
+          <div className="flex items-center gap-3 text-sm font-bold text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            WebGPU でエラーが発生しました
+          </div>
+          <p className="text-xs opacity-80 break-all">{webllm.error}</p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => webllm.loadModel().catch(() => {})}
+          >
+            <RefreshCw className="h-3 w-3 mr-1" /> 再試行
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (webllm.status === "idle" || webllm.status === "downloading") {
+    return (
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-6 space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-primary">
+            <Download className="h-3.5 w-3.5" />
+            モデルを準備中（初回のみ）...
+          </div>
+          <Progress value={Math.max(webllm.progress * 100, 5)} className="h-1.5" />
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            {WEBLLM_MODEL_INFO.name}（約 {WEBLLM_MODEL_INFO.downloadMB}MB / 初回のみ）を
+            ダウンロードしています。完了すると AI 機能が使えるようになります。
+          </p>
+        </CardContent>
+      </Card>
     )
   }
 
@@ -362,14 +407,15 @@ ${content}`
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              AI機能（デモ版）利用に関するご確認
+              AI機能（ローカル）利用に関するご確認
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-3 pt-2 text-sm">
               <p>
-                現在提供しているAI機能は<b>デモ版</b>です。以下の点をご了承いただいた上でご利用ください。
+                この AI 機能は<b>ブラウザ内（WebGPU）</b>で動作します。
+                記事の内容は一切サーバーへ送信されません。
               </p>
               <ul className="list-disc list-inside space-y-1 text-xs">
-                <li>動作が不安定だったり、エラーが発生する場合があります。</li>
+                <li>初回のみモデルのダウンロード（約 {WEBLLM_MODEL_INFO.downloadMB}MB）が発生します。</li>
                 <li>不正確な情報や不適切な内容を生成する可能性があります。</li>
               </ul>
               <p className="font-bold text-foreground">
@@ -390,11 +436,17 @@ ${content}`
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-          AI アシスタント (Qwen 3.6)
+          AI アシスタント (Qwen3 1.7B)
           </CardTitle>
           <CardDescription className="text-xs">
-          最新の高性能AIが執筆をサポートします。
+            ブラウザ内で動作するローカルAIが執筆をサポートします。
           </CardDescription>
+          {/* [追加] GPU 情報・推定 VRAM・稼働状態の表示 */}
+          <GPUInfoLine
+            gpuInfo={webllm.gpuInfo}
+            busy={isGenerating}
+            vramMB={WEBLLM_MODEL_INFO.vramMB}
+          />
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -528,6 +580,17 @@ ${content}`
               要約作成
             </Button>
           </div>
+
+          {/* [追加] 生成中のライブ状況（経過時間・速度・遅延案内） */}
+          {isGenerating && (
+            <AILiveStatus
+              isGenerating={isGenerating}
+              phase={webllm.phase}
+              elapsedMs={webllm.elapsedMs}
+              tps={webllm.liveTps}
+              tokens={webllm.liveTokens}
+            />
+          )}
 
           {!content && (
             <p className="text-[10px] text-muted-foreground text-center italic">

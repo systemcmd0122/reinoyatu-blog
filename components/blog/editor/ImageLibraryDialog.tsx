@@ -94,6 +94,7 @@ const ImageLibraryDialog: React.FC<ImageLibraryDialogProps> = ({
                       src={img.public_url}
                       alt="Uploaded"
                       fill
+                      sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
                       className="object-cover"
                     />
                     {selectedUrl === img.public_url && (

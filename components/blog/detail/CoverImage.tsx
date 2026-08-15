@@ -15,6 +15,7 @@ const CoverImage: React.FC<CoverImageProps> = ({ url, title }) => {
         src={url}
         alt={title}
         fill
+        sizes="(max-width: 720px) 100vw, 720px"
         className="object-cover transition-transform duration-500 hover:scale-105"
         priority
         unoptimized

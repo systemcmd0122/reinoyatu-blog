@@ -111,6 +111,7 @@ export const ImageLibraryDialog: React.FC<ImageLibraryDialogProps> = ({
                                         src={image.public_url}
                                         alt="Library image"
                                         fill
+                                        sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
                                         className="object-cover hover:opacity-75 transition-opacity"
                                     />
                                 </button>

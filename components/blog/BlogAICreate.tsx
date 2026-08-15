@@ -1,12 +1,14 @@
 "use client"
 
 import React, { useState, useEffect, useRef, useCallback } from "react"
-import { useAI, AIMessage } from "@/hooks/use-ai"
+import { useWebLLM, WEBLLM_MODEL_INFO } from "@/hooks/use-webllm"
+import type { ChatCompletionMessageParam } from "@mlc-ai/web-llm"
 import { searchWeb, formatSearchResults, SearchResult } from "@/actions/search"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import {
   Send,
   Sparkles,
@@ -28,10 +30,15 @@ import {
   X,
   ExternalLink,
   Trash2,
+  Cpu,
+  Download,
+  AlertCircle,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import MarkdownRenderer from "./markdown/MarkdownRenderer"
+import { AILiveStatus } from "@/components/blog/ai/AILiveStatus"
+import { GPUInfoLine, gpuDisplayName } from "@/components/blog/ai/GPUInfoLine"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -65,7 +72,7 @@ const buildMessages = (
   currentTitle: string,
   currentContent: string,
   searchResults: string | null
-): AIMessage[] => {
+): ChatCompletionMessageParam[] => {
   const titleStatus = (currentTitle || "").trim()
     ? `現在のタイトル: 「${currentTitle}」`
     : "タイトル: 未設定"
@@ -96,7 +103,7 @@ ${searchResults ? `【ウェブ検索結果（参考）】\n${searchResults}\n` 
 9. 会話の内容に応じて、現在の記事（プレビュー）を適宜更新してください。
 10. 記事が長い場合は、一度に書き切るように努めてください。途中で止めないでください。`
 
-  const messages: AIMessage[] = [
+  const messages: ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt }
   ]
 
@@ -131,6 +138,15 @@ const parseAIResponse = (raw: string): ParsedResponse => {
   let newContent: string | null = null
   let thought: string | null = null
 
+  // 0. Qwen のネイティブ思考タグ <think> を除去（ストリーム途中の未クローズにも対応）
+  if (/<think>/i.test(text)) {
+    thought = "思考中..."
+  }
+  text = text
+    .replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, "")
+    .replace(/<\/think>/gi, "")
+    .trim()
+
   // 1. [THOUGHT] タグの抽出
   const thoughtMatch = text.match(/\[THOUGHT\]([\s\S]*?)(?:\[\/THOUGHT\]|$)/i)
   if (thoughtMatch) {
@@ -149,6 +165,17 @@ const parseAIResponse = (raw: string): ParsedResponse => {
   const contentTagMatch = text.match(/\[CONTENT\]([\s\S]*?)(?:\[\/CONTENT\]|$)/i)
   if (contentTagMatch) {
     newContent = contentTagMatch[1].trim()
+  }
+
+  // [改善] [CONTENT] 内の Markdown ノイズを除去して保存する
+  // （AI が余計に付ける ``` フェンスや「本文:」等の接頭辞がそのまま
+  //  本文に残り、記事表示でバグるのを防ぐ）
+  if (newContent) {
+    newContent = newContent
+      .replace(/^```(?:markdown|md|txt)?\s*\n?/i, "")
+      .replace(/\n?```\s*$/i, "")
+      .replace(/^(改善後(?:の)?(?:本文|文章)?[：:]\s*\n?|本文[：:]\s*\n?|記事の本文[：:]\s*\n?)/, "")
+      .trim()
   }
 
   // 3. 以前の形式（タイトル案：など）もフォールバックとして維持
@@ -223,13 +250,9 @@ const QUICK_ACTIONS = [
 // ────────────────────────────────────────────
 const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
   const router = useRouter()
-  const {
-    generateResponse,
-    isGenerating,
-    initialized,
-    error: aiError,
-    stop: stopGeneration,
-  } = useAI()
+  const webllm = useWebLLM()
+  const isGenerating = webllm.status === "generating"
+  const canUseAI = webllm.webgpuSupport === "supported"
 
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
@@ -283,10 +306,10 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
 
   // ── 初期ウェルカムメッセージ ──
   useEffect(() => {
-    if (initialized && (messages || []).length === 0) {
+    if ((messages || []).length === 0) {
       setMessages([
         {
-          id: newId(),
+          id: "welcome",
           role: "ai",
           content:
             "こんにちは！あなたの執筆パートナーです ✨\n\n今日はどんな記事を書きたいですか？テーマや書きたいことを教えていただければ、一緒に対話しながら作り上げていきましょう！\n\nたとえば「Android Studioの入門記事」「Reactの基礎を分かりやすく解説する記事」など、気軽に教えてください。",
@@ -294,7 +317,15 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
       ])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialized])
+  }, [])
+
+  // ── WebGPU 対応端末ではモデルをバックグラウンドでロード ──
+  useEffect(() => {
+    if (webllm.webgpuSupport !== "supported") return
+    if (webllm.status !== "idle") return
+    webllm.loadModel().catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webllm.webgpuSupport])
 
   // ── スクロール制御 ──
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
@@ -402,31 +433,38 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
       const msgs = buildMessages(userMessage, messages, title, content, searchResults?.content || null)
       let accumulatedText = ""
 
-      const fullResponse = await generateResponse(msgs, (partial) => {
-        accumulatedText = partial
+      const fullResponse = await webllm.generate(
+        msgs,
+        {
+          temperature: 0.7,
+          maxTokens: 2048,
+          onProgress: (partial) => {
+            accumulatedText = partial
 
-        // リアルタイムパース：ストリーミング中にプレビューを更新
-        const parsed = parseAIResponse(partial)
-        setStreamingText(parsed.chatMessage)
+            // リアルタイムパース：ストリーミング中にプレビューを更新
+            const parsed = parseAIResponse(partial)
+            setStreamingText(parsed.chatMessage)
 
-        // ステータスの更新
-        if (parsed.thought) {
-          setGenerationStatus(parsed.thought)
-        } else if (partial.includes("[TITLE]")) {
-          setGenerationStatus("タイトルを案出中...")
-        } else if (partial.includes("[CONTENT]")) {
-          setGenerationStatus("本文を執筆中...")
-        } else {
-          setGenerationStatus("回答を構成中...")
-        }
+            // ステータスの更新
+            if (parsed.thought) {
+              setGenerationStatus(parsed.thought)
+            } else if (partial.includes("[TITLE]")) {
+              setGenerationStatus("タイトルを案出中...")
+            } else if (partial.includes("[CONTENT]")) {
+              setGenerationStatus("本文を執筆中...")
+            } else {
+              setGenerationStatus("回答を構成中...")
+            }
 
-        if (parsed.newTitle && parsed.newTitle !== title) {
-          setTitle(parsed.newTitle)
+            if (parsed.newTitle && parsed.newTitle !== title) {
+              setTitle(parsed.newTitle)
+            }
+            if (parsed.newContent && parsed.newContent !== content) {
+              setContent(parsed.newContent)
+            }
+          },
         }
-        if (parsed.newContent && parsed.newContent !== content) {
-          setContent(parsed.newContent)
-        }
-      })
+      )
 
       const finalText = fullResponse || accumulatedText
       setStreamingText("")
@@ -468,7 +506,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
       setGenerationStatus(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, isGenerating, messages, title, content, generateResponse])
+  }, [input, isGenerating, messages, title, content, webllm])
 
   // ── Enter送信 / Shift+Enter改行 ──
   const handleKeyDown = useCallback(
@@ -537,9 +575,20 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
             </div>
             <div className="hidden sm:block min-w-0">
               <div className="text-xs font-bold leading-none">AI対話型エディタ</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                Gemini 3.5 Flash 稼働中
+              <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 min-w-0">
+                <span
+                  className={cn(
+                    "inline-block w-1.5 h-1.5 rounded-full shrink-0",
+                    canUseAI ? "bg-green-500 animate-pulse" : "bg-amber-500"
+                  )}
+                />
+                <span className="truncate">
+                  {webllm.webgpuSupport === "unsupported"
+                    ? "WebGPU 非対応（AI 利用不可）"
+                    : webllm.status === "downloading"
+                      ? "モデルをダウンロード中..."
+                      : `${WEBLLM_MODEL_INFO.name} ローカル稼働中${webllm.gpuInfo ? ` · ${gpuDisplayName(webllm.gpuInfo)}` : ""}`}
+                </span>
               </div>
             </div>
           </div>
@@ -577,6 +626,34 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
           <span className="sm:hidden">完成</span>
         </Button>
       </header>
+
+      {/* ─── モデルロード状態 ─── */}
+      {webllm.webgpuSupport === "unsupported" && (
+        <div className="shrink-0 px-4 py-2.5 bg-amber-500/5 border-b border-amber-500/30 text-[11px] text-amber-600 flex items-center gap-2">
+          <Cpu className="h-3.5 w-3.5 shrink-0" />
+          この端末は WebGPU 非対応です。Chrome / Edge などの最新版ブラウザで AI をご利用いただけます。
+        </div>
+      )}
+      {canUseAI && webllm.status === "downloading" && (
+        <div className="shrink-0 px-4 py-2.5 bg-primary/5 border-b border-primary/20 space-y-1.5">
+          <div className="flex items-center justify-between text-[10px] font-bold text-primary">
+            <span className="flex items-center gap-1.5">
+              <Download className="h-3 w-3" /> モデルをダウンロード中（初回のみ）
+            </span>
+            <span>{Math.round(webllm.progress * 100)}%</span>
+          </div>
+          <Progress value={webllm.progress * 100} className="h-1" />
+          <p className="text-[9px] text-muted-foreground">
+            {WEBLLM_MODEL_INFO.name}（約 {WEBLLM_MODEL_INFO.downloadMB}MB / 初回のみ）をダウンロードしています。
+          </p>
+        </div>
+      )}
+      {webllm.error && (
+        <div className="shrink-0 px-4 py-2.5 bg-destructive/5 border-b border-destructive/30 text-[11px] text-destructive flex items-center gap-2">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          WebGPU でエラーが発生しました: {webllm.error}
+        </div>
+      )}
 
       {/* ─── メインエリア ─── */}
       <div className="flex-1 flex overflow-hidden relative">
@@ -706,6 +783,16 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
                           ))}
                         </div>
                       )}
+
+                      {/* [追加] 生成のライブ状況（経過時間・速度・遅延案内・GPU負荷目安） */}
+                      <AILiveStatus
+                        isGenerating={isGenerating}
+                        phase={webllm.phase}
+                        elapsedMs={webllm.elapsedMs}
+                        tps={webllm.liveTps}
+                        tokens={webllm.liveTokens}
+                        className="mt-2 border-transparent bg-muted/30 px-2.5 py-2"
+                      />
                     </div>
                   </motion.div>
                 )}
@@ -818,7 +905,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    disabled={isGenerating}
+                    disabled={isGenerating || !canUseAI || webllm.status === "downloading"}
                     rows={1}
                     className="min-h-[44px] max-h-[120px] resize-none rounded-xl border-border bg-muted/20 focus-visible:ring-primary shadow-none py-3 pr-3 text-sm leading-relaxed placeholder:text-muted-foreground/50"
                   />
@@ -827,7 +914,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
                   <Button
                     size="icon"
                     variant="destructive"
-                    onClick={stopGeneration}
+                    onClick={webllm.stop}
                     className="h-11 w-11 rounded-xl shrink-0 shadow-sm hover:scale-105 active:scale-95 transition-transform"
                   >
                     <Square className="h-4 w-4 fill-current" />
@@ -836,7 +923,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
                   <Button
                     size="icon"
                     onClick={handleSend}
-                    disabled={!input.trim()}
+                    disabled={!input.trim() || !canUseAI || webllm.status === "downloading"}
                     className="h-11 w-11 rounded-xl shrink-0 shadow-sm hover:scale-105 active:scale-95 transition-transform"
                   >
                     <Send className="h-4 w-4" />

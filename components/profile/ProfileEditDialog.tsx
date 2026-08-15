@@ -243,6 +243,7 @@ const ProfileEditDialog = ({ profile, trigger }: ProfileEditDialogProps) => {
                             src={imageList[0].dataURL}
                             alt="Preview"
                             fill
+                            sizes="112px"
                             className="object-cover"
                           />
                         ) : (

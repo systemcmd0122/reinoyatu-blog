@@ -49,6 +49,7 @@ const ListItem: React.FC<ListItemProps> = ({ blog, priority, currentUserId }) =>
               src={data.author.avatarUrl}
               alt={data.author.name}
               fill
+              sizes="44px"
               priority={priority}
               className="object-cover"
             />
@@ -127,6 +128,7 @@ const ListItem: React.FC<ListItemProps> = ({ blog, priority, currentUserId }) =>
               src={data.imageUrl}
               alt={data.title}
               fill
+              sizes="(max-width: 640px) 64px, (max-width: 768px) 112px, 144px"
               className="object-cover"
             />
           </Link>

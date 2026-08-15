@@ -39,6 +39,7 @@ import {
   AlignRight,
   Upload,
   FileText,
+  Sparkles,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -634,6 +635,23 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, userId }) => {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Separator orientation="vertical" className="mx-1 h-5 shrink-0" />
+
+      {/* AI アシスタント */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => window.dispatchEvent(new CustomEvent('open-ai-assist'))}
+            className="h-11 w-11 md:h-8 md:w-8 p-0 text-primary"
+          >
+            <Sparkles className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>AI アシスタント（WebGPU ローカル推論）</TooltipContent>
+      </Tooltip>
 
       <MediaInsertDialog
         editor={editor}

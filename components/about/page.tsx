@@ -200,23 +200,25 @@ const About = () => {
                     >
                         <div className="text-center space-y-4">
                             <h2 className="text-4xl font-bold text-foreground">AI Technology</h2>
-                            <p className="text-lg text-muted-foreground">進化したAI執筆体験を支える「Google Gemini」</p>
+                            <p className="text-lg text-muted-foreground">ブラウザ内で完結する「Qwen3 ローカルAI」</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                             <div className="space-y-6">
                                 <h3 className="text-2xl font-bold text-foreground">
-                                    サーバーサイドで<br />
-                                    安全に動作するAI
+                                    ブラウザ内で<br />
+                                    プライバシーを守るAI
                                 </h3>
                                 <p className="text-muted-foreground leading-relaxed">
-                                    「例のヤツ｜ブログ」のAIアシスタント機能は、Googleの最先端AIモデル<strong>「Gemini 3.5 Flash」</strong>を搭載しています。
-                                    サーバーサイドで安全に処理されるため、面倒なサインインやポップアップブロックの心配は一切不要。ブラウザさえあれば、誰でもすぐにAI執筆支援を利用できます。
+                                    「例のヤツ｜ブログ」のAIアシスタント機能は、オープンソースの高品質モデル<strong>「Qwen3 1.7B」</strong>を
+                                    WebGPU（GPU直接アクセスAPI）で端末上で直接実行します。
+                                    記事の内容がサーバーに一切送信されず、サインインも不要。オフラインでも動作し、
+                                    初回のダウンロード以降はブラウザ内にモデルがキャッシュされます。
                                 </p>
                                 <div className="flex flex-wrap gap-2">
-                                    <Badge variant="secondary" className="px-3 py-1">Google Gemini</Badge>
+                                    <Badge variant="secondary" className="px-3 py-1">Qwen3 1.7B（Apache 2.0）</Badge>
                                     <Badge variant="secondary" className="px-3 py-1">No Sign-in Required</Badge>
-                                    <Badge variant="secondary" className="px-3 py-1">Streaming Support</Badge>
+                                    <Badge variant="secondary" className="px-3 py-1">WebGPU ローカル実行</Badge>
                                 </div>
                             </div>
                             <div className="bg-muted/30 rounded-3xl p-8 border border-border space-y-4 shadow-inner">
@@ -224,20 +226,20 @@ const About = () => {
                                     <div className="bg-primary/10 p-2 rounded-xl">
                                         <Sparkles className="w-5 h-5 text-primary" />
                                     </div>
-                                    <span className="font-bold">Geminiのメリット</span>
+                                    <span className="font-bold">ローカルAIのメリット</span>
                                 </div>
                                 <ul className="space-y-3 text-sm">
                                     <li className="flex items-start gap-2">
                                         <Zap className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                                        <span><strong>高速ストリーミング:</strong> 生成されたテキストがリアルタイムで表示され、待ち時間を最小限に抑えます。</span>
+                                        <span><strong>プライバシー完全保護:</strong> 記事の内容は端末上で処理され、サーバーへ一切送信されません。</span>
                                     </li>
                                     <li className="flex items-start gap-2">
                                         <Zap className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                                        <span><strong>ポップアップ不要:</strong> サーバーサイドでAPIを直接呼び出すため、サインインや広告ブロッカーの影響を受けません。</span>
+                                        <span><strong>サインイン不要・オフライン対応:</strong> APIキーやサーバーが不要で、初回ダウンロード後はオフラインでも動作します。</span>
                                     </li>
                                     <li className="flex items-start gap-2">
                                         <Zap className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                                        <span><strong>世界最高峰の推論性能:</strong> Gemini 3.5 Flash はベンチマークで最高スコアを記録した、高速かつ高性能なモデルです。</span>
+                                        <span><strong>ストリーミング生成:</strong> 生成テキストがリアルタイムでエディタに反映され、待ち時間を最小限に抑えます。</span>
                                     </li>
                                 </ul>
                             </div>

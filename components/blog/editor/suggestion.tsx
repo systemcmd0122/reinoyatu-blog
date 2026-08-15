@@ -22,6 +22,7 @@ import {
   Activity,
   FileText,
   Globe,
+  Sparkles,
 } from 'lucide-react'
 import SlashCommandList from './SlashCommandList'
 
@@ -165,6 +166,42 @@ export default {
         command: ({ editor, range }: any) => {
           editor.chain().focus().deleteRange(range).run()
           window.dispatchEvent(new CustomEvent('open-media-dialog', { detail: { type: 'iframe' } }));
+        },
+      },
+      {
+        title: 'AI 続きを書く',
+        description: 'AIが現在の文章の続きを生成します',
+        icon: <Sparkles className="h-4 w-4" />,
+        command: ({ editor, range }: any) => {
+          editor.chain().focus().deleteRange(range).run()
+          window.dispatchEvent(new CustomEvent('open-ai-assist', { detail: { action: 'continue' } }));
+        },
+      },
+      {
+        title: 'AI 文章を整える',
+        description: 'AIが選択範囲をブラッシュアップします',
+        icon: <Sparkles className="h-4 w-4" />,
+        command: ({ editor, range }: any) => {
+          editor.chain().focus().deleteRange(range).run()
+          window.dispatchEvent(new CustomEvent('open-ai-assist', { detail: { action: 'improve' } }));
+        },
+      },
+      {
+        title: 'AI 要約する',
+        description: 'AIが本文を要約して挿入します',
+        icon: <Sparkles className="h-4 w-4" />,
+        command: ({ editor, range }: any) => {
+          editor.chain().focus().deleteRange(range).run()
+          window.dispatchEvent(new CustomEvent('open-ai-assist', { detail: { action: 'summarize' } }));
+        },
+      },
+      {
+        title: 'AI 見出し案',
+        description: 'AIが本文に合う見出しを提案します',
+        icon: <Sparkles className="h-4 w-4" />,
+        command: ({ editor, range }: any) => {
+          editor.chain().focus().deleteRange(range).run()
+          window.dispatchEvent(new CustomEvent('open-ai-assist', { detail: { action: 'headings' } }));
         },
       },
     ].filter((item) => item.title.toLowerCase().startsWith(query.toLowerCase()))

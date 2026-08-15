@@ -107,37 +107,58 @@ const BlogDetailPage = async ({ params, searchParams }: BlogDetailPageProps) => 
   const supabase = createClient()
 
   try {
-    const { data: userData } = await supabase.auth.getUser()
-    const user = userData?.user
+    // セッションは Cookie から直接読む（middleware が getUser() で検証済み）。
+    // getUser() はネットワーク往復になるため、公開ページでは呼ばない。
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    const user = session?.user ?? null
 
-    // ブログ詳細取得
-    const { data: blogData, error: blogError } = await supabase
-      .from("blogs")
-      .select(`
-        *,
-        profiles!user_id (
-          id,
-          name,
-          avatar_url,
-          introduce,
-          homepage_url,
-          social_links
-        ),
-        tags (
-          name
-        ),
-        article_authors (
-          user_id,
-          role,
+    // ブログ / いいね数 / コメント / コレクションをすべて並列で取得する
+    // （順次実行だと 4 往復になり、記事ページの体感速度を大きく損なうため）。
+    const [blogResult, likesResult, commentsResult, collectionResult] = await Promise.all([
+      supabase
+        .from("blogs")
+        .select(`
+          *,
           profiles!user_id (
             id,
             name,
-            avatar_url
+            avatar_url,
+            introduce,
+            homepage_url,
+            social_links
+          ),
+          tags (
+            name
+          ),
+          article_authors (
+            user_id,
+            role,
+            profiles!user_id (
+              id,
+              name,
+              avatar_url
+            )
           )
-        )
-      `)
-      .eq("id", blogId)
-      .single()
+        `)
+        .eq("id", blogId)
+        .single(),
+      supabase.rpc(
+        'get_blog_likes_count',
+        { blog_id: blogId }
+      ),
+      supabase.rpc(
+        'get_blog_comments_v2',
+        { blog_uuid: blogId }
+      ),
+      collectionId ? getCollectionWithItems(collectionId) : Promise.resolve(null),
+    ])
+
+    const { data: blogData, error: blogError } = blogResult
+    const likesCountData = likesResult.data
+    const commentsData = commentsResult.data
+    const collectionData = collectionResult ?? null
 
     if (blogError || !blogData) {
       return (
@@ -155,18 +176,6 @@ const BlogDetailPage = async ({ params, searchParams }: BlogDetailPageProps) => 
         </div>
       )
     }
-
-    // いいね数を取得
-    const { data: likesCountData } = await supabase.rpc(
-      'get_blog_likes_count',
-      { blog_id: blogId }
-    )
-
-    // コメントを取得 (V2: リアクション同梱)
-    const { data: commentsData } = await supabase.rpc(
-      'get_blog_comments_v2',
-      { blog_uuid: blogId }
-    )
 
     // ログインユーザーがブログ作成者または共同編集者かどうか
     const isMyBlog = user?.id === blogData.user_id ||
@@ -206,12 +215,6 @@ const BlogDetailPage = async ({ params, searchParams }: BlogDetailPageProps) => 
       view_count: blogData.view_count || 0,
       is_published: blogData.is_published,
       user_id: blogData.user_id,
-    }
-
-    // コレクション情報の取得（もし指定されていれば）
-    let collectionData = null
-    if (collectionId) {
-      collectionData = await getCollectionWithItems(collectionId)
     }
 
     // 非公開記事の権限チェック

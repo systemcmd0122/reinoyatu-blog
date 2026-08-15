@@ -41,6 +41,7 @@ import { CustomYoutube } from './extensions/CustomYoutube'
 import { Iframe } from './extensions/Iframe'
 
 import EditorToolbar from './EditorToolbar'
+import AIAssistPanel, { AIAssistAction } from './ai/AIAssistPanel'
 import {
   Bold,
   Italic,
@@ -86,6 +87,18 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
   userId,
 }, ref) => {
   const [isReady, setIsReady] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
+  const [aiInitialAction, setAiInitialAction] = useState<AIAssistAction | undefined>(undefined)
+
+  // ツールバーの AI ボタン / スラッシュコマンド（/ai）からパネルを開く
+  useEffect(() => {
+    const handleOpenAI = (e: any) => {
+      setAiInitialAction(e.detail?.action ?? undefined)
+      setAiOpen(true)
+    }
+    window.addEventListener('open-ai-assist', handleOpenAI)
+    return () => window.removeEventListener('open-ai-assist', handleOpenAI)
+  }, [])
 
 
   const editor = useEditor({
@@ -369,6 +382,14 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
         <div className="max-w-full overflow-x-hidden pb-32">
           <EditorContent editor={editor} />
         </div>
+
+        {aiOpen && editor && (
+          <AIAssistPanel
+            editor={editor}
+            initialAction={aiInitialAction}
+            onClose={() => setAiOpen(false)}
+          />
+        )}
       </div>
 
       <div className="block md:hidden border-t border-border bg-background pb-[env(safe-area-inset-bottom)] z-10">

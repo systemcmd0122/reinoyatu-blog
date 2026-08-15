@@ -535,6 +535,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                       {related.image_url ? (
                         <div className="relative aspect-[16/9] bg-muted overflow-hidden">
                           <Image src={related.image_url} alt={related.title} fill
+                            sizes="(min-width: 640px) 50vw, 100vw"
                             className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" unoptimized />
                         </div>
                       ) : (

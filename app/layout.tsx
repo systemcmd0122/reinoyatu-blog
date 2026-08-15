@@ -1,5 +1,4 @@
 import "./globals.css"
-import "katex/dist/katex.min.css"
 import type { Metadata, Viewport } from "next"
 import { M_PLUS_1 } from "next/font/google"
 import { createClient } from "@/utils/supabase/server"
@@ -125,12 +124,16 @@ interface RootLayoutProps {
 // ルートレイアウト
 const RootLayout = async ({ children }: RootLayoutProps) => {
   const supabase = createClient()
+  // セッションは Cookie から直接読み取る（ネットワーク呼び出しなし）。
+  // 認証の検証・セッション更新は middleware（proxy.ts）が getUser() で行うため、
+  // ここで getUser() を再度呼ぶと余分な往復になる。
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user ?? null
 
   return (
-    <html lang="ja" suppressHydrationWarning className="overflow-x-hidden">
+    <html lang="ja" suppressHydrationWarning data-scroll-behavior="smooth" className="overflow-x-hidden">
       <body className={mPlus1.className}>
         <AdSense />
         <ThemeProvider

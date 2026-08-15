@@ -247,6 +247,18 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
     })
   }
 
+  // Qwen などの思考モデルが出力する <think> を安全に表示するためのコンポーネント
+  const ThinkBlock = ({ children }: { children?: React.ReactNode }) => (
+    <div className="not-prose my-4 rounded-lg border border-dashed border-border/60 bg-muted/30 px-4 py-3">
+      <span className="mb-1 block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+        思考
+      </span>
+      <div className="prose prose-sm prose-zinc dark:prose-invert max-w-none text-muted-foreground">
+        {children}
+      </div>
+    </div>
+  )
+
   return (
     <div
       className={`
@@ -373,6 +385,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
               </blockquote>
             )
           },
+
+          // ─── AI の思考タグ（Qwen の <think> を安全に表示）────
+          ...( { think: ThinkBlock } as any ),
 
           // ─── 画像 ──────────────────────────────────
           img({ src, alt, title }: ImageProps) {

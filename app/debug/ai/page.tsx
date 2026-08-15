@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import { useAI } from "@/hooks/use-ai"
+import { useWebLLM, WEBLLM_MODEL_INFO } from "@/hooks/use-webllm"
+import { GPUInfoLine } from "@/components/blog/ai/GPUInfoLine"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -14,7 +15,6 @@ import {
   Cpu,
   Gauge,
   AlertCircle,
-  CheckCircle2,
   Terminal,
   Download,
   Zap,
@@ -22,7 +22,10 @@ import {
   Trash2,
   Maximize2,
   RefreshCw,
-  Info
+  Info,
+  CheckCircle2,
+  Database,
+  HardDrive,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -34,7 +37,11 @@ interface LogEntry {
 }
 
 export default function AIStatsPage() {
-  const { isLoading, error, generateResponse, isGenerating, initialized } = useAI()
+  const webllm = useWebLLM()
+  const isGenerating = webllm.status === "generating"
+  const isLoading = webllm.webgpuSupport === "checking"
+  const error = webllm.error
+  const initialized = webllm.status === "ready"
   const [prompt, setPrompt] = useState("")
   const [response, setResponse] = useState("")
   const [metrics, setMetrics] = useState<{
@@ -43,7 +50,6 @@ export default function AIStatsPage() {
     endTime: number
     tokenCount: number
   } | null>(null)
-  const [webGpuSupported, setWebGpuSupported] = useState<boolean | null>(null)
   const [logs, setLogs] = useState<LogEntry[]>([])
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
@@ -85,11 +91,13 @@ export default function AIStatsPage() {
     }
   }, [addLog])
 
+  // WebGPU 対応端末ではモデルを自動ロード
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setWebGpuSupported(!!(navigator as any).gpu)
-    }
-  }, [])
+    if (webllm.webgpuSupport !== "supported") return
+    if (webllm.status !== "idle") return
+    webllm.loadModel().catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webllm.webgpuSupport])
 
   // ログが追加されたら自動スクロール
   useEffect(() => {
@@ -116,16 +124,23 @@ export default function AIStatsPage() {
       let firstTokenReceived = false
       let charCount = 0
 
-      const result = await generateResponse(prompt, (partialText) => {
-        if (!firstTokenReceived) {
-          const firstTokenTime = performance.now()
-          setMetrics(prev => prev ? { ...prev, firstTokenTime } : null)
-          firstTokenReceived = true
-          addLog(`最初のトークンを受信 (${(firstTokenTime - startTime).toFixed(0)}ms)`, "system")
+      await webllm.generate(
+        [{ role: "user", content: prompt }],
+        {
+          temperature: 0.7,
+          maxTokens: 1024,
+          onProgress: (partialText) => {
+            if (!firstTokenReceived) {
+              const firstTokenTime = performance.now()
+              setMetrics(prev => prev ? { ...prev, firstTokenTime } : null)
+              firstTokenReceived = true
+              addLog(`最初のトークンを受信 (${(firstTokenTime - startTime).toFixed(0)}ms)`, "system")
+            }
+            setResponse(partialText)
+            charCount = partialText.length
+          },
         }
-        setResponse(partialText)
-        charCount = partialText.length
-      })
+      )
 
       const endTime = performance.now()
       const tokenCount = Math.ceil(charCount / 2)
@@ -149,24 +164,26 @@ export default function AIStatsPage() {
     ? (metrics.firstTokenTime - metrics.startTime).toFixed(0)
     : null
 
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-  }
+  const modelStatusLabel =
+    webllm.status === "ready" ? "READY"
+    : webllm.status === "downloading" ? "DOWNLOADING"
+    : webllm.status === "generating" ? "GENERATING"
+    : webllm.status === "error" ? "ERROR"
+    : webllm.status === "idle" ? "IDLE"
+    : "CHECKING"
+
+  const canChat = webllm.webgpuSupport === "supported" && !error
 
   return (
     <div className="container max-w-none py-6 md:py-10 space-y-6 md:space-y-8 animate-in fade-in duration-700 px-4 md:px-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl md:text-4xl font-black tracking-tight">AI (Gemini 3.5 Flash) 性能デバッグ</h1>
-            <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest px-2 py-0">v3 API</Badge>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight">AI ({WEBLLM_MODEL_INFO.name}) 性能デバッグ</h1>
+            <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest px-2 py-0">WebGPU</Badge>
           </div>
           <p className="text-muted-foreground max-w-2xl font-medium">
-            Google Gemini 3.5 Flash モデルの推論パフォーマンスをリアルタイムで監視・解析します。
+            ブラウザ内で動作するローカル LLM の推論パフォーマンスをリアルタイムで監視・解析します。
           </p>
         </div>
         <div className="flex gap-2">
@@ -191,17 +208,23 @@ export default function AIStatsPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              {webGpuSupported === null ? (
+              {webllm.webgpuSupport === "checking" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
-              ) : webGpuSupported ? (
+              ) : webllm.webgpuSupport === "supported" ? (
                 <div className="flex flex-col gap-1">
                   <span className="text-xl font-bold text-green-500">WebGPU Enabled</span>
                   <span className="text-[10px] text-muted-foreground font-mono">Hardware Acceleration Active</span>
+                  <GPUInfoLine
+                    gpuInfo={webllm.gpuInfo}
+                    busy={isGenerating}
+                    vramMB={WEBLLM_MODEL_INFO.vramMB}
+                    className="mt-1"
+                  />
                 </div>
               ) : (
                 <div className="flex flex-col gap-1">
                   <span className="text-xl font-bold text-destructive">WebGPU Disabled</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">Falling back to CPU/WASM</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">AI 利用不可</span>
                 </div>
               )}
             </div>
@@ -216,23 +239,33 @@ export default function AIStatsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {webllm.status === "downloading" ? (
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2 text-xl font-bold animate-pulse">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  LOADING...
+                  {Math.round(webllm.progress * 100)}%
                 </div>
-                <span className="text-[10px] text-muted-foreground font-mono uppercase">Initializing Engine</span>
+                <Progress value={webllm.progress * 100} className="h-1 mt-1" />
+                <span className="text-[10px] text-muted-foreground font-mono uppercase truncate mt-1">
+                  {webllm.progressText || "Downloading model"}
+                </span>
               </div>
-            ) : error ? (
+            ) : webllm.status === "error" ? (
               <div className="flex flex-col gap-1">
                 <span className="text-xl font-bold text-destructive">ERROR</span>
                 <span className="text-[10px] text-muted-foreground font-mono uppercase truncate">{error}</span>
               </div>
+            ) : webllm.status === "idle" ? (
+              <div className="flex flex-col gap-2">
+                <span className="text-xl font-bold text-muted-foreground">IDLE</span>
+                <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => webllm.loadModel().catch(() => {})}>
+                  <Download className="w-3 h-3 mr-1" /> モデルをロード
+                </Button>
+              </div>
             ) : (
               <div className="flex flex-col gap-1">
-                <span className="text-xl font-bold text-green-500">READY</span>
-                <span className="text-[10px] text-muted-foreground font-mono uppercase italic text-green-500/60">Optimized & Inference Ready</span>
+                <span className="text-xl font-bold text-green-500">{modelStatusLabel}</span>
+                <span className="text-[10px] text-muted-foreground font-mono uppercase italic text-green-500/60">Inference Ready</span>
               </div>
             )}
           </CardContent>
@@ -248,11 +281,33 @@ export default function AIStatsPage() {
           <CardContent>
             <div className="flex flex-col gap-0.5">
               <div className="text-2xl font-black italic">
-                {tps ? `${tps}` : "---"}<span className="text-sm font-normal not-italic text-muted-foreground ml-1 uppercase">tok/s</span>
+                {(isGenerating ? webllm.liveTps : (webllm.lastTokensPerSec ?? tps)) ?? "---"}
+                <span className="text-sm font-normal not-italic text-muted-foreground ml-1 uppercase">tok/s</span>
               </div>
               <p className="text-[10px] font-mono text-muted-foreground">
-                Latency: {latency ? `${latency}ms` : "N/A"}
+                Latency: {(isGenerating ? null : (webllm.lastTTFT ?? latency)) ? `${webllm.lastTTFT ?? latency}ms` : "N/A"}
               </p>
+              {isGenerating && (
+                <div className="mt-1.5 space-y-1">
+                  <div className="flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-muted-foreground">
+                      {webllm.phase === "prefill" ? "PREFILL (初回トークン待機)" : "STREAMING"}
+                    </span>
+                    <span className="text-green-500 font-bold">
+                      {Math.floor((webllm.elapsedMs ?? 0) / 1000)}s
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
+                    <span>TOKENS</span>
+                    <span className="text-foreground font-bold">{webllm.liveTokens ?? 0}</span>
+                  </div>
+                  {webllm.phase === "prefill" && (webllm.elapsedMs ?? 0) >= 8000 && (
+                    <p className="text-[10px] text-amber-500 font-bold animate-pulse">
+                      初回トークンに時間がかかっています（処理は継続中）
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -260,17 +315,18 @@ export default function AIStatsPage() {
         <Card className="shadow-premium border-none bg-muted/30">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Download className="w-4 h-4" />
-              接続状況
+              <Database className="w-4 h-4" />
+              モデル / キャッシュ
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-1">
               <div className="text-xl font-bold">
-                {initialized ? "Connected" : "Disconnected"}
+                {initialized ? "Loaded" : "Pending"}
               </div>
-              <div className="text-[10px] font-mono text-muted-foreground truncate">
-                API Base: Google Gemini API
+              <div className="text-[10px] font-mono text-muted-foreground truncate flex items-center gap-1">
+                <HardDrive className="w-3 h-3" />
+                {WEBLLM_MODEL_INFO.name} / {WEBLLM_MODEL_INFO.downloadMB}MB
               </div>
             </div>
           </CardContent>
@@ -290,6 +346,9 @@ export default function AIStatsPage() {
                   {error}
                 </p>
                 <div className="flex flex-wrap gap-2 pt-2">
+                  <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => webllm.loadModel().catch(() => {})}>
+                    <RefreshCw className="w-3 h-3 mr-1" /> 再試行
+                  </Button>
                   <Badge variant="outline" className="bg-background text-[10px] font-mono border-destructive/20">Chrome/Edge Flags: WebGPU=Enabled</Badge>
                   <Badge variant="outline" className="bg-background text-[10px] font-mono border-destructive/20">Hardware Acceleration: On</Badge>
                 </div>
@@ -313,12 +372,12 @@ export default function AIStatsPage() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-              disabled={isLoading || isGenerating || !!error}
+              disabled={isLoading || isGenerating || !canChat}
               className="h-14 pl-6 pr-16 text-base rounded-2xl border-none bg-muted/50 focus-visible:ring-primary shadow-premium transition-all"
             />
             <Button
               onClick={handleGenerate}
-              disabled={isLoading || isGenerating || !prompt.trim() || !!error}
+              disabled={isLoading || isGenerating || !prompt.trim() || !canChat}
               className="absolute right-2 top-2 h-10 w-10 p-0 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all"
             >
               {isGenerating ? (
@@ -408,11 +467,12 @@ export default function AIStatsPage() {
           <span className="font-bold text-foreground">Debugging Information</span>
         </div>
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 list-inside list-disc font-medium">
-          <li>最新の Gemini 3.5 Flash モデルを API 経由で使用しています。</li>
-          <li>Google Cloud インフラにより、高速で安定した推論を提供します。</li>
-          <li>API 呼び出しはサーバーサイドで処理され、安全に実行されます。</li>
+          <li>{WEBLLM_MODEL_INFO.name}（{WEBLLM_MODEL_INFO.params} / {WEBLLM_MODEL_INFO.quantization} / {WEBLLM_MODEL_INFO.license}）をブラウザ内で直接実行しています。</li>
+          <li>WebGPU 経由で GPU 上で推論し、記事データは一切サーバーへ送信されません。</li>
+          <li>モデルは初回のみ約 {WEBLLM_MODEL_INFO.downloadMB}MB をダウンロードし、以降は端末内（IndexedDB）にキャッシュされます。</li>
           <li>トークン数は文字数（2文字=1トークン）による簡易推定値です。</li>
-          <li>推論速度（tok/s）はネットワーク遅延の影響を受ける場合があります。</li>
+          <li>推論速度（tok/s）は GPU とブラウザの設定によって変動します。</li>
+          <li>モデルのロードには VRAM 約 {WEBLLM_MODEL_INFO.vramMB}MB が必要です。</li>
         </ul>
       </div>
     </div>

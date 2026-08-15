@@ -111,7 +111,6 @@ import { ImageLibraryDialog } from "./ImageLibraryDialog"
 import { ImageURLDialog } from "./ImageURLDialog"
 import { ImageCropDialog } from "./ImageCropDialog"
 import { AIEditorActions } from "./editor/AIEditorActions"
-import { useAI } from "@/hooks/use-ai"
 
 
 interface BlogEditorProps {
@@ -161,7 +160,6 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
   const [userProfile, setUserProfile] = useState<{ name: string; avatar_url: string | null } | null>(null)
   const [showMobileWarning, setShowMobileWarning] = useState(false)
-  const ai = useAI()
   const [isLibraryDialogOpen, setIsLibraryDialogOpen] = useState(false)
   const [isURLDialogOpen, setIsURLDialogOpen] = useState(false)
   // クロップダイアログ用 state
@@ -747,7 +745,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={imagePreview} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
                             ) : (
-                              <Image src={imagePreview} alt="Cover" fill className="object-cover" />
+                              <Image src={imagePreview} alt="Cover" fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover" />
                             )}
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                               <Button size="sm" variant="secondary" onClick={() => document.getElementById('main-image-upload')?.click()}>
@@ -883,6 +881,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                               src={imagePreview}
                               alt="Cover"
                               fill
+                              sizes="(max-width: 768px) 100vw, 768px"
                               className="object-cover"
                               priority
                             />
@@ -956,7 +955,6 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                   <div className="p-6 space-y-10">
                     <AIEditorActions
-                      ai={ai}
                       title={watchedTitle}
                       content={watchedContent}
                       tags={watchedTags || []}

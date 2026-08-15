@@ -125,12 +125,40 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
     supabaseQuery = supabaseQuery.or(`title.ilike.%${queryParam}%,content.ilike.%${queryParam}%`)
   }
 
-  const [{ data: blogsData, error, count }, { data: tags, error: tagsError }] = await Promise.all([
+  // 記事一覧 / タグ / 人気記事 / おすすめコレクションをすべて並列で取得
+  // （サイドバー2件を後から順次取得すると余分に2往復かかるため）。
+  const [blogsResult, tagsResult, popularResult, collectionsResult] = await Promise.all([
     supabaseQuery
       .order("created_at", { ascending: false })
       .range(start, end),
-    supabase.rpc('get_tags_with_counts')
+    supabase.rpc('get_tags_with_counts'),
+    supabase
+      .from("blogs")
+      .select(`
+        id,
+        title,
+        view_count,
+        profiles!user_id (name)
+      `)
+      .eq("is_published", true)
+      .order("view_count", { ascending: false })
+      .limit(5),
+    supabase
+      .from("collections")
+      .select(`
+        id,
+        title,
+        profiles!user_id (name)
+      `)
+      .eq("is_public", true)
+      .order("created_at", { ascending: false })
+      .limit(5),
   ])
+
+  const { data: blogsData, error, count } = blogsResult
+  const { data: tags, error: tagsError } = tagsResult
+  const { data: popularBlogs } = popularResult
+  const { data: recommendedCollections } = collectionsResult
 
   if (tagsError) {
     console.error("Error fetching tags:", tagsError)
@@ -180,31 +208,6 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
   // 人気タグ（上位15個）
   const popularTags = tags ? [...tags].sort((a, b) => b.count - a.count).slice(0, 15) : []
   const allTags = tags || []
-
-  // 人気の記事（閲覧数順）
-  const { data: popularBlogs } = await supabase
-    .from("blogs")
-    .select(`
-      id,
-      title,
-      view_count,
-      profiles!user_id (name)
-    `)
-    .eq("is_published", true)
-    .order("view_count", { ascending: false })
-    .limit(5)
-
-  // おすすめシリーズ（最新の公開コレクション）
-  const { data: recommendedCollections } = await supabase
-    .from("collections")
-    .select(`
-      id,
-      title,
-      profiles!user_id (name)
-    `)
-    .eq("is_public", true)
-    .order("created_at", { ascending: false })
-    .limit(5)
 
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">

@@ -58,6 +58,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
               src={blog.profiles?.avatar_url || "/default.png"}
               alt={blog.profiles?.name || "Unknown User"}
               fill
+              sizes="48px"
               className="object-cover"
               unoptimized
             />
@@ -126,6 +127,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
               src={blog.image_url}
               alt={blog.title}
               fill
+              sizes="128px"
               className="object-cover"
               unoptimized
             />

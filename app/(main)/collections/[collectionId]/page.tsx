@@ -87,6 +87,7 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
                   src={blogs[0].image_url}
                   alt={collection.title}
                   fill
+                  sizes="(max-width: 1152px) 100vw, 1152px"
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               ) : (
