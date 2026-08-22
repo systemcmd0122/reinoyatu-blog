@@ -6,6 +6,11 @@ import { Rocket, Info } from "lucide-react"
 export const metadata: Metadata = {
   title: "アップデートログ",
   description: "例のヤツ｜ブログの最新機能の追加、改善、不具合修正などの更新履歴をご確認いただけます。",
+  openGraph: {
+    title: "アップデートログ | 例のヤツ｜ブログ",
+    description: "例のヤツ｜ブログの最新機能の追加、改善、不具合修正などの更新履歴をご確認いただけます。",
+    type: "website",
+  },
 }
 
 export default function ChangelogPage() {

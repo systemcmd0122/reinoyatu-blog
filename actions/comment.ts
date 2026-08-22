@@ -77,8 +77,8 @@ export const newComment = async ({ blogId, userId, content, parentId }: NewComme
     }
 
     // プロフィール情報を取得（userIdが有効な場合のみ）
-    let profileData: any = null
-    let profileError: any = null
+    let profileData: { name: string; avatar_url: string | null } | null = null
+    let profileError: { message: string } | null = null
     if (userId) {
       const res = await supabase
         .from("profiles")
@@ -111,8 +111,8 @@ export const newComment = async ({ blogId, userId, content, parentId }: NewComme
       comment: { 
         ...data,
         content: shortcodeToEmoji(data.content),
-        user_name: profileData.name,
-        user_avatar_url: profileData.avatar_url 
+        user_name: profileData?.name || "",
+        user_avatar_url: profileData?.avatar_url || null
       } 
     }
   } catch (err) {

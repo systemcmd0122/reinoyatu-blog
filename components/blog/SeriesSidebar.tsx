@@ -73,7 +73,7 @@ export default function SeriesSidebar({ collection, currentBlogId }: SeriesSideb
             return (
               <Link 
                 key={item.id} 
-                href={`/blog/${blog.id}?collection=${collection.id}`}
+                href={`/blog/${(blog as any).slug || blog.id}?collection=${collection.id}`}
                 className={cn(
                   "flex gap-3 p-3 rounded-xl transition-all group",
                   isActive 

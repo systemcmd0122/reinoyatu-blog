@@ -60,7 +60,6 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
               fill
               sizes="48px"
               className="object-cover"
-              unoptimized
             />
           </div>
         </div>
@@ -79,7 +78,7 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
           </div>
 
           {/* Title */}
-          <Link href={`/blog/${blog.id}`} className="block">
+          <Link href={`/blog/${(blog as any).slug || blog.id}`} className="block">
             <h2 className={cn(
               "text-lg sm:text-xl font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight",
               "line-clamp-2"
@@ -129,7 +128,6 @@ const BlogItem: React.FC<BlogItemProps> = ({ blog }) => {
               fill
               sizes="128px"
               className="object-cover"
-              unoptimized
             />
           </div>
         )}

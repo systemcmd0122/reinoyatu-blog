@@ -42,6 +42,26 @@ export async function updateCollection(collectionId: string, values: z.infer<typ
   try {
     const supabase = createClient()
 
+    // オーナーチェック: ログインユーザーがコレクションの作成者か確認
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return { success: false, error: "ログインしてください" }
+    }
+
+    const { data: collection, error: fetchError } = await supabase
+      .from("collections")
+      .select("user_id")
+      .eq("id", collectionId)
+      .single()
+
+    if (fetchError || !collection) {
+      return { success: false, error: "コレクションが見つかりませんでした" }
+    }
+
+    if (collection.user_id !== user.id) {
+      return { success: false, error: "このコレクションを編集する権限がありません" }
+    }
+
     const { error } = await supabase
       .from("collections")
       .update({
@@ -51,6 +71,7 @@ export async function updateCollection(collectionId: string, values: z.infer<typ
         updated_at: new Date().toISOString(),
       })
       .eq("id", collectionId)
+      .eq("user_id", user.id)
 
     if (error) throw error
 
@@ -69,10 +90,26 @@ export async function deleteCollection(collectionId: string, userId: string) {
   try {
     const supabase = createClient()
 
+    // オーナーチェック: リクエストユーザーがコレクションの作成者か確認
+    const { data: collection, error: fetchError } = await supabase
+      .from("collections")
+      .select("user_id")
+      .eq("id", collectionId)
+      .single()
+
+    if (fetchError || !collection) {
+      return { success: false, error: "コレクションが見つかりませんでした" }
+    }
+
+    if (collection.user_id !== userId) {
+      return { success: false, error: "このコレクションを削除する権限がありません" }
+    }
+
     const { error } = await supabase
       .from("collections")
       .delete()
       .eq("id", collectionId)
+      .eq("user_id", userId)
 
     if (error) throw error
 

@@ -22,6 +22,7 @@ import BlogActionMenu from "@/components/blog/BlogActionMenu"
 import { CollectionWithItemsType } from "@/types"
 import { Metadata } from "next"
 import * as motion from "framer-motion/client"
+import { ItemListJsonLd, BreadcrumbListJsonLd } from "@/components/seo/JsonLd"
 
 interface CollectionDetailPageProps {
   params: Promise<{ collectionId: string }>
@@ -31,9 +32,37 @@ export async function generateMetadata({ params }: CollectionDetailPageProps): P
   const { collectionId } = await params
   const collection = await getCollectionWithItems(collectionId) as unknown as CollectionWithItemsType | null
   if (!collection) return { title: "コレクションが見つかりません" }
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ""
+  const url = `${baseUrl}/collections/${collectionId}`
+  const description = collection.description || `${collection.profiles.name}による記事コレクションです。`
+  const coverImage = (collection as any).collection_items?.[0]?.blogs?.image_url
+  const ogImage = coverImage
+    ? coverImage
+    : `${baseUrl}/api/og?title=${encodeURIComponent(collection.title)}&author=${encodeURIComponent(collection.profiles.name)}`
+
+  const robots = collection.is_public ? undefined : "noindex, nofollow"
+
   return {
     title: collection.title,
-    description: collection.description || `${collection.profiles.name}による記事コレクションです。`,
+    description,
+    robots,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title: collection.title,
+      description,
+      url,
+      type: "website",
+      images: [{ url: ogImage, alt: collection.title }],
+    },
+    twitter: {
+      title: collection.title,
+      description,
+      card: "summary_large_image",
+      images: [ogImage],
+    },
   }
 }
 
@@ -63,8 +92,27 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
 
   const isOwner = user?.id === collection.user_id
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ""
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
+      <ItemListJsonLd
+        name={collection.title}
+        description={collection.description || `${collection.profiles.name}による記事コレクションです。`}
+        url={`${baseUrl}/collections/${collectionId}`}
+        items={blogs.map((blog: any, index: number) => ({
+          name: blog.title,
+          url: `${baseUrl}/blog/${blog.slug || blog.id}`,
+          position: index + 1,
+          image: blog.image_url || undefined,
+        }))}
+      />
+      <BreadcrumbListJsonLd
+        items={[
+          { name: "ホーム", url: baseUrl },
+          { name: collection.title, url: `${baseUrl}/collections/${collectionId}` },
+        ]}
+      />
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
 
         {/* ── Left sidebar ── */}
@@ -102,7 +150,7 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
               {/* Overlay play button */}
               {blogs.length > 0 && (
                 <Link
-                  href={`/blog/${blogs[0].id}?collection=${collection.id}`}
+                  href={`/blog/${(blogs[0] as any).slug || blogs[0].id}?collection=${collection.id}`}
                   className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]"
                 >
                   <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center shadow-2xl">
@@ -160,7 +208,7 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
             <div className="flex flex-col gap-2 pt-2">
               {blogs.length > 0 && (
                 <Button asChild size="lg" className="w-full rounded-xl h-12 font-bold shadow-lg shadow-primary/20">
-                  <Link href={`/blog/${blogs[0].id}?collection=${collection.id}`}>
+                  <Link href={`/blog/${(blogs[0] as any).slug || blogs[0].id}?collection=${collection.id}`}>
                     <Play className="h-4 w-4 mr-2 fill-current" />
                     最初から再生
                   </Link>
@@ -196,7 +244,7 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
                   transition={{ delay: index * 0.04, duration: 0.3 }}
                 >
                   <Link
-                    href={`/blog/${blog.id}?collection=${collection.id}`}
+                    href={`/blog/${(blog as any).slug || blog.id}?collection=${collection.id}`}
                     className="group block"
                   >
                     <div className="flex gap-4 p-4 rounded-2xl bg-card border border-border hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">

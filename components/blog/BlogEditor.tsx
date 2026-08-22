@@ -160,6 +160,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
   const [userProfile, setUserProfile] = useState<{ name: string; avatar_url: string | null } | null>(null)
   const [showMobileWarning, setShowMobileWarning] = useState(false)
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isLibraryDialogOpen, setIsLibraryDialogOpen] = useState(false)
   const [isURLDialogOpen, setIsURLDialogOpen] = useState(false)
   // クロップダイアログ用 state
@@ -214,14 +216,37 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     },
   })
 
-  // フォームの変更を監視
+  // フォームの変更を監視（単一サブスクリプションで再レンダリング回数を削減）
+  const [watchedValues, setWatchedValues] = useState<{
+    title: string
+    content: string
+    summary: string
+    tags: string[]
+    is_published: boolean
+  }>({
+    title: initialData?.title || "",
+    content: initialData?.content || "",
+    summary: initialData?.summary || "",
+    tags: initialData?.tags?.map(t => t.name) || [],
+    is_published: initialData?.is_published ?? false,
+  })
+
   useEffect(() => {
-    const subscription = form.watch(() => {
+    const subscription = form.watch((value) => {
       setIsDirty(true)
       if (status === "saved") setStatus("unsaved")
+      setWatchedValues({
+        title: value.title || "",
+        content: value.content || "",
+        summary: value.summary || "",
+        tags: (value.tags || []).filter((t): t is string => typeof t === "string"),
+        is_published: value.is_published ?? false,
+      })
     })
     return () => subscription.unsubscribe()
   }, [form, status])
+
+  const { title: watchedTitle, content: watchedContent, summary: watchedSummary, tags: watchedTags, is_published: watchedIsPublished } = watchedValues
 
   // 離脱ガード
   useEffect(() => {
@@ -234,12 +259,6 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     window.addEventListener("beforeunload", handleBeforeUnload)
     return () => window.removeEventListener("beforeunload", handleBeforeUnload)
   }, [isDirty])
-
-  const watchedTitle = form.watch("title")
-  const watchedContent = form.watch("content")
-  const watchedSummary = form.watch("summary")
-  const watchedTags = form.watch("tags")
-  const watchedIsPublished = form.watch("is_published")
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const isMobileEffective = isMounted ? isMobile : false;
@@ -431,8 +450,8 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
 
     // ファイルサイズチェック
     if (file.size > MAX_FILE_SIZE) {
-      setError("画像サイズは10MB以下にしてください")
-      toast.error("画像サイズが大きすぎます（最大10MB）")
+      setError("画像サイズは3MB以下にしてください")
+      toast.error("画像サイズが大きすぎます（最大3MB）")
       event.target.value = ""
       return
     }
@@ -529,9 +548,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
 
   const handleBack = () => {
     if (isDirty) {
-      if (confirm("未保存の変更があります。離脱しますか？")) {
-        router.back()
-      }
+      setShowUnsavedWarning(true)
     } else {
       router.back()
     }
@@ -581,6 +598,56 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   setShowMobileWarning(false)
                 }}>
                   了解しました
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {/* 未保存変更警告ダイアログ */}
+          <AlertDialog open={showUnsavedWarning} onOpenChange={setShowUnsavedWarning}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>未保存の変更があります</AlertDialogTitle>
+                <AlertDialogDescription>
+                  画面を離脱すると、変更が失われます。よろしいですか？
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>編集を続ける</AlertDialogCancel>
+                <AlertDialogAction onClick={() => router.back()}>
+                  離脱する
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {/* 削除確認ダイアログ */}
+          <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>本当に削除しますか？</AlertDialogTitle>
+                <AlertDialogDescription>
+                  この操作は取り消せません。記事が完全に削除されます。
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={async () => {
+                    if (!onDelete) return
+                    setShowDeleteConfirm(false)
+                    setStatus("deleting")
+                    const res = await onDelete(currentBlogId)
+                    if (res.success) {
+                      toast.success("記事を削除しました")
+                      router.push("/")
+                    } else {
+                      setStatus("idle")
+                      toast.error(res.error || "削除に失敗しました")
+                    }
+                  }}
+                >
+                  削除する
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -702,19 +769,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                     {internalMode === "edit" && onDelete && (
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
-                        onClick={async () => {
-                          if (confirm("本当に削除しますか？")) {
-                            setStatus("deleting")
-                            const res = await onDelete(currentBlogId)
-                            if (res.success) {
-                              toast.success("記事を削除しました")
-                              router.push("/")
-                            } else {
-                              setStatus("idle")
-                              toast.error(res.error || "削除に失敗しました")
-                            }
-                          }
-                        }}
+                        onClick={() => setShowDeleteConfirm(true)}
                       >
                         <Trash2 className="h-4 w-4 mr-2" /> 記事を削除
                       </DropdownMenuItem>
@@ -1030,14 +1085,14 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
           {/* 全面ローディング (削除中など) */}
           {status === "deleting" && (
             <LoadingState
-              message="Deleting article..."
+              message="記事を削除中..."
               description="サーバーから記事を完全に削除しています"
             />
           )}
 
           {status === "uploading-image" && (
             <LoadingState
-              message="Processing Image..."
+              message="画像を処理中..."
               description="画像を最適化してプレビューを生成しています"
             />
           )}

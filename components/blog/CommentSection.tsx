@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect, lazy, Suspense } from "react"
 import { Send, Loader2, MessageSquare, Smile } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -12,12 +12,13 @@ import { newComment, getBlogComments } from "@/actions/comment"
 import { getCommentReactions } from "@/actions/reaction"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import data from '@emoji-mart/data'
-import Picker from '@emoji-mart/react'
 import { useAuth } from '@/hooks/use-auth'
 import { useTheme } from "next-themes"
 import { createClient } from "@/utils/supabase/client"
 import { shortcodeToEmoji } from "@/utils/emoji"
+
+const LazyPicker = lazy(() => import('@emoji-mart/react'))
+import data from '@emoji-mart/data'
 import { useRealtime } from "@/hooks/use-realtime"
 import {
   Popover,
@@ -357,11 +358,13 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent side="top" align="end" className="w-[350px] p-0 border-none shadow-none">
-                <Picker
-                  data={data}
-                  onEmojiSelect={handleEmojiSelect}
-                  theme={theme === 'dark' ? 'dark' : 'light'}
-                />
+                <Suspense fallback={<div className="h-[350px] flex items-center justify-center text-muted-foreground text-sm">読み込み中...</div>}>
+                  <LazyPicker
+                    data={data}
+                    onEmojiSelect={handleEmojiSelect}
+                    theme={theme === 'dark' ? 'dark' : 'light'}
+                  />
+                </Suspense>
               </PopoverContent>
             </Popover>
           </div>

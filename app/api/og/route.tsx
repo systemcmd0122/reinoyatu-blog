@@ -12,6 +12,8 @@ export async function GET(req: NextRequest) {
     const author = searchParams.get('author')?.slice(0, 50) || '例のヤツ'
     const avatar = searchParams.get('avatar')
     const image = searchParams.get('image')
+    const likes = searchParams.get('likes') || '0'
+    const readingTime = searchParams.get('readingTime') || ''
 
     return new ImageResponse(
       (
@@ -103,6 +105,29 @@ export async function GET(req: NextRequest) {
                 by {author}
               </div>
             </div>
+
+            {/* いいね数・読了時間 */}
+            {(Number(likes) > 0 || readingTime) && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 24,
+                  marginTop: 20,
+                  fontSize: 20,
+                  fontWeight: 600,
+                  color: '#888',
+                }}
+              >
+                {Number(likes) > 0 && (
+                  <span style={{ color: '#ef4444' }}>♥ {likes}</span>
+                )}
+                {readingTime && (
+                  <span>📖 {readingTime}分</span>
+                )}
+              </div>
+            )}
           </div>
 
           <div
@@ -130,12 +155,46 @@ export async function GET(req: NextRequest) {
       {
         width: 1200,
         height: 630,
+        headers: {
+          'Cache-Control': 'public, max-age=86400, s-maxage=604800',
+        },
       }
     )
   } catch (e: any) {
     console.log(`${e.message}`)
-    return new Response(`Failed to generate the image`, {
-      status: 500,
-    })
+    // エラー時にプレースホルダー画像を返す
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            height: '100%',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#f5f5f5',
+          }}
+        >
+          <div
+            style={{
+              fontSize: 48,
+              fontWeight: 900,
+              color: '#999',
+              textAlign: 'center',
+            }}
+          >
+            例のヤツ｜ブログ
+          </div>
+        </div>
+      ),
+      {
+        width: 1200,
+        height: 630,
+        headers: {
+          'Cache-Control': 'public, max-age=86400, s-maxage=604800',
+        },
+      }
+    )
   }
 }

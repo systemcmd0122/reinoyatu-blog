@@ -7,6 +7,7 @@ import { z } from "zod"
 import { v4 as uuidv4 } from "uuid"
 import { uploadImage, syncArticleImages, cleanupUnusedImages } from "./image"
 import { validateUser } from "@/utils/image-helpers"
+import { generateSlug } from "@/utils/slug"
 
 // タグをDBに保存し、IDを返すヘルパー関数
 const upsertTags = async (tagNames: string[]) => {
@@ -68,6 +69,7 @@ interface newBlogProps extends z.infer<typeof BlogSchema> {
   userId: string
   tags?: string[]
   summary?: string
+  meta_description?: string
   is_published?: boolean
 }
 
@@ -104,7 +106,8 @@ export const newBlog = async (values: newBlogProps): Promise<ActionResponse> => 
       image_url = result.data.public_url
     }
 
-    // ブログを新規作成
+    // ブログを新規作成（スラッグを自動生成）
+    const slug = generateSlug(values.title || "untitled")
     const { data: newBlog, error: insertError } = await supabase
       .from("blogs")
       .insert({
@@ -112,11 +115,13 @@ export const newBlog = async (values: newBlogProps): Promise<ActionResponse> => 
         content: values.content,
         content_json: values.content_json || null,
         summary: values.summary || null,
+        meta_description: values.meta_description || null,
         image_url: image_url || null,
         user_id: values.userId,
         is_published: values.is_published,
+        slug,
       })
-      .select("id")
+      .select("id, slug")
       .single()
 
     if (insertError) {
@@ -147,6 +152,9 @@ export const newBlog = async (values: newBlogProps): Promise<ActionResponse> => 
     await syncArticleImages(newBlog.id, values.content_json || "", image_url)
 
     revalidatePath("/")
+    if (newBlog.slug) {
+      revalidatePath(`/blog/${newBlog.slug}`)
+    }
     revalidatePath(`/blog/${newBlog.id}`)
     revalidatePath(`/profile/${values.userId}`)
 
@@ -172,7 +180,7 @@ export const newBlog = async (values: newBlogProps): Promise<ActionResponse> => 
       }
     }
 
-    return { success: true, id: newBlog.id }
+    return { success: true, id: newBlog.id, slug: newBlog.slug }
   } catch (err: any) {
     console.error("ブログ投稿エラー詳細:", {
       message: err.message,
@@ -190,6 +198,7 @@ interface editBlogProps extends z.infer<typeof BlogSchema> {
   userId: string
   tags?: string[]
   summary?: string
+  meta_description?: string
   is_published?: boolean
 }
 
@@ -246,12 +255,21 @@ export const editBlog = async (values: editBlogProps): Promise<ActionResponse> =
     // undefined の場合は、既存の画像を保持するため、更新しない
 
     // ブログ更新 - 画像が変更されていない場合は image_url フィールドを除外
-    const updateData: any = {
+    const updateData: {
+      title: string
+      content: string
+      content_json: string | null
+      summary: string | null
+      meta_description: string | null
+      is_published: boolean
+      image_url?: string | null
+    } = {
       title: values.title,
       content: values.content,
       content_json: values.content_json || null,
       summary: values.summary || null,
-      is_published: values.is_published,
+      meta_description: values.meta_description || null,
+      is_published: values.is_published ?? false,
     }
 
     if (shouldUpdateImage) {
@@ -471,6 +489,7 @@ export const getRelatedBlogs = async (blogId: string, tags: string[], limit: num
       .from("blogs")
       .select(`
         id,
+        slug,
         title,
         summary,
         image_url,
@@ -516,7 +535,7 @@ export const searchBlogs = async (query: string, userId?: string) => {
 
     let q = supabase
       .from("blogs")
-      .select("id, title, user_id, is_published, image_url, updated_at")
+      .select("id, slug, title, user_id, is_published, image_url, updated_at")
 
     if (userId) {
       // 指定されたuserIdの記事を検索する場合、本人の場合のみ下書きも含める

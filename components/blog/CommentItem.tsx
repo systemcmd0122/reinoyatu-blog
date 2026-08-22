@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect, lazy, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { Edit, Trash2, Reply, Loader2, Send, ChevronDown, ChevronUp, Smile } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -25,13 +25,14 @@ import { editComment, deleteComment, newComment } from "@/actions/comment"
 import { toggleReaction } from "@/actions/reaction"
 import { formatJST } from "@/utils/date"
 import data from '@emoji-mart/data'
-import Picker from '@emoji-mart/react'
 import { useTheme } from "next-themes"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+
+const LazyPicker = lazy(() => import('@emoji-mart/react'))
 
 interface CommentItemProps {
   comment: CommentType
@@ -342,11 +343,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent side="top" align="end" className="w-[350px] p-0 border-none shadow-none">
-                    <Picker
-                      data={data}
-                      onEmojiSelect={(emoji: EmojiData) => handleEmojiSelect(emoji, false)}
-                      theme={theme === 'dark' ? 'dark' : 'light'}
-                    />
+                    <Suspense fallback={<div className="h-[350px] flex items-center justify-center text-muted-foreground text-sm">読み込み中...</div>}>
+                      <LazyPicker
+                        data={data}
+                        onEmojiSelect={(emoji: EmojiData) => handleEmojiSelect(emoji, false)}
+                        theme={theme === 'dark' ? 'dark' : 'light'}
+                      />
+                    </Suspense>
                   </PopoverContent>
                 </Popover>
               </div>
@@ -412,14 +415,16 @@ const CommentItem: React.FC<CommentItemProps> = ({
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent side="top" align="start" className="w-[350px] p-0 border-none shadow-none">
-                      <Picker
-                        data={data}
-                        onEmojiSelect={(emoji: EmojiData) => {
-                          handleReaction(emoji)
-                          setIsReactionPickerOpen(false)
-                        }}
-                        theme={theme === 'dark' ? 'dark' : 'light'}
-                      />
+                      <Suspense fallback={<div className="h-[350px] flex items-center justify-center text-muted-foreground text-sm">読み込み中...</div>}>
+                        <LazyPicker
+                          data={data}
+                          onEmojiSelect={(emoji: EmojiData) => {
+                            handleReaction(emoji)
+                            setIsReactionPickerOpen(false)
+                          }}
+                          theme={theme === 'dark' ? 'dark' : 'light'}
+                        />
+                      </Suspense>
                     </PopoverContent>
                   </Popover>
                 )}
@@ -519,12 +524,14 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 </Button>
               </PopoverTrigger>
             <PopoverContent side="top" align="end" className="w-[350px] p-0 border-none shadow-none">
-                <Picker
+              <Suspense fallback={<div className="h-[350px] flex items-center justify-center text-muted-foreground text-sm">読み込み中...</div>}>
+                <LazyPicker
                   data={data}
                   onEmojiSelect={(emoji: EmojiData) => handleEmojiSelect(emoji, true)}
-                theme={theme === 'dark' ? 'dark' : 'light'}
+                  theme={theme === 'dark' ? 'dark' : 'light'}
                 />
-              </PopoverContent>
+              </Suspense>
+            </PopoverContent>
             </Popover>
           </div>
           <div className="flex justify-end gap-2 mt-2">

@@ -74,7 +74,7 @@ export const getUserBookmarks = async (userId: string) => {
 
     // 各ブログのいいね数とプロフィール情報を取得
     const blogsWithDetails = await Promise.all(
-      (data || []).map(async (blog: { id: any; user_id: any }) => {
+      (data || []).map(async (blog: { id: string; user_id: string }) => {
         // いいね数を取得
         const { data: likesCount } = await supabase.rpc(
           'get_blog_likes_count',

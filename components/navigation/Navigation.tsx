@@ -21,6 +21,7 @@ import {
   Download,
   Share,
   Mail,
+  BarChart3,
 } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
@@ -72,7 +73,7 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [user, setUser] = useState(initialUser)
-  const [profile, setProfile] = useState<{ avatar_url: string | null; name: string | null } | null>(null)
+  const [profile, setProfile] = useState<{ avatar_url: string | null; name: string | null; user_id?: string } | null>(null)
   const { unreadCount } = useNotifications(user?.id)
   const { isInstallable, isInstalled, isIOS, promptInstall } = usePWAInstall()
 
@@ -98,18 +99,22 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
   useEffect(() => {
     const fetchProfile = async () => {
       if (user) {
+        // プロフィールが既に同じユーザーのものなら再取得しない
+        if (profile && profile.user_id === user.id) return
         const { data: profileData } = await supabase
           .from("profiles")
           .select("name, avatar_url")
           .eq("id", user.id)
           .single()
-        setProfile(profileData)
+        if (profileData) {
+          setProfile({ ...profileData, user_id: user.id })
+        }
       } else {
         setProfile(null)
       }
     }
     fetchProfile()
-  }, [user, supabase])
+  }, [user?.id])
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -117,7 +122,6 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
       await supabase.auth.signOut()
       setUser(null)
       router.push("/login")
-      router.refresh()
     } finally {
       setIsLoggingOut(false)
       setIsLogoutDialogOpen(false)
@@ -267,6 +271,12 @@ const Navigation = ({ user: initialUser }: NavigationProps) => {
                         <Link href="/bookmarks">
                           <Bookmark className="mr-2 h-4 w-4 text-muted-foreground" />
                           <span>ブックマーク</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="rounded-xl p-2 cursor-pointer font-bold">
+                        <Link href="/dashboard">
+                          <BarChart3 className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <span>著者ダッシュボード</span>
                         </Link>
                       </DropdownMenuItem>
                       {(isInstallable || isIOS) && !isInstalled && (

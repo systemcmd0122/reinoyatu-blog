@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server"
 import UserProfile from "@/components/profile/UserProfile"
 import { Metadata } from "next"
 import { isValidUUID } from "@/utils/validation"
+import { PersonJsonLd, BreadcrumbListJsonLd } from "@/components/seo/JsonLd"
 
 const ProfilePage = async ({
   params,
@@ -59,8 +60,33 @@ const ProfilePage = async ({
   // プロフィール所有者かどうかを確認
   const isOwnProfile = !!session && session.user && session.user.id === profile.id
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ""
+  const rawSocialLinks = profile.social_links
+  const socialLinksArray: string[] = Array.isArray(rawSocialLinks)
+    ? rawSocialLinks
+    : typeof rawSocialLinks === "string"
+      ? (() => { try { const p = JSON.parse(rawSocialLinks); return Array.isArray(p) ? p : [] } catch { return [] } })()
+      : []
+  const sameAs = [
+    profile.homepage_url,
+    ...socialLinksArray,
+  ].filter(Boolean) as string[]
+
   return (
     <main className="min-h-screen">
+      <PersonJsonLd
+        name={profile.name || "ユーザー"}
+        url={`${baseUrl}/profile/${profile.id}`}
+        image={profile.avatar_url || undefined}
+        description={profile.introduce || undefined}
+        sameAs={sameAs.length > 0 ? sameAs : undefined}
+      />
+      <BreadcrumbListJsonLd
+        items={[
+          { name: "ホーム", url: baseUrl },
+          { name: profile.name || "ユーザー", url: `${baseUrl}/profile/${profile.id}` },
+        ]}
+      />
       <UserProfile
         profile={profile}
         isOwnProfile={isOwnProfile}
@@ -112,6 +138,9 @@ export async function generateMetadata({ params }: { params: Promise<{ profileId
   return {
     title,
     description,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title,
       description,

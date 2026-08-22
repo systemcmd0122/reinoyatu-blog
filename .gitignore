@@ -47,4 +47,5 @@ public/workbox-*.js.map
 public/fallback-*.js
 public/fallback-*.js.map
 public/swe-worker-*.js
-public/swe-worker-*.js.mappublic/models/gemma-2b-*
+public/swe-worker-*.js.map
+public/models/gemma-2b-*

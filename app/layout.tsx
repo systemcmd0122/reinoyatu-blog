@@ -125,7 +125,7 @@ interface RootLayoutProps {
 const RootLayout = async ({ children }: RootLayoutProps) => {
   const supabase = createClient()
   // セッションは Cookie から直接読み取る（ネットワーク呼び出しなし）。
-  // 認証の検証・セッション更新は middleware（proxy.ts）が getUser() で行うため、
+  // 認証の検証・セッション更新は middleware が getUser() で行うため、
   // ここで getUser() を再度呼ぶと余分な往復になる。
   const {
     data: { session },
@@ -215,14 +215,6 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
                             className="hover:text-primary transition-colors"
                           >
                             お問い合わせ
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            href="/debug/ai"
-                            className="hover:text-primary transition-colors"
-                          >
-                            AIデバッグ
                           </Link>
                         </li>
                       </ul>

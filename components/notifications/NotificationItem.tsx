@@ -27,6 +27,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete }: Notification
       case 'collection_add': return <Layers className="h-4 w-4 text-purple-500" />
       case 'mention': return <AtSign className="h-4 w-4 text-amber-500" />
       case 'ai_edit': return <Sparkles className="h-4 w-4 text-primary" />
+      case 'system': return <Bell className="h-4 w-4 text-blue-500" />
       default: return <Bell className="h-4 w-4 text-muted-foreground" />
     }
   }
@@ -40,6 +41,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete }: Notification
       case 'collection_add': return `${actorName}さんがあなたの記事をコレクションに追加しました`
       case 'mention': return `${actorName}さんがあなたをメンションしました`
       case 'ai_edit': return `AI執筆アシスタントが記事の更新を提案・適用しました`
+      case 'system': return notification.message || "システムからのお知らせがあります"
       default: return "新しい通知があります"
     }
   }
@@ -56,6 +58,8 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete }: Notification
         return `/collections/${notification.target_id}`
       case 'ai_edit':
         return `/blog/${notification.target_id}/edit`
+      case 'system':
+        return notification.target_id ? `/blog/${notification.target_id}` : "#"
       default:
         return "#"
     }

@@ -34,6 +34,8 @@ const ListItem: React.FC<ListItemProps> = ({ blog, priority, currentUserId }) =>
     router.push(`/tags/${encodeURIComponent(tagName)}`)
   }
 
+  const blogUrl = `/blog/${(data as any).slug || data.id}`
+
   return (
     <div className="group bg-card hover:bg-muted/30 transition-all duration-200 border-b last:border-0">
       <div className="p-4 flex gap-4 items-start">
@@ -87,7 +89,7 @@ const ListItem: React.FC<ListItemProps> = ({ blog, priority, currentUserId }) =>
           </div>
 
           {/* Title */}
-          <Link href={`/blog/${data.id}`} className="block">
+          <Link href={blogUrl} className="block">
             <h2 className="text-lg sm:text-xl font-bold text-foreground group-hover:text-primary transition-colors leading-tight tracking-tight line-clamp-2">
               {data.title}
             </h2>
@@ -121,7 +123,7 @@ const ListItem: React.FC<ListItemProps> = ({ blog, priority, currentUserId }) =>
         {/* Thumbnail (always visible, responsive size) */}
         {data.imageUrl && (
           <Link
-            href={`/blog/${data.id}`}
+            href={blogUrl}
             className="flex-shrink-0 relative h-16 w-16 sm:h-20 sm:w-28 md:h-24 md:w-36 rounded-lg overflow-hidden border group-hover:opacity-90 transition-all"
           >
             <Image

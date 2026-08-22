@@ -193,6 +193,57 @@ export async function deleteNotification(notificationId: string) {
 }
 
 /**
+ * 全ユーザーにシステム一括通知を送信する
+ * 管理者のみ使用可能
+ */
+export async function sendBulkSystemNotification({
+  message,
+  targetId,
+  targetType,
+}: {
+  message: string
+  targetId?: string | null
+  targetType?: NotificationType["target_type"]
+}) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: "ログインが必要です" }
+
+  // 全ユーザーIDを取得
+  const { data: profiles, error: profilesError } = await supabase
+    .from("profiles")
+    .select("id")
+
+  if (profilesError || !profiles) {
+    return { success: false, error: "ユーザー一覧の取得に失敗しました" }
+  }
+
+  // 各ユーザーに通知を作成
+  const notifications = profiles.map((profile) => ({
+    user_id: profile.id,
+    actor_id: user.id,
+    type: "system" as const,
+    target_id: targetId || null,
+    target_type: targetType || null,
+    message: message,
+  }))
+
+  // 一括挿入
+  const { error } = await supabase
+    .from("notifications")
+    .insert(notifications)
+
+  if (error) {
+    console.error("Bulk system notification error:", error)
+    return { success: false, error: "一括通知の送信に失敗しました" }
+  }
+
+  revalidatePath("/notifications")
+  return { success: true, count: notifications.length }
+}
+
+/**
  * すべての通知を削除する
  */
 export async function deleteAllNotifications() {

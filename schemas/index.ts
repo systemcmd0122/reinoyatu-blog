@@ -7,6 +7,7 @@ export type ActionResponse<T = any> = {
   error?: string;
   code?: string;
   id?: string; // IDを直接返すケースも多いため追加
+  slug?: string; // スラッグを返すケース
 };
 
 // URLバリデーション用の正規表現
@@ -92,6 +93,7 @@ export const BlogSchema = z.object({
   content: z.string().min(1, { message: "内容は必須です" }),
   content_json: z.string().optional(),
   summary: z.string().max(200, { message: "要約は200文字以内で入力してください" }).optional(),
+  meta_description: z.string().max(160, { message: "メタディスクリプションは160文字以内で入力してください" }).optional(),
   tags: z.array(z.string()).optional(),
   is_published: z.boolean().optional(),
   coauthors: z.array(z.string()).optional(),

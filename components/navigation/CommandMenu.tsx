@@ -126,13 +126,13 @@ export function CommandMenu({ user }: CommandMenuProps) {
                 <CommandItem
                   key={blog.id}
                   value={blog.id}
-                  onSelect={() => runCommand(() => router.push(`/blog/${blog.id}`))}
+                  onSelect={() => runCommand(() => router.push(`/blog/${(blog as any).slug || blog.id}`))}
                   className="p-2"
                 >
                   <div className="flex items-center gap-3 w-full">
                     <div className="relative h-10 w-16 shrink-0 rounded-md overflow-hidden border bg-muted">
                       {blog.image_url ? (
-                        <Image src={blog.image_url} alt="" fill sizes="64px" className="object-cover" />
+                        <Image src={blog.image_url} alt={blog.title || ""} fill sizes="64px" className="object-cover" />
                       ) : (
                         <div className="flex items-center justify-center h-full w-full">
                           <FileText className="h-4 w-4 text-muted-foreground/40" />

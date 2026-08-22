@@ -38,6 +38,7 @@ import { getBlogLikeStatus } from "@/actions/like"
 import { getBlogBookmarkStatus } from "@/actions/bookmark"
 import { incrementViewCount, getRelatedBlogs } from "@/actions/blog"
 import { calculateReadingTime } from "@/utils/blog-helpers"
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs"
 import { useRealtime } from "@/hooks/use-realtime"
 import { shareContent } from "@/utils/share"
 import { motion } from "framer-motion"
@@ -61,12 +62,21 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+interface BlogNavInfo {
+  slug: string
+  title: string
+  image_url: string | null
+  author_name: string | null
+}
+
 interface BlogDetailProps {
   blog: NormalizedArticle
   isMyBlog: boolean
   currentUserId?: string
   initialComments?: CommentType[]
   collection?: CollectionWithItemsType
+  prevBlog?: BlogNavInfo | null
+  nextBlog?: BlogNavInfo | null
 }
 
 const BlogDetail: React.FC<BlogDetailProps> = ({
@@ -75,9 +85,11 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
   currentUserId,
   initialComments,
   collection,
+  prevBlog,
+  nextBlog,
 }) => {
   const [blogData, setBlogData] = useState<NormalizedArticle>(blog)
-  const [scrollProgress, setScrollProgress] = useState(0)
+  const progressBarRef = useRef<HTMLDivElement>(null)
   const [relatedBlogs, setRelatedBlogs] = useState<any[]>([])
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -100,16 +112,61 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
     isBookmarked: false,
   })
 
-  // ── スクロール進捗 ──────────────────────────
+  // ── スクロール進捗（localStorageに保存して途中再開対応） ──────────────────────────
   useEffect(() => {
+    // 保存されたスクロール位置を復元
+    const savedProgress = localStorage.getItem(`blog-progress-${blog.id}`)
+    if (savedProgress) {
+      const progress = parseFloat(savedProgress)
+      // 95%以上読了していたら先頭に戻す
+      if (progress < 95) {
+        requestAnimationFrame(() => {
+          const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
+          if (scrollHeight > 0) {
+            window.scrollTo(0, (progress / 100) * scrollHeight)
+          }
+        })
+      }
+    }
+  }, [blog.id])
+
+  useEffect(() => {
+    let rafId: number
+    let saveTimeout: NodeJS.Timeout | null = null
     const update = () => {
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
-      if (scrollHeight <= 0) return setScrollProgress(0)
-      setScrollProgress(Math.min(Math.max((window.scrollY / scrollHeight) * 100, 0), 100))
+      if (scrollHeight <= 0) {
+        if (progressBarRef.current) progressBarRef.current.style.width = "0%"
+        return
+      }
+      const progress = Math.min(Math.max((window.scrollY / scrollHeight) * 100, 0), 100)
+      if (progressBarRef.current) {
+        progressBarRef.current.style.width = `${progress}%`
+      }
+      // 1秒に1回だけlocalStorageに保存（パフォーマンス対策）
+      if (!saveTimeout) {
+        saveTimeout = setTimeout(() => {
+          localStorage.setItem(`blog-progress-${blog.id}`, String(progress))
+          saveTimeout = null
+        }, 1000)
+      }
     }
-    window.addEventListener("scroll", update, { passive: true })
-    return () => window.removeEventListener("scroll", update)
-  }, [])
+    const onScroll = () => {
+      rafId = requestAnimationFrame(update)
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      cancelAnimationFrame(rafId)
+      if (saveTimeout) clearTimeout(saveTimeout)
+      // ページ離脱時に最終進捗を保存
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
+      if (scrollHeight > 0) {
+        const finalProgress = Math.min(Math.max((window.scrollY / scrollHeight) * 100, 0), 100)
+        localStorage.setItem(`blog-progress-${blog.id}`, String(finalProgress))
+      }
+    }
+  }, [blog.id])
 
   // ── リアルタイム購読 ───────────────────────
   const lastEvent = useRealtime<any>("blogs", {
@@ -309,8 +366,9 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
         aria-hidden="true"
       >
         <div
+          ref={progressBarRef}
           className="h-full bg-foreground/80 transition-[width] duration-100 ease-linear"
-          style={{ width: `${scrollProgress}%` }}
+          style={{ width: "0%" }}
         />
       </div>
 
@@ -335,7 +393,13 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
         <div className="flex items-start gap-12 xl:gap-16">
 
           {/* ── メイン記事エリア ── */}
-          <main className="flex-1 min-w-0 max-w-[720px]">
+          <section className="flex-1 min-w-0 max-w-[720px]">
+            {/* パンくずリスト */}
+            <Breadcrumbs items={[
+              { label: "記事一覧", href: "/" },
+              ...(collection ? [{ label: collection.title, href: `/collections/${collection.id}` }] : []),
+              { label: blogData.title || "無題の記事" },
+            ]} />
             <article>
 
               {/* カバー画像 */}
@@ -530,13 +594,13 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {relatedBlogs.map(related => (
-                    <Link key={related.id} href={`/blog/${related.id}`}
+                    <Link key={related.id} href={`/blog/${(related as any).slug || related.id}`}
                       className="group flex flex-col rounded-xl border border-border/40 overflow-hidden hover:border-border transition-all hover:shadow-sm">
                       {related.image_url ? (
                         <div className="relative aspect-[16/9] bg-muted overflow-hidden">
                           <Image src={related.image_url} alt={related.title} fill
                             sizes="(min-width: 640px) 50vw, 100vw"
-                            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" unoptimized />
+                            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
                         </div>
                       ) : (
                         <div className="aspect-[16/9] bg-muted flex items-center justify-center">
@@ -567,6 +631,42 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
               </div>
             )}
 
+            {/* ── 前後の記事ナビゲーション ── */}
+            {(prevBlog || nextBlog) && (
+              <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {prevBlog ? (
+                  <Link
+                    href={`/blog/${prevBlog.slug}`}
+                    className="group flex items-center gap-4 p-4 rounded-xl border border-border/40 hover:border-border transition-all hover:shadow-sm"
+                  >
+                    <ChevronLeft className="h-5 w-5 text-muted-foreground flex-shrink-0 group-hover:text-primary transition-colors" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] text-muted-foreground mb-1">前の記事</p>
+                      <p className="text-sm font-semibold line-clamp-2 group-hover:text-primary transition-colors leading-snug">
+                        {prevBlog.title}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">by {prevBlog.author_name}</p>
+                    </div>
+                  </Link>
+                ) : <div />}
+                {nextBlog ? (
+                  <Link
+                    href={`/blog/${nextBlog.slug}`}
+                    className="group flex items-center gap-4 p-4 rounded-xl border border-border/40 hover:border-border transition-all hover:shadow-sm text-right sm:justify-end"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] text-muted-foreground mb-1">次の記事</p>
+                      <p className="text-sm font-semibold line-clamp-2 group-hover:text-primary transition-colors leading-snug">
+                        {nextBlog.title}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">by {nextBlog.author_name}</p>
+                    </div>
+                    <ChevronLeft className="h-5 w-5 text-muted-foreground flex-shrink-0 rotate-180 group-hover:text-primary transition-colors" />
+                  </Link>
+                ) : <div />}
+              </div>
+            )}
+
             {/* ── コメント ── */}
             <div className="mt-16">
               <h2 className="text-base font-bold text-foreground mb-6 flex items-center gap-2">
@@ -579,7 +679,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({
                 initialComments={initialComments}
               />
             </div>
-          </main>
+          </section>
 
           {/* ── TOCサイドバー（デスクトップのみ）──
               sticky で上部に追従。

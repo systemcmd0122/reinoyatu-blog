@@ -36,6 +36,7 @@ export interface ProfileType {
 
 export interface BlogType {
   id: string
+  slug?: string | null
   title: string
   content: string
   content_json: string | null;
@@ -111,6 +112,7 @@ export interface NotificationType {
   target_type: 'blog' | 'comment' | 'collection' | 'profile' | null
   is_read: boolean
   created_at: string
+  message?: string | null
   actor?: {
     name: string
     avatar_url: string | null

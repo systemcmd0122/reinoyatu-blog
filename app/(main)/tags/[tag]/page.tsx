@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tag, TrendingUp, ChevronLeft, Search, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { ItemListJsonLd, BreadcrumbListJsonLd } from "@/components/seo/JsonLd"
 
 interface TagPageProps {
   params: Promise<{
@@ -22,19 +23,27 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
   const tagName = decodeURIComponent(tag)
   const title = `#${tagName}`
   const description = `「#${tagName}」タグが付いた記事の一覧です。例のヤツ｜ブログで最新の情報をチェックしましょう。`
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || ""}/tags/${encodeURIComponent(tagName)}`
+  const ogImage = `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/og?title=${encodeURIComponent(`#${tagName}`)}&author=${encodeURIComponent("例のヤツ｜ブログ")}`
 
   return {
     title,
     description,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title,
       description,
+      url,
       type: "website",
+      images: [{ url: ogImage, alt: title }],
     },
     twitter: {
       title,
       description,
-      card: "summary",
+      card: "summary_large_image",
+      images: [ogImage],
     },
   }
 }
@@ -93,8 +102,28 @@ const TagPage = async ({ params, searchParams }: TagPageProps) => {
   // 人気タグ
   const popularTags = allTagsData ? [...allTagsData].sort((a, b) => b.count - a.count).slice(0, 20) : []
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ""
+
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
+      <ItemListJsonLd
+        name={`#${tagName} の記事一覧`}
+        description={`「#${tagName}」タグが付いた記事の一覧です。`}
+        url={`${baseUrl}/tags/${encodeURIComponent(tagName)}`}
+        items={blogsWithLikes.slice(0, 20).map((blog: any, index: number) => ({
+          name: blog.title,
+          url: `${baseUrl}/blog/${blog.slug || blog.id}`,
+          position: index + 1,
+          image: blog.image_url || undefined,
+          description: (blog.content || "").slice(0, 160),
+        }))}
+      />
+      <BreadcrumbListJsonLd
+        items={[
+          { name: "ホーム", url: baseUrl },
+          { name: `#${tagName}`, url: `${baseUrl}/tags/${encodeURIComponent(tagName)}` },
+        ]}
+      />
       <div className="max-w-screen-xl mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* メインコンテンツ - フィード */}

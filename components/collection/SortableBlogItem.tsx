@@ -90,7 +90,7 @@ export function SortableBlogItem({ id, index, blog, onRemove }: SortableBlogItem
           className="h-7 w-7 text-muted-foreground/50 hover:text-primary hover:bg-primary/5"
           asChild
         >
-          <a href={`/blog/${blog.id}`} target="_blank" rel="noopener noreferrer" title="記事を開く">
+          <a href={`/blog/${(blog as any).slug || blog.id}`} target="_blank" rel="noopener noreferrer" title="記事を開く">
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </Button>

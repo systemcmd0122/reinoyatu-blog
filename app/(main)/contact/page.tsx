@@ -1,6 +1,7 @@
 // app/(main)/contact/page.tsx
 import Contact from "@/components/contact/page"
 import { Metadata } from "next"
+import { BreadcrumbListJsonLd } from "@/components/seo/JsonLd"
 
 export const metadata: Metadata = {
     title: "お問い合わせ",
@@ -14,7 +15,18 @@ export const metadata: Metadata = {
 }
 
 const ContactPage = () => {
-    return <Contact />
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ""
+    return (
+        <>
+            <BreadcrumbListJsonLd
+                items={[
+                    { name: "ホーム", url: baseUrl },
+                    { name: "お問い合わせ", url: `${baseUrl}/contact` },
+                ]}
+            />
+            <Contact />
+        </>
+    )
 }
 
 export default ContactPage

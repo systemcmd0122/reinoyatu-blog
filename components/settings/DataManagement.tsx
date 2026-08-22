@@ -184,7 +184,7 @@ export default function DataManagement({
                     </div>
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="icon" asChild className="h-8 w-8 rounded-full">
-                        <Link href={`/blog/${blog.id}`} target="_blank">
+                        <Link href={`/blog/${(blog as any).slug || blog.id}`} target="_blank">
                           <ExternalLink className="h-4 w-4" />
                         </Link>
                       </Button>

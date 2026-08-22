@@ -45,6 +45,9 @@ export function useNotifications(userId: string | undefined) {
         case 'mention':
           toast.success("メンションされました")
           break
+        case 'system':
+          toast.info(notification.message || "システムからのお知らせがあります")
+          break
         default:
           toast.info("新しい通知があります")
       }

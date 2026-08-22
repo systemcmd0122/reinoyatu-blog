@@ -109,6 +109,12 @@ export default withPWA({
     serverActions: {
       bodySizeLimit: "10mb",
     },
+    optimizePackageImports: [
+      "lucide-react",
+      "@radix-ui/react-icons",
+      "date-fns",
+      "ramda",
+    ],
   },
   serverExternalPackages: ["sharp"],
   images: {
@@ -122,5 +128,7 @@ export default withPWA({
         hostname: "lh3.googleusercontent.com",
       },
     ],
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
   },
 });

@@ -45,7 +45,7 @@ export default function BlogActionMenu({ blog, isOwner }: BlogActionMenuProps) {
             className="rounded-lg font-bold gap-2 cursor-pointer"
             onClick={() => shareContent({
               title: blog.title,
-              url: `${window.location.origin}/blog/${blog.id}`
+              url: `${window.location.origin}/blog/${(blog as any).slug || blog.id}`
             })}
           >
             <Share2 className="h-4 w-4 text-blue-500" />

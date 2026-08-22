@@ -985,7 +985,7 @@ const BlogAICreate: React.FC<BlogAICreateProps> = ({ userId }) => {
                     <p className="text-sm font-bold text-muted-foreground">
                       プレビューがここに表示されます
                     </p>
-                    <p className="text-xs text-muted-foreground/50">
+                    <p className="text-xs text-muted-foreground">
                       チャットで記事を作成すると自動的に反映されます
                     </p>
                   </div>

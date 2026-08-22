@@ -53,7 +53,7 @@ const BlogEditPage = async ({ params }: BlogEditPageProps) => {
                    blogData.article_authors?.some((aa: any) => aa.user_id === user.id)
 
   if (!isAuthor) {
-    redirect(`/blog/${blogData.id}`)
+    redirect(`/blog/${blogData.slug || blogData.id}`)
   }
 
   return <BlogEdit blog={blogData} />

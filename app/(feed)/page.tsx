@@ -1,11 +1,12 @@
 import { createClient } from "@/utils/supabase/server"
 import Link from "next/link"
 import { Metadata } from "next"
+import { Suspense } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import BlogListView from "@/components/blog/BlogListView"
 import LandingPage from "@/components/landing/LandingPage"
-import { TrendingUp, Search, PenSquare, ChevronDown, List, Eye } from "lucide-react"
+import { Search, PenSquare } from "lucide-react"
 import {
   Pagination,
   PaginationContent,
@@ -15,6 +16,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import { WebSiteJsonLd, OrganizationJsonLd } from "@/components/seo/JsonLd"
+import { FeedSidebar } from "@/components/feed/FeedSidebar"
 
 const DEFAULT_PAGE_SIZE = 9
 
@@ -51,36 +54,55 @@ const MainPage = async ({ searchParams }: { searchParams: Promise<{ [key: string
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
 
-  if (!session) {
-    return <LandingPage />
-  }
-
-  return <BlogContent searchParams={searchParams} />
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ""
+  return (
+    <>
+      <WebSiteJsonLd
+        name="例のヤツ｜ブログ"
+        url={baseUrl}
+        searchUrl={`${baseUrl}/?q={search_term_string}`}
+      />
+      <OrganizationJsonLd
+        name="例のヤツ｜ブログ"
+        url={baseUrl}
+      />
+      {!session && <LandingPage />}
+      <BlogContent searchParams={searchParams} />
+    </>
+  )
 }
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }): Promise<Metadata> {
-  const { q } = await searchParams
+  const { q, page: pageParam } = await searchParams
   const query = typeof q === "string" ? q : ""
+  const page = typeof pageParam === "string" ? Number(pageParam) : 1
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ""
 
   // クエリがない場合はタイトルを返さず、ルートレイアウトのデフォルトを使用させる
-  // 以前はここでフルタイトルを返していたため、レイアウトのテンプレートと重なって「例のヤツ｜ブログ | 例のヤツ｜ブログ」になっていた
   if (!query) {
     return {
       title: undefined,
+      alternates: {
+        canonical: page > 1 ? `${baseUrl}/?page=${page}` : baseUrl,
+      },
     }
   }
 
   const title = `"${query}" の検索結果`
   const description = `「${query}」の検索結果一覧です。例のヤツ｜ブログで興味のある記事を見つけましょう。`
-  const image = `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/og?title=${encodeURIComponent(title)}`
+  const image = `${baseUrl}/api/og?title=${encodeURIComponent(title)}`
 
   return {
     title,
     description,
+    robots: "noindex, follow",
+    alternates: {
+      canonical: `${baseUrl}/?q=${encodeURIComponent(query)}${page > 1 ? `&page=${page}` : ""}`,
+    },
     openGraph: {
       title,
       description,
-      url: process.env.NEXT_PUBLIC_APP_URL || undefined,
+      url: baseUrl || undefined,
       images: [{ url: image, alt: title }],
       type: "website",
     },
@@ -98,6 +120,8 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
   const resolvedSearchParams = await searchParams
   const page = typeof resolvedSearchParams.page === "string" ? Number(resolvedSearchParams.page) : 1
   const queryParam = typeof resolvedSearchParams.q === "string" ? resolvedSearchParams.q : ""
+  const sortParam = typeof resolvedSearchParams.sort === "string" ? resolvedSearchParams.sort : "latest"
+  const sort = sortParam === "popular" ? "popular" : "latest"
 
   const start = (page - 1) * DEFAULT_PAGE_SIZE
   const end = start + DEFAULT_PAGE_SIZE - 1
@@ -125,40 +149,24 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
     supabaseQuery = supabaseQuery.or(`title.ilike.%${queryParam}%,content.ilike.%${queryParam}%`)
   }
 
-  // 記事一覧 / タグ / 人気記事 / おすすめコレクションをすべて並列で取得
-  // （サイドバー2件を後から順次取得すると余分に2往復かかるため）。
-  const [blogsResult, tagsResult, popularResult, collectionsResult] = await Promise.all([
+  // ソート適用
+  if (sort === "popular") {
+    // 人気順: いいね数降順（加重スコアはクエリ後にソート）
+    supabaseQuery = supabaseQuery.order("created_at", { ascending: false })
+  } else {
+    // 最新順
+    supabaseQuery = supabaseQuery.order("created_at", { ascending: false })
+  }
+
+  // 記事一覧とタグのみ取得（サイドバーは Suspense で別コンポーネントに委譲）
+  const [blogsResult, tagsResult] = await Promise.all([
     supabaseQuery
-      .order("created_at", { ascending: false })
-      .range(start, end),
+      .range(0, sort === "popular" ? 200 : end),
     supabase.rpc('get_tags_with_counts'),
-    supabase
-      .from("blogs")
-      .select(`
-        id,
-        title,
-        view_count,
-        profiles!user_id (name)
-      `)
-      .eq("is_published", true)
-      .order("view_count", { ascending: false })
-      .limit(5),
-    supabase
-      .from("collections")
-      .select(`
-        id,
-        title,
-        profiles!user_id (name)
-      `)
-      .eq("is_public", true)
-      .order("created_at", { ascending: false })
-      .limit(5),
   ])
 
   const { data: blogsData, error, count } = blogsResult
   const { data: tags, error: tagsError } = tagsResult
-  const { data: popularBlogs } = popularResult
-  const { data: recommendedCollections } = collectionsResult
 
   if (tagsError) {
     console.error("Error fetching tags:", tagsError)
@@ -169,7 +177,25 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
     likes_count: blog.likes?.[0]?.count || 0
   }))
 
-  const totalCount = count || 0
+  // 人気順: 加重スコアでソート（いいね×3 + 閲覧数×1 + 鮜度ボーナス）
+  let sortedBlogs = blogsWithLikes
+  if (sort === "popular") {
+    const now = Date.now()
+    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
+    sortedBlogs = [...blogsWithLikes]
+      .map((blog) => {
+        const age = now - new Date(blog.created_at).getTime()
+        const recencyBonus = Math.max(0, 1 - age / THIRTY_DAYS) * 50
+        const score = (blog.likes_count || 0) * 3 + (blog.view_count || 0) * 1 + recencyBonus
+        return { ...blog, _score: score }
+      })
+      .sort((a, b) => b._score - a._score)
+      .slice(start, end)
+  } else {
+    sortedBlogs = blogsWithLikes.slice(start, end)
+  }
+
+  const totalCount = sort === "popular" ? blogsWithLikes.length : (count || 0)
   const totalPages = Math.ceil(totalCount / DEFAULT_PAGE_SIZE)
 
   if (!blogsWithLikes.length || error) {
@@ -205,10 +231,6 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
     )
   }
 
-  // 人気タグ（上位15個）
-  const popularTags = tags ? [...tags].sort((a, b) => b.count - a.count).slice(0, 15) : []
-  const allTags = tags || []
-
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
       <div className="max-w-screen-xl mx-auto px-4 py-6">
@@ -232,16 +254,20 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
 
             {/* タブナビゲーション */}
             <div className="flex items-center gap-1 mb-6 border-b border-border/50">
-              <Button variant="ghost" size="sm" className="rounded-none border-b-2 border-primary text-foreground font-bold px-4 h-10 hover:bg-transparent transition-none">
-                最新の投稿
-              </Button>
-              <Button variant="ghost" size="sm" className="rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground px-4 h-10 hover:bg-transparent transition-none" disabled>
-                トレンド
-              </Button>
+              <Link href={{ pathname: "/", query: { ...resolvedSearchParams, sort: "latest", page: 1 } }}>
+                <Button variant="ghost" size="sm" className={`rounded-none border-b-2 ${sort === "latest" ? "border-primary text-foreground font-bold" : "border-transparent text-muted-foreground hover:text-foreground"} px-4 h-10 hover:bg-transparent transition-none`}>
+                  最新の投稿
+                </Button>
+              </Link>
+              <Link href={{ pathname: "/", query: { ...resolvedSearchParams, sort: "popular", page: 1 } }}>
+                <Button variant="ghost" size="sm" className={`rounded-none border-b-2 ${sort === "popular" ? "border-primary text-foreground font-bold" : "border-transparent text-muted-foreground hover:text-foreground"} px-4 h-10 hover:bg-transparent transition-none`}>
+                  人気順
+                </Button>
+              </Link>
             </div>
 
             {/* ブログ一覧 */}
-            <BlogListView blogs={blogsWithLikes} />
+            <BlogListView blogs={sortedBlogs} />
 
             {/* ページネーション */}
             {totalPages > 1 && (
@@ -279,9 +305,9 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
           </main>
 
           {/* 右サイドバー */}
-          <aside className="w-full lg:w-[300px] flex-shrink-0 space-y-6">
-            {/* 投稿ボタン - サイドバー */}
-            <div className="hidden lg:block">
+          <aside className="w-full lg:w-[300px] flex-shrink-0">
+            {/* 投稿ボタン - サイドバー（即表示） */}
+            <div className="hidden lg:block mb-6">
               <Link href="/blog/new">
                 <Button size="lg" className="w-full gap-2 rounded-lg h-12 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground border-none font-bold text-lg transition-all hover:scale-[1.02] active:scale-[0.98]">
                   <PenSquare className="h-5 w-5" />
@@ -290,124 +316,31 @@ const BlogContent = async ({ searchParams }: { searchParams: Promise<{ [key: str
               </Link>
             </div>
 
-            {/* 人気の記事 */}
-            {popularBlogs && popularBlogs.length > 0 && (
-              <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-border bg-muted/30">
-                  <h2 className="font-bold flex items-center gap-2 text-foreground">
-                    <TrendingUp className="h-4 w-4 text-primary" />
-                    人気の記事
-                  </h2>
-                </div>
-                <div className="p-2">
-                  <div className="flex flex-col">
-                    {popularBlogs.map((b: any) => (
-                      <Link
-                        key={b.id}
-                        href={`/blog/${b.id}`}
-                        className="flex flex-col p-3 rounded-md hover:bg-muted transition-colors group"
-                      >
-                        <span className="text-sm font-bold text-foreground group-hover:text-primary transition-all line-clamp-1">
-                          {b.title}
-                        </span>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-[10px] text-muted-foreground">
-                            by {b.profiles?.name}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {b.view_count || 0}
-                          </span>
+            {/* サイドバー内容（ストリーミング） */}
+            <Suspense fallback={
+              <div className="space-y-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-card border border-border rounded-lg overflow-hidden shadow-sm animate-pulse">
+                    <div className="p-4 border-b border-border bg-muted/30">
+                      <div className="h-4 bg-muted rounded w-24" />
+                    </div>
+                    <div className="p-2 space-y-3">
+                      {[1, 2, 3].map((j) => (
+                        <div key={j} className="p-3">
+                          <div className="h-3 bg-muted rounded w-3/4 mb-2" />
+                          <div className="h-2 bg-muted rounded w-1/2" />
                         </div>
-                      </Link>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            )}
-
-            {/* おすすめシリーズ */}
-            {recommendedCollections && recommendedCollections.length > 0 && (
-              <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-border bg-muted/30">
-                  <h2 className="font-bold flex items-center gap-2 text-foreground">
-                    <List className="h-4 w-4 text-primary" />
-                    おすすめのシリーズ
-                  </h2>
-                </div>
-                <div className="p-2">
-                  <div className="flex flex-col">
-                    {recommendedCollections.map((col: any) => (
-                      <Link
-                        key={col.id}
-                        href={`/collections/${col.id}`}
-                        className="flex flex-col p-3 rounded-md hover:bg-muted transition-colors group"
-                      >
-                        <span className="text-sm font-bold text-foreground group-hover:text-primary transition-all line-clamp-1">
-                          {col.title}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          by {col.profiles?.name}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* トレンドタグセクション */}
-            {popularTags.length > 0 && (
-              <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-border bg-muted/30">
-                  <h2 className="font-bold flex items-center gap-2 text-foreground">
-                    <TrendingUp className="h-4 w-4 text-primary" />
-                    トレンドタグ
-                  </h2>
-                </div>
-                <div className="p-2">
-                  <div className="flex flex-col">
-                    {popularTags.map((tag: { name: string; count: number }) => (
-                      <Link
-                        key={tag.name}
-                        href={`/tags/${encodeURIComponent(tag.name)}`}
-                        className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-all group"
-                      >
-                        <span className="text-sm font-bold text-foreground/70 group-hover:text-primary transition-all">
-                          #{tag.name}
-                        </span>
-                        <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full group-hover:bg-primary/10 group-hover:text-primary transition-all">
-                          {tag.count}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-
-                  {allTags.length > popularTags.length && (
-                    <details className="group border-t border-border mt-2">
-                      <summary className="flex justify-center p-3 text-xs text-muted-foreground hover:text-primary cursor-pointer list-none">
-                        すべてのタグを表示
-                        <ChevronDown className="ml-1 h-3 w-3 transition-transform group-open:rotate-180" />
-                      </summary>
-                      <div className="p-2 grid grid-cols-2 gap-1 animate-in fade-in slide-in-from-top-1">
-                        {allTags.slice(15, 40).map((tag: { name: string; count: number }) => (
-                          <Link
-                            key={tag.name}
-                            href={`/tags/${encodeURIComponent(tag.name)}`}
-                            className="text-[11px] p-2 hover:bg-muted rounded truncate text-foreground/70"
-                          >
-                            #{tag.name}
-                          </Link>
-                        ))}
-                      </div>
-                    </details>
-                  )}
-                </div>
-              </div>
-            )}
+            }>
+              <FeedSidebar />
+            </Suspense>
 
             {/* ガイド・規約など */}
-            <div className="bg-card border border-border rounded-lg p-4 shadow-sm">
+            <div className="bg-card border border-border rounded-lg p-4 shadow-sm mt-6">
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">リンク</h3>
               <nav className="space-y-2">
                 <Link href="/privacy" className="block text-sm text-foreground/80 hover:text-primary transition-colors">

@@ -66,9 +66,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
     }
   }, [profileEvent])
 
-  // リアルタイム購読（記事・いいね数）
+  // リアルタイム購読（記事更新）
   const blogEvent = useRealtime<BlogType>('blogs', { event: '*', filter: `user_id=eq.${profile.id}` })
-  const lastLikeEvent = useRealtime('likes', { event: '*' })
 
   // 記事の取得関数をメモ化
   const fetchBlogPosts = useCallback(async () => {
@@ -106,7 +105,6 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
   }, [profile.id])
 
   const lastProcessedBlogEventId = useRef<string | null>(null)
-  const lastProcessedLikeEventId = useRef<string | null>(null)
 
   useEffect(() => {
     if (!blogEvent) return
@@ -116,26 +114,6 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
 
     fetchBlogPosts()
   }, [blogEvent, fetchBlogPosts])
-
-  useEffect(() => {
-    if (!lastLikeEvent) return
-    const eventId = (lastLikeEvent as any).commit_timestamp || JSON.stringify(lastLikeEvent.new || lastLikeEvent.old)
-    if (lastProcessedLikeEventId.current === eventId) return
-    lastProcessedLikeEventId.current = eventId
-
-    const like = (lastLikeEvent.new || lastLikeEvent.old) as { blog_id: string }
-
-    // このユーザーのブログに対するいいねかどうかをチェックして更新
-    // state を直接参照せず functional update 内で判定するか、ref を使う
-    // ここでは fetchBlogPosts 自体が最新の profile.id に依存しているのでそのまま呼んでも良いが
-    // どのブログへのいいねかを判定するために現在の blogPosts が必要
-    setBlogPosts(currentBlogs => {
-      if (currentBlogs.some(b => b.id === like.blog_id)) {
-        fetchBlogPosts()
-      }
-      return currentBlogs
-    })
-  }, [lastLikeEvent, fetchBlogPosts])
 
   // ログインユーザー情報の取得
   useEffect(() => {
@@ -346,7 +324,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ profile: initialProfile, isOw
                     {formatIntroduce(profile.introduce)}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground/50 italic">No introduction yet.</p>
+                  <p className="text-muted-foreground italic">自己紹介はまだありません</p>
                 )}
               </div>
 

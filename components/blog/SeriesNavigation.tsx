@@ -80,7 +80,7 @@ export default function SeriesNavigation({
       <div className="grid grid-cols-2 divide-x divide-border">
         {data.prevPost ? (
           <Link 
-            href={`/blog/${data.prevPost.id}?collection=${data.collection.id}`}
+            href={`/blog/${(data.prevPost as any).slug || data.prevPost.id}?collection=${data.collection.id}`}
             className="p-6 hover:bg-muted/20 transition-all group text-left"
           >
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1 mb-2 group-hover:text-primary">
@@ -103,7 +103,7 @@ export default function SeriesNavigation({
 
         {data.nextPost ? (
           <Link 
-            href={`/blog/${data.nextPost.id}?collection=${data.collection.id}`}
+            href={`/blog/${(data.nextPost as any).slug || data.nextPost.id}?collection=${data.collection.id}`}
             className="p-6 hover:bg-muted/20 transition-all group text-right"
           >
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center justify-end gap-1 mb-2 group-hover:text-primary">
